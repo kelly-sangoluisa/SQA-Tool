@@ -1,10 +1,12 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { SupabaseAuthGuard } from 'src/auth/supabase-auth/supabase-auth.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly service: UsersService) {}
 
+  @UseGuards(SupabaseAuthGuard)
   @Get()
   getAll() {
     return this.service.findAll();
