@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { SupabaseAuthGuard } from './auth/supabase-auth/supabase-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { AuthModule } from './auth/auth.module';
 
 
 @Module({
@@ -20,12 +21,13 @@ import { RolesGuard } from './common/guards/roles.guard';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
-        // ssl: { rejectUnauthorized: false },
+        ssl: configService.get('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
         autoLoadEntities: true,
         synchronize: configService.get('NODE_ENV') !== 'production',
       }),
     }),
-    UsersModule
+    AuthModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [

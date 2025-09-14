@@ -4,6 +4,8 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Role } from './role.entity';
 
@@ -23,12 +25,12 @@ export class User {
     nullable: false,
     onDelete: 'RESTRICT',
   })
-  @JoinColumn({ name: 'role_id', referencedColumnName: 'roleId' })
+  @JoinColumn({ name: 'role_id', referencedColumnName: 'id' })
   role: Role;
 
-  @Column({ name: 'created_at', type: 'timestamptz', insert: false, update: false })
-  created_at: Date;
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt: Date;
 
-  @Column({ name: 'updated_at', type: 'timestamptz', insert: false, update: false })
-  updated_at: Date;
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt: Date;
 }
