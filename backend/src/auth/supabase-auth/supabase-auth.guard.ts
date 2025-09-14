@@ -4,6 +4,7 @@ import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
+import { UsersService } from 'src/users/users.service';
 
 type JwtPayload = {
   sub: string;
@@ -17,9 +18,10 @@ export class SupabaseAuthGuard implements CanActivate {
   constructor(
     private readonly configService: ConfigService,
     private readonly reflector: Reflector,
+    private readonly users: UsersService,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -36,6 +38,11 @@ export class SupabaseAuthGuard implements CanActivate {
     try {
       const payload = jwt.verify(token, secret, { algorithms: ['HS256'] }) as JwtPayload;
       (request as any).user = payload;
+
+      if (payload?.email) {
+        (request as any).currentUser = await this.users.findByEmail(payload.email);
+      }
+
       return true;
     } catch {
       throw new UnauthorizedException('Invalid or expired token');

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -9,11 +9,13 @@ import { ConfigService } from '@nestjs/config';
 
 function cookieOpts(config: ConfigService, maxAgeMs?: number) {
   const isProd = config.get('NODE_ENV') === 'production';
+  const sameSite = (config.get('COOKIE_SAMESITE') as 'lax' | 'strict' | 'none') ?? (isProd ? 'none' : 'lax');
+  const secure = (config.get('COOKIE_SECURE') === 'true') || (isProd && sameSite === 'none');
   const domain = config.get<string>('JWT_COOKIE_DOMAIN') || undefined;
   return {
     httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'lax' : 'lax',
+    secure,
+    sameSite,
     path: '/',
     domain,
     ...(maxAgeMs ? { maxAge: maxAgeMs } : {}),
@@ -27,7 +29,7 @@ export class AuthController {
   @Public()
   @Post('signup')
   async signup(@Body() dto: SignUpDto) {
-    const user = await this.auth.signUp(dto.email, dto.password, dto.name);
+    const user = await this.auth.signUp(dto.email, dto.password, dto.name, dto.redirectTo);
     return { message: 'Evaluator account created', user };
   }
 
@@ -46,7 +48,7 @@ export class AuthController {
   @Post('forgot-password')
   async forgot(@Body() dto: ForgotPasswordDto) {
     await this.auth.forgotPassword(dto.email, dto.redirectTo);
-    return { message: 'Reset email sent' };
+    return { message: 'If the email exists, a reset link was sent' };
   }
 
   @Public()
@@ -54,7 +56,7 @@ export class AuthController {
   async refresh(@Body() dto: RefreshDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const fromCookie = req.headers.cookie?.match(/(?:^|;\s*)sb-refresh-token=([^;]+)/)?.[1];
     const refreshToken = dto.refresh_token ?? (fromCookie ? decodeURIComponent(fromCookie) : undefined);
-    if (!refreshToken) return { message: 'No refresh token' };
+    if (!refreshToken) throw new UnauthorizedException('Missing refresh token');
 
     const tokens = await this.auth.refresh(refreshToken);
     const HOUR = 60 * 60 * 1000;
@@ -73,6 +75,6 @@ export class AuthController {
 
   @Get('me')
   me(@CurrentUser() user: User) {
-    return user;
+    return user; // ahora viene cargado por el SupabaseAuthGuard
   }
 }

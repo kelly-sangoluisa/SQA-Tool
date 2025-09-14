@@ -8,6 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY, RoleName } from '../decorators/roles.decorator';
 import { UsersService } from '../../users/users.service';
+import { User } from '../../users/entities/user.entity';
 
 type JwtPayload = { email?: string; sub?: string; [k: string]: any };
 
@@ -28,14 +29,20 @@ export class RolesGuard implements CanActivate {
     if (requiredRoles.length === 0) return true;
 
     const req = ctx.switchToHttp().getRequest();
-    const jwtPayload = req.user as JwtPayload | undefined;
+    
+    let user: User | null = (req.currentUser as User | undefined) ?? null;
+    
+    if (!user) {
+      const jwtPayload = req.user as JwtPayload | undefined;
+      const email = jwtPayload?.email;
+      if (!email) throw new UnauthorizedException('User email not found in token');
 
-    if (!jwtPayload?.email) {
-      throw new UnauthorizedException('User email not found in token');
+      const dbUser = await this.usersService.findByEmail(email); 
+      if (!dbUser) throw new ForbiddenException('User not registered');
+
+      user = dbUser;
     }
 
-    const user = await this.usersService.findByEmail(jwtPayload.email);
-    if (!user) throw new ForbiddenException('User not registered');
     if (!user.role?.name) throw new ForbiddenException('User without role');
 
     if (!requiredRoles.includes(user.role.name as RoleName)) {

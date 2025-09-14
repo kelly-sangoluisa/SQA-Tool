@@ -8,7 +8,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+    }),
+  );
   
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
@@ -18,7 +23,12 @@ async function bootstrap() {
   }));
 
   const origins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()) ?? [];
-  app.enableCors({ origin: origins, credentials: true });
+  app.enableCors({
+    origin: origins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
 
   const config = new DocumentBuilder()
     .setTitle('API de Evaluación de Calidad')
