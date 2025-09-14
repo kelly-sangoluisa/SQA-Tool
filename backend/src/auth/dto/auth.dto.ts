@@ -21,3 +21,7 @@ export class RefreshDto {
   @IsOptional() @IsString() refresh_token?: string;
 }
 
+export class UpdatePasswordDto {
+  @IsString() @MinLength(6)
+  new_password!: string;
+}

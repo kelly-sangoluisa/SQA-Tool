@@ -4,7 +4,7 @@ import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { AuthService } from './auth.service';
-import { SignInDto, SignUpDto, ForgotPasswordDto, RefreshDto } from './dto/auth.dto';
+import { SignInDto, SignUpDto, ForgotPasswordDto, RefreshDto, UpdatePasswordDto } from './dto/auth.dto';
 import { ConfigService } from '@nestjs/config';
 
 function cookieOpts(config: ConfigService, maxAgeMs?: number) {
@@ -64,6 +64,14 @@ export class AuthController {
     res.cookie('sb-access-token', tokens.access_token, cookieOpts(this.cfg, HOUR));
     res.cookie('sb-refresh-token', tokens.refresh_token, cookieOpts(this.cfg, DAYS30));
     return { message: 'Refreshed' };
+  }
+
+  @Post('update-password')
+  async updatePassword(@Body() dto: UpdatePasswordDto, @Req() req: Request) {
+    const sub = (req as any).user?.sub as string | undefined;
+    if (!sub) throw new UnauthorizedException('No authenticated user');
+    await this.auth.updatePasswordByUserId(sub, dto.new_password);
+    return { message: 'Password updated' };
   }
 
   @Post('signout')

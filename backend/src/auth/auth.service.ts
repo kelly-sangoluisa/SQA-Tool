@@ -88,4 +88,12 @@ export class AuthService {
       refresh_token: data.session!.refresh_token!,
     };
   }
+
+  async updatePasswordByUserId(userId: string, newPassword: string) {
+    const { error } = await this.admin.auth.admin.updateUserById(userId, {
+      password: newPassword,
+    });
+    if (error) throw new BadRequestException(error.message);
+    return { ok: true };
+  }
 }
