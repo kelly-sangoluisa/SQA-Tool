@@ -9,7 +9,6 @@ export class SignUpDto {
   @IsEmail() email!: string;
   @IsString() @MinLength(6) password!: string;
   @IsString() name!: string;
-  @IsOptional() @IsString() roleName?: 'admin' | 'evaluator';
 }
 
 export class ForgotPasswordDto {

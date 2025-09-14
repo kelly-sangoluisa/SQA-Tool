@@ -40,11 +40,11 @@ export class AuthService {
   }
 
 
-  async signUp(email: string, password: string, name: string, roleName?: 'admin'|'evaluator') {
+  async signUp(email: string, password: string, name: string) {
     const { data, error } = await this.supabase.auth.signUp({ email, password });
     if (error) throw new BadRequestException(error.message);
 
-    await this.ensureUser(email, name, roleName ?? 'evaluator');
+    await this.ensureUser(email, name, 'evaluator');
     return { id: data.user?.id, email: data.user?.email };
   }
 

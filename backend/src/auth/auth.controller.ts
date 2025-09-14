@@ -27,8 +27,8 @@ export class AuthController {
   @Public()
   @Post('signup')
   async signup(@Body() dto: SignUpDto) {
-    const user = await this.auth.signUp(dto.email, dto.password, dto.name, dto.roleName);
-    return { message: 'User created', user };
+    const user = await this.auth.signUp(dto.email, dto.password, dto.name);
+    return { message: 'Evaluator account created', user };
   }
 
   @Public()
