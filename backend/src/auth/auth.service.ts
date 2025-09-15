@@ -89,11 +89,24 @@ export class AuthService {
     };
   }
 
-  async updatePasswordByUserId(userId: string, newPassword: string) {
-    const { error } = await this.admin.auth.admin.updateUserById(userId, {
-      password: newPassword,
+  async resetPasswordWithAccessToken(accessToken: string, newPassword: string) {
+    const url = this.config.get<string>('SUPABASE_URL')!;
+    const anon = this.config.get<string>('SUPABASE_ANON_KEY')!;
+    const client = createClient(url, anon, {
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
     });
+    const { error } = await client.auth.updateUser({ password: newPassword });
     if (error) throw new BadRequestException(error.message);
-    return { ok: true };
+  }
+
+  async signOut(accessToken: string) {
+    const url = this.config.get<string>('SUPABASE_URL')!;
+    const anon = this.config.get<string>('SUPABASE_ANON_KEY')!;
+    const client = createClient(url, anon, {
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    await client.auth.signOut();
   }
 }

@@ -22,12 +22,12 @@ async function bootstrap() {
     transformOptions: { enableImplicitConversion: true },
   }));
 
-  const origins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()) ?? [];
+  const envOrigins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()).filter(Boolean);
   app.enableCors({
-    origin: origins,
+    origin: envOrigins?.length ? envOrigins : [/^https?:\/\/localhost:\d+$/, /\.tudominio\.com$/],
     credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET','POST','PATCH','PUT','DELETE','OPTIONS'],
+    allowedHeaders: ['Content-Type','Authorization','X-CSRF-Token'],
   });
 
   const config = new DocumentBuilder()
@@ -35,6 +35,10 @@ async function bootstrap() {
     .setDescription('Documentación de la API para el sistema de evaluación de proyectos de software.')
     .setVersion('1.0')
     .addBearerAuth()
+    .addCookieAuth('sb-access-token', {
+      name: 'sb-access-token',
+      type: 'apiKey'
+    })
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
