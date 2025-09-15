@@ -12,16 +12,39 @@ export class AuthService {
   private supabase: SupabaseClient;
   private admin: SupabaseClient;
 
+  private getSupabaseUrl(): string {
+    return this.config.get<string>('SUPABASE_URL')!;
+  }
+
+  private getSupabaseAnonKey(): string {
+    return this.config.get<string>('SUPABASE_ANON_KEY')!;
+  }
+
+  private getSupabaseServiceRole(): string {
+    return this.config.get<string>('SUPABASE_SERVICE_ROLE')!;
+  }
+
+  private createSupabaseClientWithToken(token: string): SupabaseClient {
+    return createClient(this.getSupabaseUrl(), this.getSupabaseAnonKey(), {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+
+  private handleError(error: any, ExceptionType: any = BadRequestException) {
+    if (error) throw new ExceptionType(error.message);
+  }
+
   constructor(
     private readonly config: ConfigService,
     @InjectRepository(User) private readonly users: Repository<User>,
     @InjectRepository(Role) private readonly roles: Repository<Role>,
   ) {
-    const url = this.config.get<string>('SUPABASE_URL')!;
-    this.supabase = createClient(url, this.config.get<string>('SUPABASE_ANON_KEY')!, {
+    const url = this.getSupabaseUrl();
+    this.supabase = createClient(url, this.getSupabaseAnonKey(), {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    this.admin = createClient(url, this.config.get<string>('SUPABASE_SERVICE_ROLE')!, {
+    this.admin = createClient(url, this.getSupabaseServiceRole(), {
       auth: { persistSession: false, autoRefreshToken: false },
     });
   }
@@ -49,8 +72,7 @@ export class AuthService {
       password,
       options: redirectTo ? { emailRedirectTo: redirectTo } : undefined,
     });
-    if (error) throw new BadRequestException(error.message);
-
+    this.handleError(error);
     await this.ensureUser(email, name, 'evaluator');
     return { id: data.user?.id, email: data.user?.email };
   }
@@ -62,7 +84,7 @@ export class AuthService {
       if (msg.includes('email not confirmed')) {
         throw new UnauthorizedException('Email not confirmed');
       }
-      throw new UnauthorizedException(error.message);
+      this.handleError(error, UnauthorizedException);
     }
     await this.ensureUser(email);
     return {
@@ -76,13 +98,13 @@ export class AuthService {
     const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectTo ?? fallback,
     });
-    if (error) throw new BadRequestException(error.message);
+    this.handleError(error);
     return { ok: true };
   }
 
   async refresh(refresh_token: string): Promise<Tokens> {
     const { data, error } = await this.supabase.auth.refreshSession({ refresh_token });
-    if (error) throw new UnauthorizedException(error.message);
+    this.handleError(error, UnauthorizedException);
     return {
       access_token: data.session!.access_token,
       refresh_token: data.session!.refresh_token!,
@@ -90,23 +112,13 @@ export class AuthService {
   }
 
   async resetPasswordWithAccessToken(accessToken: string, newPassword: string) {
-    const url = this.config.get<string>('SUPABASE_URL')!;
-    const anon = this.config.get<string>('SUPABASE_ANON_KEY')!;
-    const client = createClient(url, anon, {
-      global: { headers: { Authorization: `Bearer ${accessToken}` } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
+    const client = this.createSupabaseClientWithToken(accessToken);
     const { error } = await client.auth.updateUser({ password: newPassword });
-    if (error) throw new BadRequestException(error.message);
+    this.handleError(error);
   }
 
   async signOut(accessToken: string) {
-    const url = this.config.get<string>('SUPABASE_URL')!;
-    const anon = this.config.get<string>('SUPABASE_ANON_KEY')!;
-    const client = createClient(url, anon, {
-      global: { headers: { Authorization: `Bearer ${accessToken}` } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
+    const client = this.createSupabaseClientWithToken(accessToken);
     await client.auth.signOut();
   }
 }
