@@ -1,4 +1,4 @@
-import { SupabaseAuthGuard } from './supabase-auth.guard';
+import { SupabaseAuthGuard } from "src/auth/supabase-auth/supabase-auth.guard";
 
 describe('SupabaseAuthGuard', () => {
   it('should be defined', () => {
