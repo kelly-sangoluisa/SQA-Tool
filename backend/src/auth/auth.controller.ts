@@ -90,18 +90,18 @@ export class AuthController {
     return { message: 'Password reset' };
   }
 
+  @Public()
   @Post('signout')
   @HttpCode(200)
   @ApiOperation({ summary: 'Cerrar sesión' })
   @ApiOkResponse({ schema: { example: { message: 'Signed out' } } })
-  @ApiBearerAuth('bearer')  
-  @ApiCookieAuth('sb-access-token')
   async signout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const access = req.headers.cookie?.match(/(?:^|;\s*)sb-access-token=([^;]+)/)?.[1];
     if (access) await this.auth.signOut(decodeURIComponent(access));
 
     res.clearCookie('sb-access-token', cookieOpts(this.cfg));
     res.clearCookie('sb-refresh-token', cookieOpts(this.cfg));
+    res.setHeader('Cache-Control', 'no-store');
     return { message: 'Signed out' };
   }
 

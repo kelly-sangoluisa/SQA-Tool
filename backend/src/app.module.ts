@@ -10,9 +10,12 @@ import { SupabaseAuthGuard } from './auth/supabase-auth/supabase-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { AuthModule } from './auth/auth.module';
 
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([{ ttl: 60, limit: 10 }]),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -32,6 +35,7 @@ import { AuthModule } from './auth/auth.module';
   controllers: [AppController],
   providers: [
     AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: SupabaseAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard }, 
   ],

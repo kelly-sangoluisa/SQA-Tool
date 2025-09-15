@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger/dist/decorators/api-property.decorator';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsString } from 'class-validator';
 
 export class UpdateRoleDto {
