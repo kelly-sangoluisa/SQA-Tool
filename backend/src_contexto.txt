@@ -1,0 +1,881 @@
+Generando contexto de src...
+
+===========================
+📁 ESTRUCTURA: src
+===========================
+
+src
+src/app.controller.spec.ts
+src/app.controller.ts
+src/app.module.ts
+src/app.service.ts
+src/auth
+src/auth/auth.controller.ts
+src/auth/auth.module.ts
+src/auth/auth.service.ts
+src/auth/dto
+src/auth/dto/auth.dto.ts
+src/auth/supabase-auth
+src/auth/supabase-auth/supabase-auth.guard.spec.ts
+src/auth/supabase-auth/supabase-auth.guard.ts
+src/auth/types
+src/auth/types/auth.types.ts
+src/common
+src/common/decorators
+src/common/decorators/current-user.decorator.ts
+src/common/decorators/public.decorator.ts
+src/common/decorators/roles.decorator.ts
+src/common/guards
+src/common/guards/roles.guard.ts
+src/main.ts
+src/types
+src/types/express.d.ts
+src/users
+src/users/dto
+src/users/dto/update-role.dto.ts
+src/users/entities
+src/users/entities/role.entity.ts
+src/users/entities/user.entity.ts
+src/users/users.controller.ts
+src/users/users.module.ts
+src/users/users.service.ts
+
+===========================
+🧠 CONTENIDO DE ARCHIVOS (texto)
+===========================
+
+
+--- src/app.controller.spec.ts ---
+
+import { Test, TestingModule } from '@nestjs/testing';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+
+describe('AppController', () => {
+  let appController: AppController;
+
+  beforeEach(async () => {
+    const app: TestingModule = await Test.createTestingModule({
+      controllers: [AppController],
+      providers: [AppService],
+    }).compile();
+
+    appController = app.get<AppController>(AppController);
+  });
+
+  describe('root', () => {
+    it('should return "Hello World!"', () => {
+      expect(appController.getHello()).toBe('Hello World!');
+    });
+  });
+});
+
+--- src/app.controller.ts ---
+
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service';
+import { Public } from './common/decorators/public.decorator';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Public()
+  @Get()
+  getHello(): string {
+    return this.appService.getHello();
+  }
+}
+
+--- src/app.module.ts ---
+
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_GUARD } from '@nestjs/core';
+
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
+import { SupabaseAuthGuard } from './auth/supabase-auth/supabase-auth.guard';
+import { RolesGuard } from './common/guards/roles.guard';
+import { AuthModule } from './auth/auth.module';
+
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+
+
+@Module({
+  imports: [
+    ThrottlerModule.forRoot([{ ttl: 60, limit: 10 }]),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        url: configService.get<string>('DATABASE_URL'),
+        ssl: configService.get('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
+        autoLoadEntities: true,
+        synchronize: configService.get('NODE_ENV') !== 'production',
+      }),
+    }),
+    AuthModule,
+    UsersModule,
+  ],
+  controllers: [AppController],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: SupabaseAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard }, 
+  ],
+})
+export class AppModule {}
+
+--- src/app.service.ts ---
+
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class AppService {
+  getHello(): string {
+    return 'Hello World!';
+  }
+}
+
+--- src/auth/auth.controller.ts ---
+
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import type { Response, Request } from 'express';
+import { Public } from '../common/decorators/public.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { User } from '../users/entities/user.entity';
+import { AuthService } from './auth.service';
+import { SignInDto, SignUpDto, ForgotPasswordDto, RefreshDto, ResetPasswordDto } from './dto/auth.dto';
+import { ConfigService } from '@nestjs/config';
+import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+
+function cookieOpts(config: ConfigService, maxAgeMs?: number) {
+  const isProd = config.get('NODE_ENV') === 'production';
+  const sameSite = (config.get('COOKIE_SAMESITE') as 'lax' | 'strict' | 'none') ?? (isProd ? 'none' : 'lax');
+  const secure = (config.get('COOKIE_SECURE') === 'true') || (isProd && sameSite === 'none');
+  const domain = config.get<string>('JWT_COOKIE_DOMAIN') || undefined;
+  return {
+    httpOnly: true,
+    secure,
+    sameSite,
+    path: '/',
+    domain,
+    ...(maxAgeMs ? { maxAge: maxAgeMs } : {}),
+  } as const;
+}
+
+@ApiTags('Auth')
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly auth: AuthService, private readonly cfg: ConfigService) {}
+
+  @Public()
+  @Post('signup')
+  @ApiOperation({ summary: 'Registrar evaluador' })
+  @ApiBody({ type: SignUpDto })
+  @ApiCreatedResponse({ description: 'Evaluator account created' })
+  async signup(@Body() dto: SignUpDto) {
+    const user = await this.auth.signUp(dto.email, dto.password, dto.name, dto.redirectTo);
+    return { message: 'Evaluator account created', user };
+  }
+
+  @Public()
+  @Post('signin')
+  @ApiOperation({ summary: 'Iniciar sesión' })
+  @ApiBody({ type: SignInDto })
+  @ApiOkResponse({ description: 'Signed in (cookies seteadas)' })
+  async signin(@Body() dto: SignInDto, @Res({ passthrough: true }) res: Response) {
+    const tokens = await this.auth.signIn(dto.email, dto.password);
+    const HOUR = 60 * 60 * 1000;
+    const DAYS30 = 30 * 24 * HOUR;
+    res.cookie('sb-access-token', tokens.access_token, cookieOpts(this.cfg, HOUR));
+    res.cookie('sb-refresh-token', tokens.refresh_token, cookieOpts(this.cfg, DAYS30));
+    return { message: 'Signed in' };
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Enviar enlace de reset' })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiOkResponse({ description: 'If the email exists, a reset link was sent' })
+  async forgot(@Body() dto: ForgotPasswordDto) {
+    await this.auth.forgotPassword(dto.email, dto.redirectTo);
+    return { message: 'If the email exists, a reset link was sent' };
+  }
+
+  @Public()
+  @Post('refresh')
+  @ApiOperation({ summary: 'Refrescar tokens' })
+  @ApiBody({ type: RefreshDto })
+  @ApiOkResponse({ description: 'Refreshed' })
+  async refresh(@Body() dto: RefreshDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const fromCookie = req.headers.cookie?.match(/(?:^|;\s*)sb-refresh-token=([^;]+)/)?.[1];
+    const refreshToken = dto.refresh_token ?? (fromCookie ? decodeURIComponent(fromCookie) : undefined);
+    if (!refreshToken) throw new UnauthorizedException('Missing refresh token');
+
+    const tokens = await this.auth.refresh(refreshToken);
+    const HOUR = 60 * 60 * 1000;
+    const DAYS30 = 30 * 24 * HOUR;
+    res.cookie('sb-access-token', tokens.access_token, cookieOpts(this.cfg, HOUR));
+    res.cookie('sb-refresh-token', tokens.refresh_token, cookieOpts(this.cfg, DAYS30));
+    return { message: 'Refreshed' };
+  }
+
+  @Public()
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Aplicar nueva contraseña con access_token del link' })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiOkResponse({ description: 'Password reset' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.auth.resetPasswordWithAccessToken(dto.access_token, dto.new_password);
+    return { message: 'Password reset' };
+  }
+
+  @Public()
+  @Post('signout')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Cerrar sesión' })
+  @ApiOkResponse({ schema: { example: { message: 'Signed out' } } })
+  async signout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const access = req.headers.cookie?.match(/(?:^|;\s*)sb-access-token=([^;]+)/)?.[1];
+    if (access) await this.auth.signOut(decodeURIComponent(access));
+
+    res.clearCookie('sb-access-token', cookieOpts(this.cfg));
+    res.clearCookie('sb-refresh-token', cookieOpts(this.cfg));
+    res.setHeader('Cache-Control', 'no-store');
+    return { message: 'Signed out' };
+  }
+
+
+  @Get('me')
+  @ApiOperation({ summary: 'Usuario autenticado actual' })
+  @ApiUnauthorizedResponse({ description: 'No autenticado' })
+  @ApiBearerAuth('bearer')
+  @ApiCookieAuth('sb-access-token')
+  me(@CurrentUser() user: User) {
+    return user;
+  }
+}
+
+--- src/auth/auth.module.ts ---
+
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from '../users/entities/user.entity';
+import { Role } from '../users/entities/role.entity';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+
+@Module({
+  imports: [ConfigModule, TypeOrmModule.forFeature([User, Role])],
+  providers: [AuthService],
+  controllers: [AuthController],
+  exports: [AuthService],
+})
+export class AuthModule {}
+
+--- src/auth/auth.service.ts ---
+
+import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/entities/user.entity';
+import { Role } from '../users/entities/role.entity';
+import { Tokens } from './types/auth.types';
+
+@Injectable()
+export class AuthService {
+  private supabase: SupabaseClient;
+  private admin: SupabaseClient;
+
+  private getSupabaseUrl(): string {
+    return this.config.get<string>('SUPABASE_URL')!;
+  }
+
+  private getSupabaseAnonKey(): string {
+    return this.config.get<string>('SUPABASE_ANON_KEY')!;
+  }
+
+  private getSupabaseServiceRole(): string {
+    return this.config.get<string>('SUPABASE_SERVICE_ROLE')!;
+  }
+
+  private createSupabaseClientWithToken(token: string): SupabaseClient {
+    return createClient(this.getSupabaseUrl(), this.getSupabaseAnonKey(), {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+
+  private handleError(error: any, ExceptionType: any = BadRequestException) {
+    if (error) throw new ExceptionType(error.message);
+  }
+
+  constructor(
+    private readonly config: ConfigService,
+    @InjectRepository(User) private readonly users: Repository<User>,
+    @InjectRepository(Role) private readonly roles: Repository<Role>,
+  ) {
+    const url = this.getSupabaseUrl();
+    this.supabase = createClient(url, this.getSupabaseAnonKey(), {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    this.admin = createClient(url, this.getSupabaseServiceRole(), {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+
+  async ensureUser(email: string, name?: string, roleName: 'admin' | 'evaluator' = 'evaluator') {
+    let user = await this.users.findOne({ where: { email } });
+    if (user) return user;
+
+    const role = await this.roles.findOne({ where: { name: roleName } });
+    if (!role) {
+      throw new BadRequestException(`Role ${roleName} not found in database`);
+    }
+
+    user = this.users.create({
+      email,
+      name: name ?? email.split('@')[0],
+      role,
+    });
+    return this.users.save(user);
+  }
+
+  async signUp(email: string, password: string, name: string, redirectTo?: string) {
+    const { data, error } = await this.supabase.auth.signUp({
+      email,
+      password,
+      options: redirectTo ? { emailRedirectTo: redirectTo } : undefined,
+    });
+    this.handleError(error);
+    await this.ensureUser(email, name, 'evaluator');
+    return { id: data.user?.id, email: data.user?.email };
+  }
+
+  async signIn(email: string, password: string): Promise<Tokens> {
+    const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      const msg = (error.message || '').toLowerCase();
+      if (msg.includes('email not confirmed')) {
+        throw new UnauthorizedException('Email not confirmed');
+      }
+      this.handleError(error, UnauthorizedException);
+    }
+    await this.ensureUser(email);
+    return {
+      access_token: data.session!.access_token,
+      refresh_token: data.session!.refresh_token!,
+    };
+  }
+
+  async forgotPassword(email: string, redirectTo?: string) {
+    const fallback = this.config.get<string>('SUPABASE_RESET_REDIRECT_TO');
+    const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectTo ?? fallback,
+    });
+    this.handleError(error);
+    return { ok: true };
+  }
+
+  async refresh(refresh_token: string): Promise<Tokens> {
+    const { data, error } = await this.supabase.auth.refreshSession({ refresh_token });
+    this.handleError(error, UnauthorizedException);
+    return {
+      access_token: data.session!.access_token,
+      refresh_token: data.session!.refresh_token!,
+    };
+  }
+
+  async resetPasswordWithAccessToken(accessToken: string, newPassword: string) {
+    const client = this.createSupabaseClientWithToken(accessToken);
+    const { error } = await client.auth.updateUser({ password: newPassword });
+    this.handleError(error);
+  }
+
+  async signOut(accessToken: string) {
+    const client = this.createSupabaseClientWithToken(accessToken);
+    await client.auth.signOut();
+  }
+}
+
+--- src/auth/dto/auth.dto.ts ---
+
+import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class SignInDto {
+  @ApiProperty({ example: 'user@mail.com' })
+  @IsEmail() email!: string;
+
+  @ApiProperty({ minLength: 6, example: 'Secret123' })
+  @IsString() @MinLength(6) password!: string;
+}
+
+export class SignUpDto {
+  @ApiProperty({ example: 'user@mail.com' })
+  @IsEmail() email!: string;
+
+  @ApiProperty({ minLength: 6, example: 'Secret123' })
+  @IsString() @MinLength(6) password!: string;
+
+  @ApiProperty({ example: 'Juan Pérez' })
+  @IsString() name!: string;
+
+  @ApiPropertyOptional({ example: 'http://localhost:3000/auth/callback' })
+  @IsOptional() @IsString() redirectTo?: string;
+}
+
+export class ForgotPasswordDto {
+  @ApiProperty({ example: 'user@mail.com' })
+  @IsEmail() email!: string;
+
+  @ApiPropertyOptional({ example: 'http://localhost:3000/auth/reset' })
+  @IsOptional() @IsString() redirectTo?: string;
+}
+
+export class RefreshDto {
+  @ApiPropertyOptional({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
+  @IsOptional() @IsString() refresh_token?: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
+  @IsString() access_token!: string;
+
+  @ApiProperty({ minLength: 6, example: 'NewSecret123' })
+  @IsString() @MinLength(6) new_password!: string;
+}
+
+--- src/auth/supabase-auth/supabase-auth.guard.spec.ts ---
+
+import { SupabaseAuthGuard } from './supabase-auth.guard';
+
+describe('SupabaseAuthGuard', () => {
+  it('should be defined', () => {
+    expect(new SupabaseAuthGuard()).toBeDefined();
+  });
+});
+
+--- src/auth/supabase-auth/supabase-auth.guard.ts ---
+
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import * as jwt from 'jsonwebtoken';
+import { Request } from 'express';
+import { ConfigService } from '@nestjs/config';
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
+import { UsersService } from 'src/users/users.service';
+
+type JwtPayload = {
+  sub: string;
+  email?: string;
+  exp?: number;
+  [k: string]: any;
+};
+
+@Injectable()
+export class SupabaseAuthGuard implements CanActivate {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly reflector: Reflector,
+    private readonly users: UsersService,
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) return true;
+
+    const request = context.switchToHttp().getRequest<Request>();
+    const token = this.extractToken(request);
+    if (!token) throw new UnauthorizedException('No token provided');
+
+    const secret = this.configService.get<string>('SUPABASE_JWT_SECRET');
+    if (!secret) throw new UnauthorizedException('JWT secret not configured');
+
+    try {
+      const payload = jwt.verify(token, secret, { algorithms: ['HS256'] }) as JwtPayload;
+      (request as any).user = payload;
+
+      if (payload?.email) {
+        (request as any).currentUser = await this.users.findByEmail(payload.email);
+      }
+
+      return true;
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+  }
+
+  private extractToken(req: Request): string | undefined {
+    const h = req.header('authorization');
+    if (h?.startsWith('Bearer ')) return h.slice(7).trim();
+
+    const safe = req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS';
+    if (safe) {
+      const m = req.headers.cookie?.match(/(?:^|;\s*)sb-access-token=([^;]+)/);
+      if (m) return decodeURIComponent(m[1]);
+    }
+    return undefined;
+  }
+}
+
+--- src/auth/types/auth.types.ts ---
+
+export type Tokens = {
+  access_token: string;
+  refresh_token: string;
+};
+
+--- src/common/decorators/current-user.decorator.ts ---
+
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { User } from '../../users/entities/user.entity';
+
+export const CurrentUser = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): User | undefined => {
+    const req = ctx.switchToHttp().getRequest();
+    return req.currentUser as User | undefined;
+  },
+);
+
+--- src/common/decorators/public.decorator.ts ---
+
+import { SetMetadata } from '@nestjs/common';
+
+export const IS_PUBLIC_KEY = 'isPublic';
+export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
+
+--- src/common/decorators/roles.decorator.ts ---
+
+import { SetMetadata } from '@nestjs/common';
+
+export type RoleName = 'admin' | 'evaluator';
+export const ROLES_KEY = 'roles';
+export const Roles = (...roles: RoleName[]) => SetMetadata(ROLES_KEY, roles);
+
+--- src/common/guards/roles.guard.ts ---
+
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { ROLES_KEY, RoleName } from '../decorators/roles.decorator';
+import { UsersService } from '../../users/users.service';
+import { User } from '../../users/entities/user.entity';
+
+type JwtPayload = { email?: string; sub?: string; [k: string]: any };
+
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly usersService: UsersService,
+  ) {}
+
+  async canActivate(ctx: ExecutionContext): Promise<boolean> {
+    const requiredRoles =
+      this.reflector.getAllAndOverride<RoleName[]>(ROLES_KEY, [
+        ctx.getHandler(),
+        ctx.getClass(),
+      ]) ?? [];
+
+    if (requiredRoles.length === 0) return true;
+
+    const req = ctx.switchToHttp().getRequest();
+    
+    let user: User | null = (req.currentUser as User | undefined) ?? null;
+    
+    if (!user) {
+      const jwtPayload = req.user as JwtPayload | undefined;
+      const email = jwtPayload?.email;
+      if (!email) throw new UnauthorizedException('User email not found in token');
+
+      const dbUser = await this.usersService.findByEmail(email); 
+      if (!dbUser) throw new ForbiddenException('User not registered');
+
+      user = dbUser;
+    }
+
+    if (!user.role?.name) throw new ForbiddenException('User without role');
+
+    if (!requiredRoles.includes(user.role.name as RoleName)) {
+      throw new ForbiddenException('Insufficient role');
+    }
+
+    req.currentUser = user;
+    return true;
+  }
+}
+
+--- src/main.ts ---
+
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import helmet from 'helmet';
+import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.setGlobalPrefix('api');
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+    }),
+  );
+  
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+    transformOptions: { enableImplicitConversion: true },
+  }));
+
+  const envOrigins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()).filter(Boolean);
+  app.enableCors({
+    origin: envOrigins?.length ? envOrigins : [/^https?:\/\/localhost:\d+$/, /\.tudominio\.com$/],
+    credentials: true,
+    methods: ['GET','POST','PATCH','PUT','DELETE','OPTIONS'],
+    allowedHeaders: ['Content-Type','Authorization','X-CSRF-Token'],
+  });
+
+  const config = new DocumentBuilder()
+    .setTitle('API de Evaluación de Calidad')
+    .setDescription('Documentación de la API para el sistema de evaluación de proyectos de software.')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .addCookieAuth('sb-access-token', {
+      name: 'sb-access-token',
+      type: 'apiKey'
+    })
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
+
+  await app.listen(process.env.PORT ?? 3000);
+}
+bootstrap();
+
+--- src/types/express.d.ts ---
+
+import { User } from '../users/entities/user.entity';
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;      
+      currentUser?: User;  
+    }
+  }
+}
+
+--- src/users/dto/update-role.dto.ts ---
+
+import { ApiProperty } from '@nestjs/swagger';
+import { IsIn, IsString } from 'class-validator';
+
+export class UpdateRoleDto {
+  @ApiProperty({
+    description: 'Nuevo rol del usuario',
+    enum: ['admin', 'evaluator'],
+    example: 'evaluator',
+  })
+  @IsString()
+  @IsIn(['admin', 'evaluator'])
+  roleName!: 'admin' | 'evaluator';
+}
+
+--- src/users/entities/role.entity.ts ---
+
+import { ApiProperty } from '@nestjs/swagger';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+
+@Entity({ name: 'roles' })
+export class Role {
+  @ApiProperty({ example: 2 })
+  @PrimaryGeneratedColumn({ name: 'role_id' })
+  id: number;
+
+  @ApiProperty({ example: 'evaluator' })
+  @Column({ type: 'varchar', length: 50, unique: true })
+  name: string;
+}
+
+--- src/users/entities/user.entity.ts ---
+
+import { 
+  Entity, 
+  PrimaryGeneratedColumn, 
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { Role } from './role.entity';
+import { ApiProperty } from '@nestjs/swagger';
+
+@Entity({ name: 'users' })
+export class User {
+  @ApiProperty({ example: 1 })
+  @PrimaryGeneratedColumn({ name: 'user_id' })
+  id: number;
+
+  @ApiProperty({ example: 'John Doe' })
+  @Column({ type: 'varchar', length: 100 })
+  name: string;
+
+  @ApiProperty({ example: 'john.doe@example.com' })
+  @Column({ type: 'varchar', length: 100, unique: true })
+  email: string;
+
+  @ApiProperty({ type: () => Role })
+  @ManyToOne(() => Role, {
+    eager: true,
+    nullable: false,
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'role_id', referencedColumnName: 'id' })
+  role: Role;
+
+  @ApiProperty({ type: String, format: 'date-time', example: '2025-09-13T18:00:00.000Z' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  created_at: Date;
+
+  @ApiProperty({ type: String, format: 'date-time', example: '2025-09-13T18:00:00.000Z' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updated_at: Date;
+}
+--- src/users/users.controller.ts ---
+
+import { Body, Controller, Get, Param, ParseIntPipe, Patch } from '@nestjs/common';
+import { UsersService } from './users.service';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiCookieAuth, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { User } from './entities/user.entity';
+
+@ApiTags('Users')
+@ApiBearerAuth('bearer')
+@ApiCookieAuth('sb-access-token')
+@Controller('users')
+export class UsersController {
+  constructor(private readonly service: UsersService) {}
+
+  @Roles('admin')
+  @Get()
+  @ApiOperation({ summary: 'Listar usuarios (solo admin)' })
+  @ApiOkResponse({ description: 'Lista de usuarios', type: User, isArray: true })
+  @ApiUnauthorizedResponse({ description: 'No autenticado' })
+  @ApiForbiddenResponse({ description: 'Sin permisos (se requiere rol admin)' })
+  getAll() {
+    return this.service.findAll();
+  }
+
+  @Roles('admin', 'evaluator')
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtener un usuario por ID (admin o evaluator)' })
+  @ApiParam({ name: 'id', type: Number, example: 1, description: 'ID del usuario' })
+  @ApiOkResponse({ description: 'Usuario', type: User })
+  @ApiNotFoundResponse({ description: 'Usuario no encontrado' })
+  @ApiUnauthorizedResponse({ description: 'No autenticado' })
+  @ApiForbiddenResponse({ description: 'Sin permisos' })
+  getOne(@Param('id', ParseIntPipe) id: number) {
+    return this.service.findOne(id);
+  }
+
+  @Roles('admin')
+  @Patch(':id/role')
+  @ApiOperation({ summary: 'Actualizar rol de un usuario (solo admin)' })
+  @ApiParam({ name: 'id', type: Number, example: 1, description: 'ID del usuario' })
+  @ApiBody({ type: UpdateRoleDto })
+  @ApiOkResponse({ description: 'Usuario actualizado', type: User })
+  @ApiBadRequestResponse({ description: 'Rol inválido o no encontrado' })
+  @ApiNotFoundResponse({ description: 'Usuario no encontrado' })
+  @ApiUnauthorizedResponse({ description: 'No autenticado' })
+  @ApiForbiddenResponse({ description: 'Sin permisos (se requiere rol admin)' })
+  async updateRole(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateRoleDto,
+  ) {
+    return this.service.updateRole(id, dto.roleName);
+  }
+}
+
+--- src/users/users.module.ts ---
+
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+import { UsersController } from './users.controller';
+import { UsersService } from './users.service';
+import { Role } from './entities/role.entity';
+
+@Module({
+    imports: [ TypeOrmModule.forFeature([User, Role]) ],
+    controllers: [UsersController],
+    providers: [UsersService],
+    exports: [UsersService]
+})
+export class UsersModule {}
+
+--- src/users/users.service.ts ---
+
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './entities/user.entity';
+import { Role } from './entities/role.entity';
+
+@Injectable()
+export class UsersService {
+  constructor(
+    @InjectRepository(User) private readonly repo: Repository<User>,
+    @InjectRepository(Role) private readonly rolesRepo: Repository<Role>,
+  ) {}
+
+  findAll() {
+    return this.repo.find({ order: { id: 'ASC' } });
+  }
+
+  async findOne(id: number) {
+    const user = await this.repo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.repo.findOne({ where: { email } });
+  }
+
+  async updateRole(userId: number, roleName: 'admin' | 'evaluator') {
+    const user = await this.findOne(userId);
+    const role = await this.rolesRepo.findOne({ where: { name: roleName } });
+
+    if (!role) throw new BadRequestException(`Role ${roleName} not found`);
+
+    user.role = role;
+    return this.repo.save(user);
+  }
+}

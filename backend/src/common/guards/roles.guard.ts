@@ -9,8 +9,7 @@ import { Reflector } from '@nestjs/core';
 import { ROLES_KEY, RoleName } from '../decorators/roles.decorator';
 import { UsersService } from '../../users/users.service';
 import { User } from '../../users/entities/user.entity';
-
-type JwtPayload = { email?: string; sub?: string; [k: string]: any };
+import { SupabaseJwtPayload } from 'src/auth/types/auth.types';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -33,7 +32,7 @@ export class RolesGuard implements CanActivate {
     let user: User | null = (req.currentUser as User | undefined) ?? null;
     
     if (!user) {
-      const jwtPayload = req.user as JwtPayload | undefined;
+      const jwtPayload = req.user as SupabaseJwtPayload | undefined;
       const email = jwtPayload?.email;
       if (!email) throw new UnauthorizedException('User email not found in token');
 
