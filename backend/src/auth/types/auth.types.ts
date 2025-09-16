@@ -3,7 +3,7 @@ export type Tokens = {
   refresh_token: string;
 };
 
-export interface SupabaseJwtPayload {
+export interface ISupabaseJwtPayload {
   sub: string;   
   email?: string;
   aud?: string;

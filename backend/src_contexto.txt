@@ -5,7 +5,6 @@ Generando contexto de src...
 ===========================
 
 src
-src/app.controller.spec.ts
 src/app.controller.ts
 src/app.module.ts
 src/app.service.ts
@@ -16,7 +15,6 @@ src/auth/auth.service.ts
 src/auth/dto
 src/auth/dto/auth.dto.ts
 src/auth/supabase-auth
-src/auth/supabase-auth/supabase-auth.guard.spec.ts
 src/auth/supabase-auth/supabase-auth.guard.ts
 src/auth/types
 src/auth/types/auth.types.ts
@@ -44,31 +42,6 @@ src/users/users.service.ts
 🧠 CONTENIDO DE ARCHIVOS (texto)
 ===========================
 
-
---- src/app.controller.spec.ts ---
-
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-
-describe('AppController', () => {
-  let appController: AppController;
-
-  beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
-      controllers: [AppController],
-      providers: [AppService],
-    }).compile();
-
-    appController = app.get<AppController>(AppController);
-  });
-
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
-    });
-  });
-});
 
 --- src/app.controller.ts ---
 
@@ -457,16 +430,6 @@ export class ResetPasswordDto {
   @IsString() @MinLength(6) new_password!: string;
 }
 
---- src/auth/supabase-auth/supabase-auth.guard.spec.ts ---
-
-import { SupabaseAuthGuard } from './supabase-auth.guard';
-
-describe('SupabaseAuthGuard', () => {
-  it('should be defined', () => {
-    expect(new SupabaseAuthGuard()).toBeDefined();
-  });
-});
-
 --- src/auth/supabase-auth/supabase-auth.guard.ts ---
 
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
@@ -476,13 +439,7 @@ import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
 import { UsersService } from 'src/users/users.service';
-
-type JwtPayload = {
-  sub: string;
-  email?: string;
-  exp?: number;
-  [k: string]: any;
-};
+import { SupabaseJwtPayload } from '../types/auth.types';
 
 @Injectable()
 export class SupabaseAuthGuard implements CanActivate {
@@ -507,7 +464,7 @@ export class SupabaseAuthGuard implements CanActivate {
     if (!secret) throw new UnauthorizedException('JWT secret not configured');
 
     try {
-      const payload = jwt.verify(token, secret, { algorithms: ['HS256'] }) as JwtPayload;
+      const payload = jwt.verify(token, secret, { algorithms: ['HS256'] }) as SupabaseJwtPayload;
       (request as any).user = payload;
 
       if (payload?.email) {
@@ -540,6 +497,22 @@ export type Tokens = {
   refresh_token: string;
 };
 
+export interface SupabaseJwtPayload {
+  sub: string;   
+  email?: string;
+  aud?: string;
+  exp?: number;
+  iat?: number;
+  iss?: string;
+  role?: string;      
+  phone?: string;
+  amr?: unknown[];
+  aal?: string;
+  session_id?: string;
+  app_metadata?: Record<string, unknown>;
+  user_metadata?: Record<string, unknown>;
+  [k: string]: unknown;
+}
 --- src/common/decorators/current-user.decorator.ts ---
 
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
@@ -580,8 +553,7 @@ import { Reflector } from '@nestjs/core';
 import { ROLES_KEY, RoleName } from '../decorators/roles.decorator';
 import { UsersService } from '../../users/users.service';
 import { User } from '../../users/entities/user.entity';
-
-type JwtPayload = { email?: string; sub?: string; [k: string]: any };
+import { SupabaseJwtPayload } from 'src/auth/types/auth.types';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -604,7 +576,7 @@ export class RolesGuard implements CanActivate {
     let user: User | null = (req.currentUser as User | undefined) ?? null;
     
     if (!user) {
-      const jwtPayload = req.user as JwtPayload | undefined;
+      const jwtPayload = req.user as SupabaseJwtPayload | undefined;
       const email = jwtPayload?.email;
       if (!email) throw new UnauthorizedException('User email not found in token');
 
@@ -679,17 +651,17 @@ bootstrap();
 
 --- src/types/express.d.ts ---
 
+import type { SupabaseJwtPayload } from '../auth/types/auth.types';
 import { User } from '../users/entities/user.entity';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: any;      
-      currentUser?: User;  
+      user?: SupabaseJwtPayload; 
+      currentUser?: User;
     }
   }
 }
-
 --- src/users/dto/update-role.dto.ts ---
 
 import { ApiProperty } from '@nestjs/swagger';
