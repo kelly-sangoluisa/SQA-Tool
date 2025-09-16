@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
 import type { Response, Request } from 'express';
-import { Public } from '../common/decorators/public.decorator';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { PUBLIC } from '../common/decorators/public.decorator';
+import { CURRENT_USER } from '../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { AuthService } from './auth.service';
 import { SignInDto, SignUpDto, ForgotPasswordDto, RefreshDto, ResetPasswordDto } from './dto/auth.dto';
@@ -28,7 +28,7 @@ function cookieOpts(config: ConfigService, maxAgeMs?: number) {
 export class AuthController {
   constructor(private readonly auth: AuthService, private readonly cfg: ConfigService) {}
 
-  @Public()
+  @PUBLIC()
   @Post('signup')
   @ApiOperation({ summary: 'Registrar evaluador' })
   @ApiBody({ type: SignUpDto })
@@ -38,7 +38,7 @@ export class AuthController {
     return { message: 'Evaluator account created', user };
   }
 
-  @Public()
+  @PUBLIC()
   @Post('signin')
   @ApiOperation({ summary: 'Iniciar sesión' })
   @ApiBody({ type: SignInDto })
@@ -52,7 +52,7 @@ export class AuthController {
     return { message: 'Signed in' };
   }
 
-  @Public()
+  @PUBLIC()
   @Post('forgot-password')
   @ApiOperation({ summary: 'Enviar enlace de reset' })
   @ApiBody({ type: ForgotPasswordDto })
@@ -62,7 +62,7 @@ export class AuthController {
     return { message: 'If the email exists, a reset link was sent' };
   }
 
-  @Public()
+  @PUBLIC()
   @Post('refresh')
   @ApiOperation({ summary: 'Refrescar tokens' })
   @ApiBody({ type: RefreshDto })
@@ -80,7 +80,7 @@ export class AuthController {
     return { message: 'Refreshed' };
   }
 
-  @Public()
+  @PUBLIC()
   @Post('reset-password')
   @ApiOperation({ summary: 'Aplicar nueva contraseña con access_token del link' })
   @ApiBody({ type: ResetPasswordDto })
@@ -90,7 +90,7 @@ export class AuthController {
     return { message: 'Password reset' };
   }
 
-  @Public()
+  @PUBLIC()
   @Post('signout')
   @HttpCode(200)
   @ApiOperation({ summary: 'Cerrar sesión' })
@@ -111,7 +111,7 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'No autenticado' })
   @ApiBearerAuth('bearer')
   @ApiCookieAuth('sb-access-token')
-  me(@CurrentUser() user: User) {
+  me(@CURRENT_USER() user: User) {
     return user;
   }
 }

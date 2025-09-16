@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Patch } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { Roles } from '../common/decorators/roles.decorator';
+import { ROLES } from '../common/decorators/roles.decorator';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiCookieAuth, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
@@ -12,7 +12,7 @@ import { User } from './entities/user.entity';
 export class UsersController {
   constructor(private readonly service: UsersService) {}
 
-  @Roles('admin')
+  @ROLES('admin')
   @Get()
   @ApiOperation({ summary: 'Listar usuarios (solo admin)' })
   @ApiOkResponse({ description: 'Lista de usuarios', type: User, isArray: true })
@@ -22,7 +22,7 @@ export class UsersController {
     return this.service.findAll();
   }
 
-  @Roles('admin', 'evaluator')
+  @ROLES('admin', 'evaluator')
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un usuario por ID (admin o evaluator)' })
   @ApiParam({ name: 'id', type: Number, example: 1, description: 'ID del usuario' })
@@ -34,7 +34,7 @@ export class UsersController {
     return this.service.findOne(id);
   }
 
-  @Roles('admin')
+  @ROLES('admin')
   @Patch(':id/role')
   @ApiOperation({ summary: 'Actualizar rol de un usuario (solo admin)' })
   @ApiParam({ name: 'id', type: Number, example: 1, description: 'ID del usuario' })

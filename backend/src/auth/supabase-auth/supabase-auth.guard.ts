@@ -4,8 +4,8 @@ import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
-import { UsersService } from 'src/users/users.service';
-import { SupabaseJwtPayload } from '../types/auth.types';
+import { UsersService } from '../../users/users.service';
+import { ISupabaseJwtPayload } from '../types/auth.types';
 
 @Injectable()
 export class SupabaseAuthGuard implements CanActivate {
@@ -30,7 +30,7 @@ export class SupabaseAuthGuard implements CanActivate {
     if (!secret) throw new UnauthorizedException('JWT secret not configured');
 
     try {
-      const payload = jwt.verify(token, secret, { algorithms: ['HS256'] }) as SupabaseJwtPayload;
+      const payload = jwt.verify(token, secret, { algorithms: ['HS256'] }) as ISupabaseJwtPayload;
       (request as any).user = payload;
 
       if (payload?.email) {
