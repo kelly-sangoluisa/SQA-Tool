@@ -12,7 +12,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  pull-requests: read  # Permite que SonarCloud decore los PRs con los resultados
+  contents: read
+  pull-requests: write  
 
 jobs:
   sonarcloud:
@@ -24,7 +25,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Necesario para analizar todos los commits
+          fetch-depth: 0
 
       # Configurar Node.js
       - name: Setup Node.js
@@ -59,4 +60,5 @@ jobs:
             -Dsonar.organization=kelly-sangoluisa
             -Dsonar.sources=frontend,backend
             -Dsonar.sourceEncoding=UTF-8
+            ${{ github.event_name == 'pull_request' && format('-Dsonar.pullrequest.key={0} -Dsonar.pullrequest.branch={1} -Dsonar.pullrequest.base={2}', github.event.pull_request.number, github.head_ref, github.base_ref) }}
           projectBaseDir: .
