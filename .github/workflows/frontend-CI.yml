@@ -1,4 +1,4 @@
-name: dFrontend CI
+name: Frontend CI
 
 on:
   push:
@@ -7,28 +7,31 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  commitlint:
-    name: Validate commits
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  # TODO: Activar commitlint cuando se configure correctamente
+  # Requiere: pnpm add -D @commitlint/cli @commitlint/config-conventional
+  # y crear: frontend/commitlint.config.js
+  # commitlint:
+  #   name: Validate commits
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'pull_request'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
 
-      - name: Validate PR title
-        run: echo "${{ github.event.pull_request.title }}" | npx commitlint
-        working-directory: frontend
+  #     - name: Validate PR title
+  #       run: echo "${{ github.event.pull_request.title }}" | npx commitlint
+  #       working-directory: frontend
 
-      - name: Validate commits
-        if: github.event.pull_request.commits > 1
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
-        working-directory: frontend
+  #     - name: Validate commits
+  #       if: github.event.pull_request.commits > 1
+  #       run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+  #       working-directory: frontend
 
   lint:
     name: Lint
