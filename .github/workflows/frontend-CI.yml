@@ -19,20 +19,6 @@ jobs:
   #       with:
   #         fetch-depth: 0
 
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: 20
-
-  #     - name: Validate PR title
-  #       run: echo "${{ github.event.pull_request.title }}" | npx commitlint
-  #       working-directory: frontend
-
-  #     - name: Validate commits
-  #       if: github.event.pull_request.commits > 1
-  #       run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
-  #       working-directory: frontend
-
   lint:
     name: Lint
     runs-on: ubuntu-latest
