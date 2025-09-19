@@ -9,56 +9,68 @@ on:
     branches:
       - main
       - develop
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pull-requests: write  
 
 jobs:
-  sonarcloud:
-    name: SonarCloud Scan
+  analyze-backend:
+    name: SonarCloud Backend
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout del repo
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Configurar Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 18
 
-      # Configurar pnpm
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.15.0
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm install
 
-      # Instalar dependencias frontend
-      - name: Install dependencies frontend
-        run: pnpm install
-        working-directory: frontend
-
-      # Instalar dependencias backend
-      - name: Install dependencies backend
-        run: pnpm install
-        working-directory: backend
-
-      # Ejecutar SonarCloud
-      - name: Analyze with SonarCloud
-        uses: SonarSource/sonarcloud-github-action@v2.2.0
+      - name: Run SonarCloud analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          cd backend
+          npx sonar-scanner \
+            --define sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            --define sonar.projectKey="kelly-sangoluisa_SQA-Tool" \
+            --define sonar.organization="kelly-sangoluisa" \
+            --define sonar.sources=. \
+            --define sonar.exclusions=**/node_modules/**,**/dist/** \
+            --define sonar.host.url="https://sonarcloud.io"
+
+  analyze-frontend:
+    name: SonarCloud Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          args: >
-            -Dsonar.projectKey=kelly-sangoluisa_SQA-Tool
-            -Dsonar.organization=kelly-sangoluisa
-            -Dsonar.sources=frontend,backend
-            -Dsonar.sourceEncoding=UTF-8
-            ${{ github.event_name == 'pull_request' && format('-Dsonar.pullrequest.key={0} -Dsonar.pullrequest.branch={1} -Dsonar.pullrequest.base={2}', github.event.pull_request.number, github.head_ref, github.base_ref) }}
-          projectBaseDir: .
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Run SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          cd frontend
+          npx sonar-scanner \
+            --define sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            --define sonar.projectKey="kelly-sangoluisa_SQA-Tool" \
+            --define sonar.organization="kelly-sangoluisa" \
+            --define sonar.sources=. \
+            --define sonar.exclusions=**/node_modules/**,**/.next/** \
+            --define sonar.host.url="https://sonarcloud.io"
