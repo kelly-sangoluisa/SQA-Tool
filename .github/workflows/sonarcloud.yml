@@ -1,0 +1,76 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  analyze-backend:
+    name: SonarCloud Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm install
+
+      - name: Run SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          cd backend
+          npx sonar-scanner \
+            --define sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            --define sonar.projectKey="kelly-sangoluisa_SQA-Tool" \
+            --define sonar.organization="kelly-sangoluisa" \
+            --define sonar.sources=. \
+            --define sonar.exclusions=**/node_modules/**,**/dist/** \
+            --define sonar.host.url="https://sonarcloud.io"
+
+  analyze-frontend:
+    name: SonarCloud Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Run SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          cd frontend
+          npx sonar-scanner \
+            --define sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            --define sonar.projectKey="kelly-sangoluisa_SQA-Tool" \
+            --define sonar.organization="kelly-sangoluisa" \
+            --define sonar.sources=. \
+            --define sonar.exclusions=**/node_modules/**,**/.next/** \
+            --define sonar.host.url="https://sonarcloud.io"
