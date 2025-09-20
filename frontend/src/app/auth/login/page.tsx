@@ -24,10 +24,10 @@ export default function LoginPage() {
       }
 
       if (result.data) {
-        // Store user data in localStorage
-        localStorage.setItem('user', JSON.stringify(result.data.user));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user', JSON.stringify(result.data.user));
+        }
         
-        // Redirect to dashboard or home page
         router.push('/dashboard');
       }
       
