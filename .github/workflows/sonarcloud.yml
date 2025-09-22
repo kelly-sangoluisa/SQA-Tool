@@ -11,8 +11,8 @@ on:
       - develop
 
 jobs:
-  analyze-backend:
-    name: SonarCloud Backend
+  sonarcloud-analyze:
+    name: SonarCloud Monorepo
     runs-on: ubuntu-latest
 
     steps:
@@ -26,51 +26,28 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install Backend Dependencies
         run: |
           cd backend
           npm install
 
-      - name: Run SonarCloud analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          cd backend
-          npx sonar-scanner \
-            --define sonar.login="${{ secrets.SONAR_TOKEN }}" \
-            --define sonar.projectKey="kelly-sangoluisa_SQA-Tool" \
-            --define sonar.organization="kelly-sangoluisa" \
-            --define sonar.sources=. \
-            --define sonar.exclusions=**/node_modules/**,**/dist/** \
-            --define sonar.host.url="https://sonarcloud.io"
-
-  analyze-frontend:
-    name: SonarCloud Frontend
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Install dependencies
+      - name: Install Frontend Dependencies
         run: |
           cd frontend
           npm install
 
-      - name: Run SonarCloud analysis
+      - name: Run SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          cd frontend
           npx sonar-scanner \
             --define sonar.login="${{ secrets.SONAR_TOKEN }}" \
             --define sonar.projectKey="kelly-sangoluisa_SQA-Tool" \
             --define sonar.organization="kelly-sangoluisa" \
-            --define sonar.sources=. \
-            --define sonar.exclusions=**/node_modules/**,**/.next/** \
+            --define sonar.sources="backend/src,frontend/src,frontend/components" \
+            --define sonar.tests="backend/test" \
+            --define sonar.exclusions="**/node_modules/**,**/dist/**,**/.next/**,**/coverage/**,**/test/**,**/*.spec.ts,**/*.test.ts,**/*.spec.tsx,**/*.test.tsx" \
+            --define sonar.test.exclusions="**/*.spec.ts,**/*.test.ts,**/*.spec.tsx,**/*.test.tsx" \
+            --define sonar.coverage.exclusions="**/*.spec.ts,**/*.test.ts,**/test/**,**/*.spec.tsx,**/*.test.tsx" \
+            --define sonar.typescript.lcov.reportPaths="backend/coverage/lcov.info,frontend/coverage/lcov.info" \
             --define sonar.host.url="https://sonarcloud.io"
