@@ -41,7 +41,7 @@ async function apiRequest<T>(
     }
 
     return { data };
-  } catch (error) {
+  } catch (_error) { // Cambiado 'error' por '_error'
     return {
       error: {
         message: 'Error de conexión. Verifica tu conexión a internet.',
