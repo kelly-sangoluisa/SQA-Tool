@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem('user', JSON.stringify(result.data));
         }
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Error al obtener información del usuario');
       setUser(null);
     } finally {
