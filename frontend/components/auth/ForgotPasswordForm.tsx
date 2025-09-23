@@ -17,7 +17,7 @@ export default function ForgotPasswordForm({
   isLoading = false, 
   error, 
   success 
-}: ForgotPasswordFormProps) {
+}: Readonly<ForgotPasswordFormProps>) {
   const {
     register,
     handleSubmit,
@@ -27,7 +27,7 @@ export default function ForgotPasswordForm({
   const handleFormSubmit = async (data: ForgotPasswordRequest) => {
     await onSubmit({
       ...data,
-      redirectTo: `${window.location.origin}/auth/reset-password`
+      redirectTo: `${globalThis.location.origin}/auth/reset-password`
     });
   };
 
