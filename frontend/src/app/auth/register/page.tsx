@@ -22,7 +22,7 @@ export default function RegisterPage() {
         data.email, 
         data.password, 
         data.name,
-        `${window.location.origin}/auth/verify`
+        `${globalThis.location.origin}/auth/verify`
       );
       
       if (result.error) {

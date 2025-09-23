@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
     try {
       const result = await authAPI.forgotPassword(
         data.email,
-        `${window.location.origin}/auth/reset-password`
+        `${globalThis.location.origin}/auth/reset-password`
       );
       
       if (result.error) {
