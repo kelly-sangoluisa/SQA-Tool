@@ -20,7 +20,7 @@ export default function ResetPasswordForm({
   error, 
   success,
   accessToken 
-}: ResetPasswordFormProps) {
+}: Readonly<ResetPasswordFormProps>) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   

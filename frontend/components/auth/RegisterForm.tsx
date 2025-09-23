@@ -13,7 +13,7 @@ interface RegisterFormProps {
   success?: string | null;
 }
 
-export default function RegisterForm({ onSubmit, isLoading = false, error, success }: RegisterFormProps) {
+export default function RegisterForm({ onSubmit, isLoading = false, error, success }: Readonly<RegisterFormProps>) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   

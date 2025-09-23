@@ -41,11 +41,13 @@ async function apiRequest<T>(
     }
 
     return { data };
-  } catch (_error) { // Cambiado 'error' por '_error'
+  } catch (error) { // Manejar la excepción correctamente
+    console.error('API request error:', error);
     return {
       error: {
         message: 'Error de conexión. Verifica tu conexión a internet.',
         statusCode: 0,
+        error: error instanceof Error ? error.message : String(error),
       }
     };
   }
