@@ -18,6 +18,23 @@ interface PasswordInputProps {
   disabled?: boolean;
 }
 
+// Validaciones integradas en el componente
+export const passwordValidation = {
+  required: 'La contraseña es requerida',
+  minLength: {
+    value: 6,
+    message: 'La contraseña debe tener al menos 6 caracteres'
+  }
+};
+
+export const strongPasswordValidation = {
+  ...passwordValidation,
+  pattern: {
+    value: /^(?=.*[A-Za-z])(?=.*\d)/,
+    message: 'La contraseña debe contener al menos una letra y un número'
+  }
+};
+
 const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
   ({ id, label, placeholder = "••••••••", required, error, helperText, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);

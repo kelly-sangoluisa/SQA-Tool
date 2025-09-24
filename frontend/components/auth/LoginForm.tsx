@@ -1,9 +1,9 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
-import Link from 'next/link';
-import { Input, Button, Alert} from '@/components/shared';
-import PasswordInput from './PasswordInput';
+import { Button, Alert } from '@/components/shared';
+import { EmailInput, emailValidation } from '@/components/shared';
+import { PasswordInput, AuthLink, passwordValidation } from '@/components/auth';
 import { SignInRequest } from '@/lib/auth/types/auth';
 
 interface LoginFormProps {
@@ -41,26 +41,10 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
       )}
 
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-        <Input
-          id="email"
-          label="Correo Electrónico"
-          type="email"
-          placeholder="usuario@ejemplo.com"
+        <EmailInput
           required
           error={errors.email?.message}
-          icon={
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-            </svg>
-          }
-          {...register('email', {
-            required: 'El correo electrónico es requerido',
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: 'Correo electrónico inválido'
-            }
-          })}
+          {...register('email', emailValidation)}
         />
 
         <PasswordInput
@@ -68,13 +52,7 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
           label="Contraseña"
           required
           error={errors.password?.message}
-          {...register('password', {
-            required: 'La contraseña es requerida',
-            minLength: {
-              value: 6,
-              message: 'La contraseña debe tener al menos 6 caracteres'
-            }
-          })}
+          {...register('password', passwordValidation)}
         />
 
         <div className="flex items-center justify-between">
@@ -90,12 +68,9 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
             </label>
           </div>
 
-          <Link 
-            href="/auth/forgot-password"
-            className="text-sm font-medium text-[#4E5EA3] hover:text-[#3d4a82] dark:text-[#8b9dc3] dark:hover:text-[#4E5EA3]"
-          >
+          <AuthLink href="/auth/forgot-password">
             ¿Olvidaste tu contraseña?
-          </Link>
+          </AuthLink>
         </div>
 
         <Button
@@ -111,12 +86,9 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
       <div className="text-center">
         <p className="text-sm text-gray-600 dark:text-gray-400">
           ¿No tienes una cuenta?{' '}
-          <Link 
-            href="/auth/register"
-            className="font-medium text-[#4E5EA3] hover:text-[#3d4a82] dark:text-[#8b9dc3] dark:hover:text-[#4E5EA3]"
-          >
+          <AuthLink href="/auth/register">
             Regístrate aquí
-          </Link>
+          </AuthLink>
         </p>
       </div>
     </div>

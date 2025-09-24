@@ -17,6 +17,15 @@ interface EmailInputProps {
   disabled?: boolean;
 }
 
+// Validación integrada en el componente
+export const emailValidation = {
+  required: 'El correo electrónico es requerido',
+  pattern: {
+    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+    message: 'Correo electrónico inválido'
+  }
+};
+
 const EmailInput = forwardRef<HTMLInputElement, EmailInputProps>(
   ({ 
     id = "email",

@@ -1,41 +1,45 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
-import { Input, Button, Alert, EmailInput } from '@/components/shared';
-import { PasswordInput, AuthLink } from '@/components/auth';
-import { SignUpRequest } from '@/lib/auth/types/auth';
+import { Button, Alert } from '@/components/shared';
+import { EmailInput, emailValidation } from '@/components/shared';
+import { AuthLink } from '@/components/auth';
 
-interface RegisterFormProps {
-  onSubmit: (data: SignUpRequest) => Promise<void>;
+interface ForgotPasswordRequest {
+  email: string;
+}
+
+interface ForgotPasswordFormProps {
+  onSubmit: (data: ForgotPasswordRequest) => Promise<void>;
   isLoading?: boolean;
   error?: string | null;
   success?: string | null;
 }
 
-export default function RegisterForm({ onSubmit, isLoading = false, error, success }: Readonly<RegisterFormProps>) {
+export default function ForgotPasswordForm({ 
+  onSubmit, 
+  isLoading = false, 
+  error, 
+  success 
+}: Readonly<ForgotPasswordFormProps>) {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors }
-  } = useForm<SignUpRequest & { confirmPassword: string }>();
+  } = useForm<ForgotPasswordRequest>();
 
-  const password = watch('password');
-
-  const handleFormSubmit = async (data: SignUpRequest & { confirmPassword: string }) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { confirmPassword, ...submitData } = data;
-    await onSubmit(submitData);
+  const handleFormSubmit = async (data: ForgotPasswordRequest) => {
+    await onSubmit(data);
   };
 
   return (
     <div className="w-full max-w-md space-y-6">
       <div className="text-center">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          Crear Cuenta
+          Recuperar Contraseña
         </h2>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Completa los datos para registrarte
+          Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña
         </p>
       </div>
 
@@ -52,88 +56,11 @@ export default function RegisterForm({ onSubmit, isLoading = false, error, succe
       )}
 
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-        <Input
-          id="name"
-          label="Nombre Completo"
-          type="text"
-          placeholder="Juan Pérez"
-          required
-          error={errors.name?.message}
-          icon={
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-            </svg>
-          }
-          {...register('name', {
-            required: 'El nombre es requerido',
-            minLength: {
-              value: 2,
-              message: 'El nombre debe tener al menos 2 caracteres'
-            }
-          })}
-        />
-
         <EmailInput
           required
           error={errors.email?.message}
-          {...register('email', {
-            required: 'El correo electrónico es requerido',
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: 'Correo electrónico inválido'
-            }
-          })}
+          {...register('email', emailValidation)}
         />
-
-        <PasswordInput
-          id="password"
-          label="Contraseña"
-          required
-          error={errors.password?.message}
-          helperText="Mínimo 6 caracteres"
-          {...register('password', {
-            required: 'La contraseña es requerida',
-            minLength: {
-              value: 6,
-              message: 'La contraseña debe tener al menos 6 caracteres'
-            },
-            pattern: {
-              value: /^(?=.*[A-Za-z])(?=.*\d)/,
-              message: 'La contraseña debe contener al menos una letra y un número'
-            }
-          })}
-        />
-
-        <PasswordInput
-          id="confirmPassword"
-          label="Confirmar Contraseña"
-          required
-          error={errors.confirmPassword?.message}
-          {...register('confirmPassword', {
-            required: 'Confirma tu contraseña',
-            validate: value => value === password || 'Las contraseñas no coinciden'
-          })}
-        />
-
-        <div className="flex items-center">
-          <input
-            id="terms"
-            name="terms"
-            type="checkbox"
-            required
-            className="h-4 w-4 text-[#4E5EA3] focus:ring-[#4E5EA3] border-gray-300 rounded"
-          />
-          <label htmlFor="terms" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-            Acepto los{' '}
-            <AuthLink href="/terms" target="_blank">
-              términos y condiciones
-            </AuthLink>{' '}
-            y la{' '}
-            <AuthLink href="/privacy" target="_blank">
-              política de privacidad
-            </AuthLink>
-          </label>
-        </div>
 
         <Button
           type="submit"
@@ -141,15 +68,22 @@ export default function RegisterForm({ onSubmit, isLoading = false, error, succe
           loading={isLoading}
           size="lg"
         >
-          {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
+          {isLoading ? 'Enviando...' : 'Enviar Enlace de Recuperación'}
         </Button>
       </form>
 
-      <div className="text-center">
+      <div className="text-center space-y-2">
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          ¿Ya tienes una cuenta?{' '}
+          ¿Recordaste tu contraseña?{' '}
           <AuthLink href="/auth/login">
-            Inicia sesión aquí
+            Inicia sesión
+          </AuthLink>
+        </p>
+        
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          ¿No tienes cuenta?{' '}
+          <AuthLink href="/auth/register">
+            Regístrate aquí
           </AuthLink>
         </p>
       </div>

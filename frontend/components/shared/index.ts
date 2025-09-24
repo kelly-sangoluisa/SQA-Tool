@@ -1,6 +1,6 @@
 export { default as Input } from './Input';
 export type { InputProps } from './Input';
-export {default as EmailInput} from './EmailInput';
+export {default as EmailInput , emailValidation} from './EmailInput';
 
 export { default as Button } from './Button';
 export type { ButtonProps } from './Button';
@@ -27,3 +27,6 @@ export type { LoadingProps, FullPageLoadingProps } from './Loading';
 
 export { default as Alert } from './Alert';
 export type { AlertProps } from './Alert';
+
+// Exportar íconos para eliminar duplicación
+export { UserIcon, EmailIcon } from './Icons';

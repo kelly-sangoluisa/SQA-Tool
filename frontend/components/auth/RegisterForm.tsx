@@ -1,9 +1,9 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
-import Link from 'next/link';
-import { Input, Button, Alert} from '@/components/shared';
-import PasswordInput from './PasswordInput';
+import { Input, Button, Alert, UserIcon } from '@/components/shared';
+import { EmailInput, emailValidation } from '@/components/shared';
+import { PasswordInput, AuthLink, strongPasswordValidation } from '@/components/auth';
 import { SignUpRequest } from '@/lib/auth/types/auth';
 
 interface RegisterFormProps {
@@ -60,11 +60,7 @@ export default function RegisterForm({ onSubmit, isLoading = false, error, succe
           placeholder="Juan Pérez"
           required
           error={errors.name?.message}
-          icon={
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-            </svg>
-          }
+          icon={<UserIcon />}
           {...register('name', {
             required: 'El nombre es requerido',
             minLength: {
@@ -74,26 +70,10 @@ export default function RegisterForm({ onSubmit, isLoading = false, error, succe
           })}
         />
 
-        <Input
-          id="email"
-          label="Correo Electrónico"
-          type="email"
-          placeholder="usuario@ejemplo.com"
+        <EmailInput
           required
           error={errors.email?.message}
-          icon={
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-            </svg>
-          }
-          {...register('email', {
-            required: 'El correo electrónico es requerido',
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: 'Correo electrónico inválido'
-            }
-          })}
+          {...register('email', emailValidation)}
         />
 
         <PasswordInput
@@ -102,17 +82,7 @@ export default function RegisterForm({ onSubmit, isLoading = false, error, succe
           required
           error={errors.password?.message}
           helperText="Mínimo 6 caracteres"
-          {...register('password', {
-            required: 'La contraseña es requerida',
-            minLength: {
-              value: 6,
-              message: 'La contraseña debe tener al menos 6 caracteres'
-            },
-            pattern: {
-              value: /^(?=.*[A-Za-z])(?=.*\d)/,
-              message: 'La contraseña debe contener al menos una letra y un número'
-            }
-          })}
+          {...register('password', strongPasswordValidation)}
         />
 
         <PasswordInput
@@ -136,21 +106,13 @@ export default function RegisterForm({ onSubmit, isLoading = false, error, succe
           />
           <label htmlFor="terms" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
             Acepto los{' '}
-            <Link 
-              href="/terms" 
-              className="text-[#4E5EA3] hover:text-[#3d4a82] underline"
-              target="_blank"
-            >
+            <AuthLink href="/terms" target="_blank">
               términos y condiciones
-            </Link>{' '}
+            </AuthLink>{' '}
             y la{' '}
-            <Link 
-              href="/privacy" 
-              className="text-[#4E5EA3] hover:text-[#3d4a82] underline"
-              target="_blank"
-            >
+            <AuthLink href="/privacy" target="_blank">
               política de privacidad
-            </Link>
+            </AuthLink>
           </label>
         </div>
 
@@ -167,12 +129,9 @@ export default function RegisterForm({ onSubmit, isLoading = false, error, succe
       <div className="text-center">
         <p className="text-sm text-gray-600 dark:text-gray-400">
           ¿Ya tienes una cuenta?{' '}
-          <Link 
-            href="/auth/login"
-            className="font-medium text-[#4E5EA3] hover:text-[#3d4a82] dark:text-[#8b9dc3] dark:hover:text-[#4E5EA3]"
-          >
+          <AuthLink href="/auth/login">
             Inicia sesión aquí
-          </Link>
+          </AuthLink>
         </p>
       </div>
     </div>
