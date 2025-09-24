@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext, useMemo } from 'react';
+import { useState, useEffect, createContext, useContext, useMemo, useCallback } from 'react';
 import { User } from '@/lib/auth/types/auth';
 import { authAPI } from '@/lib/auth/api/auth.api';
 
@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
     setIsClient(true);
   }, []);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       setIsLoading(true);
       const result = await authAPI.me();
@@ -52,9 +52,9 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await authAPI.signOut();
       setUser(null);
@@ -65,11 +65,11 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
-  };
+  }, []);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     await fetchUser();
-  };
+  }, [fetchUser]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
     }
 
     fetchUser();
-  }, [isClient]);
+  }, [isClient, fetchUser]);
 
   const value = useMemo(() => ({
     user,

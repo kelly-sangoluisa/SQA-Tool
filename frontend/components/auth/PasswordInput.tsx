@@ -10,7 +10,12 @@ interface PasswordInputProps {
   required?: boolean;
   error?: string;
   helperText?: string;
-  [key: string]: any; // Para props adicionales del register
+  // Props adicionales que se pasan al Input del register de react-hook-form
+  name?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  value?: string;
+  disabled?: boolean;
 }
 
 const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
