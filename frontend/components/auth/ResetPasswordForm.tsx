@@ -2,15 +2,15 @@
 
 import { useForm } from 'react-hook-form';
 import { Input, Button, Alert } from '@/components/shared';
-import { PasswordInput, AuthLink } from '@/components/auth';
+import { PasswordInput, AuthLink, strongPasswordValidation } from '@/components/auth';
 import { ResetPasswordRequest } from '@/lib/auth/types/auth';
 
 interface ResetPasswordFormProps {
-  onSubmit: (data: ResetPasswordRequest) => Promise<void>;
-  isLoading?: boolean;
-  error?: string | null;
-  success?: string | null;
-  accessToken?: string;
+  readonly onSubmit: (data: ResetPasswordRequest) => Promise<void>;
+  readonly isLoading?: boolean;
+  readonly error?: string | null;
+  readonly success?: string | null;
+  readonly accessToken?: string;
 }
 
 export default function ResetPasswordForm({ 
@@ -59,7 +59,11 @@ export default function ResetPasswordForm({
         <Button
           fullWidth
           size="lg"
-          onClick={() => window.location.href = '/auth/login'}
+          onClick={() => {
+            if (globalThis.window !== undefined) {
+              globalThis.window.location.href = '/auth/login';
+            }
+          }}
         >
           Ir a Iniciar Sesión
         </Button>
@@ -111,17 +115,7 @@ export default function ResetPasswordForm({
           helperText="Mínimo 6 caracteres con al menos una letra y un número"
           required
           error={errors.new_password?.message}
-          {...register('new_password', {
-            required: 'La nueva contraseña es requerida',
-            minLength: {
-              value: 6,
-              message: 'La contraseña debe tener al menos 6 caracteres'
-            },
-            pattern: {
-              value: /^(?=.*[A-Za-z])(?=.*\d)/,
-              message: 'La contraseña debe contener al menos una letra y un número'
-            }
-          })}
+          {...register('new_password', strongPasswordValidation)}
         />
 
         <PasswordInput

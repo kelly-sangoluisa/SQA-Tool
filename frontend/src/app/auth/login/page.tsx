@@ -24,7 +24,7 @@ export default function LoginPage() {
       }
 
       if (result.data) {
-        if (typeof globalThis.window !== 'undefined') {
+        if (globalThis.window !== undefined) {
           globalThis.window.localStorage.setItem('user', JSON.stringify(result.data.user));
         }
         
