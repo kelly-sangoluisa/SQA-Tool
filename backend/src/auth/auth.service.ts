@@ -9,8 +9,8 @@ import { Tokens } from './types/auth.types';
 
 @Injectable()
 export class AuthService {
-  private supabase: SupabaseClient;
-  private admin: SupabaseClient;
+  private readonly supabase: SupabaseClient;
+  private readonly admin: SupabaseClient;
 
   private getSupabaseUrl(): string {
     return this.config.get<string>('SUPABASE_URL')!;
