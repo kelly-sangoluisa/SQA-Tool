@@ -3,12 +3,12 @@
 import Link from 'next/link';
 
 interface AuthLinkProps {
-  href: string;
-  children: React.ReactNode;
-  target?: string;
+  readonly href: string;
+  readonly children: React.ReactNode;
+  readonly target?: string;
 }
 
-export default function AuthLink({ href, children, target }: AuthLinkProps) {
+export default function AuthLink({ href, children, target }: Readonly<AuthLinkProps>) {
   return (
     <Link 
       href={href}

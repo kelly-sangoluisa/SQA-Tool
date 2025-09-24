@@ -1,16 +1,15 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
-import { Input, Button, Alert, UserIcon } from '@/components/shared';
-import { EmailInput, emailValidation } from '@/components/shared';
+import { Input, Button, Alert, UserIcon, EmailInput, emailValidation } from '@/components/shared';
 import { PasswordInput, AuthLink, strongPasswordValidation } from '@/components/auth';
 import { SignUpRequest } from '@/lib/auth/types/auth';
 
 interface RegisterFormProps {
-  onSubmit: (data: SignUpRequest) => Promise<void>;
-  isLoading?: boolean;
-  error?: string | null;
-  success?: string | null;
+  readonly onSubmit: (data: SignUpRequest) => Promise<void>;
+  readonly isLoading?: boolean;
+  readonly error?: string | null;
+  readonly success?: string | null;
 }
 
 export default function RegisterForm({ onSubmit, isLoading = false, error, success }: Readonly<RegisterFormProps>) {

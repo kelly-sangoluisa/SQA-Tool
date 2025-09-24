@@ -1,19 +1,18 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
-import { Button, Alert } from '@/components/shared';
-import { EmailInput, emailValidation } from '@/components/shared';
+import { Button, Alert, EmailInput, emailValidation } from '@/components/shared';
 import { AuthLink } from '@/components/auth';
 
 interface ForgotPasswordRequest {
-  email: string;
+  readonly email: string;
 }
 
 interface ForgotPasswordFormProps {
-  onSubmit: (data: ForgotPasswordRequest) => Promise<void>;
-  isLoading?: boolean;
-  error?: string | null;
-  success?: string | null;
+  readonly onSubmit: (data: ForgotPasswordRequest) => Promise<void>;
+  readonly isLoading?: boolean;
+  readonly error?: string | null;
+  readonly success?: string | null;
 }
 
 export default function ForgotPasswordForm({ 

@@ -1,18 +1,17 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
-import { Button, Alert } from '@/components/shared';
-import { EmailInput, emailValidation } from '@/components/shared';
+import { Button, Alert, EmailInput, emailValidation } from '@/components/shared';
 import { PasswordInput, AuthLink, passwordValidation } from '@/components/auth';
 import { SignInRequest } from '@/lib/auth/types/auth';
 
 interface LoginFormProps {
-  onSubmit: (data: SignInRequest) => Promise<void>;
-  isLoading?: boolean;
-  error?: string | null;
+  readonly onSubmit: (data: SignInRequest) => Promise<void>;
+  readonly isLoading?: boolean;
+  readonly error?: string | null;
 }
 
-export default function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps) {
+export default function LoginForm({ onSubmit, isLoading = false, error }: Readonly<LoginFormProps>) {
   const {
     register,
     handleSubmit,

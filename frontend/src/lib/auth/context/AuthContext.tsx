@@ -32,8 +32,8 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
       if (result.error) {
         setError(result.error.message);
         setUser(null);
-        if (typeof globalThis.window !== 'undefined') {
-          localStorage.removeItem('user');
+        if (globalThis.window !== undefined) {
+          globalThis.window.localStorage.removeItem('user');
         }
         return;
       }
@@ -41,8 +41,8 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
       if (result.data) {
         setUser(result.data);
         setError(null);
-        if (typeof globalThis.window !== 'undefined') {
-          localStorage.setItem('user', JSON.stringify(result.data));
+        if (globalThis.window !== undefined) {
+          globalThis.window.localStorage.setItem('user', JSON.stringify(result.data));
         }
       }
     } catch (err) {
@@ -58,8 +58,8 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
     try {
       await authAPI.signOut();
       setUser(null);
-      if (typeof globalThis.window !== 'undefined') {
-        localStorage.removeItem('user');
+      if (globalThis.window !== undefined) {
+        globalThis.window.localStorage.removeItem('user');
       }
       globalThis.location.href = '/auth/login';
     } catch (error) {
@@ -74,14 +74,14 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
   useEffect(() => {
     if (!isClient) return;
     
-    if (typeof globalThis.window !== 'undefined') {
-      const storedUser = localStorage.getItem('user');
+    if (globalThis.window !== undefined) {
+      const storedUser = globalThis.window.localStorage.getItem('user');
       if (storedUser && storedUser !== 'undefined') {
         try {
           setUser(JSON.parse(storedUser));
         } catch (error) {
           console.error('Error parsing stored user:', error);
-          localStorage.removeItem('user');
+          globalThis.window.localStorage.removeItem('user');
         }
       }
     }

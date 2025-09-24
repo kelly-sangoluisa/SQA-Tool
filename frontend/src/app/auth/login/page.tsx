@@ -24,8 +24,8 @@ export default function LoginPage() {
       }
 
       if (result.data) {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('user', JSON.stringify(result.data.user));
+        if (typeof globalThis.window !== 'undefined') {
+          globalThis.window.localStorage.setItem('user', JSON.stringify(result.data.user));
         }
         
         router.push('/dashboard');
