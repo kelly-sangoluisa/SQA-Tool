@@ -81,9 +81,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Nueva Evaluación */}
-          <div 
+          <button 
             onClick={onNewEvaluation}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 cursor-pointer group hover:border-[#4E5EA3]"
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 group hover:border-[#4E5EA3] w-full text-left focus:outline-none focus:ring-2 focus:ring-[#4E5EA3] focus:ring-opacity-50"
           >
             <div className="flex items-center mb-4">
               <div className="p-3 bg-[#4E5EA3] rounded-lg group-hover:bg-[#59469A] transition-colors duration-200">
@@ -96,12 +96,12 @@ const Dashboard: React.FC<DashboardProps> = ({
             <p className="text-gray-600 text-sm leading-relaxed">
               Configure una nueva evaluación de calidad siguiendo los modelos parametrizados
             </p>
-          </div>
+          </button>
 
           {/* Evaluaciones Activas */}
-          <div 
+          <button 
             onClick={onActiveEvaluations}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 cursor-pointer group hover:border-[#3D6BA6]"
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 group hover:border-[#3D6BA6] w-full text-left focus:outline-none focus:ring-2 focus:ring-[#3D6BA6] focus:ring-opacity-50"
           >
             <div className="flex items-center mb-4">
               <div className="p-3 bg-[#3D6BA6] rounded-lg group-hover:bg-[#336791] transition-colors duration-200">
@@ -114,12 +114,12 @@ const Dashboard: React.FC<DashboardProps> = ({
             <p className="text-gray-600 text-sm leading-relaxed">
               Gestione evaluaciones en proceso y revise su estado
             </p>
-          </div>
+          </button>
 
           {/* Ingreso de Datos */}
-          <div 
+          <button 
             onClick={onIngresoData}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 cursor-pointer group hover:border-[#059669]"
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 group hover:border-[#059669] w-full text-left focus:outline-none focus:ring-2 focus:ring-[#059669] focus:ring-opacity-50"
           >
             <div className="flex items-center mb-4">
               <div className="p-3 bg-[#059669] rounded-lg group-hover:bg-[#047857] transition-colors duration-200">
@@ -132,12 +132,12 @@ const Dashboard: React.FC<DashboardProps> = ({
             <p className="text-gray-600 text-sm leading-relaxed">
               Ingrese y gestione los datos necesarios para las evaluaciones
             </p>
-          </div>
+          </button>
 
           {/* Reportes */}
-          <div 
+          <button 
             onClick={onReports}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 cursor-pointer group hover:border-[#1B72A5]"
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 group hover:border-[#1B72A5] w-full text-left focus:outline-none focus:ring-2 focus:ring-[#1B72A5] focus:ring-opacity-50"
           >
             <div className="flex items-center mb-4">
               <div className="p-3 bg-[#1B72A5] rounded-lg group-hover:bg-[#336791] transition-colors duration-200">
@@ -150,7 +150,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <p className="text-gray-600 text-sm leading-relaxed">
               Visualice resultados y genere reportes de evaluaciones completadas
             </p>
-          </div>
+          </button>
         </div>
 
         {/* Recent Evaluations Table */}
