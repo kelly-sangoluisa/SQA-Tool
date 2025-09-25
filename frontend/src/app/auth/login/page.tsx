@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import { LoginForm } from '@/components/auth';
 import { SignInRequest } from '@/lib/auth/types/auth';
 import { authAPI } from '@/lib/auth/api/auth.api';
+import { useAuth } from '@/lib/auth/context/AuthContext';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { refreshUser } = useAuth();
 
   const handleLogin = async (data: SignInRequest) => {
     setIsLoading(true);
@@ -24,10 +26,11 @@ export default function LoginPage() {
       }
 
       if (result.data) {
+        
         if (globalThis.window !== undefined) {
           globalThis.window.localStorage.setItem('user', JSON.stringify(result.data.user));
         }
-        
+        await refreshUser();
         router.push('/dashboard');
       }
       
