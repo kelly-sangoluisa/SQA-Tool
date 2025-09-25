@@ -2,12 +2,12 @@ name: Frontend CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
-  # TODO: Activar commitlint cuando se configure correctamente
+  # Activar commitlint cuando se configure correctamente
   # Requiere: pnpm add -D @commitlint/cli @commitlint/config-conventional
   # y crear: frontend/commitlint.config.js
   # commitlint:
