@@ -1,40 +1,52 @@
 'use client';
-
+import { useEffect } from 'react';
+import { useAuth } from '../../hooks/auth/useAuth';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth/context/AuthContext';
-import Dashboard from '@/components/dashboard/Dashboard';
+import { Loading } from '../../components/shared/Loading';
+import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
+import { DashboardHome } from '../../components/dashboard/DashboardHome';
 
 export default function DashboardPage() {
+  const { user, isLoading, error, checkAuth } = useAuth();
   const router = useRouter();
-  const { logout } = useAuth();
 
-  const handleNewEvaluation = () => {
-    router.push('/configuracion');
-  };
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
-  const handleActiveEvaluations = () => {
-    router.push('/shared/evaluacionesHechas');
-  };
+  useEffect(() => {
+    if (!isLoading && !user && !error) {
+      router.push('/auth/login');
+    }
+  }, [user, isLoading, error, router]);
 
-  const handleReports = () => {
-    router.push('/reportes');
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loading />
+      </div>
+    );
+  }
 
-  const handleIngresoData = () => {
-    router.push('/ingresoDatos');
-  };
-
-  const handleLogout = async () => {
-    await logout();
-  };
+  if (error || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error: {error || 'No autenticado'}</p>
+          <button
+            onClick={() => router.push('/auth/login')}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Ir a Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <Dashboard 
-      onNewEvaluation={handleNewEvaluation}
-      onActiveEvaluations={handleActiveEvaluations}
-      onReports={handleReports}
-      onIngresoData={handleIngresoData}
-      onLogout={handleLogout}
-    />
+    <DashboardLayout>
+      <DashboardHome />
+    </DashboardLayout>
   );
 }
