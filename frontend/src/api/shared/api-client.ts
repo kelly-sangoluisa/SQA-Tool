@@ -11,7 +11,7 @@ export class ApiClient {
     const url = `${this.baseURL}${endpoint}`;
     
     const config: RequestInit = {
-      credentials: 'include', // ¡IMPORTANTE! Para las cookies de Supabase
+      credentials: 'include', // Para las cookies de Supabase
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,

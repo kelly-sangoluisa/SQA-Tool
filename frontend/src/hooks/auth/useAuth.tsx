@@ -1,15 +1,7 @@
 'use client';
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { authApi } from '../../api/auth/auth-api';
-import { 
-  User, 
-  SignInData, 
-  SignUpData, 
-  ForgotPasswordData, 
-  ResetPasswordData,
-  AuthState, 
-  AuthContextType 
-} from '../../types/auth.types';
+import { SignInData, SignUpData, ForgotPasswordData, ResetPasswordData, AuthState, AuthContextType } from '../../types/auth.types';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -17,31 +9,92 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Helpers para localStorage SEGURO
+const getUserFromStorage = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem('user_profile'); // Solo perfil, NO token
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveUserToStorage = (user: any) => {
+  if (typeof window === 'undefined') return;
+  // IMPORTANTE: Solo guardar datos NO sensibles
+  const safeUser = {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    // NO guardar: token, password, ni datos sensibles
+  };
+  localStorage.setItem('user_profile', JSON.stringify(safeUser));
+};
+
+const clearUserFromStorage = () => {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('user_profile');
+};
+
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    isLoading: true,
-    isAuthenticated: false,
-    error: null
+  const [state, setState] = useState<AuthState>(() => {
+    // Inicialización optimista SEGURA
+    const storedUser = getUserFromStorage();
+    return {
+      user: storedUser, // Solo datos no sensibles del localStorage
+      isLoading: !storedUser, // Si hay usuario en cache, no loading
+      isAuthenticated: !!storedUser, // Asumir autenticado si hay cache
+      error: null
+    };
   });
 
-  // Flag para evitar checkAuth después del logout
   const [hasLoggedOut, setHasLoggedOut] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
-  // Verificar autenticación al cargar - MEMOIZADA para evitar recreación
+  // Detectar cuando estamos en el cliente
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const checkAuth = useCallback(async () => {
-  // No hacer checkAuth si el usuario se ha deslogueado
-  if (hasLoggedOut) {
-    setState(prev => ({
-      ...prev,
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null
-    }));
-    return;
-  }
+    if (!isClient || hasLoggedOut) {
+      setState(prev => ({
+        ...prev,
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null
+      }));
+      return;
+    }
 
+    // Si hay usuario en cache, verificar en background sin loading
+    if (state.user) {
+      try {
+        const user = await authApi.getMe();
+        setState(prev => ({
+          ...prev,
+          user,
+          isAuthenticated: true,
+          error: null
+        }));
+        saveUserToStorage(user); // Actualizar cache seguro
+      } catch (error) {
+        // Token expiró o es inválido
+        setState(prev => ({
+          ...prev,
+          user: null,
+          isAuthenticated: false,
+          error: null
+        }));
+        clearUserFromStorage();
+      }
+      return;
+    }
+
+    // Solo mostrar loading si NO hay cache
     setState(prev => ({ ...prev, isLoading: true }));
     
     try {
@@ -53,8 +106,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isLoading: false,
         error: null
       }));
+      saveUserToStorage(user); // Guardar de forma segura
     } catch (error) {
-      // Silenciar completamente los errores 401/403 (no autorizado) al inicio
       const isAuthError = error instanceof Error && 
         (error.message.includes('401') || 
          error.message.includes('403') || 
@@ -69,65 +122,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
         error: isAuthError ? null : 'Error de conexión'
       }));
 
-      // No hacer console.error para errores de autenticación esperados
+      clearUserFromStorage();
+
       if (!isAuthError) {
         console.error('Error inesperado en checkAuth:', error);
       }
     }
-  }, [hasLoggedOut]);
+  }, [isClient, hasLoggedOut, state.user]);
 
   const signIn = useCallback(async (data: SignInData) => {
-  setState(prev => ({ ...prev, isLoading: true, error: null }));
-  
-  try {
-    // Resetear el flag de logout al hacer login
-    setHasLoggedOut(false);
-    
-    // Hacer login primero
-    await authApi.signIn(data);
-    
-    // CRÍTICO: Esperar a que el token se guarde en localStorage
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    // Ahora sí hacer checkAuth
-    await checkAuth();
-    
-  } catch (error) {
-    setState(prev => ({
-      ...prev,
-      error: error instanceof Error ? error.message : 'Error al iniciar sesión',
-      isLoading: false
-    }));
-    throw error;
-  }
-}, [checkAuth]);
-
-  const signUp = useCallback(async (data: SignUpData) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      await authApi.signUp(data);
-      setState(prev => ({ ...prev, isLoading: false }));
+      setHasLoggedOut(false);
+      await authApi.signIn(data);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      await checkAuth();
     } catch (error) {
       setState(prev => ({
         ...prev,
-        error: error instanceof Error ? error.message : 'Error al registrarse',
+        error: error instanceof Error ? error.message : 'Error al iniciar sesión',
         isLoading: false
       }));
       throw error;
     }
-  }, []);
+  }, [checkAuth]);
 
   const signOut = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true }));
     
     try {
-      // Marcar que el usuario se está deslogueando
       setHasLoggedOut(true);
-      
       await authApi.signOut();
     } catch (error) {
-      // Solo mostrar error si no es un error de autenticación
       const isAuthError = error instanceof Error && 
         (error.message.includes('401') || 
          error.message.includes('No token'));
@@ -142,6 +169,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isLoading: false,
         error: null
       });
+      clearUserFromStorage(); // Limpiar cache
+    }
+  }, []);
+
+  const signUp = useCallback(async (data: SignUpData) => {
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    
+    try {
+      await authApi.signUp(data);
+      setState(prev => ({ ...prev, isLoading: false }));
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Error al registrarse',
+        isLoading: false
+      }));
+      throw error;
     }
   }, []);
 
@@ -182,8 +226,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]); // Ahora es seguro porque checkAuth está memoizada
+    if (isClient) {
+      checkAuth();
+    }
+  }, [isClient, checkAuth]);
 
   const contextValue: AuthContextType = useMemo(() => ({
     ...state,

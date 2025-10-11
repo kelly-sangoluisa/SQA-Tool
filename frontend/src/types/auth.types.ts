@@ -1,10 +1,10 @@
-// Tipos que coinciden EXACTAMENTE con tu backend
+// Tipos que coinciden EXACTAMENTE con backend
 export interface User {
-  user_id: number; // Cambiado de 'id' a 'user_id' para coincidir con el backend
+  user_id: number; 
   name: string;
   email: string;
   role: {
-    role_id: number; // Cambiado de 'id' a 'role_id' para coincidir con el backend
+    role_id: number; 
     name: string;
   };
   created_at: string;

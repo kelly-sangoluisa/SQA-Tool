@@ -1,13 +1,5 @@
 import { apiClient } from '../shared/api-client';
-import { 
-  SignInData, 
-  SignUpData, 
-  ForgotPasswordData, 
-  ResetPasswordData, 
-  RefreshData,
-  User, 
-  AuthResponse 
-} from '../../types/auth.types';
+import { SignInData, SignUpData, ForgotPasswordData, ResetPasswordData, RefreshData, User, AuthResponse } from '../../types/auth.types';
 
 export const authApi = {
   // 🔑 POST /api/auth/signin - Iniciar sesión
