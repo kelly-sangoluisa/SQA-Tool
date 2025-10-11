@@ -1,49 +1,40 @@
 'use client';
-import { useEffect } from 'react';
 import { useAuth } from '../../hooks/auth/useAuth';
-import { useRouter } from 'next/navigation';
-import { Loading } from '../../components/shared/Loading';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { DashboardHome } from '../../components/dashboard/DashboardHome';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function DashboardPage() {
-  const { user, isLoading, error, checkAuth } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
+  // Manejar redirección de forma suave
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
-
-  useEffect(() => {
-    if (!isLoading && !user && !error) {
-      router.push('/auth/login');
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/auth/login');
     }
-  }, [user, isLoading, error, router]);
+  }, [isLoading, isAuthenticated, router]);
 
+  // Si está cargando, mostrar fondo blanco elegante
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-gray-500 text-sm">Verificando acceso...</div>
       </div>
     );
   }
 
-  if (error || !user) {
+  // Si no está autenticado, mostrar fondo blanco mientras redirige
+  if (!isAuthenticated || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Error: {error || 'No autenticado'}</p>
-          <button
-            onClick={() => router.push('/auth/login')}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Ir a Login
-          </button>
-        </div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-gray-500 text-sm">Redirigiendo al login...</div>
       </div>
     );
   }
 
+  // Solo mostrar dashboard si está definitivamente autenticado
   return (
     <DashboardLayout>
       <DashboardHome />

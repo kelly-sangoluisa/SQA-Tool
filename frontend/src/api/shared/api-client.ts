@@ -24,12 +24,36 @@ export class ApiClient {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+        const errorMessage = errorData.message || `Error ${response.status}: ${response.statusText}`;
+        
+        // Detectar si es un error de autenticación esperado
+        const isAuthError = response.status === 401 || response.status === 403;
+        const isAuthEndpoint = endpoint.includes('/auth/');
+        
+        // Solo mostrar en consola si no es un error de autenticación en endpoint de auth
+        if (!(isAuthError && isAuthEndpoint)) {
+          console.error('API Error:', errorMessage);
+        }
+        
+        throw new Error(errorMessage);
       }
 
       return response.json();
     } catch (error) {
-      console.error('API Error:', error);
+      // Filtrar errores de autenticación para no mostrarlos en consola
+      const isAuthError = error instanceof Error && 
+        (error.message.includes('401') || 
+         error.message.includes('403') ||
+         error.message.includes('Unauthorized') ||
+         error.message.includes('No token provided'));
+      
+      const isAuthEndpoint = endpoint.includes('/auth/');
+      
+      // Solo mostrar errores que no sean de autenticación en endpoints de auth
+      if (!(isAuthError && isAuthEndpoint)) {
+        console.error('API Error:', error);
+      }
+      
       throw error;
     }
   }

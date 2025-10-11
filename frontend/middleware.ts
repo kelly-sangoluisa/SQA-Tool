@@ -2,47 +2,43 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Get the pathname of the request (e.g. /, /dashboard, /auth/signin)
   const path = request.nextUrl.pathname;
 
-  // Define protected routes
+  // Define rutas protegidas (requieren autenticación)
   const isProtectedRoute = path.startsWith('/dashboard') || 
-                          path.startsWith('/modules') ||
-                          path.startsWith('/shared');
+                          path.startsWith('/modules');
 
-  // Define auth routes
+  // Define rutas de autenticación
   const isAuthRoute = path.startsWith('/auth');
 
-  // Check if user is authenticated by looking for session cookie
-  const sessionCookie = request.cookies.get('sb-access-token') || 
-                       request.cookies.get('supabase-auth-token') ||
-                       request.cookies.get('session');
+  // Buscar cookies de sesión de Supabase
+  const accessToken = request.cookies.get('sb-access-token')?.value ||
+                     request.cookies.get('supabase-auth-token')?.value ||
+                     request.cookies.get('sb-127.0.0.1-auth-token')?.value;
 
-  // If trying to access protected route without session, redirect to signin
-  if (isProtectedRoute && !sessionCookie) {
-    const signInUrl = new URL('/auth/login', request.nextUrl.origin);
-    signInUrl.searchParams.set('redirectTo', path);
-    return NextResponse.redirect(signInUrl);
+  // Si intenta acceder a ruta protegida sin token, redirigir a login
+  if (isProtectedRoute && !accessToken) {
+    const loginUrl = new URL('/auth/login', request.nextUrl.origin);
+    return NextResponse.redirect(loginUrl);
   }
 
-  // If already authenticated and trying to access auth routes, redirect to dashboard
-  if (isAuthRoute && sessionCookie && path !== '/auth/signout') {
+  // Si ya está autenticado y trata de acceder a rutas de auth (excepto logout), redirigir a dashboard
+  if (isAuthRoute && accessToken && !path.includes('signout')) {
     return NextResponse.redirect(new URL('/dashboard', request.nextUrl.origin));
   }
 
   return NextResponse.next();
 }
 
-// See "Matching Paths" below to learn more
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (public folder)
+     * Coincide con todas las rutas excepto:
+     * - api (rutas de API)
+     * - _next/static (archivos estáticos)
+     * - _next/image (archivos de optimización de imágenes)
+     * - favicon.ico
+     * - archivos públicos
      */
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)',
   ],

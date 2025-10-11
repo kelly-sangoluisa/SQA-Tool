@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { Button, Input } from '../../../components/shared';
@@ -7,25 +7,54 @@ import Link from 'next/link';
 
 export default function SignInPage() {
   const router = useRouter();
-  const { signIn, isLoading, error, clearError } = useAuth();
+  const { signIn, isLoading, error, clearError, user, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Si ya está autenticado, redirigir al dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user) {
+      router.replace('/dashboard');
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError(); // Limpiar errores previos
+    if (isSubmitting) return;
+    
+    clearError();
+    setIsSubmitting(true);
 
     try {
       await signIn(formData);
-      // Si llegamos aquí, el login fue exitoso
-      router.push('/dashboard');
+      // El useEffect se encargará de la redirección
     } catch (err: any) {
       console.error('Error en login:', err);
-      // El error ya se maneja en el contexto
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  // Si está verificando autenticación inicial, mostrar fondo blanco elegante
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-gray-500 text-sm">Verificando sesión...</div>
+      </div>
+    );
+  }
+
+  // Si ya está autenticado, mostrar fondo blanco mientras redirige
+  if (isAuthenticated && user) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-gray-500 text-sm"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -53,6 +82,7 @@ export default function SignInPage() {
               required
               autoComplete="email"
               placeholder="tu@email.com"
+              disabled={isSubmitting}
             />
 
             <Input
@@ -64,6 +94,7 @@ export default function SignInPage() {
               required
               autoComplete="current-password"
               placeholder="Ingresa tu contraseña"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -76,10 +107,10 @@ export default function SignInPage() {
           <div>
             <Button
               type="submit"
-              isLoading={isLoading}
+              disabled={isSubmitting}
               className="w-full"
             >
-              Iniciar Sesión
+              {isSubmitting ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </div>
 

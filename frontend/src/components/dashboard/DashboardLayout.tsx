@@ -1,6 +1,8 @@
 'use client';
 import { useAuth } from '../../hooks/auth/useAuth';
 import { Button } from '../shared/Button';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -8,10 +10,21 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, signOut } = useAuth();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
-    window.location.href = '/auth/login';
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      // No necesitamos hacer router.push aquí, useAuth ya maneja la redirección
+    } catch (error) {
+      console.error('Error durante el logout:', error);
+      // En caso de error, forzar redirección al login
+      router.replace('/auth/login');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const getUserInitials = (name: string) => {
@@ -56,8 +69,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 variant="secondary"
                 onClick={handleSignOut}
                 size="sm"
+                disabled={isLoggingOut}
               >
-                Cerrar sesión
+                {isLoggingOut ? 'Cerrando...' : 'Cerrar sesión'}
               </Button>
             </div>
           </div>
