@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SupabaseAuthGuard } from '../../src/auth/supabase-auth/supabase-auth.guard';
+import { SupabaseAuthGuard } from '../../src/auth/guards/supabase-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
-import { UsersService } from '../../src/users/users.service';
+import { UsersService } from '../../src/users/services/users.service';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { User } from '../../src/users/entities/user.entity';
