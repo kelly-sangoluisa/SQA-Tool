@@ -46,7 +46,7 @@ export default function SignUpPage() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error en registro:', err);
       // El error ya se maneja en el contexto
     }

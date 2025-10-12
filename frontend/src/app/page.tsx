@@ -1,9 +1,7 @@
 'use client';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function HomePage() {
-  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { authApi } from '../../api/auth/auth-api';
-import { SignInData, SignUpData, ForgotPasswordData, ResetPasswordData, AuthState, AuthContextType } from '../../types/auth.types';
+import { SignInData, SignUpData, ForgotPasswordData, ResetPasswordData, AuthState, AuthContextType, User } from '../../types/auth.types';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -20,11 +20,11 @@ const getUserFromStorage = () => {
   }
 };
 
-const saveUserToStorage = (user: any) => {
+const saveUserToStorage = (user: User) => {
   if (typeof window === 'undefined') return;
   // IMPORTANTE: Solo guardar datos NO sensibles
   const safeUser = {
-    id: user.id,
+    id: user.user_id,
     email: user.email,
     name: user.name,
     role: user.role,
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           error: null
         }));
         saveUserToStorage(user); // Actualizar cache seguro
-      } catch (error) {
+      } catch {
         // Token expiró o es inválido
         setState(prev => ({
           ...prev,
@@ -128,7 +128,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error('Error inesperado en checkAuth:', error);
       }
     }
-  }, [isClient, hasLoggedOut, state.user]);
+  }, [isClient, hasLoggedOut]); // ELIMINADO state.user para evitar bucle
 
   const signIn = useCallback(async (data: SignInData) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));

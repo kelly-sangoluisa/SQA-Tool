@@ -31,7 +31,7 @@ export default function SignInPage() {
     try {
       await signIn(formData);
       // El useEffect se encargará de la redirección
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error en login:', err);
     } finally {
       setIsSubmitting(false);
