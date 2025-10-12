@@ -229,7 +229,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (isClient) {
       checkAuth();
     }
-  }, [isClient, checkAuth]);
+  }, [isClient]); // SOLO isClient - quitar checkAuth para evitar bucle
 
   const contextValue: AuthContextType = useMemo(() => ({
     ...state,

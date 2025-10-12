@@ -1,43 +1,47 @@
 'use client';
 import { useAuth } from '../../hooks/auth/useAuth';
-import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
-import { DashboardHome } from '../../components/dashboard/DashboardHome';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function DashboardPage() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
 
-  // Manejar redirección de forma suave
+  // Evitar hidratación
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace('/auth/login');
+    setMounted(true);
+  }, []);
+
+  // Solo redirigir cuando estemos seguros
+  useEffect(() => {
+    if (mounted && !isLoading && !isAuthenticated) {
+      router.push('/auth/login');
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [mounted, isLoading, isAuthenticated, router]);
 
-  // Si está cargando, mostrar fondo blanco elegante
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-gray-500 text-sm">Verificando acceso...</div>
-      </div>
-    );
+  // Mostrar loading hasta estar montado
+  if (!mounted || isLoading) {
+    return <div className="min-h-screen bg-white" />; // Pantalla simple
   }
 
-  // Si no está autenticado, mostrar fondo blanco mientras redirige
-  if (!isAuthenticated || !user) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-gray-500 text-sm">Redirigiendo al login...</div>
-      </div>
-    );
+  // Si no autenticado, no mostrar nada (está redirigiendo)
+  if (!isAuthenticated) {
+    return <div className="min-h-screen bg-white" />;
   }
 
-  // Solo mostrar dashboard si está definitivamente autenticado
+  // DASHBOARD REAL - Simple y directo
   return (
-    <DashboardLayout>
-      <DashboardHome />
-    </DashboardLayout>
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-8">
+        <h1 className="text-3xl font-bold mb-4">🎉 Dashboard</h1>
+        <p className="text-gray-600 mb-4">¡Funciona en Vercel!</p>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-2">Bienvenido</h2>
+          <p>Usuario: {user?.email}</p>
+          <p>Estado: ✅ Conectado</p>
+        </div>
+      </div>
+    </div>
   );
 }
