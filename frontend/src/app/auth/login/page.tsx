@@ -30,7 +30,8 @@ export default function SignInPage() {
 
     try {
       await signIn(formData);
-      // El useEffect se encargará de la redirección
+      // Forzar redirección inmediata después del login exitoso
+      router.replace('/dashboard');
     } catch (err: unknown) {
       console.error('Error en login:', err);
     } finally {
