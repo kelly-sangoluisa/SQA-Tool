@@ -14,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
 import { appConfig, databaseConfig, authConfig } from './config';
 
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ParameterizationModule } from './modules/parameterization/parameterization.module';
 
 
 @Module({
@@ -42,6 +43,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
     
     AuthModule,
     UsersModule,
+    ParameterizationModule,
   ],
   controllers: [AppController],
   providers: [
