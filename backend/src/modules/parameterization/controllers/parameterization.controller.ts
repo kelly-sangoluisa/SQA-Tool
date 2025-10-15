@@ -10,7 +10,7 @@ import { CreateSubCriterionDto, UpdateSubCriterionDto } from '../dto/sub-criteri
 import { CreateMetricDto, UpdateMetricDto } from '../dto/metric.dto';
 import { CreateFormulaVariableDto, UpdateFormulaVariableDto } from '../dto/formula-variable.dto';
 
-@ApiTags('⚙️ Parameterization (Admin)')
+@ApiTags('Parameterization (Admin)')
 @ApiBearerAuth('bearer')
 @ROLES('admin')
 @Controller('parameterization')
