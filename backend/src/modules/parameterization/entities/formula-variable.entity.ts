@@ -10,7 +10,7 @@ export class FormulaVariable {
 
   @ApiProperty({ description: 'ID de la métrica a la que pertenece', example: 1 })
   @Column({ name: 'metric_id' })
-  metricId: number;
+  metric_id: number;
 
   @ApiProperty({ description: 'Símbolo de la variable en la fórmula', example: 'A' })
   @Column({ type: 'varchar', length: 10, nullable: true })
@@ -22,11 +22,11 @@ export class FormulaVariable {
 
   @ApiProperty()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
+  created_at: Date;
 
   @ApiProperty()
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updatedAt: Date;
+  updated_at: Date;
 
   @ManyToOne(() => Metric, metric => metric.variables, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'metric_id' })

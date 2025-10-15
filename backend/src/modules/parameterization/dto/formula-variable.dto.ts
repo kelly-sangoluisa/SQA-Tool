@@ -16,7 +16,7 @@ export class CreateFormulaVariableDto {
   @ApiProperty({ description: 'ID de la métrica a la que pertenece' })
   @IsInt()
   @IsNotEmpty()
-  metricId: number;
+  metric_id: number;
 }
 
 export class UpdateFormulaVariableDto extends PartialType(CreateFormulaVariableDto) {}

@@ -16,7 +16,7 @@ export class CreateCriterionDto {
   @ApiProperty({ description: 'ID del estándar al que pertenece' })
   @IsInt()
   @IsNotEmpty()
-  standardId: number;
+  standard_id: number;
 }
 
 export class UpdateCriterionDto extends PartialType(CreateCriterionDto) {}

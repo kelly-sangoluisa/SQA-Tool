@@ -57,10 +57,10 @@ export class ParameterizationController {
     return this.service.createCriterion(createCriterionDto);
   }
   
-  @Get('standards/:standardId/criteria')
+  @Get('standards/:standard_id/criteria')
   @ApiOperation({ summary: 'Obtener todos los criterios para un estándar específico' })
-  findAllCriteriaForStandard(@Param('standardId', ParseIntPipe) standardId: number) {
-    return this.service.findAllCriteria(standardId);
+  findAllCriteriaForStandard(@Param('standard_id', ParseIntPipe) standard_id: number) {
+    return this.service.findAllCriteria(standard_id);
   }
 
   @Get('criteria/:id')
@@ -94,8 +94,8 @@ export class ParameterizationController {
 
   @Get('criteria/:criterionId/sub-criteria')
   @ApiOperation({ summary: 'Obtener todos los sub-criterios para un criterio específico' })
-  findAllSubCriteriaForCriterion(@Param('criterionId', ParseIntPipe) criterionId: number) {
-    return this.service.findAllSubCriteria(criterionId);
+  findAllSubCriteriaForCriterion(@Param('criterionId', ParseIntPipe) criterion_id: number) {
+    return this.service.findAllSubCriteria(criterion_id);
   }
 
   @Get('sub-criteria/:id')
@@ -126,8 +126,8 @@ export class ParameterizationController {
 
   @Get('sub-criteria/:subCriterionId/metrics')
   @ApiOperation({ summary: 'Obtener todas las métricas para un sub-criterio' })
-  findAllMetricsForSubCriterion(@Param('subCriterionId', ParseIntPipe) subCriterionId: number) {
-    return this.service.findAllMetrics(subCriterionId);
+  findAllMetricsForSubCriterion(@Param('subCriterionId', ParseIntPipe) sub_criterion_id: number) {
+    return this.service.findAllMetrics(sub_criterion_id);
   }
   
   @Get('metrics/:id')
@@ -158,8 +158,8 @@ export class ParameterizationController {
   
   @Get('metrics/:metricId/variables')
   @ApiOperation({ summary: 'Obtener todas las variables para una métrica' })
-  findAllVariablesForMetric(@Param('metricId', ParseIntPipe) metricId: number) {
-    return this.service.findAllVariables(metricId);
+  findAllVariablesForMetric(@Param('metricId', ParseIntPipe) metric_id: number) {
+    return this.service.findAllVariables(metric_id);
   }
   
   @Get('variables/:id')

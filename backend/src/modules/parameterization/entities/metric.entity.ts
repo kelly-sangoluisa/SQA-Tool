@@ -11,7 +11,7 @@ export class Metric {
 
   @ApiProperty({ description: 'ID del sub-criterio al que pertenece', example: 1 })
   @Column({ name: 'sub_criterion_id' })
-  subCriterionId: number;
+  sub_criterion_id: number;
 
   @ApiProperty({ description: 'Código único de la métrica', example: 'FC-1', required: false })
   @Column({ type: 'varchar', length: 20, nullable: true })
@@ -31,19 +31,19 @@ export class Metric {
 
   @ApiProperty({ description: 'Umbral deseado para la métrica', example: 95.5, required: false })
   @Column({ type: 'numeric', precision: 10, scale: 4, nullable: true })
-  desiredThreshold: number;
+  desired_threshold: number;
 
   @ApiProperty()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
+  created_at: Date;
 
   @ApiProperty()
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updatedAt: Date;
+  updated_at: Date;
 
   @ManyToOne(() => SubCriterion, subCriterion => subCriterion.metrics, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'sub_criterion_id' })
-  subCriterion: SubCriterion;
+  sub_criterion: SubCriterion;
 
   @OneToMany(() => FormulaVariable, variable => variable.metric)
   variables: FormulaVariable[];

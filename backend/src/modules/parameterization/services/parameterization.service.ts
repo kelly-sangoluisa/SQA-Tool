@@ -42,13 +42,13 @@ export class ParameterizationService {
   findOneStandard(id: number) {
     return this.findOneOrFail(this.standardRepo, id, 'Standard');
   }
-  createStandard(dto: CreateStandardDto) {
-    const newStandard = this.standardRepo.create(dto);
+  createStandard(create_standard_dto: CreateStandardDto) {
+    const newStandard = this.standardRepo.create(create_standard_dto);
     return this.standardRepo.save(newStandard);
   }
-  async updateStandard(id: number, dto: UpdateStandardDto) {
+  async updateStandard(id: number, update_standard_dto: UpdateStandardDto) {
     const standard = await this.findOneStandard(id);
-    this.standardRepo.merge(standard, dto);
+    this.standardRepo.merge(standard, update_standard_dto);
     return this.standardRepo.save(standard);
   }
   async removeStandard(id: number) {
@@ -58,22 +58,22 @@ export class ParameterizationService {
   }
 
   // CRUD for Criteria
-  findAllCriteria(standardId?: number) {
-    const where = standardId ? { standardId } : {};
-    return this.criterionRepo.find({ where, order: { name: 'ASC' }, relations: ['subCriteria'] });
+  findAllCriteria(standard_id?: number) {
+    const where = standard_id ? { standard_id } : {};
+    return this.criterionRepo.find({ where, order: { name: 'ASC' }, relations: ['sub_criteria'] });
   }
   findOneCriterion(id: number) {
     return this.findOneOrFail(this.criterionRepo, id, 'Criterion');
   }
-  async createCriterion(dto: CreateCriterionDto) {
-    await this.findOneStandard(dto.standardId); // Check if standard exists
-    const newCriterion = this.criterionRepo.create(dto);
+  async createCriterion(create_criterion_dto: CreateCriterionDto) {
+    await this.findOneStandard(create_criterion_dto.standard_id); // Check if standard exists
+    const newCriterion = this.criterionRepo.create(create_criterion_dto);
     return this.criterionRepo.save(newCriterion);
   }
-  async updateCriterion(id: number, dto: UpdateCriterionDto) {
+  async updateCriterion(id: number, update_criterion_dto: UpdateCriterionDto) {
     const criterion = await this.findOneCriterion(id);
-    if (dto.standardId) await this.findOneStandard(dto.standardId);
-    this.criterionRepo.merge(criterion, dto);
+    if (update_criterion_dto.standard_id) await this.findOneStandard(update_criterion_dto.standard_id);
+    this.criterionRepo.merge(criterion, update_criterion_dto);
     return this.criterionRepo.save(criterion);
   }
   async removeCriterion(id: number) {
@@ -83,22 +83,22 @@ export class ParameterizationService {
   }
   
   // CRUD for SubCriteria
-  findAllSubCriteria(criterionId?: number) {
-    const where = criterionId ? { criterionId } : {};
+  findAllSubCriteria(criterion_id?: number) {
+    const where = criterion_id ? { criterion_id } : {};
     return this.subCriterionRepo.find({ where, order: { name: 'ASC' }, relations: ['metrics'] });
   }
   findOneSubCriterion(id: number) {
     return this.findOneOrFail(this.subCriterionRepo, id, 'SubCriterion');
   }
-  async createSubCriterion(dto: CreateSubCriterionDto) {
-    await this.findOneCriterion(dto.criterionId);
-    const newSubCriterion = this.subCriterionRepo.create(dto);
+  async createSubCriterion(create_sub_criterion_dto: CreateSubCriterionDto) {
+    await this.findOneCriterion(create_sub_criterion_dto.criterion_id);
+    const newSubCriterion = this.subCriterionRepo.create(create_sub_criterion_dto);
     return this.subCriterionRepo.save(newSubCriterion);
   }
-  async updateSubCriterion(id: number, dto: UpdateSubCriterionDto) {
+  async updateSubCriterion(id: number, update_sub_criterion_dto: UpdateSubCriterionDto) {
     const subCriterion = await this.findOneSubCriterion(id);
-    if (dto.criterionId) await this.findOneCriterion(dto.criterionId);
-    this.subCriterionRepo.merge(subCriterion, dto);
+    if (update_sub_criterion_dto.criterion_id) await this.findOneCriterion(update_sub_criterion_dto.criterion_id);
+    this.subCriterionRepo.merge(subCriterion, update_sub_criterion_dto);
     return this.subCriterionRepo.save(subCriterion);
   }
   async removeSubCriterion(id: number) {
@@ -108,22 +108,22 @@ export class ParameterizationService {
   }
 
   // CRUD for Metrics
-  findAllMetrics(subCriterionId?: number) {
-    const where = subCriterionId ? { subCriterionId } : {};
+  findAllMetrics(sub_criterion_id?: number) {
+    const where = sub_criterion_id ? { sub_criterion_id } : {};
     return this.metricRepo.find({ where, order: { name: 'ASC' }, relations: ['variables'] });
   }
   findOneMetric(id: number) {
     return this.findOneOrFail(this.metricRepo, id, 'Metric');
   }
-  async createMetric(dto: CreateMetricDto) {
-    await this.findOneSubCriterion(dto.subCriterionId);
-    const newMetric = this.metricRepo.create(dto);
+  async createMetric(create_metric_dto: CreateMetricDto) {
+    await this.findOneSubCriterion(create_metric_dto.sub_criterion_id);
+    const newMetric = this.metricRepo.create(create_metric_dto);
     return this.metricRepo.save(newMetric);
   }
-  async updateMetric(id: number, dto: UpdateMetricDto) {
+  async updateMetric(id: number, update_metric_dto: UpdateMetricDto) {
     const metric = await this.findOneMetric(id);
-    if (dto.subCriterionId) await this.findOneSubCriterion(dto.subCriterionId);
-    this.metricRepo.merge(metric, dto);
+    if (update_metric_dto.sub_criterion_id) await this.findOneSubCriterion(update_metric_dto.sub_criterion_id);
+    this.metricRepo.merge(metric, update_metric_dto);
     return this.metricRepo.save(metric);
   }
   async removeMetric(id: number) {
@@ -133,22 +133,22 @@ export class ParameterizationService {
   }
 
   // CRUD for FormulaVariables
-  findAllVariables(metricId?: number) {
-    const where = metricId ? { metricId } : {};
+  findAllVariables(metric_id?: number) {
+    const where = metric_id ? { metric_id } : {};
     return this.variableRepo.find({ where, order: { symbol: 'ASC' } });
   }
   findOneVariable(id: number) {
     return this.findOneOrFail(this.variableRepo, id, 'FormulaVariable');
   }
-  async createVariable(dto: CreateFormulaVariableDto) {
-    await this.findOneMetric(dto.metricId);
-    const newVariable = this.variableRepo.create(dto);
+  async createVariable(create_variable_dto: CreateFormulaVariableDto) {
+    await this.findOneMetric(create_variable_dto.metric_id);
+    const newVariable = this.variableRepo.create(create_variable_dto);
     return this.variableRepo.save(newVariable);
   }
-  async updateVariable(id: number, dto: UpdateFormulaVariableDto) {
+  async updateVariable(id: number, update_variable_dto: UpdateFormulaVariableDto) {
     const variable = await this.findOneVariable(id);
-    if (dto.metricId) await this.findOneMetric(dto.metricId);
-    this.variableRepo.merge(variable, dto);
+    if (update_variable_dto.metric_id) await this.findOneMetric(update_variable_dto.metric_id);
+    this.variableRepo.merge(variable, update_variable_dto);
     return this.variableRepo.save(variable);
   }
   async removeVariable(id: number) {

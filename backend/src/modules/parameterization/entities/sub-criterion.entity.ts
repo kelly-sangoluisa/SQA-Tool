@@ -11,7 +11,7 @@ export class SubCriterion {
 
   @ApiProperty({ description: 'ID del criterio al que pertenece', example: 1 })
   @Column({ name: 'criterion_id' })
-  criterionId: number;
+  criterion_id: number;
 
   @ApiProperty({ description: 'Nombre del sub-criterio', example: 'Completitud funcional' })
   @Column({ type: 'varchar', length: 100 })
@@ -23,16 +23,16 @@ export class SubCriterion {
 
   @ApiProperty()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
+  created_at: Date;
 
   @ApiProperty()
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updatedAt: Date;
+  updated_at: Date;
 
-  @ManyToOne(() => Criterion, criterion => criterion.subCriteria, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Criterion, criterion => criterion.sub_criteria, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'criterion_id' })
   criterion: Criterion;
 
-  @OneToMany(() => Metric, metric => metric.subCriterion)
+  @OneToMany(() => Metric, metric => metric.sub_criterion)
   metrics: Metric[];
 }

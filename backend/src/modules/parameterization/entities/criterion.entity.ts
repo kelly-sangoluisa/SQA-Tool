@@ -11,7 +11,7 @@ export class Criterion {
 
   @ApiProperty({ description: 'ID del estándar al que pertenece', example: 1 })
   @Column({ name: 'standard_id' })
-  standardId: number;
+  standard_id: number;
 
   @ApiProperty({ description: 'Nombre del criterio', example: 'Adecuación funcional' })
   @Column({ type: 'varchar', length: 100 })
@@ -20,19 +20,19 @@ export class Criterion {
   @ApiProperty({ description: 'Descripción del criterio', required: false })
   @Column({ type: 'text', nullable: true })
   description: string;
-  
-  @ApiProperty()
+
+  @ApiProperty({ description: 'Fecha de creación', example: '2021-01-01T00:00:00.000Z' })
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
+  created_at: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Fecha de actualización', example: '2021-01-01T00:00:00.000Z' })
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updatedAt: Date;
+  updated_at: Date;
 
-  @ManyToOne(() => Standard, standard => standard.criteria, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Standard, (standard) => standard.criteria)
   @JoinColumn({ name: 'standard_id' })
   standard: Standard;
 
-  @OneToMany(() => SubCriterion, subCriterion => subCriterion.criterion)
-  subCriteria: SubCriterion[];
+  @OneToMany(() => SubCriterion, (subCriterion) => subCriterion.criterion)
+  sub_criteria: SubCriterion[];
 }

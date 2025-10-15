@@ -11,7 +11,7 @@ export class CreateMetricDto {
   @ApiProperty({ description: 'ID del sub-criterio al que pertenece' })
   @IsInt()
   @IsNotEmpty()
-  subCriterionId: number;
+  sub_criterion_id: number;
   
   @ApiProperty({ description: 'Código de la métrica', example: 'PO-1', required: false })
   @IsOptional()
@@ -33,7 +33,7 @@ export class CreateMetricDto {
   @ApiProperty({ description: 'Umbral deseado', example: 99.0, required: false })
   @IsOptional()
   @IsNumber()
-  desiredThreshold?: number;
+  desired_threshold?: number;
 }
 
 export class UpdateMetricDto extends PartialType(CreateMetricDto) {}

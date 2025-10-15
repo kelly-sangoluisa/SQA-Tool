@@ -16,7 +16,7 @@ export class CreateSubCriterionDto {
   @ApiProperty({ description: 'ID del criterio al que pertenece' })
   @IsInt()
   @IsNotEmpty()
-  criterionId: number;
+  criterion_id: number;
 }
 
 export class UpdateSubCriterionDto extends PartialType(CreateSubCriterionDto) {}
