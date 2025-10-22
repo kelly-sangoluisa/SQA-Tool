@@ -22,13 +22,17 @@ async function bootstrap() {
     transformOptions: { enableImplicitConversion: true },
   }));
 
-  const envOrigins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()).filter(Boolean);
+  const envOrigins = process.env.CORS_ORIGINS?.split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: envOrigins?.length ? envOrigins : [/^https?:\/\/localhost:\d+$/, /\.tudominio\.com$/],
+    origin: envOrigins?.length ? envOrigins : true,  // si no hay, permite todo
     credentials: true,
-    methods: ['GET','POST','PATCH','PUT','DELETE','OPTIONS'],
-    allowedHeaders: ['Content-Type','Authorization','X-CSRF-Token'],
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
   });
+
 
   const config = new DocumentBuilder()
     .setTitle('API de Evaluación de Calidad')
@@ -44,7 +48,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT ?? 3001;
+  const port = process.env.PORT || 3001;
   await app.listen(port);
+  console.log(`NestJS listening on port ${port}`);
 }
 bootstrap();

@@ -7,7 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Role } from './role.entity';
+import { Role } from './role.entity'
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity({ name: 'users' })
