@@ -1,5 +1,6 @@
-'use client';
+"use client";
 import { useAuth } from '../../hooks/auth/useAuth';
+import styles from './DashboardHome.module.css';
 
 export function DashboardHome() {
   const { user } = useAuth();
@@ -10,89 +11,71 @@ export function DashboardHome() {
       description: 'Configura criterios y parámetros de evaluación de calidad',
       href: '/modules/config-evaluation',
       icon: '⚙️',
-      bgColor: 'bg-blue-50',
-      iconBg: 'bg-blue-100',
-      textColor: 'text-blue-600'
+      iconBg: '#e0f2fe',
+      iconColor: '#0369a1'
     },
     {
       name: 'Entrada de Datos',
       description: 'Ingresa datos del proyecto para evaluación',
       href: '/modules/entry-data',
       icon: '📝',
-      bgColor: 'bg-green-50',
-      iconBg: 'bg-green-100',
-      textColor: 'text-green-600'
+      iconBg: '#ecfdf5',
+      iconColor: '#065f46'
     },
     {
       name: 'Parametrización',
       description: 'Configura parámetros avanzados del sistema',
       href: '/modules/parameterization',
       icon: '🎛️',
-      bgColor: 'bg-purple-50',
-      iconBg: 'bg-purple-100',
-      textColor: 'text-purple-600'
+      iconBg: '#f5f3ff',
+      iconColor: '#6d28d9'
     },
     {
       name: 'Reportes',
       description: 'Genera y visualiza reportes de evaluación',
       href: '/modules/reports',
       icon: '📊',
-      bgColor: 'bg-yellow-50',
-      iconBg: 'bg-yellow-100',
-      textColor: 'text-yellow-600'
+      iconBg: '#fffbeb',
+      iconColor: '#854d0e'
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className={styles.root}>
       {/* Welcome Section */}
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">
-          Bienvenido, {user?.name}
-        </h2>
-        <p className="mt-2 text-gray-600">
-          Selecciona un módulo para comenzar con la evaluación de calidad de software
-        </p>
+        <h2 className={styles.welcomeTitle}>Bienvenido, {user?.name}</h2>
+        <p className={styles.subtitle}>Selecciona un módulo para comenzar con la evaluación de calidad de software</p>
       </div>
 
       {/* Modules Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className={styles.modulesGrid}>
         {modules.map((module) => (
-          <a
-            key={module.name}
-            href={module.href}
-            className={`${module.bgColor} rounded-lg p-6 hover:shadow-md transition-all duration-200 hover:-translate-y-1 border border-gray-200`}
-          >
-            <div className={`${module.iconBg} w-12 h-12 rounded-lg flex items-center justify-center mb-4`}>
-              <span className="text-2xl">{module.icon}</span>
+          <a key={module.name} href={module.href} className={styles.moduleCard}>
+            <div className={styles.moduleIconWrap} style={{ background: module.iconBg }}>
+              <span style={{ fontSize: '1.25rem' }}>{module.icon}</span>
             </div>
-            <h3 className={`text-lg font-semibold ${module.textColor} mb-2`}>
-              {module.name}
-            </h3>
-            <p className="text-gray-600 text-sm">{module.description}</p>
+            <h3 className={styles.moduleTitle} style={{ color: module.iconColor }}>{module.name}</h3>
+            <p className={styles.moduleDesc}>{module.description}</p>
           </a>
         ))}
       </div>
 
       {/* User Info Card */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Información del usuario</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className={styles.cardWhite}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.75rem' }}>Información del usuario</h3>
+        <div className={styles.gridThree}>
           <div>
-            <p className="text-sm font-medium text-gray-500">Nombre</p>
-            <p className="text-gray-900">{user?.name}</p>
+            <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Nombre</p>
+            <p style={{ color: '#0f172a' }}>{user?.name}</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Email</p>
-            <p className="text-gray-900">{user?.email}</p>
+            <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Email</p>
+            <p style={{ color: '#0f172a' }}>{user?.email}</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Rol</p>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              user?.role.name === 'admin' 
-                ? 'bg-red-100 text-red-800' 
-                : 'bg-blue-100 text-blue-800'
-            }`}>
+            <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Rol</p>
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.125rem 0.625rem', borderRadius: '9999px', fontSize: '.75rem', fontWeight: 600, background: user?.role.name === 'admin' ? '#fee2e2' : '#e0f2fe', color: user?.role.name === 'admin' ? '#991b1b' : '#075985' }}>
               {user?.role.name === 'admin' ? 'Administrador' : 'Evaluador'}
             </span>
           </div>
@@ -100,37 +83,28 @@ export function DashboardHome() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Acciones rápidas</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a
-            href="/shared/profile"
-            className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-          >
-            <span className="text-2xl mr-3">👤</span>
+      <div className={styles.cardWhite}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.75rem' }}>Acciones rápidas</h3>
+        <div className={styles.gridThree}>
+          <a href="/shared/profile" className={styles.quickAction}>
+            <span style={{ fontSize: '1.25rem', marginRight: '0.75rem' }}>👤</span>
             <div>
-              <p className="font-medium">Mi Perfil</p>
-              <p className="text-sm text-gray-500">Configurar información personal</p>
+              <p style={{ fontWeight: 600 }}>Mi Perfil</p>
+              <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Configurar información personal</p>
             </div>
           </a>
-          <a
-            href="/shared/settings"
-            className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-          >
-            <span className="text-2xl mr-3">⚙️</span>
+          <a href="/shared/settings" className={styles.quickAction}>
+            <span style={{ fontSize: '1.25rem', marginRight: '0.75rem' }}>⚙️</span>
             <div>
-              <p className="font-medium">Configuración</p>
-              <p className="text-sm text-gray-500">Ajustes del sistema</p>
+              <p style={{ fontWeight: 600 }}>Configuración</p>
+              <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Ajustes del sistema</p>
             </div>
           </a>
-          <a
-            href="/shared/notifications"
-            className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-          >
-            <span className="text-2xl mr-3">🔔</span>
+          <a href="/shared/notifications" className={styles.quickAction}>
+            <span style={{ fontSize: '1.25rem', marginRight: '0.75rem' }}>🔔</span>
             <div>
-              <p className="font-medium">Notificaciones</p>
-              <p className="text-sm text-gray-500">Ver alertas y mensajes</p>
+              <p style={{ fontWeight: 600 }}>Notificaciones</p>
+              <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Ver alertas y mensajes</p>
             </div>
           </a>
         </div>

@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/auth/useAuth';
-import { Button } from '../shared/Button';
-import { Input } from '../shared/Input';
+import { Button, Input } from '../shared';
+import styles from './RegisterForm.module.css';
 
 export function RegisterForm() {
   const router = useRouter();
@@ -56,19 +56,15 @@ export function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Crear cuenta
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Regístrate como evaluador
-          </p>
+    <div className={styles.root}>
+      <div className={styles.card}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Crear cuenta</h2>
+          <p className={styles.subtitle}>Regístrate como evaluador</p>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div className={styles.fields}>
             <Input
               label="Nombre completo"
               name="name"
@@ -116,16 +112,16 @@ export function RegisterForm() {
           </div>
 
           {(error || validationError) && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className={styles.errorBox}>
               {error || validationError}
             </div>
           )}
 
-          <div>
+          <div className={styles.buttonWrapper}>
             <Button
               type="submit"
               isLoading={isLoading}
-              className="w-full"
+              className={styles.fullWidth}
               size="lg"
               variant="primary"
             >
@@ -133,15 +129,12 @@ export function RegisterForm() {
             </Button>
           </div>
 
-          <div className="text-center">
-            <span className="text-sm text-gray-600">
-              ¿Ya tienes cuenta?{' '}
-              <a
-                href="/auth/login"
-                className="text-blue-600 hover:text-blue-500 font-medium"
-              >
-                Inicia sesión aquí
-              </a>
+          <div className={styles.textCenter}>
+            <span>
+              <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                ¿Ya tienes cuenta?{' '}
+              </span>
+              <a href="/auth/login" className={styles.link}>Inicia sesión aquí</a>
             </span>
           </div>
         </form>

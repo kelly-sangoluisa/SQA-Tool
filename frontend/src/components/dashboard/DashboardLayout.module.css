@@ -1,0 +1,13 @@
+.root { min-height: 100vh; background: #f9fafb; }
+.header { background: #ffffff; box-shadow: 0 1px 0 rgb(0 0 0 / 4%); }
+.container { max-width: 1120px; margin: 0 auto; padding: 0 1rem; }
+.headerInner { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; }
+.brand { display: flex; align-items: center; }
+.title { font-size: 1.25rem; font-weight: 700; color: #0f172a; }
+.userSection { display: flex; align-items: center; gap: 1rem; }
+.avatar { width: 2rem; height: 2rem; border-radius: 9999px; background: #2563eb; display:flex; align-items:center; justify-content:center; color: #ffffff; font-weight:600; font-size:0.875rem; }
+.userInfo { display: none; }
+@media (min-width: 768px) { .userInfo { display: block; } }
+.breadcrumb { background: #ffffff; border-bottom: 1px solid #e5e7eb; }
+.breadcrumbInner { padding: 0.5rem 0; }
+.main { max-width: 1120px; margin: 0 auto; padding: 1.5rem; }

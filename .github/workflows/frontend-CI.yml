@@ -49,8 +49,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install
         working-directory: frontend
+      - name: Type-check (tsc)
+        run: npx -y tsc --noEmit
+        working-directory: frontend
       - name: Run ESLint
         run: pnpm run lint
+        working-directory: frontend
+      - name: Run Stylelint
+        run: pnpm run lint:css --fix
         working-directory: frontend
 
   build:

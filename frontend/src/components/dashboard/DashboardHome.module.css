@@ -1,0 +1,15 @@
+.root { display: block; }
+.welcomeTitle { font-size: 1.875rem; font-weight: 700; color: #0f172a; }
+.subtitle { margin-top: 0.5rem; color: #4b5563; }
+.modulesGrid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+@media (min-width: 768px) { .modulesGrid { grid-template-columns: repeat(2,1fr); } }
+@media (min-width: 1024px) { .modulesGrid { grid-template-columns: repeat(4,1fr); } }
+.moduleCard { border-radius: 0.5rem; padding: 1.25rem; background: #fff; border: 1px solid #e6e7eb; transition: all .15s ease; }
+.moduleIconWrap { width: 3rem; height: 3rem; border-radius: 0.5rem; display:flex; align-items:center; justify-content:center; margin-bottom:0.75rem; }
+.moduleTitle { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; }
+.moduleDesc { color: #4b5563; font-size: 0.875rem; }
+.cardWhite { background: #ffffff; border-radius: 0.5rem; padding: 1.25rem; box-shadow: 0 6px 18px rgb(15 23 42 / 6%); }
+.gridThree { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+@media (min-width: 768px) { .gridThree { grid-template-columns: repeat(3,1fr); } }
+.quickAction { display:flex; align-items:center; padding:0.75rem; border-radius:0.5rem; border:1px solid #e5e7eb; transition: background .12s ease; }
+.quickAction:hover { background:#f8fafc; }

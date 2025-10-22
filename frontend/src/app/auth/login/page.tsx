@@ -3,7 +3,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { Button, Input } from '../../../components/shared';
+import buttonStyles from '../../../components/shared/Button.module.css';
 import Link from 'next/link';
+import styles from '../../../styles/auth/login.module.css';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -42,7 +44,7 @@ export default function SignInPage() {
   // Si está verificando autenticación inicial, mostrar fondo blanco elegante
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className={styles.container}>
         <div className="text-gray-500 text-sm">Verificando sesión...</div>
       </div>
     );
@@ -51,20 +53,20 @@ export default function SignInPage() {
   // Si ya está autenticado, mostrar fondo blanco mientras redirige
   if (isAuthenticated && user) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className={styles.container}>
         <div className="text-gray-500 text-sm"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className={styles.container}>
+      <div className={styles.card}>
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className={styles.title}>
             Inicia sesión en tu cuenta
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className={styles.subtitle}>
             ¿No tienes una cuenta?{' '}
             <Link href="/auth/signup" className="font-medium text-blue-600 hover:text-blue-500">
               Regístrate aquí
@@ -72,8 +74,8 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div className={styles.spaceY4}>
             <Input
               label="Email"
               type="email"
@@ -100,7 +102,7 @@ export default function SignInPage() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+            <div className={styles.errorBox}>
               {error}
             </div>
           )}
@@ -109,13 +111,13 @@ export default function SignInPage() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full"
+              className={buttonStyles.full}
             >
               {isSubmitting ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </div>
 
-          <div className="text-center">
+          <div className={styles.centerText}>
             <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
               ¿Olvidaste tu contraseña?
             </Link>

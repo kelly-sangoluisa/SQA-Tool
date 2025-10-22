@@ -1,0 +1,106 @@
+.dashboard-root {
+  min-height: 100vh;
+  background-color: #f9fafb; /* gray-50 */
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.dashboard-header {
+  background: #ffffff;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 4%);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dashboard-header .container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 4rem;
+}
+
+.dashboard-header .brand h1 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.dashboard-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dashboard-user-greeting { color: #374151; } /* gray-700 */
+
+.signout-btn {
+  background: #dc2626; /* red-600 */
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.signout-btn:hover { background: #b91c1c; /* red-700 */ }
+.signout-btn:disabled { background: #fca5a5; cursor: not-allowed; }
+
+.dashboard-main .page-wrapper {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.dashboard-card {
+  border: 4px dashed #e5e7eb;
+  border-radius: 0.5rem;
+  min-height: 18rem;
+  padding: 2rem;
+  background: white;
+}
+
+/* Features grid styles (moved from home.css) */
+.features-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1fr;
+  max-width: 1100px;
+  margin: 2rem auto 0 auto;
+}
+
+@media (min-width: 768px) {
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .features-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.feature-card {
+  background: #ffffff;
+  border-radius: 0.75rem;
+  border-color: #374151;
+  padding: 1.25rem;
+  box-shadow: 0 6px 18px rgb(15 23 42 / 35%);
+}
+
+.feature-emoji { font-size: 2.25rem; margin-bottom: 0.75rem; }
+.feature-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; color: #151e30; }
+.feature-desc { color: #354057; }
+
+/* Tech bar styles (moved from home.css) */
+.tech-bar { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e6e7eb; }
+.tech-label { color: #9ca3af; margin-bottom: 0.75rem; }
+.tech-list { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+.tech-pill { 
+  background: #fff; 
+  padding: 0.4rem 0.75rem; 
+  border-radius: 9999px; 
+  box-shadow: 0 2px 6px rgb(15 23 42 / 4%); 
+  font-size: 0.9rem; 
+}

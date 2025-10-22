@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { Button, Input } from '../../../components/shared';
+import buttonStyles from '../../../components/shared/Button.module.css';
 import Link from 'next/link';
+import styles from '../../../styles/auth/signup.module.css';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -55,13 +57,13 @@ export default function SignUpPage() {
   const displayError = localError || contextError;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className={styles.container}>
+      <div className={styles.card}>
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className={styles.title}>
             Crea tu cuenta
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className={styles.subtitle}>
             ¿Ya tienes una cuenta?{' '}
             <Link href="/auth/login" className="font-medium text-blue-600 hover:text-blue-500">
               Inicia sesión aquí
@@ -69,8 +71,8 @@ export default function SignUpPage() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div className={styles.spaceY4}>
             <Input
               label="Nombre completo"
               type="text"
@@ -117,13 +119,13 @@ export default function SignUpPage() {
           </div>
 
           {displayError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+            <div className={styles.errorBox}>
               {displayError}
             </div>
           )}
 
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md">
+            <div className={styles.successBox}>
               {success}
             </div>
           )}
@@ -132,7 +134,7 @@ export default function SignUpPage() {
             <Button
               type="submit"
               isLoading={isLoading}
-              className="w-full"
+              className={buttonStyles.full}
             >
               Crear Cuenta
             </Button>

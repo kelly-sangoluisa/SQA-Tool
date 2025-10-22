@@ -1,8 +1,9 @@
-'use client';
+"use client";
 import { useAuth } from '../../hooks/auth/useAuth';
-import { Button } from '../shared/Button';
+import { Button } from '../shared';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import styles from './DashboardLayout.module.css';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -37,34 +38,26 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={styles.root}>
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {process.env.NEXT_PUBLIC_APP_NAME || 'SQA Tool'}
-              </h1>
+      <header className={styles.header}>
+        <div className={styles.container}>
+          <div className={styles.headerInner}>
+            <div className={styles.brand}>
+              <h1 className={styles.title}>{process.env.NEXT_PUBLIC_APP_NAME || 'SQA Tool'}</h1>
             </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">
-                    {user ? getUserInitials(user.name) : 'U'}
-                  </span>
+
+            <div className={styles.userSection}>
+              <div className={styles.brand}>
+                <div className={styles.avatar}>
+                  <span>{user ? getUserInitials(user.name) : 'U'}</span>
                 </div>
-                <div className="hidden md:block">
-                  <p className="text-sm font-medium text-gray-900">
-                    {user?.name}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {user?.role.name}
-                  </p>
+                <div className={styles.userInfo}>
+                  <p style={{ fontSize: '.875rem', fontWeight: 600 }}>{user?.name}</p>
+                  <p style={{ fontSize: '.75rem', color: '#6b7280' }}>{user?.role.name}</p>
                 </div>
               </div>
-              
+
               <Button
                 variant="secondary"
                 onClick={handleSignOut}
@@ -79,14 +72,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </header>
 
       {/* Navigation breadcrumb */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-3">
-            <ol className="flex items-center space-x-2 text-sm">
+      <nav className={styles.breadcrumb}>
+        <div className={styles.container}>
+          <div className={styles.breadcrumbInner}>
+            <ol style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '.875rem' }}>
               <li>
-                <a href="/dashboard" className="text-blue-600 hover:text-blue-500">
-                  Dashboard
-                </a>
+                <a href="/dashboard" style={{ color: '#2563eb', textDecoration: 'none' }}>Dashboard</a>
               </li>
             </ol>
           </div>
@@ -94,9 +85,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </nav>
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {children}
-      </main>
+      <main className={styles.main}>{children}</main>
     </div>
   );
 }

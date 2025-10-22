@@ -1,9 +1,10 @@
-'use client';
+"use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/auth/useAuth';
-import { Button } from '../shared/Button';
-import { Input } from '../shared/Input';
+import { Button, Input } from '../shared';
+import styles from './LoginForm.module.css';
+import buttonStyles from '../shared/Button.module.css';
 
 export function LoginForm() {
   const router = useRouter();
@@ -34,19 +35,15 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Iniciar sesión
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            {process.env.NEXT_PUBLIC_APP_NAME || 'Sistema de Evaluación SQA'}
-          </p>
+    <div className={styles.root}>
+      <div className={styles.card}>
+        <div className={styles.header}>
+          <h2>Iniciar sesión</h2>
+          <p>{process.env.NEXT_PUBLIC_APP_NAME || 'Sistema de Evaluación SQA'}</p>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div className={styles['field-group']}>
             <Input
               label="Email"
               name="email"
@@ -57,7 +54,9 @@ export function LoginForm() {
               placeholder="tu@email.com"
               autoComplete="email"
             />
-            
+          </div>
+
+          <div className={styles['field-group']}>
             <Input
               label="Contraseña"
               name="password"
@@ -71,16 +70,16 @@ export function LoginForm() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className={styles.error}>
               {error}
             </div>
           )}
 
-          <div>
+          <div className={styles.actions}>
             <Button
               type="submit"
               isLoading={isLoading}
-              className="w-full"
+              className={buttonStyles.full}
               size="lg"
               variant="primary"
             >
@@ -88,22 +87,12 @@ export function LoginForm() {
             </Button>
           </div>
 
-          <div className="text-center space-y-2">
-            <a
-              href="/auth/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-500"
-            >
-              ¿Olvidaste tu contraseña?
-            </a>
+          <div className={`${styles['text-center']} ${styles.links}`}>
+            <a href="/auth/forgot-password" className={styles.link}>¿Olvidaste tu contraseña?</a>
             <br />
-            <span className="text-sm text-gray-600">
+            <span>
               ¿No tienes cuenta?{' '}
-              <a
-                href="/auth/register"
-                className="text-blue-600 hover:text-blue-500 font-medium"
-              >
-                Regístrate aquí
-              </a>
+              <a href="/auth/register" className={styles.link}>Regístrate aquí</a>
             </span>
           </div>
         </form>

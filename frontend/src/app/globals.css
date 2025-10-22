@@ -1,4 +1,9 @@
-@import "tailwindcss";
+/* Tailwind import comentado para usar CSS puro por ahora.
+  Si desean habilitar Tailwind más adelante, descomenten la línea
+  y añadan las directivas: @tailwind base; @tailwind components; @tailwind utilities;
+*/
+ 
+/* @import "tailwindcss"; */
 
 :root {
   --background: #ffffff;
