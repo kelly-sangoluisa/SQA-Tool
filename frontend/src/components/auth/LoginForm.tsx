@@ -14,7 +14,6 @@ export function LoginForm() {
     email: '',
     password: '',
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Si ya está autenticado, redirigir al dashboard
   useEffect(() => {
@@ -25,18 +24,15 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (isLoading) return;
     
     clearError();
-    setIsSubmitting(true);
 
     try {
       await signIn(formData);
-      router.replace('/dashboard');
+      // El useEffect se encarga de la redirección cuando isAuthenticated cambie
     } catch (err: unknown) {
       console.error('Error en login:', err);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -47,28 +43,7 @@ export function LoginForm() {
     }));
   };
 
-  // Si está verificando autenticación inicial
-  if (isLoading) {
-    return (
-      <div className={styles.root}>
-        <div className={styles.card}>
-          <div className="text-gray-500 text-sm text-center">Verificando sesión...</div>
-        </div>
-      </div>
-    );
-  }
-
-  // Si ya está autenticado, mostrar mientras redirige
-  if (isAuthenticated && user) {
-    return (
-      <div className={styles.root}>
-        <div className={styles.card}>
-          <div className="text-gray-500 text-sm text-center">Redirigiendo...</div>
-        </div>
-      </div>
-    );
-  }
-
+  // No mostrar nada mientras verifica o redirige, solo el formulario normal
   return (
     <div className={styles.root}>
       <div className={styles.card}>
@@ -93,7 +68,7 @@ export function LoginForm() {
               required
               placeholder="tu@email.com"
               autoComplete="email"
-              disabled={isSubmitting}
+              disabled={isLoading}
             />
 
             <Input
@@ -105,7 +80,7 @@ export function LoginForm() {
               required
               placeholder="Ingresa tu contraseña"
               autoComplete="current-password"
-              disabled={isSubmitting}
+              disabled={isLoading}
             />
           </div>
 
@@ -118,12 +93,12 @@ export function LoginForm() {
           <div className={styles.actions}>
             <Button
               type="submit"
-              disabled={isSubmitting}
+              isLoading={isLoading}
               className={buttonStyles.full}
               size="lg"
               variant="primary"
             >
-              {isSubmitting ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </div>
 

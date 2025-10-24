@@ -136,8 +136,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setHasLoggedOut(false);
       await authApi.signIn(data);
-      await new Promise(resolve => setTimeout(resolve, 200));
-      await checkAuth();
+      // Obtener el usuario inmediatamente después del login
+      const user = await authApi.getMe();
+      setState({
+        user,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null
+      });
+      saveUserToStorage(user);
     } catch (error) {
       setState(prev => ({
         ...prev,
@@ -146,7 +153,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }));
       throw error;
     }
-  }, [checkAuth]);
+  }, []);
 
   const signOut = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true }));
