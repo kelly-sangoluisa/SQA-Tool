@@ -34,7 +34,7 @@
 .form {
   margin-top: 2rem;
   display: block;
-  gap: 1rem;
+  gap: 0.5 rem;
 }
 
 .spaceY4 > * + * {
