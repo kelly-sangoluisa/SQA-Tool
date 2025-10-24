@@ -1,29 +1,42 @@
-"use client";
-import { useState } from 'react';
+'use client';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/auth/useAuth';
 import { Button, Input } from '../shared';
+import Link from 'next/link';
 import styles from './LoginForm.module.css';
 import buttonStyles from '../shared/Button.module.css';
 
 export function LoginForm() {
   const router = useRouter();
-  const { signIn, isLoading, error, clearError } = useAuth();
+  const { signIn, isLoading, error, clearError, user, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Si ya está autenticado, redirigir al dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user) {
+      router.replace('/dashboard');
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
+    if (isSubmitting) return;
     
+    clearError();
+    setIsSubmitting(true);
+
     try {
       await signIn(formData);
-      router.push('/dashboard'); // Redirigir al dashboard después del login
-    } catch (error) {
-      // El error ya se maneja en el hook useAuth
-      console.error('Error en login:', error);
+      router.replace('/dashboard');
+    } catch (err: unknown) {
+      console.error('Error en login:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -34,16 +47,43 @@ export function LoginForm() {
     }));
   };
 
+  // Si está verificando autenticación inicial
+  if (isLoading) {
+    return (
+      <div className={styles.root}>
+        <div className={styles.card}>
+          <div className="text-gray-500 text-sm text-center">Verificando sesión...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si ya está autenticado, mostrar mientras redirige
+  if (isAuthenticated && user) {
+    return (
+      <div className={styles.root}>
+        <div className={styles.card}>
+          <div className="text-gray-500 text-sm text-center">Redirigiendo...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.root}>
       <div className={styles.card}>
         <div className={styles.header}>
-          <h2>Iniciar sesión</h2>
-          <p>{process.env.NEXT_PUBLIC_APP_NAME || 'Sistema de Evaluación SQA'}</p>
+          <h2>Inicia sesión en tu cuenta</h2>
+          <p className={styles.subtitle}>
+            ¿No tienes una cuenta?{' '}
+            <Link href="/auth/signup" className={styles.link}>
+              Regístrate aquí
+            </Link>
+          </p>
         </div>
 
         <form className={styles.form} onSubmit={handleSubmit}>
-          <div className={styles['field-group']}>
+          <div className={styles.fields}>
             <Input
               label="Email"
               name="email"
@@ -53,10 +93,9 @@ export function LoginForm() {
               required
               placeholder="tu@email.com"
               autoComplete="email"
+              disabled={isSubmitting}
             />
-          </div>
 
-          <div className={styles['field-group']}>
             <Input
               label="Contraseña"
               name="password"
@@ -64,8 +103,9 @@ export function LoginForm() {
               value={formData.password}
               onChange={handleChange}
               required
-              placeholder="••••••••"
+              placeholder="Ingresa tu contraseña"
               autoComplete="current-password"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -78,22 +118,19 @@ export function LoginForm() {
           <div className={styles.actions}>
             <Button
               type="submit"
-              isLoading={isLoading}
+              disabled={isSubmitting}
               className={buttonStyles.full}
               size="lg"
               variant="primary"
             >
-              {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+              {isSubmitting ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </div>
 
-          <div className={`${styles['text-center']} ${styles.links}`}>
-            <a href="/auth/forgot-password" className={styles.link}>¿Olvidaste tu contraseña?</a>
-            <br />
-            <span>
-              ¿No tienes cuenta?{' '}
-              <a href="/auth/register" className={styles.link}>Regístrate aquí</a>
-            </span>
+          <div className={styles.links}>
+            <Link href="/auth/forgot-password" className={styles.link}>
+              ¿Olvidaste tu contraseña?
+            </Link>
           </div>
         </form>
       </div>

@@ -71,13 +71,14 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
 }
 
 .fields {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .errorBox {
@@ -98,8 +99,26 @@
   20%, 40%, 60%, 80% { transform: translateX(5px); }
 }
 
+.successBox {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #86efac;
+  color: #166534;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .buttonWrapper {
-  margin-top: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .fullWidth {
