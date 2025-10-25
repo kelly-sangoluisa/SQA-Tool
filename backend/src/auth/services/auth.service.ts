@@ -112,9 +112,48 @@ export class AuthService {
   }
 
   async resetPasswordWithAccessToken(accessToken: string, newPassword: string) {
-    const client = this.createSupabaseClientWithToken(accessToken);
-    const { error } = await client.auth.updateUser({ password: newPassword });
-    this.handleError(error);
+        
+    // Verificar el token y extraer el user_id
+    const secret = this.config.get<string>('SUPABASE_JWT_SECRET');
+    if (!secret) {
+      throw new BadRequestException('JWT secret not configured');
+    }
+
+    try {
+      const jwt = require('jsonwebtoken');
+      const payload = jwt.verify(accessToken, secret, { algorithms: ['HS256'] }) as any;
+      
+      console.log('[Reset Password] Token verificado, user_id:', payload.sub);
+      
+      // Verificar que sea un token de tipo recovery
+      if (payload.aud !== 'authenticated') {
+        throw new BadRequestException('Invalid token type');
+      }
+
+      // Usar el Admin client para actualizar la contraseña
+      const { data, error } = await this.admin.auth.admin.updateUserById(
+        payload.sub,
+        { password: newPassword }
+      );
+
+      console.log('[Reset Password] Resultado de updateUserById:', {
+        hasData: !!data,
+        hasError: !!error,
+        errorMessage: error?.message
+      });
+
+      if (error) {
+        console.error('[Reset Password] Error en updateUserById:', error);
+        throw new BadRequestException(error.message || 'Failed to update password');
+      }
+
+      console.log('[Reset Password] ✅ Contraseña actualizada exitosamente');
+    } catch (err: any) {
+      if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+        throw new BadRequestException('Invalid or expired recovery token');
+      }
+      throw err;
+    }
   }
 
   async signOut(accessToken: string) {
