@@ -53,10 +53,8 @@ export function ResetPasswordForm() {
     }
 
     try {
-      console.log('Enviando petición de reset con:', {
-        access_token: accessToken.substring(0, 20) + '...',
-        new_password: '***'
-      });
+      // NOSONAR typescript:S2068 - Logging API field structure for debugging (password is masked)
+      
       
       // NOSONAR typescript:S2068 - 'new_password' is the backend API field name as defined in ResetPasswordDto
       // The actual password value comes from user input (formData.password), not hardcoded
