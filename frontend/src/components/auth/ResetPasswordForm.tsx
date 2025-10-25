@@ -58,9 +58,11 @@ export function ResetPasswordForm() {
         new_password: '***'
       });
       
+      // NOSONAR typescript:S2068 - 'new_password' is the backend API field name as defined in ResetPasswordDto
+      // The actual password value comes from user input (formData.password), not hardcoded
       await resetPassword({
         access_token: accessToken,
-        new_password: formData.password,
+        new_password: formData.password, // NOSONAR
       });
       setSuccess(true);
       
