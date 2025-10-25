@@ -19,7 +19,7 @@ export function ForgotPasswordForm() {
     setSuccess(false);
 
     try {
-      const redirectTo = `${window.location.origin}/auth/reset-password`;
+      const redirectTo = `${globalThis.location.origin}/auth/reset-password`;
       await forgotPassword({ email, redirectTo });
       setSuccess(true);
       setEmail(''); // Limpiar el campo

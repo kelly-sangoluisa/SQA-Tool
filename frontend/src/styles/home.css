@@ -42,10 +42,10 @@
   background-clip: text;
   margin-bottom: 1.5rem;
   letter-spacing: -0.02em;
-  animation: fadeInDown 0.8s ease-out;
+  animation: fade-in-down 0.8s ease-out;
 }
 
-@keyframes fadeInDown {
+@keyframes fade-in-down {
   from {
     opacity: 0;
     transform: translateY(-20px);
@@ -64,10 +64,10 @@
   margin-left: auto;
   margin-right: auto;
   line-height: 1.7;
-  animation: fadeIn 1s ease-out 0.2s both;
+  animation: fade-in 1s ease-out 0.2s both;
 }
 
-@keyframes fadeIn {
+@keyframes fade-in {
   from {
     opacity: 0;
   }
@@ -82,7 +82,7 @@
   justify-content: center;
   flex-wrap: wrap;
   margin-bottom: 4rem;
-  animation: fadeIn 1s ease-out 0.4s both;
+  animation: fade-in 1s ease-out 0.4s both;
 }
 
 .btn-primary,
@@ -154,10 +154,10 @@
   grid-template-columns: 1fr;
   max-width: 1200px;
   margin: 0 auto 4rem auto;
-  animation: fadeInUp 1s ease-out 0.6s both;
+  animation: fade-in-up 1s ease-out 0.6s both;
 }
 
-@keyframes fadeInUp {
+@keyframes fade-in-up {
   from {
     opacity: 0;
     transform: translateY(30px);
@@ -242,7 +242,7 @@
   margin-top: 4rem;
   padding-top: 3rem;
   border-top: 2px solid rgba(78, 94, 163, 0.15);
-  animation: fadeIn 1s ease-out 0.8s both;
+  animation: fade-in 1s ease-out 0.8s both;
 }
 
 .tech-label {

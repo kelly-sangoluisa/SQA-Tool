@@ -20,7 +20,7 @@ export function ResetPasswordForm() {
 
   useEffect(() => {
     // Supabase envía el token en el hash: #access_token=...&expires_at=...
-    const hash = window.location.hash.substring(1); // Quitar el #
+    const hash = globalThis.location.hash.substring(1); // Quitar el #
     const params = new URLSearchParams(hash);
     const token = params.get('access_token');
     

@@ -32,10 +32,10 @@
   position: relative;
   z-index: 1;
   border: 1px solid rgba(78, 94, 163, 0.1);
-  animation: fadeInUp 0.6s ease-out;
+  animation: fade-in-up 0.6s ease-out;
 }
 
-@keyframes fadeInUp {
+@keyframes fade-in-up {
   from {
     opacity: 0;
     transform: translateY(30px);
