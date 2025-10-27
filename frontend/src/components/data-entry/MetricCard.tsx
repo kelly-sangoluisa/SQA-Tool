@@ -15,7 +15,7 @@ interface MetricCardProps {
   variables: Variable[];
 }
 
-export function MetricCard({ number, name, description, formula, variables }: MetricCardProps) {
+export function MetricCard({ number, name, description, formula, variables }: Readonly<MetricCardProps>) {
   return (
     <div className={styles.metricCard}>
       {/* Header con número y título */}
@@ -37,7 +37,7 @@ export function MetricCard({ number, name, description, formula, variables }: Me
               <div className={styles.variablesInfo}>
                 <div className={styles.variablesTitle}>Donde:</div>
                 {variables.map((variable, index) => (
-                  <div key={index} className={styles.variableDefinition}>
+                  <div key={variable.symbol} className={styles.variableDefinition}>
                     <span className={styles.variableSymbol}>{variable.symbol}</span>
                     <span className={styles.equals}>=</span>
                     <span className={styles.variableDescription}>{variable.description}</span>
@@ -53,7 +53,7 @@ export function MetricCard({ number, name, description, formula, variables }: Me
           {variables.length > 0 && (
             <div className={styles.inputsSection}>
               {variables.map((variable, index) => (
-                <div key={index} className={styles.inputGroup}>
+                <div key={variable.symbol} className={styles.inputGroup}>
                   <label className={styles.inputLabel}>
                     {variable.symbol} =
                   </label>
