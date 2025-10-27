@@ -1,0 +1,220 @@
+.metricCard {
+  background: #FFFFFF;
+  border-radius: 0px 16px 16px 16px;
+  box-shadow: 0 4px 20px rgba(78, 94, 163, 0.116);
+  border: 1px solid rgba(75, 65, 211, 0.26);
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(78, 94, 163, 0.1);
+  background: #f8f9ff;
+}
+
+.number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: white;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(78, 94, 163, 0.25);
+}
+
+.titleSection {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Contenido principal con dos columnas */
+.mainContent {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.leftColumn {
+  flex: 70%;
+  background: #f8f9ff;
+  border-right: 1px solid rgba(78, 94, 163, 0.1);
+  overflow-y: auto;
+}
+
+.rightColumn {
+  flex: 30%;
+  padding: 2rem;
+  background: #f8f9ff;
+  display: flex;
+  flex-direction: column;
+}
+
+.description {
+  font-size: 1rem;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0 0 2rem 0;
+}
+
+.formulaSection {
+  background: #f8f9ff;
+  border-radius: 0px;
+  padding: 0rem 0rem 0rem 10rem ;
+  height: auto;
+}
+
+.formulaTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 1.0rem 0.5rem;
+  font-family: 'Courier New', monospace;
+  background: #FFFFFF;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  border: 2px solid rgba(78, 94, 163, 0.2);
+}
+
+.variablesInfo {
+  margin-top: 0rem;
+}
+
+.variablesTitle {
+  font-weight: 600;
+  color: #374151;
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+
+.variableDefinition {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 2rem;
+}
+
+.variableSymbol {
+  font-weight: 700;
+  color: #4E5EA3;
+  min-width: 2rem;
+  font-size: 1.1rem;
+}
+
+.equals {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.variableDescription {
+  color: #374151;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+/* Inputs en la columna derecha */
+.inputsSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+}
+
+.inputGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.inputLabel {
+  font-weight: 600;
+  color: #4E5EA3;
+  font-size: 1.1rem;
+   line-height: normal;
+  letter-spacing: 0;
+  min-width: auto;
+  flex-shrink: 0;
+}
+
+.valueInput {
+  flex: 1;
+  height: 41px;
+  background: white;
+  border-radius: 10px;
+  outline: none;
+  border: 1px solid #7462aa;
+  padding: 0 12px;
+  font-size: 1.1rem;
+  text-align: center;
+  box-shadow: 0 0 0 2px rgba(116, 98, 170, 0.1);
+}
+
+
+/* Footer con botones */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 2rem;
+  border-top: 1px solid rgba(78, 94, 163, 0.1);
+  background: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .mainContent {
+    flex-direction: column;
+  }
+  
+  .leftColumn {
+    border-right: none;
+    border-bottom: 1px solid rgba(78, 94, 163, 0.1);
+  }
+  
+  .rightColumn {
+    flex: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem;
+  }
+  
+  .leftColumn,
+  .rightColumn {
+    padding: 1rem;
+  }
+  
+  .footer {
+    padding: 1rem;
+    flex-direction: column;
+  }
+  
+  .name {
+    font-size: 1.25rem;
+  }
+  
+  .formulaTitle {
+    font-size: 1.25rem;
+  }
+}
