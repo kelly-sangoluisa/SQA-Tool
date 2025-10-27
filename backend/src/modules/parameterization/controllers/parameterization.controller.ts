@@ -10,15 +10,15 @@ import { CreateSubCriterionDto, UpdateSubCriterionDto } from '../dto/sub-criteri
 import { CreateMetricDto, UpdateMetricDto } from '../dto/metric.dto';
 import { CreateFormulaVariableDto, UpdateFormulaVariableDto } from '../dto/formula-variable.dto';
 
-@ApiTags('Parameterization (Admin)')
+@ApiTags('Parameterization')
 @ApiBearerAuth('bearer')
-@ROLES('admin')
 @Controller('parameterization')
 export class ParameterizationController {
   constructor(private readonly service: ParameterizationService) {}
 
   // --- Standards Endpoints ---
   @Post('standards')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Crear un nuevo estándar de calidad' })
   @ApiResponse({ status: 201, description: 'Estándar creado exitosamente.' })
   createStandard(@Body() createStandardDto: CreateStandardDto) {
@@ -26,24 +26,28 @@ export class ParameterizationController {
   }
 
   @Get('standards')
+  @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener todos los estándares de calidad' })
   findAllStandards() {
     return this.service.findAllStandards();
   }
 
   @Get('standards/:id')
+  @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener un estándar por su ID' })
   findOneStandard(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOneStandard(id);
   }
 
   @Patch('standards/:id')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Actualizar un estándar existente' })
   updateStandard(@Param('id', ParseIntPipe) id: number, @Body() updateStandardDto: UpdateStandardDto) {
     return this.service.updateStandard(id, updateStandardDto);
   }
 
   @Delete('standards/:id')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Eliminar un estándar' })
   @HttpCode(HttpStatus.OK)
   removeStandard(@Param('id', ParseIntPipe) id: number) {
@@ -52,6 +56,7 @@ export class ParameterizationController {
 
   // --- Criteria Endpoints (anidados y directos) ---
   @Post('criteria')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Crear un nuevo criterio' })
   @ApiResponse({ status: 201, description: 'Criterio creado exitosamente.' })
   createCriterion(@Body() createCriterionDto: CreateCriterionDto) {
@@ -59,6 +64,7 @@ export class ParameterizationController {
   }
   
   @Get('standards/:standard_id/criteria')
+  @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener todos los criterios para un estándar específico' })
   @ApiResponse({ status: 200, description: 'Lista de criterios obtenida exitosamente.' })
   findAllCriteriaForStandard(@Param('standard_id', ParseIntPipe) standard_id: number) {
@@ -66,6 +72,7 @@ export class ParameterizationController {
   }
 
   @Get('criteria/:id')
+  @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener un criterio por su ID' })
   @ApiResponse({ status: 200, description: 'Criterio obtenido exitosamente.' })
   @ApiResponse({ status: 404, description: 'Criterio no encontrado.' })
@@ -74,6 +81,7 @@ export class ParameterizationController {
   }
 
   @Patch('criteria/:id')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Actualizar un criterio existente' })
   @ApiResponse({ status: 200, description: 'Criterio actualizado exitosamente.' })
   @ApiResponse({ status: 404, description: 'Criterio no encontrado.' })
@@ -82,6 +90,7 @@ export class ParameterizationController {
   }
   
   @Delete('criteria/:id')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Eliminar un criterio' })
   @ApiResponse({ status: 200, description: 'Criterio eliminado exitosamente.' })
   @ApiResponse({ status: 404, description: 'Criterio no encontrado.' })
@@ -95,6 +104,7 @@ export class ParameterizationController {
   
   // --- SubCriteria Endpoints ---
   @Post('sub-criteria')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Crear un nuevo sub-criterio' })
   @ApiResponse({ status: 201, description: 'Sub-criterio creado exitosamente.' })
   createSubCriterion(@Body() createSubCriterionDto: CreateSubCriterionDto) {
@@ -102,6 +112,7 @@ export class ParameterizationController {
   }
 
   @Get('criteria/:criterionId/sub-criteria')
+  @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener todos los sub-criterios para un criterio específico' })
   @ApiResponse({ status: 200, description: 'Lista de sub-criterios obtenida exitosamente.' })
   findAllSubCriteriaForCriterion(@Param('criterionId', ParseIntPipe) criterion_id: number) {
@@ -109,6 +120,7 @@ export class ParameterizationController {
   }
 
   @Get('sub-criteria/:id')
+  @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener un sub-criterio por ID' })
   @ApiResponse({ status: 200, description: 'Sub-criterio obtenido exitosamente.' })
   @ApiResponse({ status: 404, description: 'Sub-criterio no encontrado.' })
@@ -117,6 +129,7 @@ export class ParameterizationController {
   }
   
   @Patch('sub-criteria/:id')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Actualizar un sub-criterio' })
   @ApiResponse({ status: 200, description: 'Sub-criterio actualizado exitosamente.' })
   @ApiResponse({ status: 404, description: 'Sub-criterio no encontrado.' })
@@ -125,6 +138,7 @@ export class ParameterizationController {
   }
   
   @Delete('sub-criteria/:id')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Eliminar un sub-criterio' })
   @ApiResponse({ status: 200, description: 'Sub-criterio eliminado exitosamente.' })
   @ApiResponse({ status: 404, description: 'Sub-criterio no encontrado.' })
@@ -135,6 +149,7 @@ export class ParameterizationController {
   
   // --- Metrics Endpoints ---
   @Post('metrics')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Crear una nueva métrica' })
   @ApiResponse({ status: 201, description: 'Métrica creada exitosamente.' })
   createMetric(@Body() createMetricDto: CreateMetricDto) {
@@ -142,6 +157,7 @@ export class ParameterizationController {
   }
 
   @Get('sub-criteria/:subCriterionId/metrics')
+  @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener todas las métricas para un sub-criterio' })
   @ApiResponse({ status: 200, description: 'Lista de métricas obtenida exitosamente.' })
   findAllMetricsForSubCriterion(@Param('subCriterionId', ParseIntPipe) sub_criterion_id: number) {
@@ -149,6 +165,7 @@ export class ParameterizationController {
   }
   
   @Get('metrics/:id')
+  @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener una métrica por ID' })
   @ApiResponse({ status: 200, description: 'Métrica obtenida exitosamente.' })
   @ApiResponse({ status: 404, description: 'Métrica no encontrada.' })
@@ -157,6 +174,7 @@ export class ParameterizationController {
   }
   
   @Patch('metrics/:id')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Actualizar una métrica' })
   @ApiResponse({ status: 200, description: 'Métrica actualizada exitosamente.' })
   @ApiResponse({ status: 404, description: 'Métrica no encontrada.' })
@@ -165,6 +183,7 @@ export class ParameterizationController {
   }
   
   @Delete('metrics/:id')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Eliminar una métrica' })
   @ApiResponse({ status: 200, description: 'Métrica eliminada exitosamente.' })
   @ApiResponse({ status: 404, description: 'Métrica no encontrada.' })
@@ -175,6 +194,7 @@ export class ParameterizationController {
   
   // --- Formula Variables Endpoints ---
   @Post('variables')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Crear una nueva variable de fórmula' })
   @ApiResponse({ status: 201, description: 'Variable creada exitosamente.' })
   createVariable(@Body() createDto: CreateFormulaVariableDto) {
@@ -182,6 +202,7 @@ export class ParameterizationController {
   }
   
   @Get('metrics/:metricId/variables')
+  @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener todas las variables para una métrica' })
   @ApiResponse({ status: 200, description: 'Lista de variables obtenida exitosamente.' })
   findAllVariablesForMetric(@Param('metricId', ParseIntPipe) metric_id: number) {
@@ -189,6 +210,7 @@ export class ParameterizationController {
   }
   
   @Get('variables/:id')
+  @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener una variable por ID' })
   @ApiResponse({ status: 200, description: 'Variable obtenida exitosamente.' })
   @ApiResponse({ status: 404, description: 'Variable no encontrada.' })
@@ -197,6 +219,7 @@ export class ParameterizationController {
   }
   
   @Patch('variables/:id')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Actualizar una variable' })
   @ApiResponse({ status: 200, description: 'Variable actualizada exitosamente.' })
   @ApiResponse({ status: 404, description: 'Variable no encontrada.' })
@@ -205,6 +228,7 @@ export class ParameterizationController {
   }
   
   @Delete('variables/:id')
+  @ROLES('admin')
   @ApiOperation({ summary: 'Eliminar una variable' })
   @ApiResponse({ status: 200, description: 'Variable eliminada exitosamente.' })
   @ApiResponse({ status: 404, description: 'Variable no encontrada.' })
