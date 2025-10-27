@@ -85,9 +85,93 @@ const evaluationData = [
 export default function EnterDataPage() {
   const [activeStandard, setActiveStandard] = useState(0);
   const [activeMetric, setActiveMetric] = useState(0);
+  
+  // Estado para almacenar los valores de cada métrica
+  const [metricValues, setMetricValues] = useState<Record<string, Record<string, string>>>({});
+  
+  // Estado para marcar métricas como completadas
+  const [completedMetrics, setCompletedMetrics] = useState<Set<string>>(new Set());
 
   const currentStandard = evaluationData[activeStandard];
   const currentMetric = currentStandard?.metrics[activeMetric];
+
+  // Función para generar clave única de métrica
+  const getMetricKey = (standardIndex: number, metricIndex: number) => 
+    `${standardIndex}-${metricIndex}`;
+
+  // Función para obtener valores de la métrica actual
+  const getCurrentMetricValues = () => {
+    const key = getMetricKey(activeStandard, activeMetric);
+    return metricValues[key] || {};
+  };
+
+  // Función para actualizar valores de variables
+  const updateMetricValue = (variableSymbol: string, value: string) => {
+    const key = getMetricKey(activeStandard, activeMetric);
+    setMetricValues(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [variableSymbol]: value
+      }
+    }));
+  };
+
+  // Función para marcar métrica como completada
+  const markAsCompleted = () => {
+    const key = getMetricKey(activeStandard, activeMetric);
+    const currentValues = getCurrentMetricValues();
+    const allVariablesFilled = currentMetric?.variables.every(variable => 
+      currentValues[variable.symbol] && currentValues[variable.symbol].trim() !== ''
+    );
+    
+    if (allVariablesFilled) {
+      setCompletedMetrics(prev => new Set([...prev, key]));
+    }
+  };
+
+  // Función para ir a la siguiente métrica
+  const goToNext = () => {
+    markAsCompleted();
+    
+    const totalMetricsInCurrentStandard = currentStandard?.metrics.length || 0;
+    const isLastMetricInStandard = activeMetric === totalMetricsInCurrentStandard - 1;
+    const isLastStandard = activeStandard === evaluationData.length - 1;
+
+    if (isLastMetricInStandard) {
+      if (!isLastStandard) {
+        // Ir al primer métrica del siguiente estándar
+        setActiveStandard(activeStandard + 1);
+        setActiveMetric(0);
+      } else {
+        // Es la última métrica - aquí podrías abrir un modal de finalización
+        alert('¡Evaluación completada! 🎉');
+      }
+    } else {
+      // Siguiente métrica en el mismo estándar
+      setActiveMetric(activeMetric + 1);
+    }
+  };
+
+  // Función para ir a la métrica anterior
+  const goToPrevious = () => {
+    if (activeMetric > 0) {
+      // Métrica anterior en el mismo estándar
+      setActiveMetric(activeMetric - 1);
+    } else if (activeStandard > 0) {
+      // Última métrica del estándar anterior
+      const previousStandard = evaluationData[activeStandard - 1];
+      setActiveStandard(activeStandard - 1);
+      setActiveMetric(previousStandard.metrics.length - 1);
+    }
+  };
+
+  // Verificar si es la primera métrica
+  const isFirstMetric = activeStandard === 0 && activeMetric === 0;
+  
+  // Verificar si es la última métrica
+  const isLastMetric = activeStandard === evaluationData.length - 1 && 
+                       activeMetric === (currentStandard?.metrics.length || 0) - 1;
 
   const handleStandardClick = (standardIndex: number) => {
     setActiveStandard(standardIndex);
@@ -108,6 +192,7 @@ export default function EnterDataPage() {
             evaluationData={evaluationData}
             activeStandard={activeStandard}
             activeMetric={activeMetric}
+            completedMetrics={completedMetrics}
             onStandardClick={handleStandardClick}
             onMetricClick={handleMetricClick}
         />
@@ -125,6 +210,12 @@ export default function EnterDataPage() {
                 description={currentMetric.description}
                 formula={currentMetric.formula}
                 variables={currentMetric.variables}
+                values={getCurrentMetricValues()}
+                onValueChange={updateMetricValue}
+                onPrevious={goToPrevious}
+                onNext={goToNext}
+                isFirstMetric={isFirstMetric}
+                isLastMetric={isLastMetric}
               />
             </div>
           )}

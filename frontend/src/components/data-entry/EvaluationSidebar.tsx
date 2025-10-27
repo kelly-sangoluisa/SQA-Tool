@@ -23,6 +23,7 @@ interface EvaluationSidebarProps {
   evaluationData: Standard[];
   activeStandard?: number;
   activeMetric?: number;
+  completedMetrics?: Set<string>;
   onStandardClick?: (standardIndex: number) => void;
   onMetricClick?: (standardIndex: number, metricIndex: number) => void;
 }
@@ -31,10 +32,25 @@ export function EvaluationSidebar({
   evaluationData, 
   activeStandard, 
   activeMetric, 
+  completedMetrics = new Set(),
   onStandardClick, 
   onMetricClick 
 }: Readonly<EvaluationSidebarProps>) {
   const [expandedStandards, setExpandedStandards] = useState<Set<number>>(new Set([0]));
+
+  // Función para generar clave de métrica
+  const getMetricKey = (standardIndex: number, metricIndex: number) => 
+    `${standardIndex}-${metricIndex}`;
+
+  // Función para contar métricas completadas por estándar
+  const getCompletedMetricsInStandard = (standardIndex: number) => {
+    const standard = evaluationData[standardIndex];
+    if (!standard) return 0;
+    
+    return standard.metrics.filter((_, metricIndex) => 
+      completedMetrics.has(getMetricKey(standardIndex, metricIndex))
+    ).length;
+  };
 
   const toggleStandard = (index: number) => {
     const newExpanded = new Set(expandedStandards);
@@ -58,40 +74,57 @@ export function EvaluationSidebar({
       </div>
       
       <div className={styles.navigation}>
-        {evaluationData.map((section, standardIndex) => (
-          <div key={`standard-${section.standard}-${standardIndex}`} className={styles.standardGroup}>
-            <button
-              className={`${styles.standardButton} ${
-                activeStandard === standardIndex ? styles.activeStandard : ''
-              }`}
-              onClick={() => toggleStandard(standardIndex)}
-            >
-              <span className={styles.standardIcon}>
-                {expandedStandards.has(standardIndex) ? '▼' : '▶'}
-              </span>
-              <span className={styles.standardName}>{section.standard}</span>
-            </button>
-            
-            {expandedStandards.has(standardIndex) && (
-              <div className={styles.metricsContainer}>
-                {section.metrics.map((metric, metricIndex) => (
-                  <button
-                    key={`metric-${metric.number}-${metricIndex}`}
-                    className={`${styles.metricButton} ${
-                      activeStandard === standardIndex && activeMetric === metricIndex 
-                        ? styles.activeMetric 
-                        : ''
-                    }`}
-                    onClick={() => handleMetricClick(standardIndex, metricIndex)}
-                  >
-                    <span className={styles.metricNumber}>{metric.number}</span>
-                    <span className={styles.metricName}>{metric.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+        {evaluationData.map((section, standardIndex) => {
+          const completedCount = getCompletedMetricsInStandard(standardIndex);
+          const totalCount = section.metrics.length;
+          
+          return (
+            <div key={`standard-${section.standard}-${standardIndex}`} className={styles.standardGroup}>
+              <button
+                className={`${styles.standardButton} ${
+                  activeStandard === standardIndex ? styles.activeStandard : ''
+                }`}
+                onClick={() => toggleStandard(standardIndex)}
+              >
+                <span className={styles.standardIcon}>
+                  {expandedStandards.has(standardIndex) ? '▼' : '▶'}
+                </span>
+                <span className={styles.standardName}>
+                  {section.standard}
+                  <span className={styles.progressIndicator}>
+                    ({completedCount}/{totalCount})
+                  </span>
+                </span>
+              </button>
+              
+              {expandedStandards.has(standardIndex) && (
+                <div className={styles.metricsContainer}>
+                  {section.metrics.map((metric, metricIndex) => {
+                    const metricKey = getMetricKey(standardIndex, metricIndex);
+                    const isCompleted = completedMetrics.has(metricKey);
+                    
+                    return (
+                      <button
+                        key={`metric-${metric.number}-${metricIndex}`}
+                        className={`${styles.metricButton} ${
+                          activeStandard === standardIndex && activeMetric === metricIndex 
+                            ? styles.activeMetric 
+                            : ''
+                        } ${isCompleted ? styles.completedMetric : ''}`}
+                        onClick={() => handleMetricClick(standardIndex, metricIndex)}
+                      >
+                        <span className={`${styles.metricNumber} ${isCompleted ? styles.completedNumber : ''}`}>
+                          {isCompleted ? '✓' : metric.number}
+                        </span>
+                        <span className={styles.metricName}>{metric.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
