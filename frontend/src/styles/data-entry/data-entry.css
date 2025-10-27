@@ -30,7 +30,7 @@
 .backButton:hover {
   transform: translateX(-4px);
   color: #59469A;
-  background: rgba(78, 94, 163, 0.08);
+  background: rgb(78 94 163 / 0.08);
 }
 
 .evaluationTitle {
@@ -40,9 +40,8 @@
   text-align: center;
   margin: 0;
   background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .navigation {
@@ -62,11 +61,11 @@
 .currentStandardHeader {
   background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
   color: white;
-  padding: 8px; /* Padding más pequeño */
-  border-radius: 16px 16px 0px 0px;
-  box-shadow: 0 4px 20px rgba(78, 94, 163, 0.25);
+  padding: 8px 0;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 4px 20px rgb(78 94 163 / 0.25);
   text-align: center;
-  animation: fadeInUp 0.3s ease;
+  animation: fade-in-up 0.3s ease;
   flex-shrink: 0; /* No se encoge */
   width: 30%;
   
@@ -82,7 +81,7 @@
 
 .metricContainer {
   flex: 1;
-  animation: fadeInUp 0.4s ease;
+  animation: fade-in-up 0.4s ease;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -136,7 +135,7 @@
 }
 
 /* Animaciones */
-@keyframes fadeInUp {
+@keyframes fade-in-up {
   from {
     opacity: 0;
     transform: translateY(30px);
@@ -158,15 +157,15 @@
   background: #FFFFFF;
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 4px 20px rgba(78, 94, 163, 0.08);
-  border: 1px solid rgba(78, 94, 163, 0.1);
+  box-shadow: 0 4px 20px rgb(78 94 163 / 0.08);
+  border: 1px solid rgb(78 94 163 / 0.1);
   margin-bottom: 2rem;
   transition: all 0.3s ease;
 }
 
 .evaluationCard:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 32px rgba(78, 94, 163, 0.12);
+  box-shadow: 0 8px 32px rgb(78 94 163 / 0.12);
 }
 
 .standardSection {
@@ -185,7 +184,7 @@
   margin-bottom: 1.5rem;
   font-weight: 700;
   font-size: 1.25rem;
-  box-shadow: 0 4px 12px rgba(78, 94, 163, 0.15);
+  box-shadow: 0 4px 12px rgb(78 94 163 / 0.15);
 }
 
 .metricsGrid {
@@ -195,7 +194,7 @@
 
 .metricItem {
   background: #f8f9ff;
-  border: 2px solid rgba(78, 94, 163, 0.1);
+  border: 2px solid rgb(78 94 163 / 0.1);
   border-radius: 12px;
   padding: 1.5rem;
   transition: all 0.3s ease;
@@ -204,7 +203,7 @@
 .metricItem:hover {
   border-color: #4E5EA3;
   background: #ffffff;
-  box-shadow: 0 4px 16px rgba(78, 94, 163, 0.1);
+  box-shadow: 0 4px 16px rgb(78 94 163 / 0.1);
 }
 
 .metricHeader {

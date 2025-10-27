@@ -2,19 +2,19 @@
   width: 250px; /* Sidebar más pequeña */
   height: 100vh;
   background: #FFFFFF;
-  border-right: 1px solid rgba(78, 94, 163, 0.15);
+  border-right: 1px solid rgb(78 94 163 / 0.15);
   display: flex;
   flex-direction: column;
   position: fixed;
   left: 0;
   top: 0;
   z-index: 100;
-  box-shadow: 4px 0 20px rgba(78, 94, 163, 0.08);
+  box-shadow: 4px 0 20px rgb(78 94 163 / 0.08);
 }
 
 .header {
   padding: 1.5rem 1rem 1rem; /* Padding más pequeño */
-  border-bottom: 1px solid rgba(78, 94, 163, 0.15);
+  border-bottom: 1px solid rgb(78 94 163 / 0.15);
   background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
 }
 
@@ -54,11 +54,11 @@
 }
 
 .standardButton:hover {
-  background: rgba(78, 94, 163, 0.08);
+  background: rgb(78 94 163 / 0.08);
 }
 
 .activeStandard {
-  background: rgba(78, 94, 163, 0.1) !important;
+  background: rgb(78 94 163 / 0.1) !important;
   color: #59469A !important;
 }
 
@@ -78,10 +78,10 @@
   background: #f8f9ff;
   border-left: 3px solid #4E5EA3;
   margin-left: 1rem; /* Margen más pequeño */
-  animation: slideDown 0.3s ease;
+  animation: slide-down 0.3s ease;
 }
 
-@keyframes slideDown {
+@keyframes slide-down {
   from {
     opacity: 0;
     max-height: 0;
@@ -109,7 +109,7 @@
 }
 
 .metricButton:hover {
-  background: rgba(78, 94, 163, 0.05);
+  background: rgb(78 94 163 / 0.05);
   color: #4E5EA3;
 }
 
@@ -117,7 +117,7 @@
   background: #FFFFFF !important;
   color: #4E5EA3 !important;
   border-left-color: #7462AA !important;
-  box-shadow: 0 2px 8px rgba(78, 94, 163, 0.1);
+  box-shadow: 0 2px 8px rgb(78 94 163 / 0.1);
 }
 
 .metricNumber {

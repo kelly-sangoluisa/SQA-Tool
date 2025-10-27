@@ -14,7 +14,7 @@
   margin-bottom: 1.5rem;
   font-weight: 700;
   font-size: 1.25rem;
-  box-shadow: 0 4px 12px rgba(78, 94, 163, 0.15);
+  box-shadow: 0 4px 12px rgb(78, 94, 163, 0.15);
 }
 
 .content {
