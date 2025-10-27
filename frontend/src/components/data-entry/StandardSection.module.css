@@ -1,0 +1,29 @@
+.standardSection {
+  margin-bottom: 2.5rem;
+}
+
+.standardSection:last-child {
+  margin-bottom: 0;
+}
+
+.header {
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+  box-shadow: 0 4px 12px rgba(78, 94, 163, 0.15);
+}
+
+.content {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .content {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
