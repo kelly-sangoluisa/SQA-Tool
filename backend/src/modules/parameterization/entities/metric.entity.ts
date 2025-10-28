@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { SubCriterion } from './sub-criterion.entity';
 import { FormulaVariable } from './formula-variable.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { ItemStatus } from '../types/parameterization.types';
 
 @Entity('metrics')
 export class Metric {
@@ -32,6 +33,19 @@ export class Metric {
   @ApiProperty({ description: 'Umbral deseado para la métrica', example: 95.5, required: false })
   @Column({ type: 'numeric', precision: 10, scale: 4, nullable: true })
   desired_threshold: number;
+
+  @ApiProperty({ 
+    description: 'Estado del ítem (activo o inactivo)', 
+    enum: ItemStatus, 
+    example: ItemStatus.ACTIVE 
+  })
+  @Column({ 
+    type: 'enum', 
+    enum: ItemStatus, 
+    name: 'state', 
+    default: ItemStatus.ACTIVE 
+  })
+  state: ItemStatus;
 
   @ApiProperty()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

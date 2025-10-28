@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { Criterion } from './criterion.entity';
 import { Metric } from './metric.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { ItemStatus } from '../types/parameterization.types';
 
 @Entity('sub_criteria')
 export class SubCriterion {
@@ -20,6 +21,19 @@ export class SubCriterion {
   @ApiProperty({ description: 'Descripción del sub-criterio', required: false })
   @Column({ type: 'text', nullable: true })
   description: string;
+
+  @ApiProperty({ 
+    description: 'Estado del ítem (activo o inactivo)', 
+    enum: ItemStatus, 
+    example: ItemStatus.ACTIVE 
+  })
+  @Column({ 
+    type: 'enum', 
+    enum: ItemStatus, 
+    name: 'state', 
+    default: ItemStatus.ACTIVE 
+  })
+  state: ItemStatus;
 
   @ApiProperty()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

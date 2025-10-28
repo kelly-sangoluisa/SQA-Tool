@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Criterion } from './criterion.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { ItemStatus } from '../types/parameterization.types';
 
 @Entity('standards')
 export class Standard {
@@ -19,6 +20,19 @@ export class Standard {
   @ApiProperty({ description: 'Descripción detallada del estándar', example: 'Modelo de calidad del producto software', required: false })
   @Column({ type: 'text', nullable: true })
   description: string;
+
+  @ApiProperty({ 
+    description: 'Estado del ítem (activo o inactivo)', 
+    enum: ItemStatus, 
+    example: ItemStatus.ACTIVE 
+  })
+  @Column({ 
+    type: 'enum', 
+    enum: ItemStatus, 
+    name: 'state', 
+    default: ItemStatus.ACTIVE 
+  })
+  state: ItemStatus;
 
   @ApiProperty()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
