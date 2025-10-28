@@ -36,7 +36,7 @@ import { ParameterizationModule } from './modules/parameterization/parameterizat
         url: configService.get<string>('DATABASE_URL'),
         ssl: configService.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
         autoLoadEntities: true,
-        synchronize: configService.get('NODE_ENV') !== 'production',
+        synchronize: false,
         logging: configService.get('NODE_ENV') === 'development',
       }),
     }),
