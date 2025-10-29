@@ -2,7 +2,7 @@ import {
   Controller, Get, Post, Body, Patch, Param,
   ParseIntPipe, Query
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ROLES } from '../../../common/decorators/roles.decorator';
 import { ParameterizationService } from '../services/parameterization.service';
 
