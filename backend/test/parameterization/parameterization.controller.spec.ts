@@ -3,37 +3,48 @@ import { ParameterizationController } from '../../src/modules/parameterization/c
 import { ParameterizationService } from '../../src/modules/parameterization/services/parameterization.service';
 import { CreateStandardDto } from '../../src/modules/parameterization/dto/standard.dto';
 import { CreateCriterionDto } from '../../src/modules/parameterization/dto/criterion.dto';
+import { CreateSubCriterionDto } from '../../src/modules/parameterization/dto/sub-criterion.dto';
+import { CreateMetricDto } from '../../src/modules/parameterization/dto/metric.dto';
+import { CreateFormulaVariableDto } from '../../src/modules/parameterization/dto/formula-variable.dto';
+import { UpdateStateDto } from '../../src/modules/parameterization/dto/update-state.dto';
+import { FindAllQueryDto } from '../../src/modules/parameterization/dto/find-all-query.dto';
+import { ItemStatus } from '../../src/modules/parameterization/types/parameterization.types';
 
 const mockParameterizationService = {
+  // Standards
   createStandard: jest.fn(),
   findAllStandards: jest.fn(),
   findOneStandard: jest.fn(),
   updateStandard: jest.fn(),
-  removeStandard: jest.fn(),
+  updateStandardState: jest.fn(),
 
+  // Criteria
   createCriterion: jest.fn(),
   findAllCriteria: jest.fn(),
   findOneCriterion: jest.fn(),
   updateCriterion: jest.fn(),
-  removeCriterion: jest.fn(),
+  updateCriterionState: jest.fn(),
   
+  // SubCriteria
   createSubCriterion: jest.fn(),
   findAllSubCriteria: jest.fn(),
   findOneSubCriterion: jest.fn(),
   updateSubCriterion: jest.fn(),
-  removeSubCriterion: jest.fn(),
+  updateSubCriterionState: jest.fn(),
 
+  // Metrics
   createMetric: jest.fn(),
   findAllMetrics: jest.fn(),
   findOneMetric: jest.fn(),
   updateMetric: jest.fn(),
-  removeMetric: jest.fn(),
+  updateMetricState: jest.fn(),
 
+  // Variables
   createVariable: jest.fn(),
   findAllVariables: jest.fn(),
   findOneVariable: jest.fn(),
   updateVariable: jest.fn(),
-  removeVariable: jest.fn(),
+  updateVariableState: jest.fn(),
 };
 
 
@@ -72,9 +83,10 @@ describe('ParameterizationController', () => {
       expect(service.createStandard).toHaveBeenCalledWith(dto);
     });
 
-    it('GET /standards -> debería llamar a service.findAllStandards', () => {
-      controller.findAllStandards();
-      expect(service.findAllStandards).toHaveBeenCalled();
+    it('GET /standards -> debería llamar a service.findAllStandards con query', () => {
+      const query: FindAllQueryDto = { state: ItemStatus.ACTIVE, page: 1, limit: 10 };
+      controller.findAllStandards(query);
+      expect(service.findAllStandards).toHaveBeenCalledWith(query);
     });
 
     it('GET /standards/:id -> debería llamar a service.findOneStandard con el ID correcto', () => {
@@ -83,11 +95,12 @@ describe('ParameterizationController', () => {
       expect(service.findOneStandard).toHaveBeenCalledWith(id);
     });
 
-    it('DELETE /standards/:id -> debería llamar a service.removeStandard con el ID correcto', () => {
-        const id = 1;
-        controller.removeStandard(id);
-        expect(service.removeStandard).toHaveBeenCalledWith(id);
-      });
+    it('PATCH /standards/:id/state -> debería llamar a service.updateStandardState', () => {
+      const id = 1;
+      const updateStateDto: UpdateStateDto = { state: ItemStatus.INACTIVE };
+      controller.updateStandardState(id, updateStateDto);
+      expect(service.updateStandardState).toHaveBeenCalledWith(id, updateStateDto);
+    });
   });
 
   // --- Pruebas para Endpoints de Criteria ---
@@ -98,43 +111,87 @@ describe('ParameterizationController', () => {
       expect(service.createCriterion).toHaveBeenCalledWith(dto);
     });
 
-    it('GET /standards/:standard_id/criteria -> debería llamar a service.findAllCriteria con el standard_id', () => {
+    it('GET /standards/:standard_id/criteria -> debería llamar a service.findAllCriteria con el standard_id y query', () => {
       const standardId = 5;
-      controller.findAllCriteriaForStandard(standardId);
-      expect(service.findAllCriteria).toHaveBeenCalledWith(standardId);
+      const query: FindAllQueryDto = { state: ItemStatus.ACTIVE };
+      controller.findAllCriteriaForStandard(standardId, query);
+      expect(service.findAllCriteria).toHaveBeenCalledWith(query, standardId);
+    });
+
+    it('PATCH /criteria/:id/state -> debería llamar a service.updateCriterionState', () => {
+      const id = 1;
+      const updateStateDto: UpdateStateDto = { state: ItemStatus.INACTIVE };
+      controller.updateCriterionState(id, updateStateDto);
+      expect(service.updateCriterionState).toHaveBeenCalledWith(id, updateStateDto);
     });
   });
 
   // --- Pruebas para Endpoints de Sub-criteria ---
   describe('SubCriteria Endpoints', () => {
-    it('GET /criteria/:criterionId/sub-criteria -> debería llamar a service.findAllSubCriteria', () => {
+    it('POST /sub-criteria -> debería llamar a service.createSubCriterion', () => {
+      const dto: CreateSubCriterionDto = { name: 'Test SubCriterion', criterion_id: 1 };
+      controller.createSubCriterion(dto);
+      expect(service.createSubCriterion).toHaveBeenCalledWith(dto);
+    });
+
+    it('GET /criteria/:criterionId/sub-criteria -> debería llamar a service.findAllSubCriteria con query', () => {
       const criterionId = 10;
-      controller.findAllSubCriteriaForCriterion(criterionId);
-      expect(service.findAllSubCriteria).toHaveBeenCalledWith(criterionId);
+      const query: FindAllQueryDto = { state: ItemStatus.ACTIVE };
+      controller.findAllSubCriteriaForCriterion(criterionId, query);
+      expect(service.findAllSubCriteria).toHaveBeenCalledWith(query, criterionId);
+    });
+
+    it('PATCH /sub-criteria/:id/state -> debería llamar a service.updateSubCriterionState', () => {
+      const id = 1;
+      const updateStateDto: UpdateStateDto = { state: ItemStatus.INACTIVE };
+      controller.updateSubCriterionState(id, updateStateDto);
+      expect(service.updateSubCriterionState).toHaveBeenCalledWith(id, updateStateDto);
     });
   });
 
   // --- Pruebas para Endpoints de Metrics ---
   describe('Metrics Endpoints', () => {
-    it('GET /sub-criteria/:subCriterionId/metrics -> debería llamar a service.findAllMetrics', () => {
+    it('POST /metrics -> debería llamar a service.createMetric', () => {
+      const dto: CreateMetricDto = { name: 'Test Metric', sub_criterion_id: 1 };
+      controller.createMetric(dto);
+      expect(service.createMetric).toHaveBeenCalledWith(dto);
+    });
+
+    it('GET /sub-criteria/:subCriterionId/metrics -> debería llamar a service.findAllMetrics con query', () => {
       const subCriterionId = 15;
-      controller.findAllMetricsForSubCriterion(subCriterionId);
-      expect(service.findAllMetrics).toHaveBeenCalledWith(subCriterionId);
+      const query: FindAllQueryDto = { state: ItemStatus.ACTIVE };
+      controller.findAllMetricsForSubCriterion(subCriterionId, query);
+      expect(service.findAllMetrics).toHaveBeenCalledWith(query, subCriterionId);
+    });
+
+    it('PATCH /metrics/:id/state -> debería llamar a service.updateMetricState', () => {
+      const id = 1;
+      const updateStateDto: UpdateStateDto = { state: ItemStatus.INACTIVE };
+      controller.updateMetricState(id, updateStateDto);
+      expect(service.updateMetricState).toHaveBeenCalledWith(id, updateStateDto);
     });
   });
 
-    // --- Pruebas para Endpoints de Variables ---
-    describe('Variables Endpoints', () => {
-        it('GET /metrics/:metricId/variables -> debería llamar a service.findAllVariables', () => {
-          const metricId = 20;
-          controller.findAllVariablesForMetric(metricId);
-          expect(service.findAllVariables).toHaveBeenCalledWith(metricId);
-        });
-    
-        it('DELETE /variables/:id -> debería llamar a service.removeVariable', () => {
-          const id = 1;
-          controller.removeVariable(id);
-          expect(service.removeVariable).toHaveBeenCalledWith(id);
-        });
-      });
+  // --- Pruebas para Endpoints de Variables ---
+  describe('Variables Endpoints', () => {
+    it('POST /variables -> debería llamar a service.createVariable', () => {
+      const dto: CreateFormulaVariableDto = { symbol: 'X', metric_id: 1 };
+      controller.createVariable(dto);
+      expect(service.createVariable).toHaveBeenCalledWith(dto);
+    });
+
+    it('GET /metrics/:metricId/variables -> debería llamar a service.findAllVariables con query', () => {
+      const metricId = 20;
+      const query: FindAllQueryDto = { state: ItemStatus.ACTIVE };
+      controller.findAllVariablesForMetric(metricId, query);
+      expect(service.findAllVariables).toHaveBeenCalledWith(query, metricId);
+    });
+
+    it('PATCH /variables/:id/state -> debería llamar a service.updateVariableState', () => {
+      const id = 1;
+      const updateStateDto: UpdateStateDto = { state: ItemStatus.INACTIVE };
+      controller.updateVariableState(id, updateStateDto);
+      expect(service.updateVariableState).toHaveBeenCalledWith(id, updateStateDto);
+    });
+  });
 });

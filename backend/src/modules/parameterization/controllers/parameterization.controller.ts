@@ -1,4 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller, Get, Post, Body, Patch, Param,
+  ParseIntPipe, Query
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ROLES } from '../../../common/decorators/roles.decorator';
 import { ParameterizationService } from '../services/parameterization.service';
@@ -9,6 +12,8 @@ import { CreateCriterionDto, UpdateCriterionDto } from '../dto/criterion.dto';
 import { CreateSubCriterionDto, UpdateSubCriterionDto } from '../dto/sub-criterion.dto';
 import { CreateMetricDto, UpdateMetricDto } from '../dto/metric.dto';
 import { CreateFormulaVariableDto, UpdateFormulaVariableDto } from '../dto/formula-variable.dto';
+import { UpdateStateDto } from '../dto/update-state.dto'; 
+import { FindAllQueryDto } from '../dto/find-all-query.dto'; 
 
 @ApiTags('Parameterization')
 @ApiBearerAuth('bearer')
@@ -27,9 +32,9 @@ export class ParameterizationController {
 
   @Get('standards')
   @ROLES('admin', 'evaluator')
-  @ApiOperation({ summary: 'Obtener todos los estándares de calidad' })
-  findAllStandards() {
-    return this.service.findAllStandards();
+  @ApiOperation({ summary: 'Obtener todos los estándares de calidad (con filtro de estado)' })
+  findAllStandards(@Query() query: FindAllQueryDto) { 
+    return this.service.findAllStandards(query);
   }
 
   @Get('standards/:id')
@@ -46,36 +51,38 @@ export class ParameterizationController {
     return this.service.updateStandard(id, updateStandardDto);
   }
 
-  @Delete('standards/:id')
+  @Patch('standards/:id/state') 
   @ROLES('admin')
-  @ApiOperation({ summary: 'Eliminar un estándar' })
-  @HttpCode(HttpStatus.OK)
-  removeStandard(@Param('id', ParseIntPipe) id: number) {
-    return this.service.removeStandard(id);
+  @ApiOperation({ summary: 'Activar o inactivar un estándar (causa cascada)' })
+  @ApiResponse({ status: 200, description: 'Estado actualizado.' })
+  updateStandardState(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateStateDto: UpdateStateDto,
+  ) {
+    return this.service.updateStandardState(id, updateStateDto);
   }
 
-  // --- Criteria Endpoints (anidados y directos) ---
+  // --- Criteria Endpoints ---
   @Post('criteria')
   @ROLES('admin')
   @ApiOperation({ summary: 'Crear un nuevo criterio' })
-  @ApiResponse({ status: 201, description: 'Criterio creado exitosamente.' })
   createCriterion(@Body() createCriterionDto: CreateCriterionDto) {
     return this.service.createCriterion(createCriterionDto);
   }
-  
+
   @Get('standards/:standard_id/criteria')
   @ROLES('admin', 'evaluator')
-  @ApiOperation({ summary: 'Obtener todos los criterios para un estándar específico' })
-  @ApiResponse({ status: 200, description: 'Lista de criterios obtenida exitosamente.' })
-  findAllCriteriaForStandard(@Param('standard_id', ParseIntPipe) standard_id: number) {
-    return this.service.findAllCriteria(standard_id);
+  @ApiOperation({ summary: 'Obtener criterios de un estándar (con filtro de estado)' })
+  findAllCriteriaForStandard(
+    @Param('standard_id', ParseIntPipe) standard_id: number,
+    @Query() query: FindAllQueryDto, 
+  ) {
+    return this.service.findAllCriteria(query, standard_id);
   }
 
   @Get('criteria/:id')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener un criterio por su ID' })
-  @ApiResponse({ status: 200, description: 'Criterio obtenido exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Criterio no encontrado.' })
   findOneCriterion(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOneCriterion(id);
   }
@@ -83,157 +90,143 @@ export class ParameterizationController {
   @Patch('criteria/:id')
   @ROLES('admin')
   @ApiOperation({ summary: 'Actualizar un criterio existente' })
-  @ApiResponse({ status: 200, description: 'Criterio actualizado exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Criterio no encontrado.' })
   updateCriterion(@Param('id', ParseIntPipe) id: number, @Body() updateCriterionDto: UpdateCriterionDto) {
     return this.service.updateCriterion(id, updateCriterionDto);
   }
-  
-  @Delete('criteria/:id')
+
+  @Patch('criteria/:id/state')
   @ROLES('admin')
-  @ApiOperation({ summary: 'Eliminar un criterio' })
-  @ApiResponse({ status: 200, description: 'Criterio eliminado exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Criterio no encontrado.' })
-  @HttpCode(HttpStatus.OK)
-  removeCriterion(@Param('id', ParseIntPipe) id: number) {
-    return this.service.removeCriterion(id);
+  @ApiOperation({ summary: 'Activar o inactivar un criterio (causa cascada)' })
+  updateCriterionState(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateStateDto: UpdateStateDto,
+  ) {
+    return this.service.updateCriterionState(id, updateStateDto);
   }
-  
-  // --- Sub-criteria, Metrics, and Variables seguirían un patrón similar ---
-  // A continuación se implementan para ser completos.
-  
+
   // --- SubCriteria Endpoints ---
   @Post('sub-criteria')
   @ROLES('admin')
   @ApiOperation({ summary: 'Crear un nuevo sub-criterio' })
-  @ApiResponse({ status: 201, description: 'Sub-criterio creado exitosamente.' })
   createSubCriterion(@Body() createSubCriterionDto: CreateSubCriterionDto) {
     return this.service.createSubCriterion(createSubCriterionDto);
   }
 
   @Get('criteria/:criterionId/sub-criteria')
   @ROLES('admin', 'evaluator')
-  @ApiOperation({ summary: 'Obtener todos los sub-criterios para un criterio específico' })
-  @ApiResponse({ status: 200, description: 'Lista de sub-criterios obtenida exitosamente.' })
-  findAllSubCriteriaForCriterion(@Param('criterionId', ParseIntPipe) criterion_id: number) {
-    return this.service.findAllSubCriteria(criterion_id);
+  @ApiOperation({ summary: 'Obtener sub-criterios de un criterio (con filtro de estado)' })
+  findAllSubCriteriaForCriterion(
+    @Param('criterionId', ParseIntPipe) criterion_id: number,
+    @Query() query: FindAllQueryDto, 
+  ) {
+    return this.service.findAllSubCriteria(query, criterion_id);
   }
 
   @Get('sub-criteria/:id')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener un sub-criterio por ID' })
-  @ApiResponse({ status: 200, description: 'Sub-criterio obtenido exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Sub-criterio no encontrado.' })
   findOneSubCriterion(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOneSubCriterion(id);
   }
-  
+
   @Patch('sub-criteria/:id')
   @ROLES('admin')
   @ApiOperation({ summary: 'Actualizar un sub-criterio' })
-  @ApiResponse({ status: 200, description: 'Sub-criterio actualizado exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Sub-criterio no encontrado.' })
   updateSubCriterion(@Param('id', ParseIntPipe) id: number, @Body() updateSubCriterionDto: UpdateSubCriterionDto) {
     return this.service.updateSubCriterion(id, updateSubCriterionDto);
   }
-  
-  @Delete('sub-criteria/:id')
+
+  @Patch('sub-criteria/:id/state') 
   @ROLES('admin')
-  @ApiOperation({ summary: 'Eliminar un sub-criterio' })
-  @ApiResponse({ status: 200, description: 'Sub-criterio eliminado exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Sub-criterio no encontrado.' })
-  @HttpCode(HttpStatus.OK)
-  removeSubCriterion(@Param('id', ParseIntPipe) id: number) {
-    return this.service.removeSubCriterion(id);
+  @ApiOperation({ summary: 'Activar o inactivar un sub-criterio (causa cascada)' })
+  updateSubCriterionState(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateStateDto: UpdateStateDto,
+  ) {
+    return this.service.updateSubCriterionState(id, updateStateDto);
   }
-  
+
   // --- Metrics Endpoints ---
   @Post('metrics')
   @ROLES('admin')
   @ApiOperation({ summary: 'Crear una nueva métrica' })
-  @ApiResponse({ status: 201, description: 'Métrica creada exitosamente.' })
   createMetric(@Body() createMetricDto: CreateMetricDto) {
     return this.service.createMetric(createMetricDto);
   }
 
   @Get('sub-criteria/:subCriterionId/metrics')
   @ROLES('admin', 'evaluator')
-  @ApiOperation({ summary: 'Obtener todas las métricas para un sub-criterio' })
-  @ApiResponse({ status: 200, description: 'Lista de métricas obtenida exitosamente.' })
-  findAllMetricsForSubCriterion(@Param('subCriterionId', ParseIntPipe) sub_criterion_id: number) {
-    return this.service.findAllMetrics(sub_criterion_id);
+  @ApiOperation({ summary: 'Obtener métricas de un sub-criterio (con filtro de estado)' })
+  findAllMetricsForSubCriterion(
+    @Param('subCriterionId', ParseIntPipe) sub_criterion_id: number,
+    @Query() query: FindAllQueryDto,
+  ) {
+    return this.service.findAllMetrics(query, sub_criterion_id);
   }
-  
+
   @Get('metrics/:id')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener una métrica por ID' })
-  @ApiResponse({ status: 200, description: 'Métrica obtenida exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Métrica no encontrada.' })
   findOneMetric(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOneMetric(id);
   }
-  
+
   @Patch('metrics/:id')
   @ROLES('admin')
   @ApiOperation({ summary: 'Actualizar una métrica' })
-  @ApiResponse({ status: 200, description: 'Métrica actualizada exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Métrica no encontrada.' })
   updateMetric(@Param('id', ParseIntPipe) id: number, @Body() updateMetricDto: UpdateMetricDto) {
     return this.service.updateMetric(id, updateMetricDto);
   }
-  
-  @Delete('metrics/:id')
+
+  @Patch('metrics/:id/state')
   @ROLES('admin')
-  @ApiOperation({ summary: 'Eliminar una métrica' })
-  @ApiResponse({ status: 200, description: 'Métrica eliminada exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Métrica no encontrada.' })
-  @HttpCode(HttpStatus.OK)
-  removeMetric(@Param('id', ParseIntPipe) id: number) {
-    return this.service.removeMetric(id);
+  @ApiOperation({ summary: 'Activar o inactivar una métrica (causa cascada)' })
+  updateMetricState(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateStateDto: UpdateStateDto,
+  ) {
+    return this.service.updateMetricState(id, updateStateDto);
   }
-  
+
   // --- Formula Variables Endpoints ---
   @Post('variables')
   @ROLES('admin')
   @ApiOperation({ summary: 'Crear una nueva variable de fórmula' })
-  @ApiResponse({ status: 201, description: 'Variable creada exitosamente.' })
   createVariable(@Body() createDto: CreateFormulaVariableDto) {
     return this.service.createVariable(createDto);
   }
-  
+
   @Get('metrics/:metricId/variables')
   @ROLES('admin', 'evaluator')
-  @ApiOperation({ summary: 'Obtener todas las variables para una métrica' })
-  @ApiResponse({ status: 200, description: 'Lista de variables obtenida exitosamente.' })
-  findAllVariablesForMetric(@Param('metricId', ParseIntPipe) metric_id: number) {
-    return this.service.findAllVariables(metric_id);
+  @ApiOperation({ summary: 'Obtener variables de una métrica (con filtro de estado)' })
+  findAllVariablesForMetric(
+    @Param('metricId', ParseIntPipe) metric_id: number,
+    @Query() query: FindAllQueryDto,
+  ) {
+    return this.service.findAllVariables(query, metric_id);
   }
-  
+
   @Get('variables/:id')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ summary: 'Obtener una variable por ID' })
-  @ApiResponse({ status: 200, description: 'Variable obtenida exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Variable no encontrada.' })
   findOneVariable(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOneVariable(id);
   }
-  
+
   @Patch('variables/:id')
   @ROLES('admin')
   @ApiOperation({ summary: 'Actualizar una variable' })
-  @ApiResponse({ status: 200, description: 'Variable actualizada exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Variable no encontrada.' })
   updateVariable(@Param('id', ParseIntPipe) id: number, @Body() updateDto: UpdateFormulaVariableDto) {
     return this.service.updateVariable(id, updateDto);
   }
-  
-  @Delete('variables/:id')
+
+  @Patch('variables/:id/state')
   @ROLES('admin')
-  @ApiOperation({ summary: 'Eliminar una variable' })
-  @ApiResponse({ status: 200, description: 'Variable eliminada exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Variable no encontrada.' })
-  @HttpCode(HttpStatus.OK)
-  removeVariable(@Param('id', ParseIntPipe) id: number) {
-    return this.service.removeVariable(id);
+  @ApiOperation({ summary: 'Activar o inactivar una variable' })
+  updateVariableState(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateStateDto: UpdateStateDto,
+  ) {
+    return this.service.updateVariableState(id, updateStateDto);
   }
 }
