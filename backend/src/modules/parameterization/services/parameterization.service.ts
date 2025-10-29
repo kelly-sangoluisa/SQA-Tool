@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ObjectLiteral, Repository, DataSource, ILike } from 'typeorm';
 
@@ -17,7 +17,6 @@ import { CreateMetricDto, UpdateMetricDto } from '../dto/metric.dto';
 import { CreateFormulaVariableDto, UpdateFormulaVariableDto } from '../dto/formula-variable.dto';
 import { UpdateStateDto } from '../dto/update-state.dto';
 import { FindAllQueryDto } from '../dto/find-all-query.dto';
-import { ItemStatus } from '../types/parameterization.types';
 
 @Injectable()
 export class ParameterizationService {
@@ -32,7 +31,7 @@ export class ParameterizationService {
     private readonly dataSource: DataSource,
   ) {}
 
-  // --- Helper genérico ---
+  // --- Helper genérico refactorizado ---
   private async findOneOrFail<T extends ObjectLiteral>(
     repo: Repository<T>,
     id: number,
@@ -49,32 +48,24 @@ export class ParameterizationService {
     return entity;
   }
 
-  // --- Helper genérico para DTO de consulta ---
+  // --- Helper genérico para DTO de consulta refactorizado ---
   private buildFindAllWhere<T>(
     query: FindAllQueryDto,
-    searchFields: string[], // Campos en los que se buscará (ej: ['name', 'description'])
+    searchFields: string[],
     baseWhere: FindOptionsWhere<T> = {},
   ): FindOptionsWhere<T> | FindOptionsWhere<T>[] {
     const { state, search } = query;
-
-    // 1. Iniciar con las condiciones base (ej: { standard_id: 1 })
     const baseConditions: FindOptionsWhere<T> = { ...baseWhere };
 
-    // 2. Añadir filtro de estado (si no es 'all')
     if (state && state !== 'all') {
       (baseConditions as any).state = state;
     }
 
-    // 3. Si no hay término de búsqueda, devolver solo las condiciones base
     if (!search || search.trim() === '') {
       return baseConditions;
     }
 
-    // 4. Si hay búsqueda, construir un array de cláusulas OR
     const searchPattern = ILike(`%${search.trim()}%`);
-
-    // Esto crea: [ {state: 'active', name: ILike(...) }, {state: 'active', description: ILike(...)} ]
-    // TypeORM lo traduce a: state = 'active' AND (name ILike '...' OR description ILike '...')
     const whereClauses = searchFields.map((field) => {
       return {
         ...baseConditions,
@@ -83,6 +74,23 @@ export class ParameterizationService {
     });
 
     return whereClauses;
+  }
+
+  // --- Helper genérico para actualizar estado refactorizado ---
+  private async updateEntityState<T extends { state: any }>(
+    repo: Repository<T>,
+    id: number,
+    updateStateDto: UpdateStateDto,
+    entityName: string,
+  ): Promise<T> {
+    const entity = await this.findOneOrFail(repo, id, entityName) as T;
+    const oldState = entity.state;
+    entity.state = updateStateDto.state;
+
+    const result = await repo.save(entity as any);
+    this.logger.log(`${entityName} ${id} state changed from ${oldState} to ${updateStateDto.state}`);
+    
+    return result as T;
   }
 
   // --- CRUD for Standards ---
@@ -98,28 +106,26 @@ export class ParameterizationService {
       take: limit,
     });
   }
+
   findOneStandard(id: number) {
     return this.findOneOrFail(this.standardRepo, id, 'Standard');
   }
-  createStandard(create_standard_dto: CreateStandardDto) {
-    const newStandard = this.standardRepo.create(create_standard_dto);
-    return this.standardRepo.save(newStandard);
+
+  createStandard(createStandardDto: CreateStandardDto) {
+    const newStandard = this.standardRepo.create(createStandardDto);
+    const result = this.standardRepo.save(newStandard);
+    this.logger.log(`Created new Standard: ${createStandardDto.name}`);
+    return result;
   }
-  async updateStandard(id: number, update_standard_dto: UpdateStandardDto) {
+
+  async updateStandard(id: number, updateStandardDto: UpdateStandardDto) {
     const standard = await this.findOneStandard(id);
-    this.standardRepo.merge(standard, update_standard_dto);
+    this.standardRepo.merge(standard, updateStandardDto);
     return this.standardRepo.save(standard);
   }
-  async updateStandardState(id: number, update_state_dto: UpdateStateDto) {
-    const standard = await this.findOneStandard(id);
-    const oldState = standard.state;
-    standard.state = update_state_dto.state;
 
-    const result = await this.standardRepo.save(standard);
-    
-    this.logger.log(`Standard ${id} state changed from ${oldState} to ${update_state_dto.state}`);
-    
-    return result;
+  async updateStandardState(id: number, updateStateDto: UpdateStateDto) {
+    return this.updateEntityState(this.standardRepo, id, updateStateDto, 'Standard');
   }
 
   // --- CRUD for Criteria ---
@@ -136,36 +142,34 @@ export class ParameterizationService {
       take: limit,
     });
   }
+
   findOneCriterion(id: number) {
     return this.findOneOrFail(this.criterionRepo, id, 'Criterion');
   }
-  async createCriterion(create_criterion_dto: CreateCriterionDto) {
+
+  async createCriterion(createCriterionDto: CreateCriterionDto) {
     return this.dataSource.transaction(async manager => {
-      await this.findOneStandard(create_criterion_dto.standard_id);
-      const newCriterion = manager.create(Criterion, create_criterion_dto);
+      await this.findOneStandard(createCriterionDto.standard_id);
+      const newCriterion = manager.create(Criterion, createCriterionDto);
       const result = await manager.save(newCriterion);
       
-      this.logger.log(`Created new criterion: ${result.name} (ID: ${result.id}) for standard ${create_criterion_dto.standard_id}`);
+      this.logger.log(`Created new criterion: ${result.name} (ID: ${result.id}) for standard ${createCriterionDto.standard_id}`);
       
       return result;
     });
   }
-  async updateCriterion(id: number, update_criterion_dto: UpdateCriterionDto) {
+
+  async updateCriterion(id: number, updateCriterionDto: UpdateCriterionDto) {
     const criterion = await this.findOneCriterion(id);
-    if (update_criterion_dto.standard_id)
-      await this.findOneStandard(update_criterion_dto.standard_id);
-    this.criterionRepo.merge(criterion, update_criterion_dto);
+    if (updateCriterionDto.standard_id) {
+      await this.findOneStandard(updateCriterionDto.standard_id);
+    }
+    this.criterionRepo.merge(criterion, updateCriterionDto);
     return this.criterionRepo.save(criterion);
   }
-  async updateCriterionState(id: number, update_state_dto: UpdateStateDto) {
-    const criterion = await this.findOneCriterion(id);
-    const oldState = criterion.state;
-    criterion.state = update_state_dto.state;
-    const result = await this.criterionRepo.save(criterion);
-    
-    this.logger.log(`Criterion ${id} state changed from ${oldState} to ${update_state_dto.state}`);
-    
-    return result;
+
+  async updateCriterionState(id: number, updateStateDto: UpdateStateDto) {
+    return this.updateEntityState(this.criterionRepo, id, updateStateDto, 'Criterion');
   }
 
   // --- CRUD for SubCriteria ---
@@ -182,39 +186,34 @@ export class ParameterizationService {
       take: limit,
     });
   }
+
   findOneSubCriterion(id: number) {
     return this.findOneOrFail(this.subCriterionRepo, id, 'SubCriterion');
   }
-  async createSubCriterion(create_sub_criterion_dto: CreateSubCriterionDto) {
+
+  async createSubCriterion(createSubCriterionDto: CreateSubCriterionDto) {
     return this.dataSource.transaction(async manager => {
-      await this.findOneCriterion(create_sub_criterion_dto.criterion_id);
-      const newSubCriterion = manager.create(SubCriterion, create_sub_criterion_dto);
+      await this.findOneCriterion(createSubCriterionDto.criterion_id);
+      const newSubCriterion = manager.create(SubCriterion, createSubCriterionDto);
       const result = await manager.save(newSubCriterion);
       
-      this.logger.log(`Created new sub-criterion: ${result.name} (ID: ${result.id}) for criterion ${create_sub_criterion_dto.criterion_id}`);
+      this.logger.log(`Created new sub-criterion: ${result.name} (ID: ${result.id}) for criterion ${createSubCriterionDto.criterion_id}`);
       
       return result;
     });
   }
-  async updateSubCriterion(
-    id: number,
-    update_sub_criterion_dto: UpdateSubCriterionDto,
-  ) {
+
+  async updateSubCriterion(id: number, updateSubCriterionDto: UpdateSubCriterionDto) {
     const subCriterion = await this.findOneSubCriterion(id);
-    if (update_sub_criterion_dto.criterion_id)
-      await this.findOneCriterion(update_sub_criterion_dto.criterion_id);
-    this.subCriterionRepo.merge(subCriterion, update_sub_criterion_dto);
+    if (updateSubCriterionDto.criterion_id) {
+      await this.findOneCriterion(updateSubCriterionDto.criterion_id);
+    }
+    this.subCriterionRepo.merge(subCriterion, updateSubCriterionDto);
     return this.subCriterionRepo.save(subCriterion);
   }
-  async updateSubCriterionState(id: number, update_state_dto: UpdateStateDto) {
-    const subCriterion = await this.findOneSubCriterion(id);
-    const oldState = subCriterion.state;
-    subCriterion.state = update_state_dto.state;
-    const result = await this.subCriterionRepo.save(subCriterion);
-    
-    this.logger.log(`SubCriterion ${id} state changed from ${oldState} to ${update_state_dto.state}`);
-    
-    return result;
+
+  async updateSubCriterionState(id: number, updateStateDto: UpdateStateDto) {
+    return this.updateEntityState(this.subCriterionRepo, id, updateStateDto, 'SubCriterion');
   }
 
   // --- CRUD for Metrics ---
@@ -231,36 +230,34 @@ export class ParameterizationService {
       take: limit,
     });
   }
+
   findOneMetric(id: number) {
     return this.findOneOrFail(this.metricRepo, id, 'Metric');
   }
-  async createMetric(create_metric_dto: CreateMetricDto) {
+
+  async createMetric(createMetricDto: CreateMetricDto) {
     return this.dataSource.transaction(async manager => {
-      await this.findOneSubCriterion(create_metric_dto.sub_criterion_id);
-      const newMetric = manager.create(Metric, create_metric_dto);
+      await this.findOneSubCriterion(createMetricDto.sub_criterion_id);
+      const newMetric = manager.create(Metric, createMetricDto);
       const result = await manager.save(newMetric);
       
-      this.logger.log(`Created new metric: ${result.name} (ID: ${result.id}) for sub-criterion ${create_metric_dto.sub_criterion_id}`);
+      this.logger.log(`Created new metric: ${result.name} (ID: ${result.id}) for sub-criterion ${createMetricDto.sub_criterion_id}`);
       
       return result;
     });
   }
-  async updateMetric(id: number, update_metric_dto: UpdateMetricDto) {
+
+  async updateMetric(id: number, updateMetricDto: UpdateMetricDto) {
     const metric = await this.findOneMetric(id);
-    if (update_metric_dto.sub_criterion_id)
-      await this.findOneSubCriterion(update_metric_dto.sub_criterion_id);
-    this.metricRepo.merge(metric, update_metric_dto);
+    if (updateMetricDto.sub_criterion_id) {
+      await this.findOneSubCriterion(updateMetricDto.sub_criterion_id);
+    }
+    this.metricRepo.merge(metric, updateMetricDto);
     return this.metricRepo.save(metric);
   }
-  async updateMetricState(id: number, update_state_dto: UpdateStateDto) {
-    const metric = await this.findOneMetric(id);
-    const oldState = metric.state;
-    metric.state = update_state_dto.state;
-    const result = await this.metricRepo.save(metric);
-    
-    this.logger.log(`Metric ${id} state changed from ${oldState} to ${update_state_dto.state}`);
-    
-    return result;
+
+  async updateMetricState(id: number, updateStateDto: UpdateStateDto) {
+    return this.updateEntityState(this.metricRepo, id, updateStateDto, 'Metric');
   }
 
   // --- CRUD for FormulaVariables ---
@@ -276,36 +273,33 @@ export class ParameterizationService {
       take: limit,
     });
   }
+
   findOneVariable(id: number) {
     return this.findOneOrFail(this.variableRepo, id, 'FormulaVariable');
   }
-  async createVariable(create_variable_dto: CreateFormulaVariableDto) {
+
+  async createVariable(createVariableDto: CreateFormulaVariableDto) {
     return this.dataSource.transaction(async manager => {
-      await this.findOneMetric(create_variable_dto.metric_id);
-      const newVariable = manager.create(FormulaVariable, create_variable_dto);
+      await this.findOneMetric(createVariableDto.metric_id);
+      const newVariable = manager.create(FormulaVariable, createVariableDto);
       const result = await manager.save(newVariable);
       
-      this.logger.log(`Created new formula variable: ${result.symbol} (ID: ${result.id}) for metric ${create_variable_dto.metric_id}`);
+      this.logger.log(`Created new formula variable: ${result.symbol} (ID: ${result.id}) for metric ${createVariableDto.metric_id}`);
       
       return result;
     });
   }
-  async updateVariable(id: number, update_variable_dto: UpdateFormulaVariableDto) {
+
+  async updateVariable(id: number, updateVariableDto: UpdateFormulaVariableDto) {
     const variable = await this.findOneVariable(id);
-    if (update_variable_dto.metric_id)
-      await this.findOneMetric(update_variable_dto.metric_id);
-    this.variableRepo.merge(variable, update_variable_dto);
+    if (updateVariableDto.metric_id) {
+      await this.findOneMetric(updateVariableDto.metric_id);
+    }
+    this.variableRepo.merge(variable, updateVariableDto);
     return this.variableRepo.save(variable);
   }
-  async updateVariableState(id: number, update_state_dto: UpdateStateDto) {
-    const variable = await this.findOneVariable(id);
-    const oldState = variable.state;
-    
-    variable.state = update_state_dto.state;
-    const result = await this.variableRepo.save(variable);
-    
-    this.logger.log(`FormulaVariable ${id} state changed from ${oldState} to ${update_state_dto.state}`);
-    
-    return result;
+
+  async updateVariableState(id: number, updateStateDto: UpdateStateDto) {
+    return this.updateEntityState(this.variableRepo, id, updateStateDto, 'FormulaVariable');
   }
 }

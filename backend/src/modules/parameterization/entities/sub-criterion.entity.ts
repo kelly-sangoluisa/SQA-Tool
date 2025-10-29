@@ -1,11 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Criterion } from './criterion.entity';
 import { Metric } from './metric.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { ItemStatus } from '../types/parameterization.types';
+import { BaseNamedEntity } from '../../../common/entities/base.entity';
 
 @Entity('sub_criteria')
-export class SubCriterion {
+export class SubCriterion extends BaseNamedEntity {
   @ApiProperty({ description: 'ID único del sub-criterio', example: 1 })
   @PrimaryGeneratedColumn({ name: 'sub_criterion_id' })
   id: number;
@@ -13,35 +13,6 @@ export class SubCriterion {
   @ApiProperty({ description: 'ID del criterio al que pertenece', example: 1 })
   @Column({ name: 'criterion_id' })
   criterion_id: number;
-
-  @ApiProperty({ description: 'Nombre del sub-criterio', example: 'Completitud funcional' })
-  @Column({ type: 'varchar', length: 100 })
-  name: string;
-
-  @ApiProperty({ description: 'Descripción del sub-criterio', required: false })
-  @Column({ type: 'text', nullable: true })
-  description: string;
-
-  @ApiProperty({ 
-    description: 'Estado del ítem (activo o inactivo)', 
-    enum: ItemStatus, 
-    example: ItemStatus.ACTIVE 
-  })
-  @Column({ 
-    type: 'enum', 
-    enum: ItemStatus, 
-    name: 'state', 
-    default: ItemStatus.ACTIVE 
-  })
-  state: ItemStatus;
-
-  @ApiProperty()
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  created_at: Date;
-
-  @ApiProperty()
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updated_at: Date;
 
   @ManyToOne(() => Criterion, criterion => criterion.sub_criteria, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'criterion_id' })
