@@ -1,0 +1,124 @@
+/* Shared styles for configuration evaluation components */
+
+/* Common container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  animation: fade-in-up 0.6s ease-out;
+}
+
+/* Header styles */
+.header {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.title {
+  font-size: clamp(1.5rem, 3vw, 1.75rem);
+  font-weight: 700;
+  color: #4E5EA3;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  font-weight: 400;
+  margin-bottom: 1rem;
+}
+
+/* Selection summary badges */
+.selectionSummary {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Actions (buttons at bottom) */
+.actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 2rem;
+  margin-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Loading and error states */
+.loadingContainer,
+.errorContainer,
+.emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 2rem;
+}
+
+.loadingText {
+  margin-top: 1rem;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.errorCard,
+.emptyCard {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  box-shadow: 0 4px 20px rgb(78 94 163 / 0.08);
+  text-align: center;
+  max-width: 500px;
+}
+
+.errorTitle,
+.emptyTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4E5EA3;
+  margin-bottom: 1rem;
+}
+
+.errorMessage,
+.emptyMessage {
+  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+/* Animations */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+}
