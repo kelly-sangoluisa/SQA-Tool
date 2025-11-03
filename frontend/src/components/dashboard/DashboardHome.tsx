@@ -1,114 +1,154 @@
 "use client";
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/auth/useAuth';
 import styles from './DashboardHome.module.css';
+
+type Evaluation = {
+  id: string;
+  title: string;
+  description?: string;
+  date?: string;
+  icon?: string;
+  iconBg?: string;
+};
 
 export function DashboardHome() {
   const { user } = useAuth();
 
-  const modules = [
-    {
-      name: 'Configuración de Evaluación',
-      description: 'Configura criterios y parámetros de evaluación de calidad',
-      href: '/modules/config-evaluation',
-      icon: '⚙️',
-      iconBg: '#e0f2fe',
-      iconColor: '#0369a1'
-    },
-    {
-      name: 'Entrada de Datos',
-      description: 'Ingresa datos del proyecto para evaluación',
-      href: '/modules/entry-data',
-      icon: '📝',
-      iconBg: '#ecfdf5',
-      iconColor: '#065f46'
-    },
-    {
-      name: 'Parametrización',
-      description: 'Configura parámetros avanzados del sistema',
-      href: '/modules/parameterization',
-      icon: '🎛️',
-      iconBg: '#f5f3ff',
-      iconColor: '#6d28d9'
-    },
-    {
-      name: 'Reportes',
-      description: 'Genera y visualiza reportes de evaluación',
-      href: '/modules/reports',
-      icon: '📊',
-      iconBg: '#fffbeb',
-      iconColor: '#854d0e'
-    },
-  ];
+  const [recentEvaluations, setRecentEvaluations] = useState<Evaluation[] | null>(null);
+  const [allEvaluations, setAllEvaluations] = useState<Evaluation[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch evaluaciones desde la API
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        // Intenta cargar desde la API
+        const [recentRes, allRes] = await Promise.all([
+          fetch('/api/evaluations/recent'),
+          fetch('/api/evaluations/all')
+        ]);
+
+        if (!mounted) return;
+
+        // Si la API responde, usa los datos
+        if (recentRes.ok) {
+          const recentData = await recentRes.json();
+          setRecentEvaluations(Array.isArray(recentData) ? recentData : []);
+        } else {
+          // Fallback: datos de ejemplo para recientes
+          setRecentEvaluations([
+            { id: '1', title: 'Evaluación App A', description: 'Chequeo rápido de calidad', date: '2025-10-20', icon: '✅', iconBg: '#e0f2fe' },
+            { id: '2', title: 'Proyecto B - Sprint 3', description: 'Análisis de defectos y métricas', date: '2025-10-18', icon: '📊', iconBg: '#ecfdf5' },
+            { id: '3', title: 'Integración CI', description: 'Pruebas y cobertura', date: '2025-09-30', icon: '🔧', iconBg: '#f5f3ff' },
+          ]);
+        }
+
+        if (allRes.ok) {
+          const allData = await allRes.json();
+          setAllEvaluations(Array.isArray(allData) ? allData : []);
+        } else {
+          // Fallback: datos de ejemplo para todas
+          setAllEvaluations([
+            { id: '4', title: 'API REST v2', description: 'Testing de endpoints', date: '2025-09-25', icon: '🔌', iconBg: '#fffbeb' },
+            { id: '5', title: 'Dashboard Admin', description: 'QA completo', date: '2025-09-20', icon: '🎨', iconBg: '#fef2f2' },
+            { id: '6', title: 'Auth Module', description: 'Seguridad y validación', date: '2025-09-15', icon: '🔐', iconBg: '#f0fdf4' },
+            { id: '7', title: 'Payment Gateway', description: 'Integración de pagos', date: '2025-09-10', icon: '💳', iconBg: '#eff6ff' },
+            { id: '8', title: 'Mobile App', description: 'Testing multiplataforma', date: '2025-09-05', icon: '📱', iconBg: '#fef3c7' },
+            { id: '9', title: 'Database Migration', description: 'Migración de datos', date: '2025-08-30', icon: '💾', iconBg: '#ddd6fe' },
+          ]);
+        }
+      } catch (e) {
+        if (!mounted) return;
+        // Fallback en caso de error
+        setRecentEvaluations([
+          { id: '1', title: 'Evaluación App A', description: 'Chequeo rápido de calidad', date: '2025-10-20', icon: '✅', iconBg: '#e0f2fe' },
+          { id: '2', title: 'Proyecto B - Sprint 3', description: 'Análisis de defectos y métricas', date: '2025-10-18', icon: '📊', iconBg: '#ecfdf5' },
+        ]);
+        setAllEvaluations([
+          { id: '4', title: 'API REST v2', description: 'Testing de endpoints', date: '2025-09-25', icon: '🔌', iconBg: '#fffbeb' },
+          { id: '5', title: 'Dashboard Admin', description: 'QA completo', date: '2025-09-20', icon: '🎨', iconBg: '#fef2f2' },
+        ]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div className={styles.root}>
       {/* Welcome Section */}
-      <div>
-        <h2 className={styles.welcomeTitle}>Bienvenido, {user?.name}</h2>
-        <p className={styles.subtitle}>Selecciona un módulo para comenzar con la evaluación de calidad de software</p>
-      </div>
+      <header className={styles.greeting}>
+        <h2>Hola, {user?.name ?? 'Usuario'}</h2>
+      </header>
 
-      {/* Modules Grid */}
-      <div className={styles.modulesGrid}>
-        {modules.map((module) => (
-          <a key={module.name} href={module.href} className={styles.moduleCard}>
-            <div className={styles.moduleIconWrap} style={{ background: module.iconBg }}>
-              <span style={{ fontSize: '1.25rem' }}>{module.icon}</span>
+      {/* Evaluaciones Recientes - TARJETAS GRANDES */}
+      <div className={styles.dashedContainer}>
+        <section className={styles.sectionWrapper}>
+          <div className={styles.sectionHeader}>
+            <h3 className={styles.sectionTitle}>Evaluaciones recientes</h3>
+            <a href="/evaluations" className={styles.viewAllLink}>Ver todas</a>
+          </div>
+
+          {loading && <p className={styles.loadingText}>Cargando...</p>}
+
+          {!loading && (
+            <div className={styles.recentGridLarge}>
+              {(recentEvaluations ?? []).length === 0 && <p className={styles.emptyText}>No tienes evaluaciones recientes.</p>}
+
+              {(recentEvaluations ?? []).map((ev) => (
+                <article key={ev.id} className={styles.recentCardLarge}>
+                  <div className={styles.cardIcon} style={{ background: ev.iconBg || '#e0f2fe' }}>
+                    <span className={styles.cardIconEmoji}>{ev.icon || '📋'}</span>
+                  </div>
+                  <div className={styles.cardContent}>
+                    <h4 className={styles.cardTitle}>{ev.title}</h4>
+                    <p className={styles.cardDesc}>{ev.description}</p>
+                    <div className={styles.cardFooter}>
+                      <time className={styles.cardDate}>{ev.date}</time>
+                      <a href={`/evaluations/${ev.id}`} className={styles.viewBtn}>Abrir</a>
+                    </div>
+                  </div>
+                </article>
+              ))}
             </div>
-            <h3 className={styles.moduleTitle} style={{ color: module.iconColor }}>{module.name}</h3>
-            <p className={styles.moduleDesc}>{module.description}</p>
-          </a>
-        ))}
+          )}
+        </section>
       </div>
 
-      {/* User Info Card */}
-      <div className={styles.cardWhite}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.75rem' }}>Información del usuario</h3>
-        <div className={styles.gridThree}>
-          <div>
-            <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Nombre</p>
-            <p style={{ color: '#0f172a' }}>{user?.name}</p>
-          </div>
-          <div>
-            <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Email</p>
-            <p style={{ color: '#0f172a' }}>{user?.email}</p>
-          </div>
-          <div>
-            <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Rol</p>
-            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.125rem 0.625rem', borderRadius: '9999px', fontSize: '.75rem', fontWeight: 600, background: user?.role.name === 'admin' ? '#fee2e2' : '#e0f2fe', color: user?.role.name === 'admin' ? '#991b1b' : '#075985' }}>
-              {user?.role.name === 'admin' ? 'Administrador' : 'Evaluador'}
-            </span>
-          </div>
+      {/* Todas las Evaluaciones - TARJETAS PEQUEÑAS */}
+      <section className={styles.sectionWrapper}>
+        <div className={styles.sectionHeader}>
+          <h3 className={styles.sectionTitle}>Todas las evaluaciones</h3>
         </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className={styles.cardWhite}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.75rem' }}>Acciones rápidas</h3>
-        <div className={styles.gridThree}>
-          <a href="/shared/profile" className={styles.quickAction}>
-            <span style={{ fontSize: '1.25rem', marginRight: '0.75rem' }}>👤</span>
-            <div>
-              <p style={{ fontWeight: 600 }}>Mi Perfil</p>
-              <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Configurar información personal</p>
-            </div>
-          </a>
-          <a href="/shared/settings" className={styles.quickAction}>
-            <span style={{ fontSize: '1.25rem', marginRight: '0.75rem' }}>⚙️</span>
-            <div>
-              <p style={{ fontWeight: 600 }}>Configuración</p>
-              <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Ajustes del sistema</p>
-            </div>
-          </a>
-          <a href="/shared/notifications" className={styles.quickAction}>
-            <span style={{ fontSize: '1.25rem', marginRight: '0.75rem' }}>🔔</span>
-            <div>
-              <p style={{ fontWeight: 600 }}>Notificaciones</p>
-              <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Ver alertas y mensajes</p>
-            </div>
-          </a>
-        </div>
-      </div>
+        {!loading && (
+          <div className={styles.allGridSmall}>
+            {(allEvaluations ?? []).length === 0 && <p className={styles.emptyText}>No hay evaluaciones disponibles.</p>}
+
+            {(allEvaluations ?? []).map((ev) => (
+              <article key={ev.id} className={styles.allCardSmall}>
+                <div className={styles.smallCardIcon} style={{ background: ev.iconBg || '#f3f4f6' }}>
+                  <span className={styles.smallCardIconEmoji}>{ev.icon || '📄'}</span>
+                </div>
+                <div className={styles.smallCardContent}>
+                  <h4 className={styles.smallCardTitle}>{ev.title}</h4>
+                  <p className={styles.smallCardDesc}>{ev.description}</p>
+                </div>
+                <div className={styles.smallCardFooter}>
+                  <a href={`/evaluations/${ev.id}`} className={styles.smallViewBtn}>Abrir</a>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

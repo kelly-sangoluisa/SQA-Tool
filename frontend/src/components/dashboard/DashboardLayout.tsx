@@ -1,6 +1,5 @@
 "use client";
 import { useAuth } from '../../hooks/auth/useAuth';
-import { Button } from '../shared';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import styles from './DashboardLayout.module.css';
@@ -18,10 +17,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     try {
       setIsLoggingOut(true);
       await signOut();
-      // No necesitamos hacer router.push aquí, useAuth ya maneja la redirección
+      router.push('/auth/login');
     } catch (error) {
       console.error('Error durante el logout:', error);
-      // En caso de error, forzar redirección al login
       router.replace('/auth/login');
     } finally {
       setIsLoggingOut(false);
@@ -29,6 +27,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   const getUserInitials = (name: string) => {
+    if (!name) return 'U';
     return name
       .split(' ')
       .map(word => word.charAt(0))
@@ -44,47 +43,32 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className={styles.container}>
           <div className={styles.headerInner}>
             <div className={styles.brand}>
-              <h1 className={styles.title}>{process.env.NEXT_PUBLIC_APP_NAME || 'SQA Tool'}</h1>
+              <h1 className={styles.title}>🎉 Dashboard SQA Tool</h1>
             </div>
 
             <div className={styles.userSection}>
-              <div className={styles.brand}>
+              <div className={styles.userInfo}>
                 <div className={styles.avatar}>
-                  <span>{user ? getUserInitials(user.name) : 'U'}</span>
+                  {user ? getUserInitials(user.name) : 'U'}
                 </div>
-                <div className={styles.userInfo}>
-                  <p style={{ fontSize: '.875rem', fontWeight: 600 }}>{user?.name}</p>
-                  <p style={{ fontSize: '.75rem', color: '#6b7280' }}>{user?.role.name}</p>
+                <div className={styles.userDetails}>
+                  <span className={styles.userName}>{user?.name}</span>
+                  <span className={styles.userRole}>{user?.role?.name}</span>
                 </div>
               </div>
 
-              <Button
-                variant="secondary"
+              <button
                 onClick={handleSignOut}
-                size="sm"
                 disabled={isLoggingOut}
+                className={styles.logoutBtn}
               >
                 {isLoggingOut ? 'Cerrando...' : 'Cerrar sesión'}
-              </Button>
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Navigation breadcrumb */}
-      <nav className={styles.breadcrumb}>
-        <div className={styles.container}>
-          <div className={styles.breadcrumbInner}>
-            <ol style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '.875rem' }}>
-              <li>
-                <a href="/dashboard" style={{ color: '#2563eb', textDecoration: 'none' }}>Dashboard</a>
-              </li>
-            </ol>
-          </div>
-        </div>
-      </nav>
-
-      {/* Main content */}
       <main className={styles.main}>{children}</main>
     </div>
   );
