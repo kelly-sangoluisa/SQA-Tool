@@ -1,10 +1,9 @@
 /* Tailwind import comentado para usar CSS puro por ahora.
   Si desean habilitar Tailwind más adelante, descomenten la línea
   y añadan las directivas: @tailwind base; @tailwind components; @tailwind utilities;
+  @import "tailwindcss"; 
 */
  
-/* @import "tailwindcss"; */
-
 :root {
   /* Paleta de colores personalizada */
   --color-primary: #4E5EA3;
@@ -30,12 +29,8 @@
   --text-muted: #6b7280;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Moved from removed @theme rule for compatibility */
+/* Removed unsupported @theme at-rule; variables were moved into :root above for compatibility */
 
 * {
   margin: 0;
@@ -46,8 +41,8 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, 
+    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;

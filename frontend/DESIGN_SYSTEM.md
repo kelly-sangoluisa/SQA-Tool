@@ -281,3 +281,65 @@ Usar en CSS:
 **Versión**: 1.0.0  
 **Última actualización**: Octubre 2025  
 **Desarrollado por**: Dev-Sentinels
+
+**NORMAS PARA CSS LINT**
+🎨 Colores
+✅ USA: rgb(255 255 255 / 0.5)
+❌ EVITA: rgba(255, 255, 255, 0.5)
+Razón: El linter prefiere la notación moderna rgb() con sintaxis de espacio
+📏 Unidades
+✅ USA: margin: 0;
+❌ EVITA: margin: 0px; o margin: 0rem;
+Razón: No necesitas unidad cuando el valor es 0
+🏷️ Nombres de Keyframes
+✅ USA: @keyframes slide-down
+❌ EVITA: @keyframes slideDown
+Razón: El linter prefiere kebab-case (con guiones)
+
+🔤 Font Family
+✅ USA: font-family: Roboto, Arial, sans-serif;
+❌ EVITA: font-family: "Roboto", "Arial", sans-serif;
+Razón: No pongas comillas en nombres de fuentes de una sola palabra
+🏪 Propiedades Vendor
+✅ USA: Esto está bien si es necesario para compatibilidad
+⚠️ CUIDADO: -webkit-background-clip: text;
+Consejo: Úsalos solo cuando sean realmente necesarios
+🔄 Propiedades Duplicadas
+✅ USA: Una sola declaración por propiedad
+❌ EVITA:
+.elemento {
+  background-clip: text;
+  background-clip: text; /* Duplicado */
+}
+
+📱 Estructura General
+/* ✅ Ejemplo de CSS bien estructurado */
+.mi-componente {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+  font-family: Inter, Arial, sans-serif;
+  animation: fade-in 0.3s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+⚡ Comandos Útiles
+# Verificar errores de CSS
+npm run lint:css
+
+# Intentar arreglar automáticamente
+npm run lint:css --fix
+
+# Si no funciona, arreglar manualmente siguiendo estas reglas
+

@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Metric } from './metric.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { ItemStatus } from '../types/parameterization.types';
 
 @Entity('formula_variables')
 export class FormulaVariable {
@@ -19,6 +20,19 @@ export class FormulaVariable {
   @ApiProperty({ description: 'Descripción de lo que representa la variable', example: 'Número de funciones implementadas' })
   @Column({ type: 'text', nullable: true })
   description: string;
+
+  @ApiProperty({ 
+    description: 'Estado del ítem (activo o inactivo)', 
+    enum: ItemStatus, 
+    example: ItemStatus.ACTIVE 
+  })
+  @Column({ 
+    type: 'enum', 
+    enum: ItemStatus, 
+    name: 'state', 
+    default: ItemStatus.ACTIVE 
+  })
+  state: ItemStatus;
 
   @ApiProperty()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

@@ -8,7 +8,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);

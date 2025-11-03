@@ -29,7 +29,7 @@
 .input:focus {
   outline: none;
   border-color: #4E5EA3;
-  box-shadow: 0 0 0 4px rgba(78, 94, 163, 0.1);
+  box-shadow: 0 0 0 4px rgb(78, 94, 163, 0.1);
   background: #ffffff;
 }
 
@@ -64,6 +64,6 @@
 }
 
 .errorInput:focus {
-  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+  box-shadow: 0 0 0 4px rgb(220, 38, 38, 0.1);
   border-color: #dc2626;
 }
