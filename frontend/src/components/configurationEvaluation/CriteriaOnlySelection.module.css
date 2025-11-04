@@ -27,7 +27,9 @@
 .selectionSummary {
   display: flex;
   justify-content: center;
+  gap: 1rem;
   margin-top: 1rem;
+  flex-wrap: wrap;
 }
 
 .badge {
@@ -37,6 +39,36 @@
   border-radius: 24px;
   font-size: 0.875rem;
   font-weight: 600;
+}
+
+.percentageBadge {
+  padding: 0.5rem 1rem;
+  border-radius: 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.percentageBadge.valid {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.percentageBadge.invalid {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.validationError {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
 }
 
 .criteriaList {
@@ -106,6 +138,62 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: #4971AB;
+}
+
+.importanceSection {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.importanceField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.importanceLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.required {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.importanceSelect,
+.importanceInput {
+  padding: 0.625rem;
+  font-size: 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.importanceSelect:focus,
+.importanceInput:focus {
+  outline: none;
+  border-color: #4E5EA3;
+  box-shadow: 0 0 0 3px rgba(78, 94, 163, 0.1);
+}
+
+.importanceInput {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .importanceSection {
+    grid-template-columns: 1fr;
+  }
 }
 
 .actions {

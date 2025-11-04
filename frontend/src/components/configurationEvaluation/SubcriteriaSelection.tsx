@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { Criterion } from '@/api/parameterization/parameterization-api';
-import { SelectedCriterion } from '@/types/configurationEvaluation.types';
+import { SelectedCriterion, ImportanceLevel } from '@/types/configurationEvaluation.types';
 import { Button } from '../shared';
 import styles from './SubcriteriaSelection.module.css';
+import { CriteriaWithImportance } from './CriteriaOnlySelection';
 
 interface SubCriteriaSelectionProps {
-  selectedCriteria: Criterion[];
+  selectedCriteria: Criterion[] | CriteriaWithImportance[];
   initialSelected?: SelectedCriterion[];
   onNext: (selectedCriteria: SelectedCriterion[]) => void;
   onBack: () => void;
@@ -34,10 +35,14 @@ export function SubCriteriaSelection({
     } else {
       // Select all subcriteria by default
       const defaultMap = new Map<number, Set<number>>();
-      selectedCriteria.forEach((criterion) => {
+      selectedCriteria.forEach((item) => {
+        const isCriteriaWithImportance = 'criterionId' in item;
+        const criterion = isCriteriaWithImportance ? item.criterion : item;
+        const criterionId = isCriteriaWithImportance ? item.criterionId : item.id;
+
         if (criterion.sub_criteria && criterion.sub_criteria.length > 0) {
           const subIds = criterion.sub_criteria.map((sc) => sc.id);
-          defaultMap.set(criterion.id, new Set(subIds));
+          defaultMap.set(criterionId, new Set(subIds));
         }
       });
       setSelectedSubCriteria(defaultMap);
@@ -64,8 +69,18 @@ export function SubCriteriaSelection({
   };
 
   const handleSelectAllForCriterion = (criterionId: number) => {
-    const criterion = selectedCriteria.find((c) => c.id === criterionId);
-    if (!criterion || !criterion.sub_criteria) return;
+    const item = selectedCriteria.find((item) => {
+      const isCriteriaWithImportance = 'criterionId' in item;
+      const id = isCriteriaWithImportance ? item.criterionId : item.id;
+      return id === criterionId;
+    });
+
+    if (!item) return;
+
+    const isCriteriaWithImportance = 'criterionId' in item;
+    const criterion = isCriteriaWithImportance ? item.criterion : item;
+
+    if (!criterion.sub_criteria) return;
 
     const newSelected = new Map(selectedSubCriteria);
     const allSubIds = criterion.sub_criteria.map((sc) => sc.id);
@@ -97,8 +112,15 @@ export function SubCriteriaSelection({
   const handleNext = () => {
     const result: SelectedCriterion[] = [];
 
-    selectedCriteria.forEach((criterion) => {
-      const subCriteriaIds = selectedSubCriteria.get(criterion.id);
+    selectedCriteria.forEach((item) => {
+      // Check if it's a CriteriaWithImportance or just a Criterion
+      const isCriteriaWithImportance = 'criterionId' in item;
+      const criterion = isCriteriaWithImportance ? item.criterion : item;
+      const criterionId = isCriteriaWithImportance ? item.criterionId : item.id;
+      const importanceLevel = isCriteriaWithImportance ? item.importanceLevel : ('M' as ImportanceLevel);
+      const importancePercentage = isCriteriaWithImportance ? item.importancePercentage : 0;
+
+      const subCriteriaIds = selectedSubCriteria.get(criterionId);
       if (subCriteriaIds && subCriteriaIds.size > 0) {
         const subCriteriaNames =
           criterion.sub_criteria
@@ -106,10 +128,12 @@ export function SubCriteriaSelection({
             .map((sc) => sc.name) || [];
 
         result.push({
-          criterionId: criterion.id,
+          criterionId: criterionId,
           criterionName: criterion.name,
           subCriteriaIds: Array.from(subCriteriaIds),
           subCriteriaNames,
+          importanceLevel,
+          importancePercentage,
         });
       }
     });
@@ -137,56 +161,62 @@ export function SubCriteriaSelection({
       </div>
 
       <div className={styles.criteriaList}>
-        {selectedCriteria.map((criterion) => (
-          <div key={criterion.id} className={styles.criterionCard}>
-            <div className={styles.criterionHeader}>
-              <h3 className={styles.criterionName}>{criterion.name}</h3>
-              {criterion.sub_criteria && criterion.sub_criteria.length > 0 && (
-                <button
-                  type="button"
-                  className={styles.selectAllButton}
-                  onClick={() => handleSelectAllForCriterion(criterion.id)}
-                >
-                  {(selectedSubCriteria.get(criterion.id)?.size || 0) ===
-                  criterion.sub_criteria.length
-                    ? 'Desmarcar todos'
-                    : 'Seleccionar todos'}
-                </button>
+        {selectedCriteria.map((item) => {
+          const isCriteriaWithImportance = 'criterionId' in item;
+          const criterion = isCriteriaWithImportance ? item.criterion : item;
+          const criterionId = isCriteriaWithImportance ? item.criterionId : item.id;
+
+          return (
+            <div key={criterionId} className={styles.criterionCard}>
+              <div className={styles.criterionHeader}>
+                <h3 className={styles.criterionName}>{criterion.name}</h3>
+                {criterion.sub_criteria && criterion.sub_criteria.length > 0 && (
+                  <button
+                    type="button"
+                    className={styles.selectAllButton}
+                    onClick={() => handleSelectAllForCriterion(criterionId)}
+                  >
+                    {(selectedSubCriteria.get(criterionId)?.size || 0) ===
+                    criterion.sub_criteria.length
+                      ? 'Desmarcar todos'
+                      : 'Seleccionar todos'}
+                  </button>
+                )}
+              </div>
+
+              {criterion.description && (
+                <p className={styles.criterionDescription}>{criterion.description}</p>
+              )}
+
+              {criterion.sub_criteria && criterion.sub_criteria.length > 0 ? (
+                <div className={styles.subCriteriaList}>
+                  {criterion.sub_criteria.map((subCriterion) => (
+                    <div key={subCriterion.id} className={styles.subCriterionItem}>
+                      <label className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          className={styles.checkbox}
+                          checked={isSubCriterionSelected(criterionId, subCriterion.id)}
+                          onChange={() => handleSubCriterionToggle(criterionId, subCriterion.id)}
+                        />
+                        <div className={styles.subCriterionContent}>
+                          <span className={styles.subCriterionName}>{subCriterion.name}</span>
+                          {subCriterion.description && (
+                            <p className={styles.subCriterionDescription}>
+                              {subCriterion.description}
+                            </p>
+                          )}
+                        </div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className={styles.noSubCriteria}>Este criterio no tiene subcriterios disponibles</p>
               )}
             </div>
-
-            {criterion.description && (
-              <p className={styles.criterionDescription}>{criterion.description}</p>
-            )}
-
-            {criterion.sub_criteria && criterion.sub_criteria.length > 0 ? (
-              <div className={styles.subCriteriaList}>
-                {criterion.sub_criteria.map((subCriterion) => (
-                  <div key={subCriterion.id} className={styles.subCriterionItem}>
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        className={styles.checkbox}
-                        checked={isSubCriterionSelected(criterion.id, subCriterion.id)}
-                        onChange={() => handleSubCriterionToggle(criterion.id, subCriterion.id)}
-                      />
-                      <div className={styles.subCriterionContent}>
-                        <span className={styles.subCriterionName}>{subCriterion.name}</span>
-                        {subCriterion.description && (
-                          <p className={styles.subCriterionDescription}>
-                            {subCriterion.description}
-                          </p>
-                        )}
-                      </div>
-                    </label>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className={styles.noSubCriteria}>Este criterio no tiene subcriterios disponibles</p>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className={styles.actions}>

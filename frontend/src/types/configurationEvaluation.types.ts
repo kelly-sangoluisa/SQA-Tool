@@ -5,19 +5,27 @@
  */
 export interface EvaluationInfo {
   name: string;
+  description?: string;
   version: string;
   company: string;
   minQualityThreshold: number;
 }
 
 /**
- * Selected criterion with its sub-criteria
+ * Importance level for criteria
+ */
+export type ImportanceLevel = 'A' | 'M' | 'B';
+
+/**
+ * Selected criterion with its sub-criteria and importance configuration
  */
 export interface SelectedCriterion {
   criterionId: number;
   criterionName: string;
   subCriteriaIds: number[];
   subCriteriaNames: string[];
+  importanceLevel: ImportanceLevel;
+  importancePercentage: number;
 }
 
 /**
@@ -47,7 +55,16 @@ export interface Step {
  */
 export interface ValidationErrors {
   name?: string;
+  description?: string;
   version?: string;
   company?: string;
   minQualityThreshold?: string;
+}
+
+/**
+ * Criterion importance configuration errors
+ */
+export interface CriterionImportanceErrors {
+  importanceLevel?: string;
+  importancePercentage?: string;
 }

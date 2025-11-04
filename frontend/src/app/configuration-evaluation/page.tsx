@@ -8,19 +8,24 @@ import {
   StandardSelection,
   CriteriaOnlySelection,
   SubCriteriaSelection,
+  CriteriaWithImportance,
 } from '@/components/configurationEvaluation';
 import { Standard, Criterion } from '@/api/parameterization/parameterization-api';
+import { configEvaluationApi } from '@/api/config-evaluation/config-evaluation-api';
 import {
   EvaluationInfo,
   SelectedCriterion,
   EvaluationConfiguration,
+  ImportanceLevel,
 } from '@/types/configurationEvaluation.types';
 import styles from './page.module.css';
 
 export default function ConfigurationEvaluationPage() {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated, user } = useAuth();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Store data from each step
   const [evaluationInfo, setEvaluationInfo] = useState<EvaluationInfo | null>(null);
@@ -29,6 +34,14 @@ export default function ConfigurationEvaluationPage() {
   const [selectedCriteriaFull, setSelectedCriteriaFull] = useState<Criterion[]>([]);
   const [selectedSubCriteria, setSelectedSubCriteria] = useState<SelectedCriterion[]>([]);
 
+  // Store criteria importance data
+  interface CriteriaImportanceData {
+    criterionId: number;
+    importanceLevel: ImportanceLevel;
+    importancePercentage: number;
+  }
+  const [criteriaImportance, setCriteriaImportance] = useState<CriteriaImportanceData[]>([]);
+
   // Auth protection
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -36,7 +49,10 @@ export default function ConfigurationEvaluationPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // Don't render until auth is checked
+  useEffect(() => {
+    // Verificar autenticación
+  }, [isLoading, isAuthenticated, user]);
+
   if (isLoading || !isAuthenticated) {
     return null;
   }
@@ -51,30 +67,78 @@ export default function ConfigurationEvaluationPage() {
     setCurrentStep(3);
   };
 
-  const handleStep3Complete = (criteriaIds: number[], criteriaFull: Criterion[]) => {
-    setSelectedCriteriaIds(criteriaIds);
-    setSelectedCriteriaFull(criteriaFull);
+  const handleStep3Complete = (criteriaWithImportance: CriteriaWithImportance[]) => {
+    // Guardar los criterios seleccionados con importancia
+    setSelectedCriteriaIds(criteriaWithImportance.map(c => c.criterionId));
+    setSelectedCriteriaFull(criteriaWithImportance.map(c => c.criterion));
+    setCriteriaImportance(criteriaWithImportance.map(c => ({
+      criterionId: c.criterionId,
+      importanceLevel: c.importanceLevel,
+      importancePercentage: c.importancePercentage,
+    })));
+    
+    // Avanzar al paso 4
     setCurrentStep(4);
   };
 
-  const handleStep4Complete = (subCriteria: SelectedCriterion[]) => {
-    setSelectedSubCriteria(subCriteria);
+  const handleStep4Complete = async (subCriteria: SelectedCriterion[]) => {
+    try {
+      setIsSaving(true);
+      setSaveError(null);
+      setSelectedSubCriteria(subCriteria);
 
-    // Create final configuration object
-    const configuration: EvaluationConfiguration = {
-      info: evaluationInfo!,
-      standardId: selectedStandard!.id,
-      standardName: selectedStandard!.name,
-      standardVersion: selectedStandard!.version,
-      selectedCriteria: subCriteria,
-    };
+      // Verificar que tenemos el usuario autenticado
+      if (!user) {
+        throw new Error('Usuario no encontrado. Por favor, recarga la página e inicia sesión nuevamente.');
+      }
 
-    // TODO: Save configuration to backend or local storage
-    console.log('Evaluation Configuration:', configuration);
+      if (!user.id) {
+        throw new Error(`Usuario autenticado pero sin ID. Datos del usuario: ${JSON.stringify(user)}`);
+      }
 
-    // Show success message and redirect
-    alert('Configuración de evaluación completada exitosamente!');
-    router.push('/dashboard');
+      // Llamar a las APIs en orden:
+      // 1. POST /config-evaluation/projects (retorna project.id)
+      // 2. POST /config-evaluation/evaluations (usa project.id, retorna evaluation.id)
+      // 3. POST /config-evaluation/evaluation-criteria/bulk (usa evaluation.id)
+      const result = await configEvaluationApi.completeEvaluationConfiguration({
+        projectName: evaluationInfo!.name,
+        projectDescription: evaluationInfo!.description,
+        standardId: selectedStandard!.id,
+        creatorUserId: user.id,
+        criteria: criteriaImportance.map((item) => ({
+          criterionId: item.criterionId,
+          importanceLevel: item.importanceLevel,
+          importancePercentage: item.importancePercentage,
+        })),
+      });
+
+      // Create final configuration object
+      const configuration: EvaluationConfiguration = {
+        info: evaluationInfo!,
+        standardId: selectedStandard!.id,
+        standardName: selectedStandard!.name,
+        standardVersion: selectedStandard!.version,
+        selectedCriteria: subCriteria,
+      };
+
+      // Mostrar mensaje de éxito y redirigir
+      alert(`¡Configuración de evaluación completada exitosamente!
+      
+Proyecto ID: ${result.project.id}
+Evaluación ID: ${result.evaluation.id}
+Criterios creados: ${result.criteria.length}`);
+      
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('❌ Error al crear la evaluación:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al guardar la evaluación';
+      setSaveError(errorMessage);
+      
+      // Scroll hacia arriba para ver el error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleBack = (targetStep: number) => {
@@ -230,6 +294,32 @@ export default function ConfigurationEvaluationPage() {
 
         {/* Content */}
         <div className={styles.content}>
+          {saveError && (
+            <div style={{ 
+              padding: '1rem', 
+              marginBottom: '1rem', 
+              backgroundColor: '#fee', 
+              color: '#c00',
+              borderRadius: '8px',
+              border: '1px solid #fcc'
+            }}>
+              <strong>Error:</strong> {saveError}
+            </div>
+          )}
+          
+          {isSaving && (
+            <div style={{ 
+              padding: '1rem', 
+              marginBottom: '1rem', 
+              backgroundColor: '#e3f2fd', 
+              color: '#1976d2',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}>
+              Guardando configuración de evaluación...
+            </div>
+          )}
+
           {currentStep === 1 && (
             <EvaluationInfoForm
               initialData={evaluationInfo || undefined}

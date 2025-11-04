@@ -15,6 +15,7 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
   const [formData, setFormData] = useState<EvaluationInfo>(
     initialData || {
       name: '',
+      description: '',
       version: '',
       company: '',
       minQualityThreshold: 70,
@@ -85,6 +86,21 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
               error={errors.name}
             />
             {errors.name && <span className={styles.errorText}>{errors.name}</span>}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="description" className={styles.label}>
+              Descripción
+            </label>
+            <textarea
+              id="description"
+              className={styles.textarea}
+              placeholder="Ej: Evaluación de calidad del proyecto de software..."
+              value={formData.description || ''}
+              onChange={(e) => handleChange('description', e.target.value)}
+              rows={3}
+            />
+            {errors.description && <span className={styles.errorText}>{errors.description}</span>}
           </div>
 
           <div className={styles.formGroup}>

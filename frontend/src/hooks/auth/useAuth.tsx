@@ -14,7 +14,10 @@ const getUserFromStorage = () => {
   if (typeof window === 'undefined') return null;
   try {
     const stored = localStorage.getItem('user_profile'); // Solo perfil, NO token
-    return stored ? JSON.parse(stored) : null;
+    if (!stored) return null;
+
+    const user = JSON.parse(stored);
+    return user;
   } catch {
     return null;
   }
@@ -24,7 +27,7 @@ const saveUserToStorage = (user: User) => {
   if (typeof window === 'undefined') return;
   // IMPORTANTE: Solo guardar datos NO sensibles
   const safeUser = {
-    id: user.user_id,
+    id: user.id,
     email: user.email,
     name: user.name,
     role: user.role,

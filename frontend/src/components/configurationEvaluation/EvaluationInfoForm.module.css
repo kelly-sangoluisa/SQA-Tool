@@ -70,6 +70,27 @@
   font-style: italic;
 }
 
+.textarea {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #4E5EA3;
+  box-shadow: 0 0 0 3px rgba(78, 94, 163, 0.1);
+}
+
+.textarea::placeholder {
+  color: #9ca3af;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

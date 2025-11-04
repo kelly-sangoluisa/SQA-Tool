@@ -86,6 +86,9 @@ export function DashboardHome() {
       {/* Welcome Section */}
       <header className={styles.greeting}>
         <h2>Hola, {user?.name ?? 'Usuario'}</h2>
+        <a href="/configuration-evaluation" className={styles.newEvaluationBtn}>
+          + Nueva Evaluación
+        </a>
       </header>
 
       {/* Evaluaciones Recientes - TARJETAS GRANDES */}
