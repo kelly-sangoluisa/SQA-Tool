@@ -1,10 +1,10 @@
 // Tipos que coinciden EXACTAMENTE con backend
 export interface User {
-  user_id: number; 
+  id: number;
   name: string;
   email: string;
   role: {
-    role_id: number; 
+    role_id: number;
     name: string;
   };
   created_at: string;

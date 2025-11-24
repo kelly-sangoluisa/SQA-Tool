@@ -1,13 +1,8 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, MaxLength, IsInt, IsNumber } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, IsNumber } from 'class-validator';
+import { BaseNameDescriptionDto } from '../../../common/dto/base.dto';
 
-export class CreateMetricDto {
-  @ApiProperty({ description: 'Nombre de la métrica', example: 'Tasa de éxito de instalación' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(100)
-  name: string;
-
+export class CreateMetricDto extends BaseNameDescriptionDto {
   @ApiProperty({ description: 'ID del sub-criterio al que pertenece' })
   @IsInt()
   @IsNotEmpty()
@@ -18,11 +13,6 @@ export class CreateMetricDto {
   @IsString()
   @MaxLength(20)
   code?: string;
-
-  @ApiProperty({ description: 'Descripción de la métrica', required: false })
-  @IsOptional()
-  @IsString()
-  description?: string;
   
   @ApiProperty({ description: 'Fórmula de cálculo', example: '(InstalacionesExitosas / TotalInstalaciones) * 100', required: false })
   @IsOptional()

@@ -1,0 +1,161 @@
+import { apiClient } from '../shared/api-client';
+
+// Types
+export type ImportanceLevel = 'A' | 'M' | 'B';
+
+export interface Project {
+  id: number;
+  name: string;
+  description?: string;
+  creator_user_id: number;
+  status: 'active' | 'inactive';
+  final_project_score?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Evaluation {
+  id: number;
+  project_id: number;
+  standard_id: number;
+  creation_date: string;
+  status: 'in_progress' | 'completed' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EvaluationCriterion {
+  id: number;
+  evaluation_id: number;
+  criterion_id: number;
+  importance_level: ImportanceLevel;
+  importance_percentage: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// DTOs
+export interface CreateProjectDto {
+  name: string;
+  description?: string;
+  creator_user_id: number;
+}
+
+export interface CreateEvaluationDto {
+  project_id: number;
+  standard_id: number;
+  creation_date: string;
+}
+
+export interface CreateEvaluationCriterionDto {
+  evaluation_id: number;
+  criterion_id: number;
+  importance_level: ImportanceLevel;
+  importance_percentage: number;
+}
+
+export interface BulkCreateEvaluationCriteriaDto {
+  criteria: CreateEvaluationCriterionDto[];
+}
+
+/**
+ * API service for configuration evaluation endpoints
+ */
+export const configEvaluationApi = {
+  /**
+   * Create a new project
+   * The creator_user_id is automatically set from the authenticated user
+   */
+  async createProject(data: CreateProjectDto): Promise<Project> {
+    return apiClient.post('/config-evaluation/projects', data);
+  },
+
+  /**
+   * Create a new evaluation
+   * Should be called after creating the project
+   */
+  async createEvaluation(data: CreateEvaluationDto): Promise<Evaluation> {
+    return apiClient.post('/config-evaluation/evaluations', data);
+  },
+
+  /**
+   * Create a single evaluation criterion
+   */
+  async createEvaluationCriterion(data: CreateEvaluationCriterionDto): Promise<EvaluationCriterion> {
+    return apiClient.post('/config-evaluation/evaluation-criteria', data);
+  },
+
+  /**
+   * Create multiple evaluation criteria in bulk
+   * Validates that the sum of percentages equals 100%
+   */
+  async bulkCreateEvaluationCriteria(
+    data: BulkCreateEvaluationCriteriaDto
+  ): Promise<EvaluationCriterion[]> {
+    return apiClient.post('/config-evaluation/evaluation-criteria/bulk', data);
+  },
+
+  /**
+   * Get project by ID
+   */
+  async getProjectById(id: number): Promise<Project> {
+    return apiClient.get(`/config-evaluation/projects/${id}`);
+  },
+
+  /**
+   * Get evaluation by ID with relations
+   */
+  async getEvaluationById(id: number): Promise<Evaluation> {
+    return apiClient.get(`/config-evaluation/evaluations/${id}`);
+  },
+
+  /**
+   * Complete evaluation configuration flow
+   * Creates project, evaluation, and criteria in order
+   */
+  async completeEvaluationConfiguration(data: {
+    projectName: string;
+    projectDescription?: string;
+    standardId: number;
+    creatorUserId: number;
+    criteria: Array<{
+      criterionId: number;
+      importanceLevel: ImportanceLevel;
+      importancePercentage: number;
+    }>;
+  }): Promise<{
+    project: Project;
+    evaluation: Evaluation;
+    criteria: EvaluationCriterion[];
+  }> {
+    try {
+      // Step 1: Create project
+      const project = await this.createProject({
+        name: data.projectName,
+        description: data.projectDescription,
+        creator_user_id: data.creatorUserId,
+      });
+
+      // Step 2: Create evaluation
+      const evaluation = await this.createEvaluation({
+        project_id: project.id,
+        standard_id: data.standardId,
+        creation_date: new Date().toISOString(),
+      });
+
+      // Step 3: Create evaluation criteria
+      const criteria = await this.bulkCreateEvaluationCriteria({
+        criteria: data.criteria.map((criterion) => ({
+          evaluation_id: evaluation.id,
+          criterion_id: criterion.criterionId,
+          importance_level: criterion.importanceLevel,
+          importance_percentage: criterion.importancePercentage,
+        })),
+      });
+
+      return { project, evaluation, criteria };
+    } catch (error) {
+      throw error;
+    }
+  },
+};

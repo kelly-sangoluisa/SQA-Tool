@@ -1,18 +1,8 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, MaxLength, IsInt } from 'class-validator';
+import { IsInt, IsNotEmpty } from 'class-validator';
+import { BaseNameDescriptionDto } from '../../../common/dto/base.dto';
 
-export class CreateSubCriterionDto {
-  @ApiProperty({ description: 'Nombre del sub-criterio', example: 'Adaptabilidad' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(100)
-  name: string;
-
-  @ApiProperty({ description: 'Descripción del sub-criterio', required: false })
-  @IsOptional()
-  @IsString()
-  description?: string;
-  
+export class CreateSubCriterionDto extends BaseNameDescriptionDto {
   @ApiProperty({ description: 'ID del criterio al que pertenece' })
   @IsInt()
   @IsNotEmpty()
