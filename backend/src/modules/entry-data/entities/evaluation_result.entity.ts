@@ -1,0 +1,53 @@
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
+import { BaseTimestampEntity } from '../../../common/entities/base.entity';
+import { Evaluation } from '../../config-evaluation/entities/evaluation.entity';
+
+/**
+ * Entidad para almacenar el resultado final de una evaluación completa
+ * Contiene la puntuación final del sistema y conclusiones
+ */
+@Entity('evaluation_results')
+export class EvaluationResult extends BaseTimestampEntity {
+  @ApiProperty({ description: 'ID único del resultado de la evaluación', example: 1 })
+  @PrimaryGeneratedColumn({ name: 'result_id' })
+  id: number;
+
+  @ApiProperty({ description: 'ID de la evaluación relacionada' })
+  @Column({ name: 'evaluation_id', unique: true })
+  evaluation_id: number;
+
+  @ApiProperty({ description: 'Evaluación asociada' })
+  @OneToOne(() => Evaluation, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'evaluation_id' })
+  evaluation: Evaluation;
+
+  @ApiProperty({ 
+    description: 'Puntuación final de la evaluación', 
+    example: 87.3
+  })
+  @Column({ 
+    name: 'evaluation_score',
+    type: 'numeric', 
+    precision: 5, 
+    scale: 2
+  })
+  evaluation_score: number;
+
+  @ApiProperty({ description: 'Conclusiones y observaciones de la evaluación', })
+  @Column({ 
+name: 'conclusion',
+type: 'text'})
+  conclusion: string;
+
+  @ApiProperty({
+    description: 'Fecha de creación de los resultados',
+    type: String,
+    format: 'date-time'
+  })
+  @Column({ name: 'creation_date', type: 'timestamptz' })
+  creation_date: Date;
+}
