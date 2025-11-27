@@ -46,10 +46,8 @@ export class EvaluationVariable extends BaseTimestampEntity {
   @Column({ 
     name: 'value',
     type: 'decimal',
-    precision: 5,
-    scale: 2
-})
+    precision: 2,
+    scale: 4
+  })
   value: number;
 }
-
-
