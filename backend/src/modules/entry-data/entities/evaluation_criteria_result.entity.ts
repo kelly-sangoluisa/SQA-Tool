@@ -25,24 +25,15 @@ export class EvaluationCriteriaResult extends BaseTimestampEntity {
   @JoinColumn({ name: 'eval_criterion_id' })
   evaluation_criterion: EvaluationCriterion;
 
-  @ApiProperty({ 
-    description: 'Puntuación final del criterio', 
-    example: 92.3 
+  @ApiProperty({
+    description: 'Puntuación final del criterio',
+    example: 92.3
   })
-  @Column({ 
+  @Column({
     name: 'final_score',
-    type: 'numeric', 
-    precision: 5, 
+    type: 'numeric',
+    precision: 5,
     scale: 2
   })
   final_score: number;
-
-    @ApiProperty({
-    description: 'Fecha de creación de los resultados',
-    type: String,
-    format: 'date-time'
-  })
-  @Column({ name: 'creation_date', type: 'timestamptz' })
-  creation_date: Date;
-
 }

@@ -7,7 +7,7 @@ import { Evaluation } from '../../config-evaluation/entities/evaluation.entity';
  * Entidad para almacenar el resultado final de una evaluación completa
  * Contiene la puntuación final del sistema y conclusiones
  */
-@Entity('evaluation_results')
+@Entity('evaluation_result')
 export class EvaluationResult extends BaseTimestampEntity {
   @ApiProperty({ description: 'ID único del resultado de la evaluación', example: 1 })
   @PrimaryGeneratedColumn({ name: 'result_id' })
@@ -25,29 +25,22 @@ export class EvaluationResult extends BaseTimestampEntity {
   @JoinColumn({ name: 'evaluation_id' })
   evaluation: Evaluation;
 
-  @ApiProperty({ 
-    description: 'Puntuación final de la evaluación', 
+  @ApiProperty({
+    description: 'Puntuación final de la evaluación',
     example: 87.3
   })
-  @Column({ 
+  @Column({
     name: 'evaluation_score',
-    type: 'numeric', 
-    precision: 5, 
+    type: 'numeric',
+    precision: 5,
     scale: 2
   })
   evaluation_score: number;
 
   @ApiProperty({ description: 'Conclusiones y observaciones de la evaluación', })
-  @Column({ 
-name: 'conclusion',
-type: 'text'})
-  conclusion: string;
-
-  @ApiProperty({
-    description: 'Fecha de creación de los resultados',
-    type: String,
-    format: 'date-time'
+  @Column({
+    name: 'conclusion',
+    type: 'text'
   })
-  @Column({ name: 'creation_date', type: 'timestamptz' })
-  creation_date: Date;
+  conclusion: string;
 }

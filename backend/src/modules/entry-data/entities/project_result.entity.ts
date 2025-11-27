@@ -7,14 +7,14 @@ import { Project } from '../../config-evaluation/entities/project.entity';
  * Entidad para almacenar el resultado final de un proyecto
  * Contiene la puntuación final consolidada de todas las evaluaciones del proyecto
  */
-@Entity('project_results')
+@Entity('project_result')
 export class ProjectResult extends BaseTimestampEntity {
   @ApiProperty({ description: 'ID único del resultado del proyecto', example: 1 })
   @PrimaryGeneratedColumn({ name: 'project_result_id' })
   id: number;
 
   @ApiProperty({ description: 'ID del proyecto' })
-  @Column({ name: 'project_id'})
+  @Column({ name: 'project_id' })
   project_id: number;
 
   @ApiProperty({ description: 'Proyecto asociado' })
@@ -25,23 +25,15 @@ export class ProjectResult extends BaseTimestampEntity {
   @JoinColumn({ name: 'project_id' })
   project: Project;
 
-  @ApiProperty({ 
-    description: 'Puntuación final consolidada del proyecto', 
+  @ApiProperty({
+    description: 'Puntuación final consolidada del proyecto',
     example: 87.5
   })
-  @Column({ 
+  @Column({
     name: 'final_project_score',
-    type: 'numeric', 
-    precision: 5, 
+    type: 'numeric',
+    precision: 5,
     scale: 2
   })
   final_project_score: number;
-
-  @ApiProperty({
-    description: 'Fecha de creación de los resultados',
-    type: String,
-    format: 'date-time'
-  })
-  @Column({ name: 'creation_date', type: 'timestamptz' })
-  creation_date: Date;
 }

@@ -8,7 +8,7 @@ import { EvaluationMetric } from '../../config-evaluation/entities/evaluation_me
  * Entidad para almacenar el resultado calculado de una métrica específica
  * Contiene el valor calculado aplicando la fórmula de la métrica
  */
-@Entity('evaluation_metric_results')
+@Entity('evaluation_metric_result')
 export class EvaluationMetricResult extends BaseTimestampEntity {
   @ApiProperty({ description: 'ID único del resultado de la métrica', example: 1 })
   @PrimaryGeneratedColumn({ name: 'metric_result_id' })
@@ -27,23 +27,15 @@ export class EvaluationMetricResult extends BaseTimestampEntity {
   evaluation_metric: EvaluationMetric;
 
 
-  @ApiProperty({ 
-    description: 'Valor calculado aplicando la fórmula de la métrica', 
+  @ApiProperty({
+    description: 'Valor calculado aplicando la fórmula de la métrica',
     example: 85.7
   })
-  @Column({ 
+  @Column({
     name: 'calculated_value',
-    type: 'numeric', 
-    precision: 15, 
+    type: 'numeric',
+    precision: 15,
     scale: 4
   })
   calculated_value: number;
-
-  @ApiProperty({
-    description: 'Fecha de creación de los resultados',
-    type: String,
-    format: 'date-time'
-  })
-  @Column({ name: 'creation_date', type: 'timestamptz' })
-  creation_date: Date;
 }

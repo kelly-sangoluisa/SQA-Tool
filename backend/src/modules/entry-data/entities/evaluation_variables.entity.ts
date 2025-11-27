@@ -1,14 +1,14 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseTimestampEntity } from '../../../common/entities/base.entity';
-import { EvaluationMetric } from '../../config-evaluation/entities/evaluation_metric.entity';
+import { EvaluationMetric } from '../';
 import { FormulaVariable } from '../../parameterization/entities/formula-variable.entity';
 
 /**
  * Entidad para almacenar los valores de variables de fórmulas durante la evaluación
  * Relaciona una variable de fórmula con su valor específico para una métrica evaluada
  */
-@Entity('evaluation_variable')
+@Entity('evaluation_variables')
 export class EvaluationVariable extends BaseTimestampEntity {
   @ApiProperty({ description: 'ID único de la variable de evaluación', example: 1 })
   @PrimaryGeneratedColumn({ name: 'eval_variable_id' })
@@ -19,7 +19,7 @@ export class EvaluationVariable extends BaseTimestampEntity {
   eval_metric_id: number;
 
   @ApiProperty({ description: 'Métrica de evaluación asociada' })
-  @ManyToOne(() => EvaluationMetric, {
+  @ManyToOne(() => EvaluationMetric, metric => metric.variables, {
     nullable: false,
     onDelete: 'CASCADE',
   })
@@ -39,15 +39,17 @@ export class EvaluationVariable extends BaseTimestampEntity {
   @JoinColumn({ name: 'variable_id' })
   variable: FormulaVariable;
 
-  @ApiProperty({
-    description: 'Valor numérico de la variable para el cálculo',
-    example: 85.5
+  @ApiProperty({ 
+    description: 'Valor numérico de la variable para el cálculo', 
+    example: 85.5 
   })
-  @Column({
+  @Column({ 
     name: 'value',
     type: 'decimal',
     precision: 5,
     scale: 2
-  })
+})
   value: number;
 }
+
+
