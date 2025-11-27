@@ -38,4 +38,16 @@ export class EvaluationMetricResult extends BaseTimestampEntity {
     scale: 4
   })
   calculated_value: number;
+
+    @ApiProperty({
+    description: 'Ponderacion del valor calculado aplicando la fórmula de la métrica',
+    example: 85.7
+  })
+  @Column({
+    name: 'weighted_value',
+    type: 'numeric',
+    precision: 15,
+    scale: 4
+  })
+  weighted_value: number;
 }
