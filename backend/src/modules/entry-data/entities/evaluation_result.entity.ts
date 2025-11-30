@@ -10,7 +10,7 @@ import { Evaluation } from '../../config-evaluation/entities/evaluation.entity';
 @Entity('evaluation_result')
 export class EvaluationResult extends BaseTimestampEntity {
   @ApiProperty({ description: 'ID único del resultado de la evaluación', example: 1 })
-  @PrimaryGeneratedColumn({ name: 'result_id' })
+  @PrimaryGeneratedColumn({ name: 'evaluation_result_id' })
   id: number;
 
   @ApiProperty({ description: 'ID de la evaluación relacionada' })

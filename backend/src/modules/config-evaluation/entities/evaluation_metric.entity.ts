@@ -38,16 +38,4 @@ export class EvaluationMetric extends BaseTimestampEntity {
   @JoinColumn({ name: 'metric_id', referencedColumnName: 'id' })
   metric: Metric;
 
-
-  @ApiProperty({
-    description: 'Porcentaje de importancia del criterio',
-    example: 30.5
-  })
-  @Column({
-    name: 'weight_value',
-    type: 'decimal',
-    precision: 5,
-    scale: 2
-  })
-  weight_value: number;
 }

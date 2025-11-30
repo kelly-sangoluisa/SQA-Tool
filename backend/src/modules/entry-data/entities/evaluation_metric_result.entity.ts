@@ -34,8 +34,8 @@ export class EvaluationMetricResult extends BaseTimestampEntity {
   @Column({
     name: 'calculated_value',
     type: 'numeric',
-    precision: 15,
-    scale: 4
+    precision: 5,
+    scale: 2
   })
   calculated_value: number;
 
@@ -46,8 +46,8 @@ export class EvaluationMetricResult extends BaseTimestampEntity {
   @Column({
     name: 'weighted_value',
     type: 'numeric',
-    precision: 15,
-    scale: 4
+    precision: 5,
+    scale: 2
   })
   weighted_value: number;
 }
