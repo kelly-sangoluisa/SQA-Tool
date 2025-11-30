@@ -36,6 +36,9 @@ export class FormulaEvaluationService {
 
     let expression = formula.trim();
 
+    // Primero validar si la fórmula contiene caracteres inválidos
+    this.validateForInvalidCharacters(formula);
+
     // Reemplazar variables manteniendo orden de precedencia
     const sortedVariables = variables.sort((a, b) => b.symbol.length - a.symbol.length);
     
@@ -46,6 +49,31 @@ export class FormulaEvaluationService {
 
     this.validateExpression(expression);
     return expression;
+  }
+
+  /**
+   * Valida que la fórmula original no contenga caracteres peligrosos o inválidos
+   */
+  private validateForInvalidCharacters(formula: string): void {
+    // Lista de caracteres/tokens no permitidos en fórmulas matemáticas
+    const dangerousPatterns = [
+      /[;]/,                    // Punto y coma (SQL injection)
+      /\bDROP\b/i,             // Palabras SQL peligrosas
+      /\bTABLE\b/i,
+      /\bDELETE\b/i,
+      /\bINSERT\b/i,
+      /\bUPDATE\b/i,
+      /\bSELECT\b/i,
+      /['"]/,                  // Comillas (potential string injection)
+      /[{}]/,                  // Llaves
+      /\$[{]/,                 // Template literals
+    ];
+
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(formula)) {
+        throw new Error('Expression contains invalid characters');
+      }
+    }
   }
 
   /**
