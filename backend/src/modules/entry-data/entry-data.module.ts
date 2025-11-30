@@ -6,6 +6,9 @@ import { EntryDataController } from './controllers/entry-data.controller';
 
 // Services
 import { EntryDataService } from './services/entry-data.service';
+import { EvaluationCalculationService } from './services/evaluation-calculation.service';
+import { EvaluationVariableService } from './services/evaluation-variable.service';
+import { FormulaEvaluationService } from './services/formula-evaluation.service';
 
 // Entities - Entry Data
 import { EvaluationCriteriaResult } from './entities/evaluation_criteria_result.entity';
@@ -20,6 +23,7 @@ import { EvaluationMetric } from '../config-evaluation/entities/evaluation_metri
 import { Evaluation } from '../config-evaluation/entities/evaluation.entity';
 import { Project } from '../config-evaluation/entities/project.entity';
 import { FormulaVariable } from '../parameterization/entities/formula-variable.entity';
+import { Metric } from '../parameterization/entities/metric.entity';
 
 @Module({
   imports: [
@@ -37,10 +41,23 @@ import { FormulaVariable } from '../parameterization/entities/formula-variable.e
       Evaluation,
       Project,
       FormulaVariable,
+      Metric,
     ]),
   ],
   controllers: [EntryDataController],
-  providers: [EntryDataService],
-  exports: [EntryDataService], // Exportar el servicio para que otros módulos puedan usarlo
+  providers: [
+    // Servicios especializados
+    FormulaEvaluationService,
+    EvaluationVariableService,
+    EvaluationCalculationService,
+    // Servicio principal de coordinación
+    EntryDataService,
+  ],
+  exports: [
+    EntryDataService,
+    EvaluationCalculationService,
+    EvaluationVariableService,
+    FormulaEvaluationService,
+  ],
 })
 export class EntryDataModule {}
