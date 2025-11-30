@@ -55,7 +55,7 @@ export class ConfigEvaluationService {
         name: createProjectDto.name,
         description: createProjectDto.description,
         creator_user_id: createProjectDto.creator_user_id,
-        status: ProjectStatus.ACTIVE,
+        status: ProjectStatus.IN_PROGRESS,
       });
 
       const savedProject = await projectRepo.save(newProject);

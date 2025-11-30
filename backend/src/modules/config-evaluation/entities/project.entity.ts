@@ -5,8 +5,9 @@ import { User } from '../../../users/entities/user.entity';
 import { Evaluation } from './evaluation.entity';
 
 export enum ProjectStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
 }
 
 @Entity('projects')
@@ -39,12 +40,12 @@ export class Project extends BaseTimestampEntity {
   @ApiProperty({
     description: 'Estado del proyecto',
     enum: ProjectStatus,
-    example: ProjectStatus.ACTIVE
+    example: ProjectStatus.IN_PROGRESS
   })
   @Column({
     type: 'enum',
     enum: ProjectStatus,
-    default: ProjectStatus.ACTIVE
+    default: ProjectStatus.IN_PROGRESS
   })
   status: ProjectStatus;
 

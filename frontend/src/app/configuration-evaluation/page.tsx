@@ -145,10 +145,10 @@ Criterios creados: ${result.criteria.length}`);
     setCurrentStep(targetStep);
   };
 
-  const getStepStatus = (step: number): 'completed' | 'active' | 'pending' => {
+  const getStepStatus = (step: number): 'in_progress' | 'completed' | 'cancelled' => {
     if (step < currentStep) return 'completed';
-    if (step === currentStep) return 'active';
-    return 'pending';
+    if (step === currentStep) return 'in_progress';
+    return 'cancelled';
   };
 
   return (
