@@ -1,0 +1,324 @@
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
+
+// Entities
+import { EvaluationMetricResult } from '../entities/evaluation_metric_result.entity';
+import { EvaluationCriteriaResult } from '../entities/evaluation_criteria_result.entity';
+import { EvaluationResult } from '../entities/evaluation_result.entity';
+import { ProjectResult } from '../entities/project_result.entity';
+import { EvaluationMetric } from '../../config-evaluation/entities/evaluation_metric.entity';
+import { Evaluation } from '../../config-evaluation/entities/evaluation.entity';
+import { Project } from '../../config-evaluation/entities/project.entity';
+
+// Services
+import { FormulaEvaluationService } from './formula-evaluation.service';
+import { EvaluationVariableService } from './evaluation-variable.service';
+
+// DTOs
+import { CreateEvaluationVariableDto } from '../dto/evaluation-variable.dto';
+
+/**
+ * Servicio de orquestación para cálculos de evaluación
+ * Responsabilidad: Coordinar cálculos y agregaciones de resultados
+ */
+@Injectable()
+export class EvaluationCalculationService {
+  private readonly logger = new Logger(EvaluationCalculationService.name);
+
+  constructor(
+    // Repositories para resultados
+    @InjectRepository(EvaluationMetricResult)
+    private readonly evaluationMetricResultRepo: Repository<EvaluationMetricResult>,
+    @InjectRepository(EvaluationCriteriaResult)
+    private readonly evaluationCriteriaResultRepo: Repository<EvaluationCriteriaResult>,
+    @InjectRepository(EvaluationResult)
+    private readonly evaluationResultRepo: Repository<EvaluationResult>,
+    @InjectRepository(ProjectResult)
+    private readonly projectResultRepo: Repository<ProjectResult>,
+
+    // Repositories de configuración
+    @InjectRepository(EvaluationMetric)
+    private readonly evaluationMetricRepo: Repository<EvaluationMetric>,
+    @InjectRepository(Evaluation)
+    private readonly evaluationRepo: Repository<Evaluation>,
+    @InjectRepository(Project)
+    private readonly projectRepo: Repository<Project>,
+
+    // Servicios especializados
+    private readonly formulaEvaluationService: FormulaEvaluationService,
+    private readonly evaluationVariableService: EvaluationVariableService,
+    private readonly dataSource: DataSource,
+  ) {}
+
+  /**
+   * Procesa datos de evaluación desde el frontend
+   */
+  async processEvaluationData(evaluationId: number, data: {
+    evaluation_variables: CreateEvaluationVariableDto[]
+  }): Promise<{ message: string; variables_saved: number }> {
+    
+    this.logger.log(`Processing evaluation data for evaluation ${evaluationId}`);
+    
+    await this.validateEvaluation(evaluationId);
+    
+    const savedVariables = await this.dataSource.transaction(async (manager) => {
+      const variables: any[] = [];
+      
+      for (const variableDto of data.evaluation_variables) {
+        await this.validateMetricBelongsToEvaluation(variableDto.eval_metric_id, evaluationId);
+        const variable = await this.evaluationVariableService.createOrUpdate(variableDto);
+        variables.push(variable);
+      }
+      
+      return variables;
+    });
+
+    return {
+      message: 'Evaluation data processed successfully',
+      variables_saved: savedVariables.length
+    };
+  }
+
+  /**
+   * Calcula resultados para una métrica específica
+   */
+  async calculateMetricResult(evalMetricId: number): Promise<EvaluationMetricResult> {
+    this.logger.log(`Calculating metric result for evaluation metric ${evalMetricId}`);
+
+    const evaluationMetric = await this.getEvaluationMetricWithDetails(evalMetricId);
+    const variables = await this.evaluationVariableService.findByEvaluationMetric(evalMetricId);
+
+    if (variables.length === 0) {
+      throw new BadRequestException(`No variables found for evaluation metric ${evalMetricId}`);
+    }
+
+    const formula = evaluationMetric.metric.formula;
+    const variableValues = variables.map(v => ({
+      symbol: v.variable.symbol,
+      value: v.value
+    }));
+
+    const calculatedValue = this.formulaEvaluationService.evaluateFormula(formula, variableValues);
+    const weightedValue = this.calculateWeightedValue(calculatedValue, evaluationMetric);
+
+    return this.saveMetricResult(evalMetricId, calculatedValue, weightedValue);
+  }
+
+  /**
+   * Calcula y guarda resultados de criterios de evaluación
+   */
+  async calculateCriteriaResults(evaluationId: number): Promise<EvaluationCriteriaResult[]> {
+    this.logger.log(`Calculating criteria results for evaluation ${evaluationId}`);
+
+    const evaluation = await this.getEvaluationWithCriteria(evaluationId);
+    const criteriaResults: EvaluationCriteriaResult[] = [];
+
+    await this.dataSource.transaction(async (manager) => {
+      for (const criterion of evaluation.evaluation_criteria) {
+        const metricResults = await this.evaluationMetricResultRepo.find({
+          where: { 
+            evaluation_metric: { 
+              evaluation_criterion: { id: criterion.id } 
+            } 
+          },
+          relations: ['evaluation_metric']
+        });
+
+        if (metricResults.length === 0) {
+          throw new BadRequestException(`No metric results found for criterion ${criterion.id}`);
+        }
+
+        const criteriaScore = this.calculateSimpleAverage(
+          metricResults.map(mr => mr.weighted_value)
+        );
+
+        const criteriaResult = await this.saveCriteriaResult(criterion.id, criteriaScore);
+        criteriaResults.push(criteriaResult);
+      }
+    });
+
+    return criteriaResults;
+  }
+
+  /**
+   * Calcula resultado final de evaluación
+   */
+  async calculateEvaluationResult(evaluationId: number): Promise<EvaluationResult> {
+    this.logger.log(`Calculating final evaluation result for evaluation ${evaluationId}`);
+
+    const criteriaResults = await this.evaluationCriteriaResultRepo.find({
+      where: { 
+        evaluation_criterion: { 
+          evaluation: { id: evaluationId } 
+        } 
+      },
+      relations: ['evaluation_criterion']
+    });
+
+    if (criteriaResults.length === 0) {
+      throw new BadRequestException(`No criteria results found for evaluation ${evaluationId}`);
+    }
+
+    const finalScore = this.calculateSimpleAverage(
+      criteriaResults.map(cr => cr.final_score)
+    );
+
+    return this.saveEvaluationResult(evaluationId, finalScore);
+  }
+
+  /**
+   * Calcula resultado del proyecto completo
+   */
+  async calculateProjectResult(projectId: number): Promise<ProjectResult> {
+    this.logger.log(`Calculating project result for project ${projectId}`);
+
+    const evaluationResults = await this.evaluationResultRepo.find({
+      where: { 
+        evaluation: { 
+          project: { id: projectId } 
+        } 
+      },
+      relations: ['evaluation']
+    });
+
+    if (evaluationResults.length === 0) {
+      throw new BadRequestException(`No evaluation results found for project ${projectId}`);
+    }
+
+    const projectScore = this.calculateSimpleAverage(
+      evaluationResults.map(er => er.evaluation_score)
+    );
+
+    return this.saveProjectResult(projectId, projectScore);
+  }
+
+  // =========================================================================
+  // MÉTODOS PRIVADOS DE VALIDACIÓN
+  // =========================================================================
+
+  private async validateEvaluation(evaluationId: number): Promise<void> {
+    const evaluation = await this.evaluationRepo.findOneBy({ id: evaluationId });
+    if (!evaluation) {
+      throw new NotFoundException(`Evaluation with ID ${evaluationId} not found`);
+    }
+  }
+
+  private async validateMetricBelongsToEvaluation(evalMetricId: number, evaluationId: number): Promise<void> {
+    const evaluationMetric = await this.evaluationMetricRepo.findOne({
+      where: { id: evalMetricId },
+      relations: ['evaluation_criterion', 'evaluation_criterion.evaluation']
+    });
+
+    if (!evaluationMetric) {
+      throw new NotFoundException(`EvaluationMetric with ID ${evalMetricId} not found`);
+    }
+
+    if (evaluationMetric.evaluation_criterion.evaluation.id !== evaluationId) {
+      throw new BadRequestException(
+        `EvaluationMetric ${evalMetricId} does not belong to evaluation ${evaluationId}`
+      );
+    }
+  }
+
+  // =========================================================================
+  // MÉTODOS PRIVADOS DE CONSULTA
+  // =========================================================================
+
+  private async getEvaluationMetricWithDetails(evalMetricId: number): Promise<EvaluationMetric> {
+    const evaluationMetric = await this.evaluationMetricRepo.findOne({
+      where: { id: evalMetricId },
+      relations: ['metric', 'evaluation_criterion']
+    });
+
+    if (!evaluationMetric) {
+      throw new NotFoundException(`EvaluationMetric with ID ${evalMetricId} not found`);
+    }
+
+    return evaluationMetric;
+  }
+
+  private async getEvaluationWithCriteria(evaluationId: number): Promise<Evaluation> {
+    const evaluation = await this.evaluationRepo.findOne({
+      where: { id: evaluationId },
+      relations: ['evaluation_criteria', 'evaluation_criteria.evaluation_metrics']
+    });
+
+    if (!evaluation) {
+      throw new NotFoundException(`Evaluation with ID ${evaluationId} not found`);
+    }
+
+    return evaluation;
+  }
+
+  // =========================================================================
+  // MÉTODOS PRIVADOS DE CÁLCULO
+  // =========================================================================
+
+  private calculateWeightedValue(value: number, evaluationMetric: EvaluationMetric): number {
+    // Por ahora retornamos el valor calculado directamente
+    // TODO: Implementar lógica de normalización cuando se definan umbrales
+    return Math.max(0, value);
+  }
+
+  private calculateWeightedAverage(items: { score: number; weight: number }[]): number {
+    const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+    const weightedSum = items.reduce((sum, item) => sum + (item.score * item.weight), 0);
+    
+    return totalWeight > 0 ? weightedSum / totalWeight : 0;
+  }
+
+  private calculateSimpleAverage(scores: number[]): number {
+    return scores.length > 0 ? scores.reduce((sum, score) => sum + score, 0) / scores.length : 0;
+  }
+
+  // =========================================================================
+  // MÉTODOS PRIVADOS DE PERSISTENCIA
+  // =========================================================================
+
+  private async saveMetricResult(evalMetricId: number, calculatedValue: number, weightedValue: number): Promise<EvaluationMetricResult> {
+    const metricResult = this.evaluationMetricResultRepo.create({
+      eval_metric_id: evalMetricId,
+      calculated_value: calculatedValue,
+      weighted_value: weightedValue
+    });
+
+    const saved = await this.evaluationMetricResultRepo.save(metricResult);
+    this.logger.log(`Saved metric result ${saved.id} with weighted value ${weightedValue}`);
+    return saved;
+  }
+
+  private async saveCriteriaResult(criterionId: number, finalScore: number): Promise<EvaluationCriteriaResult> {
+    const criteriaResult = this.evaluationCriteriaResultRepo.create({
+      eval_criterion_id: criterionId,
+      final_score: finalScore
+    });
+
+    const saved = await this.evaluationCriteriaResultRepo.save(criteriaResult);
+    this.logger.log(`Saved criteria result ${saved.id} with final score ${finalScore}`);
+    return saved;
+  }
+
+  private async saveEvaluationResult(evaluationId: number, evaluationScore: number): Promise<EvaluationResult> {
+    const evaluationResult = this.evaluationResultRepo.create({
+      evaluation_id: evaluationId,
+      evaluation_score: evaluationScore,
+      conclusion: 'Evaluación calculada automáticamente'
+    });
+
+    const saved = await this.evaluationResultRepo.save(evaluationResult);
+    this.logger.log(`Saved evaluation result ${saved.id} with evaluation score ${evaluationScore}`);
+    return saved;
+  }
+
+  private async saveProjectResult(projectId: number, finalProjectScore: number): Promise<ProjectResult> {
+    const projectResult = this.projectResultRepo.create({
+      project_id: projectId,
+      final_project_score: finalProjectScore
+    });
+
+    const saved = await this.projectResultRepo.save(projectResult);
+    this.logger.log(`Saved project result ${saved.id} with final project score ${finalProjectScore}`);
+    return saved;
+  }
+}

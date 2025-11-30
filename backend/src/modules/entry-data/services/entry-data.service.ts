@@ -1,572 +1,457 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, ObjectLiteral } from 'typeorm';
+import { Repository } from 'typeorm';
 
-// Entities - Entry Data
-import { EvaluationCriteriaResult } from '../entities/evaluation_criteria_result.entity';
-import { EvaluationMetricResult } from '../entities/evaluation_metric_result.entity';
-import { EvaluationResult } from '../entities/evaluation_result.entity';
+// Entities
 import { EvaluationVariable } from '../entities/evaluation_variable.entity';
+import { EvaluationMetricResult } from '../entities/evaluation_metric_result.entity';
+import { EvaluationCriteriaResult } from '../entities/evaluation_criteria_result.entity';
+import { EvaluationResult } from '../entities/evaluation_result.entity';
 import { ProjectResult } from '../entities/project_result.entity';
 
-// Entities - Related modules
-//import { EvaluationCriterion } from '../../config-evaluation/entities/evaluation-criterion.entity';
-//import { EvaluationMetric } from '../../config-evaluation/entities/evaluation_metric.entity';
-import { Evaluation, EvaluationStatus } from '../../config-evaluation/entities/evaluation.entity';
-import { Project, ProjectStatus } from '../../config-evaluation/entities/project.entity';
-//import { FormulaVariable } from '../../parameterization/entities/formula-variable.entity';
+// Services
+import { EvaluationCalculationService } from './evaluation-calculation.service';
 
 // DTOs
 import { CreateEvaluationVariableDto } from '../dto/evaluation-variable.dto';
-import { CreateEvaluationResultDto } from '../dto/evaluation-result.dto';
-import { CreateEvaluationCriteriaResultDto } from '../dto/evaluation-criteria-result.dto';
-import { CreateEvaluationMetricResultDto } from '../dto/evaluation-metric-result.dto';
-import { CreateProjectResultDto } from '../dto/project-result.dto';
 
+/**
+ * Servicio principal de Entry Data - Coordinación de operaciones CRUD
+ * Responsabilidad: Orquestar operaciones y proveer API unificada
+ */
 @Injectable()
 export class EntryDataService {
   private readonly logger = new Logger(EntryDataService.name);
 
   constructor(
-    // Entry Data repositories
-    @InjectRepository(EvaluationCriteriaResult)
-    private readonly evaluationCriteriaResultRepo: Repository<EvaluationCriteriaResult>,
-    @InjectRepository(EvaluationMetricResult)
-    private readonly evaluationMetricResultRepo: Repository<EvaluationMetricResult>,
-    @InjectRepository(EvaluationResult)
-    private readonly evaluationResultRepo: Repository<EvaluationResult>,
     @InjectRepository(EvaluationVariable)
     private readonly evaluationVariableRepo: Repository<EvaluationVariable>,
+    @InjectRepository(EvaluationMetricResult)
+    private readonly evaluationMetricResultRepo: Repository<EvaluationMetricResult>,
+    @InjectRepository(EvaluationCriteriaResult)
+    private readonly evaluationCriteriaResultRepo: Repository<EvaluationCriteriaResult>,
+    @InjectRepository(EvaluationResult)
+    private readonly evaluationResultRepo: Repository<EvaluationResult>,
     @InjectRepository(ProjectResult)
     private readonly projectResultRepo: Repository<ProjectResult>,
 
-    // Related repositories for validations
-    //@InjectRepository(EvaluationCriterion)
-    //private readonly evaluationCriterionRepo: Repository<EvaluationCriterion>,
-    //@InjectRepository(EvaluationMetric)
-    //private readonly evaluationMetricRepo: Repository<EvaluationMetric>,
-    @InjectRepository(Evaluation)
-    private readonly evaluationRepo: Repository<Evaluation>,
-    @InjectRepository(Project)
-    private readonly projectRepo: Repository<Project>,
-    //@InjectRepository(FormulaVariable)
-    //private readonly formulaVariableRepo: Repository<FormulaVariable>,
-
-    private readonly dataSource: DataSource,
-    private readonly calculateService: any,
+    private readonly evaluationCalculationService: EvaluationCalculationService,
   ) {}
 
-  // --- Helper genérico para validaciones ---
-  private async findOneOrFail<T extends ObjectLiteral>(
-    repo: Repository<T>,
-    id: number,
-    entityName: string,
-  ): Promise<T> {
-    if (!id || id <= 0) {
-      throw new BadRequestException(`Invalid ${entityName} ID: ${id}`);
-    }
-    
-    const entity = await repo.findOneBy({ id: id } as any);
-    if (!entity) {
-      throw new NotFoundException(`${entityName} with ID ${id} not found`);
-    }
-    return entity;
-  }
-
-  // =============================================================================
-  // 📊 FUNCIONES PARA BUSCAR RESULTADOS POR PROYECTO
-  // =============================================================================
+  // =========================================================================
+  // API PRINCIPAL PARA FRONTEND
+  // =========================================================================
 
   /**
-   * Obtiene todos los resultados finales de un proyecto específico
-   */
-  async findProjectResultsByProject(projectId: number): Promise<ProjectResult[]> {
-    this.logger.log(`Finding project results for project ${projectId}`);
-    
-    // Verificar que el proyecto existe
-    await this.findOneOrFail(this.projectRepo, projectId, 'Project');
-    
-    const results = await this.projectResultRepo.find({
-      where: { project_id: projectId },
-      relations: ['project'],
-      order: { created_at: 'DESC' },
-    });
-
-    this.logger.log(`Found ${results.length} project results for project ${projectId}`);
-    return results;
-  }
-
-  /**
-   * Obtiene todos los resultados de evaluaciones de un proyecto específico
-   */
-  async findEvaluationResultsByProject(projectId: number): Promise<EvaluationResult[]> {
-    this.logger.log(`Finding evaluation results for project ${projectId}`);
-    
-    // Verificar que el proyecto existe
-    await this.findOneOrFail(this.projectRepo, projectId, 'Project');
-    
-    const results = await this.evaluationResultRepo.find({
-      where: { 
-        evaluation: { project_id: projectId }
-      },
-      relations: [
-        'evaluation', 
-        'evaluation.project', 
-        'evaluation.standard'
-      ],
-      order: { created_at: 'DESC' },
-    });
-
-    this.logger.log(`Found ${results.length} evaluation results for project ${projectId}`);
-    return results;
-  }
-
-  /**
-   * Obtiene todos los resultados de criterios de un proyecto específico
-   */
-  async findCriteriaResultsByProject(projectId: number): Promise<EvaluationCriteriaResult[]> {
-    this.logger.log(`Finding criteria results for project ${projectId}`);
-    
-    // Verificar que el proyecto existe
-    await this.findOneOrFail(this.projectRepo, projectId, 'Project');
-    
-    const results = await this.evaluationCriteriaResultRepo.find({
-      where: { 
-        evaluation_criterion: {
-          evaluation: { project_id: projectId }
-        }
-      },
-      relations: [
-        'evaluation_criterion',
-        'evaluation_criterion.criterion',
-        'evaluation_criterion.evaluation',
-        'evaluation_criterion.evaluation.project'
-      ],
-      order: { created_at: 'DESC' },
-    });
-
-    this.logger.log(`Found ${results.length} criteria results for project ${projectId}`);
-    return results;
-  }
-
-  /**
-   * Obtiene todos los resultados de métricas de un proyecto específico
-   */
-  async findMetricResultsByProject(projectId: number): Promise<EvaluationMetricResult[]> {
-    this.logger.log(`Finding metric results for project ${projectId}`);
-    
-    // Verificar que el proyecto existe
-    await this.findOneOrFail(this.projectRepo, projectId, 'Project');
-    
-    const results = await this.evaluationMetricResultRepo.find({
-      where: {
-        evaluation_metric: {
-          evaluation_criterion: {
-            evaluation: { project_id: projectId }
-          }
-        }
-      },
-      relations: [
-        'evaluation_metric',
-        'evaluation_metric.metric',
-        'evaluation_metric.evaluation_criterion',
-        'evaluation_metric.evaluation_criterion.evaluation',
-        'evaluation_metric.evaluation_criterion.criterion'
-      ],
-      order: { created_at: 'DESC' },
-    });
-
-    this.logger.log(`Found ${results.length} metric results for project ${projectId}`);
-    return results;
-  }
-
-
-  /**
-   * Obtiene todas las variables de evaluación de un proyecto específico
-   */
-  async findEvaluationVariablesByProject(projectId: number): Promise<EvaluationVariable[]> {
-    this.logger.log(`Finding evaluation variables for project ${projectId}`);
-    
-    // Verificar que el proyecto existe
-    await this.findOneOrFail(this.projectRepo, projectId, 'Project');
-    
-    const results = await this.evaluationVariableRepo.find({
-      where: {
-        evaluation_metric: {
-          evaluation_criterion: {
-            evaluation: { project_id: projectId }
-          }
-        }
-      },
-      relations: [
-        'evaluation_metric',
-        'evaluation_metric.metric', 
-        'evaluation_metric.evaluation_criterion',
-        'evaluation_metric.evaluation_criterion.evaluation',
-        'variable'
-      ],
-      order: { created_at: 'DESC' },
-    });
-
-    this.logger.log(`Found ${results.length} evaluation variables for project ${projectId}`);
-    return results;
-  }
-
-  // =============================================================================
-  //  FUNCIONES PARA BUSCAR RESULTADOS POR EVALUACIÓN
-  // =============================================================================
-
-  /**
-   * Obtiene el resultado de una evaluación específica
-   */
-  async findEvaluationResultsByEvaluation(evaluationId: number): Promise<EvaluationResult[]> {
-    this.logger.log(`Finding evaluation results for evaluation ${evaluationId}`);
-    
-    // Verificar que la evaluación existe
-    await this.findOneOrFail(this.evaluationRepo, evaluationId, 'Evaluation');
-    
-    const results = await this.evaluationResultRepo.find({
-      where: { evaluation_id: evaluationId },
-      relations: [
-        'evaluation',
-        'evaluation.project',
-        'evaluation.standard'
-      ],
-      order: { created_at: 'DESC' },
-    });
-
-    this.logger.log(`Found ${results.length} evaluation results for evaluation ${evaluationId}`);
-    return results;
-  }
-
-  /**
-   * Obtiene los resultados de criterios de una evaluación específica
-   */
-  async findCriteriaResultsByEvaluation(evaluationId: number): Promise<EvaluationCriteriaResult[]> {
-    this.logger.log(`Finding criteria results for evaluation ${evaluationId}`);
-    
-    // Verificar que la evaluación existe
-    await this.findOneOrFail(this.evaluationRepo, evaluationId, 'Evaluation');
-    
-    const results = await this.evaluationCriteriaResultRepo.find({
-      where: {
-        evaluation_criterion: { evaluation_id: evaluationId }
-      },
-      relations: [
-        'evaluation_criterion',
-        'evaluation_criterion.criterion',
-        'evaluation_criterion.evaluation'
-      ],
-      order: { created_at: 'DESC' },
-    });
-
-    this.logger.log(`Found ${results.length} criteria results for evaluation ${evaluationId}`);
-    return results;
-  }
-
-  /**
-   * Obtiene los resultados de métricas de una evaluación específica
-   */
-  async findMetricResultsByEvaluation(evaluationId: number): Promise<EvaluationMetricResult[]> {
-    this.logger.log(`Finding metric results for evaluation ${evaluationId}`);
-    
-    // Verificar que la evaluación existe
-    await this.findOneOrFail(this.evaluationRepo, evaluationId, 'Evaluation');
-    
-    const results = await this.evaluationMetricResultRepo.find({
-      where: {
-        evaluation_metric: {
-          evaluation_criterion: { evaluation_id: evaluationId }
-        }
-      },
-      relations: [
-        'evaluation_metric',
-        'evaluation_metric.metric',
-        'evaluation_metric.evaluation_criterion',
-        'evaluation_metric.evaluation_criterion.criterion'
-      ],
-      order: { created_at: 'DESC' },
-    });
-
-    this.logger.log(`Found ${results.length} metric results for evaluation ${evaluationId}`);
-    return results;
-  }
-
-  /**
-   * Obtiene las variables de evaluación de una evaluación específica
-   */
-  async findEvaluationVariablesByEvaluation(evaluationId: number): Promise<EvaluationVariable[]> {
-    this.logger.log(`Finding evaluation variables for evaluation ${evaluationId}`);
-    
-    // Verificar que la evaluación existe
-    await this.findOneOrFail(this.evaluationRepo, evaluationId, 'Evaluation');
-    
-    const results = await this.evaluationVariableRepo.find({
-      where: {
-        evaluation_metric: {
-          evaluation_criterion: { evaluation_id: evaluationId }
-        }
-      },
-      relations: [
-        'evaluation_metric',
-        'evaluation_metric.metric',
-        'evaluation_metric.evaluation_criterion',
-        'variable'
-      ],
-      order: { created_at: 'DESC' },
-    });
-
-    this.logger.log(`Found ${results.length} evaluation variables for evaluation ${evaluationId}`);
-    return results;
-  }
-
-  // =============================================================================
-  // FUNCIONES PARA OBTENER RESULTADOS COMPLETOS
-  // =============================================================================
-
-  /**
-   * Obtiene todos los resultados de un proyecto en una sola consulta
-   */
-  async findCompleteResultsByProject(projectId: number): Promise<{
-    project_results: ProjectResult[];
-    evaluation_results: EvaluationResult[];
-    criteria_results: EvaluationCriteriaResult[];
-    metric_results: EvaluationMetricResult[];
-    evaluation_variables: EvaluationVariable[];
-  }> {
-    this.logger.log(`Finding complete results for project ${projectId}`);
-    
-    // Verificar que el proyecto existe
-    await this.findOneOrFail(this.projectRepo, projectId, 'Project');
-
-    // Obtener todos los resultados en paralelo
-    const [
-      project_results,
-      evaluation_results,
-      criteria_results,
-      metric_results,
-      evaluation_variables
-    ] = await Promise.all([
-      this.findProjectResultsByProject(projectId),
-      this.findEvaluationResultsByProject(projectId),
-      this.findCriteriaResultsByProject(projectId),
-      this.findMetricResultsByProject(projectId),
-      this.findEvaluationVariablesByProject(projectId)
-    ]);
-
-    this.logger.log(`Complete results found for project ${projectId}: ${project_results.length} project, ${evaluation_results.length} evaluations, ${criteria_results.length} criteria, ${metric_results.length} metrics, ${evaluation_variables.length} variables`);
-
-    return {
-      project_results,
-      evaluation_results,
-      criteria_results,
-      metric_results,
-      evaluation_variables
-    };
-  }
-
-  /**
-   * Obtiene todos los resultados de una evaluación en una sola consulta
-   */
-  async findCompleteResultsByEvaluation(evaluationId: number): Promise<{
-    evaluation_results: EvaluationResult[];
-    criteria_results: EvaluationCriteriaResult[];
-    metric_results: EvaluationMetricResult[];
-    evaluation_variables: EvaluationVariable[];
-  }> {
-    this.logger.log(`Finding complete results for evaluation ${evaluationId}`);
-    
-    // Verificar que la evaluación existe
-    await this.findOneOrFail(this.evaluationRepo, evaluationId, 'Evaluation');
-
-    // Obtener todos los resultados en paralelo
-    const [
-      evaluation_results,
-      criteria_results,
-      metric_results,
-      evaluation_variables
-    ] = await Promise.all([
-      this.findEvaluationResultsByEvaluation(evaluationId),
-      this.findCriteriaResultsByEvaluation(evaluationId),
-      this.findMetricResultsByEvaluation(evaluationId),
-      this.findEvaluationVariablesByEvaluation(evaluationId)
-    ]);
-
-    this.logger.log(`Complete results found for evaluation ${evaluationId}: ${evaluation_results.length} evaluations, ${criteria_results.length} criteria, ${metric_results.length} metrics, ${evaluation_variables.length} variables`);
-
-    return {
-      evaluation_results,
-      criteria_results,
-      metric_results,
-      evaluation_variables
-    };
-  }
-
-
-
-
-
-    /**
-   * Recibe y guarda datos del navegador (NO termina la evaluación)
+   * Recibe y procesa datos del frontend (entrada principal)
    */
   async receiveEvaluationData(evaluationId: number, data: {
-    evaluation_variables: Array<{
-      eval_metric_id: number;
-      variable_id: number;
-      value: number;
-    }>
-  }): Promise<EvaluationVariable[]> {
-    //  Delegar al CalculateService que ya lo tienes implementado
-    return await this.calculateService.receiveEvaluationData(evaluationId, data);
-  }
-
-
-   /**
-   * Termina UNA evaluación específica: calcula resultados y cambia estado
-   * El usuario puede terminar evaluaciones individuales sin afectar otras
-   */
-  async finalizeEvaluation(evaluationId: number): Promise<{
-    evaluation_result: EvaluationResult;
-    criteria_results: EvaluationCriteriaResult[];
-    metric_results: EvaluationMetricResult[];
-    evaluation_status: string;
-    project_progress: {
-      completed_evaluations: number;
-      total_evaluations: number;
-      completion_percentage: number;
-    };
-  }> {
-    this.logger.log(`Finalizing individual evaluation ${evaluationId}`);
-
-    // Validaciones
-    const evaluation = await this.findOneOrFail(this.evaluationRepo, evaluationId, 'Evaluation');
+    evaluation_variables: CreateEvaluationVariableDto[]
+  }) {
+    this.logger.log(`Receiving evaluation data for evaluation ${evaluationId}`);
     
-    if (evaluation.status === EvaluationStatus.COMPLETED) {
-      throw new BadRequestException(`Evaluation ${evaluationId} is already completed`);
+    return await this.evaluationCalculationService.processEvaluationData(evaluationId, data);
+  }
+
+  /**
+   * Finaliza una evaluación calculando todos sus resultados
+   */
+  async finalizeEvaluation(evaluationId: number) {
+    this.logger.log(`Finalizing evaluation ${evaluationId}`);
+
+    // 1. Obtener métricas de evaluación para esta evaluación
+    const evaluationMetrics = await this.getEvaluationMetricsForEvaluation(evaluationId);
+    const metricResults: EvaluationMetricResult[] = [];
+    
+    // 2. Calcular resultados de cada métrica
+    for (const metric of evaluationMetrics) {
+      const result = await this.evaluationCalculationService.calculateMetricResult(metric.eval_metric_id);
+      metricResults.push(result);
     }
 
-    // Verificar que hay datos
-    const hasData = await this.evaluationVariableRepo.count({
-      where: {
-        evaluation_metric: {
-          evaluation_criterion: { evaluation_id: evaluationId }
-        }
-      }
-    });
+    // 3. Calcular resultados de criterios
+    const criteriaResults = await this.evaluationCalculationService.calculateCriteriaResults(evaluationId);
 
-    if (hasData === 0) {
-      throw new BadRequestException(
-        `No data found for evaluation ${evaluationId}. Please submit evaluation data first.`
-      );
-    }
-
-    // Calcular resultados usando tu CalculateService
-    const metricResults = await this.calculateService.calculateMetricResults(evaluationId);
-    const criteriaResults = await this.calculateService.calculateCriteriaResults(evaluationId);
-    const evaluationResult = await this.calculateService.calculateEvaluationResult(evaluationId);
-
-    // Actualizar estado a COMPLETED
-    await this.evaluationRepo.update(evaluationId, {
-      status: EvaluationStatus.COMPLETED
-    });
-
-    // Obtener progreso del proyecto
-    const projectProgress = await this.getProjectProgress(evaluation.project_id);
-
-    this.logger.log(`Evaluation ${evaluationId} finalized successfully`);
+    // 4. Calcular resultado final
+    const evaluationResult = await this.evaluationCalculationService.calculateEvaluationResult(evaluationId);
 
     return {
-      evaluation_result: evaluationResult,
-      criteria_results: criteriaResults,
-      metric_results: metricResults,
-      evaluation_status: EvaluationStatus.COMPLETED,
-      project_progress: projectProgress,
+      message: 'Evaluation finalized successfully',
+      evaluation_id: evaluationId,
+      metric_results: metricResults.length,
+      criteria_results: criteriaResults.length,
+      final_score: evaluationResult.evaluation_score,
+      finalized_at: evaluationResult.created_at
     };
   }
 
-  // =============================================================================
-  // 🔍 4. FUNCIONES DE PROGRESO Y ESTADO
-  // =============================================================================
-  
   /**
-   * Obtiene el progreso de un proyecto
+   * Finaliza un proyecto calculando el resultado agregado
    */
-  async getProjectProgress(projectId: number): Promise<{
-    total_evaluations: number;
-    completed_evaluations: number;
-    in_progress_evaluations: number;
-    pending_evaluations: number;
-    completion_percentage: number;
-    can_finalize_project: boolean;
-  }> {
-    const totalEvaluations = await this.evaluationRepo.count({
-      where: { project_id: projectId }
-    });
+  async finalizeProject(projectId: number) {
+    this.logger.log(`Finalizing project ${projectId}`);
 
-    const completedEvaluations = await this.evaluationRepo.count({
-      where: { 
-        project_id: projectId,
-        status: EvaluationStatus.COMPLETED 
-      }
-    });
-
-    const inProgressEvaluations = await this.evaluationRepo.count({
-      where: { 
-        project_id: projectId,
-        status: EvaluationStatus.IN_PROGRESS 
-      }
-    });
-
-    const pendingEvaluations = totalEvaluations - completedEvaluations - inProgressEvaluations;
-    const completionPercentage = totalEvaluations > 0 ? Math.round((completedEvaluations / totalEvaluations) * 100) : 0;
+    const projectResult = await this.evaluationCalculationService.calculateProjectResult(projectId);
 
     return {
+      message: 'Project finalized successfully',
+      project_id: projectId,
+      final_score: projectResult.final_project_score,
+      finalized_at: projectResult.created_at
+    };
+  }
+
+  // =========================================================================
+  // OPERACIONES DE CONSULTA
+  // =========================================================================
+
+  /**
+   * Obtiene variables por evaluación
+   */
+  async getEvaluationVariables(evaluationId: number): Promise<EvaluationVariable[]> {
+    return await this.evaluationVariableRepo
+      .createQueryBuilder('ev')
+      .innerJoin('ev.evaluation_metric', 'em')
+      .innerJoin('em.evaluation_criterion', 'ec')
+      .leftJoinAndSelect('ev.variable', 'fv')
+      .leftJoinAndSelect('ev.evaluation_metric', 'em_full')
+      .where('ec.evaluation_id = :evaluationId', { evaluationId })
+      .getMany();
+  }
+
+  /**
+   * Obtiene resultados de métricas por evaluación
+   */
+  async getMetricResults(evaluationId: number): Promise<EvaluationMetricResult[]> {
+    return await this.evaluationMetricResultRepo
+      .createQueryBuilder('emr')
+      .innerJoin('emr.evaluation_metric', 'em')
+      .innerJoin('em.evaluation_criterion', 'ec')
+      .leftJoinAndSelect('emr.evaluation_metric', 'em_full')
+      .leftJoinAndSelect('em_full.metric', 'metric')
+      .where('ec.evaluation_id = :evaluationId', { evaluationId })
+      .getMany();
+  }
+
+  /**
+   * Obtiene resultado de evaluación
+   */
+  async getEvaluationResult(evaluationId: number): Promise<EvaluationResult> {
+    const result = await this.evaluationResultRepo.findOne({
+      where: { evaluation_id: evaluationId },
+      relations: ['evaluation']
+    });
+
+    if (!result) {
+      throw new NotFoundException(`No result found for evaluation ${evaluationId}`);
+    }
+
+    return result;
+  }
+
+  /**
+   * Obtiene resultado de proyecto
+   */
+  async getProjectResult(projectId: number): Promise<ProjectResult> {
+    const result = await this.projectResultRepo.findOne({
+      where: { project_id: projectId },
+      relations: ['project']
+    });
+
+    if (!result) {
+      throw new NotFoundException(`No result found for project ${projectId}`);
+    }
+
+    return result;
+  }
+
+  /**
+   * Obtiene resumen completo de evaluación
+   */
+  async getEvaluationSummary(evaluationId: number) {
+    const [variables, metricResults, evaluationResult] = await Promise.all([
+      this.getEvaluationVariables(evaluationId),
+      this.getMetricResults(evaluationId),
+      this.getEvaluationResult(evaluationId).catch(() => null)
+    ]);
+
+    return {
+      evaluation_id: evaluationId,
+      variables: {
+        count: variables.length,
+        data: variables
+      },
+      metric_results: {
+        count: metricResults.length,
+        data: metricResults
+      },
+      final_result: evaluationResult,
+      status: evaluationResult ? 'completed' : 'in_progress'
+    };
+  }
+
+  /**
+   * Obtiene resultados de criterios por evaluación
+   */
+  async getCriteriaResults(evaluationId: number): Promise<EvaluationCriteriaResult[]> {
+    return await this.evaluationCriteriaResultRepo
+      .createQueryBuilder('ecr')
+      .innerJoin('ecr.evaluation_criterion', 'ec')
+      .leftJoinAndSelect('ecr.evaluation_criterion', 'ec_full')
+      .where('ec.evaluation_id = :evaluationId', { evaluationId })
+      .getMany();
+  }
+
+  /**
+   * Obtiene resultados completos del proyecto
+   */
+  async getProjectCompleteResults(projectId: number) {
+    const [
+      projectResult,
+      evaluationResults,
+      criteriaResults,
+      metricResults,
+      variables
+    ] = await Promise.all([
+      this.getProjectResult(projectId).catch(() => null),
+      this.getProjectEvaluationResults(projectId),
+      this.getProjectCriteriaResults(projectId),
+      this.getProjectMetricResults(projectId),
+      this.getProjectEvaluationVariables(projectId)
+    ]);
+
+    return {
+      project_id: projectId,
+      project_result: projectResult,
+      evaluation_results: { count: evaluationResults.length, data: evaluationResults },
+      criteria_results: { count: criteriaResults.length, data: criteriaResults },
+      metric_results: { count: metricResults.length, data: metricResults },
+      evaluation_variables: { count: variables.length, data: variables },
+      status: projectResult ? 'completed' : 'in_progress'
+    };
+  }
+
+  /**
+   * Obtiene todos los resultados de evaluaciones por proyecto
+   */
+  async getProjectEvaluationResults(projectId: number): Promise<EvaluationResult[]> {
+    return await this.evaluationResultRepo
+      .createQueryBuilder('er')
+      .innerJoin('er.evaluation', 'e')
+      .leftJoinAndSelect('er.evaluation', 'e_full')
+      .where('e.project_id = :projectId', { projectId })
+      .getMany();
+  }
+
+  /**
+   * Obtiene todos los resultados de criterios por proyecto
+   */
+  async getProjectCriteriaResults(projectId: number): Promise<EvaluationCriteriaResult[]> {
+    return await this.evaluationCriteriaResultRepo
+      .createQueryBuilder('ecr')
+      .innerJoin('ecr.evaluation_criterion', 'ec')
+      .innerJoin('ec.evaluation', 'e')
+      .leftJoinAndSelect('ecr.evaluation_criterion', 'ec_full')
+      .leftJoinAndSelect('ec_full.evaluation', 'e_full')
+      .where('e.project_id = :projectId', { projectId })
+      .getMany();
+  }
+
+  /**
+   * Obtiene todos los resultados de métricas por proyecto
+   */
+  async getProjectMetricResults(projectId: number): Promise<EvaluationMetricResult[]> {
+    return await this.evaluationMetricResultRepo
+      .createQueryBuilder('emr')
+      .innerJoin('emr.evaluation_metric', 'em')
+      .innerJoin('em.evaluation_criterion', 'ec')
+      .innerJoin('ec.evaluation', 'e')
+      .leftJoinAndSelect('emr.evaluation_metric', 'em_full')
+      .leftJoinAndSelect('em_full.metric', 'm')
+      .leftJoinAndSelect('em_full.evaluation_criterion', 'ec_full')
+      .where('e.project_id = :projectId', { projectId })
+      .getMany();
+  }
+
+  /**
+   * Obtiene todas las variables por proyecto
+   */
+  async getProjectEvaluationVariables(projectId: number): Promise<EvaluationVariable[]> {
+    return await this.evaluationVariableRepo
+      .createQueryBuilder('ev')
+      .innerJoin('ev.evaluation_metric', 'em')
+      .innerJoin('em.evaluation_criterion', 'ec')
+      .innerJoin('ec.evaluation', 'e')
+      .leftJoinAndSelect('ev.variable', 'fv')
+      .leftJoinAndSelect('ev.evaluation_metric', 'em_full')
+      .where('e.project_id = :projectId', { projectId })
+      .getMany();
+  }
+
+  /**
+   * Obtiene estado de la evaluación
+   */
+  async getEvaluationStatus(evaluationId: number) {
+    const [variables, metricResults, evaluationResult] = await Promise.all([
+      this.getEvaluationVariables(evaluationId),
+      this.getMetricResults(evaluationId),
+      this.getEvaluationResult(evaluationId).catch(() => null)
+    ]);
+
+    const totalExpectedVariables = await this.getTotalExpectedVariables(evaluationId);
+
+    return {
+      evaluation_id: evaluationId,
+      status: evaluationResult ? 'completed' : 'in_progress',
+      progress: {
+        variables: { submitted: variables.length, expected: totalExpectedVariables },
+        metric_results: metricResults.length,
+        is_finalized: !!evaluationResult
+      },
+      completion_percentage: totalExpectedVariables > 0 
+        ? Math.round((variables.length / totalExpectedVariables) * 100) 
+        : 0
+    };
+  }
+
+  /**
+   * Obtiene progreso del proyecto
+   */
+  async getProjectProgress(projectId: number) {
+    const evaluationResults = await this.getProjectEvaluationResults(projectId);
+    const projectResult = await this.getProjectResult(projectId).catch(() => null);
+    
+    // Obtener todas las evaluaciones del proyecto (completadas y pendientes)
+    const query = `
+      SELECT COUNT(*) as total_evaluations
+      FROM evaluations e
+      WHERE e.project_id = $1
+    `;
+    
+    const totalEvaluationsResult = await this.evaluationVariableRepo.query(query, [projectId]);
+    const totalEvaluations = parseInt(totalEvaluationsResult[0]?.total_evaluations || '0');
+    
+    return {
+      project_id: projectId,
       total_evaluations: totalEvaluations,
-      completed_evaluations: completedEvaluations,
-      in_progress_evaluations: inProgressEvaluations,
-      pending_evaluations: pendingEvaluations,
-      completion_percentage: completionPercentage,
-      can_finalize_project: completedEvaluations === totalEvaluations && totalEvaluations > 0,
+      completed_evaluations: evaluationResults.length,
+      completion_percentage: totalEvaluations > 0 
+        ? Math.round((evaluationResults.length / totalEvaluations) * 100) 
+        : 0,
+      final_result: projectResult,
+      status: projectResult ? 'completed' : 'in_progress',
+      evaluation_results: evaluationResults
     };
   }
 
+  // =========================================================================
+  // OPERACIONES DE ELIMINACIÓN
+  // =========================================================================
+
   /**
-   * Verifica si una evaluación puede ser finalizada
+   * Elimina variable específica
    */
-  async canEvaluationBeFinalized(evaluationId: number): Promise<{
-    can_finalize: boolean;
-    reason?: string;
-    data_count: number;
-  }> {
-    const evaluation = await this.findOneOrFail(this.evaluationRepo, evaluationId, 'Evaluation');
-
-    if (evaluation.status === EvaluationStatus.COMPLETED) {
-      return {
-        can_finalize: false,
-        reason: 'Evaluation is already completed',
-        data_count: 0,
-      };
-    }
-
-    const dataCount = await this.evaluationVariableRepo.count({
+  async deleteVariable(evalMetricId: number, variableId: number): Promise<void> {
+    const variable = await this.evaluationVariableRepo.findOne({
       where: {
-        evaluation_metric: {
-          evaluation_criterion: { evaluation_id: evaluationId }
-        }
+        eval_metric_id: evalMetricId,
+        variable_id: variableId
       }
     });
 
-    if (dataCount === 0) {
-      return {
-        can_finalize: false,
-        reason: 'No evaluation data submitted',
-        data_count: 0,
-      };
+    if (!variable) {
+      throw new NotFoundException(`Variable not found for metric ${evalMetricId} and variable ${variableId}`);
     }
 
-    return {
-      can_finalize: true,
-      data_count: dataCount,
-    };
+    await this.evaluationVariableRepo.remove(variable);
+    this.logger.log(`Deleted variable for metric ${evalMetricId}`);
+  }
+
+  /**
+   * Elimina resultado de métrica
+   */
+  async deleteMetricResult(metricResultId: number): Promise<void> {
+    const result = await this.evaluationMetricResultRepo.findOneBy({ id: metricResultId });
+    
+    if (!result) {
+      throw new NotFoundException(`Metric result ${metricResultId} not found`);
+    }
+
+    await this.evaluationMetricResultRepo.remove(result);
+    this.logger.log(`Deleted metric result ${metricResultId}`);
+  }
+
+  /**
+   * Reinicia evaluación (elimina todos los resultados)
+   */
+  async resetEvaluation(evaluationId: number): Promise<void> {
+    this.logger.log(`Resetting evaluation ${evaluationId}`);
+
+    // Eliminar en orden inverso de dependencias
+    await this.evaluationResultRepo.delete({ evaluation_id: evaluationId });
+    
+    await this.evaluationCriteriaResultRepo
+      .createQueryBuilder()
+      .delete()
+      .where('eval_criterion_id IN (SELECT id FROM evaluation_criteria WHERE evaluation_id = :evaluationId)', { evaluationId })
+      .execute();
+
+    await this.evaluationMetricResultRepo
+      .createQueryBuilder()
+      .delete()
+      .where('eval_metric_id IN (SELECT em.id FROM evaluation_metrics em INNER JOIN evaluation_criteria ec ON em.eval_criterion_id = ec.id WHERE ec.evaluation_id = :evaluationId)', { evaluationId })
+      .execute();
+
+    await this.evaluationVariableRepo
+      .createQueryBuilder()
+      .delete()
+      .where('eval_metric_id IN (SELECT em.id FROM evaluation_metrics em INNER JOIN evaluation_criteria ec ON em.eval_criterion_id = ec.id WHERE ec.evaluation_id = :evaluationId)', { evaluationId })
+      .execute();
+
+    this.logger.log(`Reset completed for evaluation ${evaluationId}`);
+  }
+
+  // =========================================================================
+  // MÉTODOS PRIVADOS DE UTILIDAD
+  // =========================================================================
+
+  private async getEvaluationMetricsForEvaluation(evaluationId: number) {
+    // Obtener las métricas de evaluación (no los resultados)
+    const query = `
+      SELECT em.eval_metric_id
+      FROM evaluation_metrics em
+      INNER JOIN evaluation_criteria ec ON em.eval_criterion_id = ec.eval_criterion_id
+      WHERE ec.evaluation_id = $1
+    `;
+    
+    const result = await this.evaluationVariableRepo.query(query, [evaluationId]);
+    return result;
+  }
+
+  private async getEvaluationMetrics(evaluationId: number) {
+    return await this.evaluationMetricResultRepo
+      .createQueryBuilder('emr')
+      .innerJoin('emr.evaluation_metric', 'em')
+      .innerJoin('em.evaluation_criterion', 'ec')
+      .where('ec.evaluation_id = :evaluationId', { evaluationId })
+      .select('emr.eval_metric_id', 'id')
+      .getRawMany();
+  }
+
+  /**
+   * Obtiene total de variables esperadas para una evaluación
+   */
+  private async getTotalExpectedVariables(evaluationId: number): Promise<number> {
+    const query = `
+      SELECT COUNT(fv.variable_id) as total
+      FROM formula_variables fv
+      INNER JOIN metrics m ON fv.metric_id = m.metric_id
+      INNER JOIN evaluation_metrics em ON em.metric_id = m.metric_id
+      INNER JOIN evaluation_criteria ec ON em.eval_criterion_id = ec.eval_criterion_id
+      WHERE ec.evaluation_id = $1 AND fv.state = 'ACTIVE'
+    `;
+    
+    const result = await this.evaluationVariableRepo.query(query, [evaluationId]);
+    return parseInt(result[0]?.total || '0');
   }
 }
