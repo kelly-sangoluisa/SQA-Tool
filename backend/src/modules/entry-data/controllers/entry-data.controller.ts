@@ -1,196 +1,404 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Param,
-  ParseIntPipe,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
-
-import { EntryDataService } from '../services/entry-data.service';
+import {Controller,Post,Get,Delete,Body,Param,ParseIntPipe,Query, HttpStatus, } from '@nestjs/common';
+import {ApiTags,ApiOperation,ApiResponse,ApiBearerAuth,ApiParam,ApiQuery,} from '@nestjs/swagger';
 import { ROLES } from '../../../common/decorators/roles.decorator';
 
 // DTOs
 import { CreateEvaluationVariableDto } from '../dto/evaluation-variable.dto';
 
-@ApiTags('Entry Data')
-@ApiBearerAuth('bearer')
+// Services
+import { EntryDataService } from '../services/entry-data.service';
+
+@ApiTags('Entry Data - Procesamiento de Datos de Evaluación')
 @Controller('entry-data')
+@ApiBearerAuth()
 export class EntryDataController {
-  constructor(private readonly service: EntryDataService) {}
+  constructor(private readonly entryDataService: EntryDataService) {}
 
-  // --- ENDPOINTS PARA EL FLUJO DEL FRONTEND ---
+  // ==========================================================================
+  // POST ENDPOINTS - FLUJO PRINCIPAL
+  // ==========================================================================
 
-  /**
-   * POST /entry-data/metrics/:metricId/variables
-   * Guardar variables mientras el usuario evalúa
-   */
-  @Post('metrics/:metricId/variables')
-  @ROLES('admin', 'evaluator')
+  @Post('evaluations/:evaluationId/submit-data')
+    @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: 'Guardar variables de una métrica durante la evaluación',
-    description: 'Permite al usuario guardar temporalmente los valores de las variables de una métrica específica'
+    summary: 'Enviar datos de evaluación (Botón "Siguiente")',
+    description: 'Guarda datos de variables en memoria del servidor. NO calcula resultados finales.'
   })
-  @ApiResponse({ status: 201, description: 'Variables guardadas exitosamente.' })
-  @ApiResponse({ status: 400, description: 'Datos inválidos.' })
-  @ApiResponse({ status: 404, description: 'Métrica de evaluación no encontrada.' })
-  saveMetricVariables(
-    @Param('metricId', ParseIntPipe) metricId: number,
-    @Body() dto: { variables: { variable_id: number; value: number }[] }
+  @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
+  @ApiResponse({ 
+    status: HttpStatus.CREATED, 
+    description: 'Datos guardados exitosamente',
+    schema: {
+      example: {
+        message: 'Evaluation data processed successfully',
+        variables_saved: 5,
+        evaluation_id: 1
+      }
+    }
+  })
+  async submitEvaluationData(
+    @Param('evaluationId', ParseIntPipe) evaluationId: number,
+    @Body() data: {
+      evaluation_variables: CreateEvaluationVariableDto[]
+    }
   ) {
-    return this.service.saveMetricVariables(metricId, dto.variables);
+    const result = await this.entryDataService.receiveEvaluationData(evaluationId, data);
+    
+    return {
+      ...result,
+      evaluation_id: evaluationId,
+      timestamp: new Date().toISOString()
+    };
   }
 
-  /**
-   * POST /entry-data/evaluations/:evaluationId/finalize
-   * Calcular y guardar TODO cuando el usuario termina la evaluación
-   */
   @Post('evaluations/:evaluationId/finalize')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: 'Finalizar evaluación y calcular todos los resultados',
-    description: 'Calcula todas las fórmulas, métricas y criterios. Cambia estados de evaluación y proyecto si es necesario.'
+    summary: ' Finalizar evaluación individual (Botón "Terminar Evaluación")',
+    description: 'Calcula todos los resultados de la evaluación: métricas → criterios → evaluación final.'
   })
-  @ApiResponse({ status: 201, description: 'Evaluación finalizada exitosamente.' })
-  @ApiResponse({ status: 400, description: 'Error en cálculos o datos faltantes.' })
-  @ApiResponse({ status: 404, description: 'Evaluación no encontrada.' })
-  finalizeEvaluation(@Param('evaluationId', ParseIntPipe) evaluationId: number) {
-    return this.service.finalizeEvaluation(evaluationId);
+  @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
+  @ApiResponse({ 
+    status: HttpStatus.CREATED, 
+    description: 'Evaluación finalizada exitosamente',
+    schema: {
+      example: {
+        message: 'Evaluation finalized successfully',
+        evaluation_id: 1,
+        metric_results: 8,
+        criteria_results: 3,
+        final_score: 85.67,
+        finalized_at: '2024-01-15T10:30:00Z'
+      }
+    }
+  })
+  async finalizeEvaluation(
+    @Param('evaluationId', ParseIntPipe) evaluationId: number
+  ) {
+    return await this.entryDataService.finalizeEvaluation(evaluationId);
   }
 
-  /**
-   * GET /entry-data/evaluations/:evaluationId/progress
-   * Ver progreso de una evaluación
-   */
-  @Get('evaluations/:evaluationId/progress')
+  @Post('projects/:projectId/finalize')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: 'Obtener progreso de una evaluación',
-    description: 'Muestra cuántas métricas han sido completadas y el porcentaje de progreso'
+    summary: '🚀 Finalizar proyecto completo (Última evaluación)',
+    description: 'Calcula el resultado final del proyecto basado en todas las evaluaciones completadas.'
   })
-  @ApiResponse({ status: 200, description: 'Progreso obtenido exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Evaluación no encontrada.' })
-  getEvaluationProgress(@Param('evaluationId', ParseIntPipe) evaluationId: number) {
-    return this.service.getEvaluationProgress(evaluationId);
+  @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
+  @ApiResponse({ 
+    status: HttpStatus.CREATED, 
+    description: 'Proyecto finalizado exitosamente',
+    schema: {
+      example: {
+        message: 'Project finalized successfully',
+        project_id: 1,
+        final_score: 88.23,
+        finalized_at: '2024-01-15T10:35:00Z'
+      }
+    }
+  })
+  async finalizeProject(
+    @Param('projectId', ParseIntPipe) projectId: number
+  ) {
+    return await this.entryDataService.finalizeProject(projectId);
   }
 
-  /**
-   * GET /entry-data/evaluations/:evaluationId/summary
-   * Resumen antes de finalizar evaluación
-   */
-  @Get('evaluations/:evaluationId/summary')
+  // ==========================================================================
+  // GET ENDPOINTS - CONSULTA DE RESULTADOS COMPLETOS
+  // ==========================================================================
+
+  @Get('evaluations/:evaluationId/complete-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: 'Obtener resumen de una evaluación antes de finalizar',
-    description: 'Muestra todos los datos ingresados organizados por criterios para revisión final'
+    summary: '📊 Obtener resumen completo de evaluación',
+    description: 'Retorna todas las tablas de resultados de una evaluación específica.'
   })
-  @ApiResponse({ status: 200, description: 'Resumen obtenido exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Evaluación no encontrada.' })
-  getEvaluationSummary(@Param('evaluationId', ParseIntPipe) evaluationId: number) {
-    return this.service.getEvaluationSummary(evaluationId);
+  @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
+  @ApiResponse({ 
+    status: HttpStatus.OK, 
+    description: 'Resumen completo de la evaluación',
+    schema: {
+      example: {
+        evaluation_id: 1,
+        variables: { count: 12, data: [] },
+        metric_results: { count: 8, data: [] },
+        final_result: { evaluation_score: 85.67 },
+        status: 'completed'
+      }
+    }
+  })
+  async getEvaluationCompleteResults(
+    @Param('evaluationId', ParseIntPipe) evaluationId: number
+  ) {
+    return await this.entryDataService.getEvaluationSummary(evaluationId);
   }
 
-  // --- ENDPOINTS PARA REPORTS (POR PROYECTO) ---
+  @Get('projects/:projectId/complete-results')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({ 
+    summary: '📊 Obtener resultados completos del proyecto',
+    description: 'Retorna todas las tablas de resultados de todas las evaluaciones del proyecto.'
+  })
+  @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
+  @ApiResponse({ 
+    status: HttpStatus.OK, 
+    description: 'Resultados completos del proyecto'
+  })
+  async getProjectCompleteResults(
+    @Param('projectId', ParseIntPipe) projectId: number
+  ) {
+    // Implementar método en el servicio
+    return await this.entryDataService.getProjectCompleteResults(projectId);
+  }
 
-  /**
-   * GET /entry-data/projects/:projectId/evaluation-results
-   * Obtener resultados de evaluaciones de un proyecto específico
-   */
+  // ==========================================================================
+  // GET ENDPOINTS - CONSULTAS INDIVIDUALES POR EVALUACIÓN
+  // ==========================================================================
+
+  @Get('evaluations/:evaluationId/evaluation-variables')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({ 
+    summary: '📋 Obtener variables de evaluación',
+    description: 'Variables capturadas del frontend para una evaluación específica.'
+  })
+  @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
+  async getEvaluationVariables(
+    @Param('evaluationId', ParseIntPipe) evaluationId: number
+  ) {
+    const variables = await this.entryDataService.getEvaluationVariables(evaluationId);
+    
+    return {
+      evaluation_id: evaluationId,
+      count: variables.length,
+      variables: variables
+    };
+  }
+
+  @Get('evaluations/:evaluationId/metric-results')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({ 
+    summary: '📋 Obtener resultados de métricas',
+    description: 'Resultados calculados de todas las métricas de una evaluación.'
+  })
+  @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
+  async getEvaluationMetricResults(
+    @Param('evaluationId', ParseIntPipe) evaluationId: number
+  ) {
+    const results = await this.entryDataService.getMetricResults(evaluationId);
+    
+    return {
+      evaluation_id: evaluationId,
+      count: results.length,
+      metric_results: results
+    };
+  }
+
+  @Get('evaluations/:evaluationId/criteria-results')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({ 
+    summary: '📋 Obtener resultados de criterios',
+    description: 'Resultados calculados de todos los criterios de una evaluación.'
+  })
+  @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
+  async getEvaluationCriteriaResults(
+    @Param('evaluationId', ParseIntPipe) evaluationId: number
+  ) {
+    const results = await this.entryDataService.getCriteriaResults(evaluationId);
+    
+    return {
+      evaluation_id: evaluationId,
+      count: results.length,
+      criteria_results: results
+    };
+  }
+
+  @Get('evaluations/:evaluationId/evaluation-results')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({ 
+    summary: '📋 Obtener resultado final de evaluación',
+    description: 'Resultado final calculado de la evaluación.'
+  })
+  @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
+  async getEvaluationResult(
+    @Param('evaluationId', ParseIntPipe) evaluationId: number
+  ) {
+    const result = await this.entryDataService.getEvaluationResult(evaluationId);
+    
+    return {
+      evaluation_id: evaluationId,
+      result: result
+    };
+  }
+
+  // ==========================================================================
+  // GET ENDPOINTS - CONSULTAS INDIVIDUALES POR PROYECTO
+  // ==========================================================================
+
+  @Get('projects/:projectId/project-results')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({ 
+    summary: '📋 Obtener resultado final del proyecto',
+    description: 'Resultado final calculado del proyecto completo.'
+  })
+  @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
+  async getProjectResult(
+    @Param('projectId', ParseIntPipe) projectId: number
+  ) {
+    const result = await this.entryDataService.getProjectResult(projectId);
+    
+    return {
+      project_id: projectId,
+      result: result
+    };
+  }
+
   @Get('projects/:projectId/evaluation-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: 'Obtener resultados de evaluaciones de un proyecto',
-    description: 'Retorna todos los resultados de las evaluaciones de un proyecto para reportes'
+    summary: '📋 Obtener todos los resultados de evaluaciones del proyecto',
+    description: 'Todos los resultados finales de las evaluaciones que pertenecen al proyecto.'
   })
-  @ApiResponse({ status: 200, description: 'Resultados obtenidos exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Proyecto no encontrado.' })
-  findEvaluationResultsByProject(@Param('projectId', ParseIntPipe) projectId: number) {
-    return this.service.findEvaluationResultsByProject(projectId);
+  @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
+  async getProjectEvaluationResults(
+    @Param('projectId', ParseIntPipe) projectId: number
+  ) {
+    const results = await this.entryDataService.getProjectEvaluationResults(projectId);
+    
+    return {
+      project_id: projectId,
+      count: results.length,
+      evaluation_results: results
+    };
   }
 
-  /**
-   * GET /entry-data/projects/:projectId/criteria-results
-   * Obtener resultados de criterios de un proyecto específico
-   */
   @Get('projects/:projectId/criteria-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: 'Obtener resultados de criterios de un proyecto',
-    description: 'Retorna todos los resultados de criterios de un proyecto para reportes'
+    summary: '📋 Obtener todos los resultados de criterios del proyecto',
+    description: 'Todos los resultados de criterios de todas las evaluaciones del proyecto.'
   })
-  @ApiResponse({ status: 200, description: 'Resultados obtenidos exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Proyecto no encontrado.' })
-  findCriteriaResultsByProject(@Param('projectId', ParseIntPipe) projectId: number) {
-    return this.service.findCriteriaResultsByProject(projectId);
+  @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
+  async getProjectCriteriaResults(
+    @Param('projectId', ParseIntPipe) projectId: number
+  ) {
+    const results = await this.entryDataService.getProjectCriteriaResults(projectId);
+    
+    return {
+      project_id: projectId,
+      count: results.length,
+      criteria_results: results
+    };
   }
 
-  /**
-   * GET /entry-data/projects/:projectId/metric-results
-   * Obtener resultados de métricas de un proyecto específico
-   */
   @Get('projects/:projectId/metric-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: 'Obtener resultados de métricas de un proyecto',
-    description: 'Retorna todos los resultados de métricas de un proyecto para reportes'
+    summary: '📋 Obtener todos los resultados de métricas del proyecto',
+    description: 'Todos los resultados de métricas de todas las evaluaciones del proyecto.'
   })
-  @ApiResponse({ status: 200, description: 'Resultados obtenidos exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Proyecto no encontrado.' })
-  findMetricResultsByProject(@Param('projectId', ParseIntPipe) projectId: number) {
-    return this.service.findMetricResultsByProject(projectId);
+  @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
+  async getProjectMetricResults(
+    @Param('projectId', ParseIntPipe) projectId: number
+  ) {
+    const results = await this.entryDataService.getProjectMetricResults(projectId);
+    
+    return {
+      project_id: projectId,
+      count: results.length,
+      metric_results: results
+    };
   }
 
-  /**
-   * GET /entry-data/projects/:projectId/evaluation-variables
-   * Obtener variables evaluadas de un proyecto específico
-   */
   @Get('projects/:projectId/evaluation-variables')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: 'Obtener variables evaluadas de un proyecto',
-    description: 'Retorna todas las variables con sus valores de un proyecto para reportes'
+    summary: '📋 Obtener todas las variables del proyecto',
+    description: 'Todas las variables capturadas en todas las evaluaciones del proyecto.'
   })
-  @ApiResponse({ status: 200, description: 'Variables obtenidas exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Proyecto no encontrado.' })
-  findEvaluationVariablesByProject(@Param('projectId', ParseIntPipe) projectId: number) {
-    return this.service.findEvaluationVariablesByProject(projectId);
+  @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
+  async getProjectEvaluationVariables(
+    @Param('projectId', ParseIntPipe) projectId: number
+  ) {
+    const variables = await this.entryDataService.getProjectEvaluationVariables(projectId);
+    
+    return {
+      project_id: projectId,
+      count: variables.length,
+      evaluation_variables: variables
+    };
   }
 
-  /**
-   * GET /entry-data/projects/:projectId/project-result
-   * Obtener resultado final de un proyecto específico
-   */
-  @Get('projects/:projectId/project-result')
+  // ==========================================================================
+  // DELETE ENDPOINTS - UTILIDADES ADMINISTRATIVAS
+  // ==========================================================================
+
+  @Delete('evaluations/:evaluationId/reset')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: 'Obtener resultado final de un proyecto',
-    description: 'Retorna el resultado consolidado final del proyecto'
+    summary: '🔧 Reiniciar evaluación',
+    description: 'Elimina todos los resultados y variables de una evaluación. Solo para administradores.'
   })
-  @ApiResponse({ status: 200, description: 'Resultado obtenido exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Proyecto o resultado no encontrado.' })
-  findProjectResult(@Param('projectId', ParseIntPipe) projectId: number) {
-    return this.service.findProjectResult(projectId);
+  @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
+  async resetEvaluation(
+    @Param('evaluationId', ParseIntPipe) evaluationId: number
+  ) {
+    await this.entryDataService.resetEvaluation(evaluationId);
+    
+    return {
+      message: 'Evaluation reset successfully',
+      evaluation_id: evaluationId,
+      timestamp: new Date().toISOString()
+    };
   }
 
-  /**
-   * GET /entry-data/projects/:projectId/complete-report
-   * Obtener reporte completo de un proyecto (todas las 5 tablas)
-   */
-  @Get('projects/:projectId/complete-report')
+  @Delete('variables/:evalMetricId/:variableId')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: 'Obtener reporte completo de un proyecto',
-    description: 'Retorna todas las tablas de resultados y estadísticas del proyecto en una sola respuesta'
+    summary: '🔧 Eliminar variable específica',
+    description: 'Elimina una variable específica de una métrica de evaluación.'
   })
-  @ApiResponse({ status: 200, description: 'Reporte completo obtenido exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Proyecto no encontrado.' })
-  getProjectCompleteReport(@Param('projectId', ParseIntPipe) projectId: number) {
-    return this.service.getProjectCompleteReport(projectId);
+  @ApiParam({ name: 'evalMetricId', description: 'ID de la métrica de evaluación', example: 1 })
+  @ApiParam({ name: 'variableId', description: 'ID de la variable', example: 1 })
+  async deleteVariable(
+    @Param('evalMetricId', ParseIntPipe) evalMetricId: number,
+    @Param('variableId', ParseIntPipe) variableId: number
+  ) {
+    await this.entryDataService.deleteVariable(evalMetricId, variableId);
+    
+    return {
+      message: 'Variable deleted successfully',
+      eval_metric_id: evalMetricId,
+      variable_id: variableId
+    };
+  }
+
+  // ==========================================================================
+  // STATUS ENDPOINTS - INFORMACIÓN DE PROGRESO
+  // ==========================================================================
+
+  @Get('evaluations/:evaluationId/status')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({ 
+    summary: '📊 Obtener estado de la evaluación',
+    description: 'Información del progreso y estado actual de una evaluación.'
+  })
+  @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
+  async getEvaluationStatus(
+    @Param('evaluationId', ParseIntPipe) evaluationId: number
+  ) {
+    return await this.entryDataService.getEvaluationStatus(evaluationId);
+  }
+
+  @Get('projects/:projectId/progress')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({ 
+    summary: '📊 Obtener progreso del proyecto',
+    description: 'Información del progreso general del proyecto y sus evaluaciones.'
+  })
+  @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
+  async getProjectProgress(
+    @Param('projectId', ParseIntPipe) projectId: number
+  ) {
+    return await this.entryDataService.getProjectProgress(projectId);
   }
 }
