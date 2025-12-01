@@ -129,7 +129,7 @@ export function DashboardHome() {
                         <time className={styles.cardDate}>
                           Actualizado: {formatDate(project.updated_at)}
                         </time>
-                        <a href={`/configuration-evaluation/project/${project.id}`} className={styles.viewBtn}>
+                        <a href={`/data-entry/${project.id}`} className={styles.viewBtn}>
                           Abrir
                         </a>
                       </div>
@@ -168,7 +168,7 @@ export function DashboardHome() {
                     </p>
                   </div>
                   <div className={styles.smallCardFooter}>
-                    <a href={`/configuration-evaluation/project/${project.id}`} className={styles.smallViewBtn}>
+                    <a href={`/data-entry/${project.id}`} className={styles.smallViewBtn}>
                       Abrir
                     </a>
                   </div>
