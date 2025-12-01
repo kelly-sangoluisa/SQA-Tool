@@ -1,6 +1,5 @@
 // Imports de enums y tipos necesarios
 import { ProjectStatus } from '../../src/modules/config-evaluation/entities/project.entity';
-import { EvaluationStatus } from '../../src/modules/config-evaluation/entities/evaluation.entity';
 import { ImportanceLevel } from '../../src/modules/config-evaluation/entities/evaluation-criterion.entity';
 import { ItemStatus } from '../../src/modules/parameterization/types/parameterization.types';
 
@@ -44,8 +43,6 @@ export const mockEvaluation = {
   standard_id: 1,
   created_at: new Date('2023-01-01T10:00:00Z'),
   updated_at: new Date('2023-01-01T10:00:00Z'),
-  creation_date: new Date('2023-01-01T10:00:00Z'),
-  status: EvaluationStatus.IN_PROGRESS, // ✅ Usando el enum correcto
   project: mockProject,
   standard: mockStandard,
   evaluation_criteria: [],

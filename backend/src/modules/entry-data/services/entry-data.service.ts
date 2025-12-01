@@ -448,7 +448,7 @@ export class EntryDataService {
       INNER JOIN metrics m ON fv.metric_id = m.metric_id
       INNER JOIN evaluation_metrics em ON em.metric_id = m.metric_id
       INNER JOIN evaluation_criteria ec ON em.eval_criterion_id = ec.eval_criterion_id
-      WHERE ec.evaluation_id = $1 AND fv.state = 'ACTIVE'
+      WHERE ec.evaluation_id = $1 AND fv.state = 'active'
     `;
     
     const result = await this.evaluationVariableRepo.query(query, [evaluationId]);
