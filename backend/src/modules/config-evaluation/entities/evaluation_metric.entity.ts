@@ -5,7 +5,7 @@ import { Metric} from '../../parameterization/entities/metric.entity';
 import { EvaluationCriterion } from './evaluation-criterion.entity';    
 
 
-@Entity('evaluation_metric')
+@Entity('evaluation_metrics')
 export class EvaluationMetric extends BaseTimestampEntity {
   @ApiProperty({ description: 'ID único de la métrica de evaluación', example: 1 })
   @PrimaryGeneratedColumn({ name: 'eval_metric_id' })

@@ -8,6 +8,7 @@ export enum ImportanceLevel {
   HIGH = 'A',
   MEDIUM = 'M',
   LOW = 'B',
+  NOT_APPLICABLE = 'NA',
 }
 
 @Entity('evaluation_criteria')
@@ -60,9 +61,10 @@ export class EvaluationCriterion extends BaseTimestampEntity {
   })
   @Column({
     name: 'importance_percentage',
-    type: 'decimal',
+    type: 'numeric',
     precision: 5,
-    scale: 2
+    scale: 2,
+    nullable: true
   })
   importance_percentage: number;
 }

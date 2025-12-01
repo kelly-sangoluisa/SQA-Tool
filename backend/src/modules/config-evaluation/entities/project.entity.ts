@@ -17,12 +17,22 @@ export class Project extends BaseTimestampEntity {
   id: number;
 
   @ApiProperty({ description: 'Nombre del proyecto', example: 'Proyecto de Software A' })
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 200 })
   name: string;
 
   @ApiProperty({ description: 'Descripción del proyecto', required: false })
   @Column({ type: 'text', nullable: true })
   description: string;
+
+  @ApiProperty({ description: 'Umbral mínimo del proyecto', required: false })
+  @Column({ 
+    name: 'minimum_threshold', 
+    type: 'numeric', 
+    precision: 10, 
+    scale: 2, 
+    nullable: true 
+  })
+  minimum_threshold: number;
 
   @ApiProperty({ description: 'ID del usuario creador' })
   @Column({ name: 'creator_user_id' })
@@ -48,20 +58,6 @@ export class Project extends BaseTimestampEntity {
     default: ProjectStatus.IN_PROGRESS
   })
   status: ProjectStatus;
-
-  @ApiProperty({
-    description: 'Puntuación final del proyecto',
-    required: false,
-    example: 85.5
-  })
-  @Column({
-    name: 'final_project_score',
-    type: 'decimal',
-    precision: 5,
-    scale: 2,
-    nullable: true
-  })
-  final_project_score: number;
 
   @OneToMany(() => Evaluation, evaluation => evaluation.project)
   evaluations: Evaluation[];
