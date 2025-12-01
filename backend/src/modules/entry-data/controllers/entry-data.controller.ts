@@ -81,7 +81,7 @@ export class EntryDataController {
   @Post('projects/:projectId/finalize')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '🚀 Finalizar proyecto completo (Última evaluación)',
+    summary: 'Finalizar proyecto completo (Automatico ultima evaluación)',
     description: 'Calcula el resultado final del proyecto basado en todas las evaluaciones completadas.'
   })
   @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
@@ -110,7 +110,7 @@ export class EntryDataController {
   @Get('evaluations/:evaluationId/complete-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📊 Obtener resumen completo de evaluación',
+    summary: 'Obtener resumen completo de evaluación',
     description: 'Retorna todas las tablas de resultados de una evaluación específica.'
   })
   @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
@@ -136,7 +136,7 @@ export class EntryDataController {
   @Get('projects/:projectId/complete-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📊 Obtener resultados completos del proyecto',
+    summary: 'Obtener resultados completos del proyecto',
     description: 'Retorna todas las tablas de resultados de todas las evaluaciones del proyecto.'
   })
   @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
@@ -158,7 +158,7 @@ export class EntryDataController {
   @Get('evaluations/:evaluationId/evaluation-variables')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📋 Obtener variables de evaluación',
+    summary: 'Obtener variables de evaluación',
     description: 'Variables capturadas del frontend para una evaluación específica.'
   })
   @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
@@ -177,7 +177,7 @@ export class EntryDataController {
   @Get('evaluations/:evaluationId/metric-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📋 Obtener resultados de métricas',
+    summary: 'Obtener resultados de métricas',
     description: 'Resultados calculados de todas las métricas de una evaluación.'
   })
   @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
@@ -196,7 +196,7 @@ export class EntryDataController {
   @Get('evaluations/:evaluationId/criteria-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📋 Obtener resultados de criterios',
+    summary: 'Obtener resultados de criterios',
     description: 'Resultados calculados de todos los criterios de una evaluación.'
   })
   @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
@@ -215,7 +215,7 @@ export class EntryDataController {
   @Get('evaluations/:evaluationId/evaluation-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📋 Obtener resultado final de evaluación',
+    summary: 'Obtener resultado final de evaluación',
     description: 'Resultado final calculado de la evaluación.'
   })
   @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
@@ -237,7 +237,7 @@ export class EntryDataController {
   @Get('projects/:projectId/project-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📋 Obtener resultado final del proyecto',
+    summary: 'Obtener resultado final del proyecto',
     description: 'Resultado final calculado del proyecto completo.'
   })
   @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
@@ -255,7 +255,7 @@ export class EntryDataController {
   @Get('projects/:projectId/evaluation-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📋 Obtener todos los resultados de evaluaciones del proyecto',
+    summary: 'Obtener todos los resultados de evaluaciones del proyecto',
     description: 'Todos los resultados finales de las evaluaciones que pertenecen al proyecto.'
   })
   @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
@@ -274,7 +274,7 @@ export class EntryDataController {
   @Get('projects/:projectId/criteria-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📋 Obtener todos los resultados de criterios del proyecto',
+    summary: 'Obtener todos los resultados de criterios del proyecto',
     description: 'Todos los resultados de criterios de todas las evaluaciones del proyecto.'
   })
   @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
@@ -293,7 +293,7 @@ export class EntryDataController {
   @Get('projects/:projectId/metric-results')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📋 Obtener todos los resultados de métricas del proyecto',
+    summary: 'Obtener todos los resultados de métricas del proyecto',
     description: 'Todos los resultados de métricas de todas las evaluaciones del proyecto.'
   })
   @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
@@ -312,7 +312,7 @@ export class EntryDataController {
   @Get('projects/:projectId/evaluation-variables')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📋 Obtener todas las variables del proyecto',
+    summary: 'Obtener todas las variables del proyecto',
     description: 'Todas las variables capturadas en todas las evaluaciones del proyecto.'
   })
   @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
@@ -335,7 +335,7 @@ export class EntryDataController {
   @Delete('evaluations/:evaluationId/reset')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '🔧 Reiniciar evaluación',
+    summary: 'Reiniciar evaluación (Posiblemente se borre)',
     description: 'Elimina todos los resultados y variables de una evaluación. Solo para administradores.'
   })
   @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
@@ -354,7 +354,7 @@ export class EntryDataController {
   @Delete('variables/:evalMetricId/:variableId')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '🔧 Eliminar variable específica',
+    summary: 'Eliminar variable específica (Posiblemente se borre)',
     description: 'Elimina una variable específica de una métrica de evaluación.'
   })
   @ApiParam({ name: 'evalMetricId', description: 'ID de la métrica de evaluación', example: 1 })
@@ -379,7 +379,7 @@ export class EntryDataController {
   @Get('evaluations/:evaluationId/status')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📊 Obtener estado de la evaluación',
+    summary: 'Obtener estado de la evaluación',
     description: 'Información del progreso y estado actual de una evaluación.'
   })
   @ApiParam({ name: 'evaluationId', description: 'ID de la evaluación', example: 1 })
@@ -392,7 +392,7 @@ export class EntryDataController {
   @Get('projects/:projectId/progress')
   @ROLES('admin', 'evaluator')
   @ApiOperation({ 
-    summary: '📊 Obtener progreso del proyecto',
+    summary: 'Obtener progreso del proyecto',
     description: 'Información del progreso general del proyecto y sus evaluaciones.'
   })
   @ApiParam({ name: 'projectId', description: 'ID del proyecto', example: 1 })
