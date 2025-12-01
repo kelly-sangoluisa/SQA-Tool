@@ -5,12 +5,6 @@ import { Project } from './project.entity';
 import { Standard } from '../../parameterization/entities/standard.entity';
 import { EvaluationCriterion } from './evaluation-criterion.entity';
 
-export enum EvaluationStatus {
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
-}
-
 @Entity('evaluations')
 export class Evaluation extends BaseTimestampEntity {
   @ApiProperty({ description: 'ID único de la evaluación', example: 1 })
@@ -42,26 +36,6 @@ export class Evaluation extends BaseTimestampEntity {
   })
   @JoinColumn({ name: 'standard_id', referencedColumnName: 'id' })
   standard: Standard;
-
-  @ApiProperty({
-    description: 'Fecha de creación de la evaluación',
-    type: String,
-    format: 'date-time'
-  })
-  @Column({ name: 'creation_date', type: 'timestamptz' })
-  creation_date: Date;
-
-  @ApiProperty({
-    description: 'Estado de la evaluación',
-    enum: EvaluationStatus,
-    example: EvaluationStatus.IN_PROGRESS
-  })
-  @Column({
-    type: 'enum',
-    enum: EvaluationStatus,
-    default: EvaluationStatus.IN_PROGRESS
-  })
-  status: EvaluationStatus;
 
   @OneToMany(() => EvaluationCriterion, criterion => criterion.evaluation)
   evaluation_criteria: EvaluationCriterion[];
