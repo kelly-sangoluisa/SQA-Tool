@@ -8,7 +8,7 @@ import { FormulaVariable } from '../../parameterization/entities/formula-variabl
  * Entidad para almacenar los valores de variables de fórmulas durante la evaluación
  * Relaciona una variable de fórmula con su valor específico para una métrica evaluada
  */
-@Entity('evaluation_variable')
+@Entity('evaluation_variables')
 export class EvaluationVariable extends BaseTimestampEntity {
   @ApiProperty({ description: 'ID único de la variable de evaluación', example: 1 })
   @PrimaryGeneratedColumn({ name: 'eval_variable_id' })
@@ -45,8 +45,8 @@ export class EvaluationVariable extends BaseTimestampEntity {
   })
   @Column({
     name: 'value',
-    type: 'decimal',
-    precision: 5,
+    type: 'numeric',
+    precision: 10,
     scale: 2
   })
   value: number;

@@ -32,7 +32,7 @@ export class EvaluationResult extends BaseTimestampEntity {
   @Column({
     name: 'evaluation_score',
     type: 'numeric',
-    precision: 5,
+    precision: 10,
     scale: 2
   })
   evaluation_score: number;
