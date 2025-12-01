@@ -19,12 +19,12 @@ export const mockProject = {
   id: 1,
   name: 'Test Project',
   description: 'Test Description',
+  minimum_threshold: 85.0,
   creator_user_id: 1,
   status: ProjectStatus.IN_PROGRESS, // ✅ Usando el enum correcto
   created_at: new Date('2023-01-01T10:00:00Z'),
   updated_at: new Date('2023-01-01T10:00:00Z'),
   creator: {} as any,
-  final_project_score: 85.5,
   evaluations: [],
 };
 export const mockStandard = {
@@ -42,10 +42,10 @@ export const mockEvaluation = {
   id: 1,
   project_id: 1,
   standard_id: 1,
-  creation_date: new Date('2023-01-01T10:00:00Z'),
-  status: EvaluationStatus.IN_PROGRESS, // ✅ Usando el enum correcto
   created_at: new Date('2023-01-01T10:00:00Z'),
   updated_at: new Date('2023-01-01T10:00:00Z'),
+  creation_date: new Date('2023-01-01T10:00:00Z'),
+  status: EvaluationStatus.IN_PROGRESS, // ✅ Usando el enum correcto
   project: mockProject,
   standard: mockStandard,
   evaluation_criteria: [],
@@ -82,15 +82,13 @@ export const mockMetric = {
   code: 'MET-001',
   description: 'Test Metric Description',
   formula: 'a/b',
-  threshold: 100,
   desired_threshold: 100,
-  variables: [],
+  sub_criterion_id: 1,
   state: ItemStatus.ACTIVE,
   created_at: new Date('2023-01-01T09:00:00Z'),
   updated_at: new Date('2023-01-01T09:00:00Z'),
-  sub_criterion_id: 1,
   sub_criterion: {} as any,
-  formula_variables: [],
+  variables: [],
 };
 
 export const mockEvaluationMetric = {
@@ -101,8 +99,6 @@ export const mockEvaluationMetric = {
   updated_at: new Date('2023-01-01T10:00:00Z'),
   evaluation_criterion: mockEvaluationCriterion,
   metric: mockMetric,
-  evaluation_variables: [],
-  evaluation_metric_results: [],
 };
 
 export const mockFormulaVariable = {
