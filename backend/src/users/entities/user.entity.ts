@@ -4,25 +4,29 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 import { Role } from './role.entity'
 import { ApiProperty } from '@nestjs/swagger';
+import { BaseTimestampEntity } from '../../common/entities/base.entity';
+import { ItemStatus } from '../../modules/parameterization/types/parameterization.types';
 
 @Entity({ name: 'users' })
-export class User {
+export class User extends BaseTimestampEntity {
   @ApiProperty({ example: 1 })
   @PrimaryGeneratedColumn({ name: 'user_id' })
   id: number;
 
   @ApiProperty({ example: 'John Doe' })
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 120 })
   name: string;
 
   @ApiProperty({ example: 'john.doe@example.com' })
-  @Column({ type: 'varchar', length: 100, unique: true })
+  @Column({ type: 'varchar', length: 120, unique: true })
   email: string;
+
+  @ApiProperty({ description: 'ID del rol' })
+  @Column({ name: 'role_id' })
+  role_id: number;
 
   @ApiProperty({ type: () => Role })
   @ManyToOne(() => Role, {
@@ -33,11 +37,15 @@ export class User {
   @JoinColumn({ name: 'role_id', referencedColumnName: 'id' })
   role: Role;
 
-  @ApiProperty({ type: String, format: 'date-time', example: '2025-09-13T18:00:00.000Z' })
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  created_at: Date;
-
-  @ApiProperty({ type: String, format: 'date-time', example: '2025-09-13T18:00:00.000Z' })
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updated_at: Date;
+  @ApiProperty({ 
+    description: 'Estado del usuario (activo o inactivo)', 
+    enum: ItemStatus 
+  })
+  @Column({ 
+    type: 'enum', 
+    enum: ItemStatus, 
+    name: 'state', 
+    default: ItemStatus.ACTIVE 
+  })
+  state: ItemStatus;
 }
