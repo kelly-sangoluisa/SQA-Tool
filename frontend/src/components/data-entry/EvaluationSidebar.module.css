@@ -74,6 +74,13 @@
   flex: 1;
 }
 
+.progressIndicator {
+  font-size: 0.75rem;
+  color: #7462AA;
+  margin-left: 0.5rem;
+  font-weight: 500;
+}
+
 .metricsContainer {
   background: #f8f9ff;
   border-left: 3px solid #4E5EA3;
@@ -136,6 +143,16 @@
 
 .activeMetric .metricNumber {
   background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+}
+
+.completedMetric {
+  background: rgb(34 197 94 / 0.1) !important;
+  border-left-color: #22c55e !important;
+}
+
+.completedNumber {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  color: white !important;
 }
 
 .metricName {

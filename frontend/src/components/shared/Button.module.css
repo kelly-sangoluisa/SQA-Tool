@@ -86,6 +86,24 @@
   box-shadow: 0 8px 24px rgb(220, 38, 38, 0.35);
 }
 
+.outline {
+  background: transparent;
+  color: #4E5EA3;
+  border: 2px solid #4E5EA3;
+  box-shadow: none;
+}
+
+.outline:hover {
+  background: #4E5EA3;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgb(78 94 163 / 0.25);
+}
+
+.outline:active {
+  transform: translateY(0);
+}
+
 .sm {
   padding: 8px 16px;
   font-size: 0.875rem;

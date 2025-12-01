@@ -13,9 +13,32 @@ interface MetricCardProps {
   description: string;
   formula: string;
   variables: Variable[];
+  values?: Record<string, string>;
+  onValueChange?: (variableSymbol: string, value: string) => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  isFirstMetric?: boolean;
+  isLastMetric?: boolean;
 }
 
-export function MetricCard({ number, name, description, formula, variables }: Readonly<MetricCardProps>) {
+export function MetricCard({ 
+  number, 
+  name, 
+  description, 
+  formula, 
+  variables,
+  values = {},
+  onValueChange,
+  onPrevious,
+  onNext,
+  isFirstMetric = false,
+  isLastMetric = false
+}: Readonly<MetricCardProps>) {
+
+  const handleInputChange = (variableSymbol: string, value: string) => {
+    onValueChange?.(variableSymbol, value);
+  };
+
   return (
     <div className={styles.metricCard}>
       {/* Header con número y título */}
@@ -60,6 +83,8 @@ export function MetricCard({ number, name, description, formula, variables }: Re
                   <Input 
                     type="number" 
                     placeholder="0"
+                    value={values[variable.symbol] || ''}
+                    onChange={(e) => handleInputChange(variable.symbol, e.target.value)}
                     className={styles.valueInput}
                   />
                 </div>
@@ -71,11 +96,20 @@ export function MetricCard({ number, name, description, formula, variables }: Re
       
       {/* Botones en la parte inferior */}
       <div className={styles.footer}>
-        <Button variant="secondary" size="lg">
+        <Button 
+          variant="secondary" 
+          size="lg"
+          onClick={onPrevious}
+          disabled={isFirstMetric}
+        >
           ANTERIOR
         </Button>
-        <Button variant="primary" size="lg">
-          SIGUIENTE
+        <Button 
+          variant="primary" 
+          size="lg"
+          onClick={onNext}
+        >
+          {isLastMetric ? 'TERMINAR EVALUACIÓN' : 'SIGUIENTE'}
         </Button>
       </div>
     </div>

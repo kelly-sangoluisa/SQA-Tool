@@ -3,74 +3,78 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/auth/useAuth';
 import styles from './DashboardHome.module.css';
 
-type Evaluation = {
-  id: string;
-  title: string;
+interface Project {
+  id: number;
+  name: string;
   description?: string;
-  date?: string;
-  icon?: string;
-  iconBg?: string;
+  creator_user_id: number;
+  status: 'in_progress' | 'completed' | 'cancelled';
+  final_project_score?: number;
+  created_at: string;
+  updated_at: string;
+  evaluations?: Evaluation[];
+  creator?: {
+    name: string;
+  };
+}
+
+interface Evaluation {
+  id: number;
+  project_id: number;
+  standard_id: number;
+  creation_date: string;
+  status: 'in_progress' | 'completed' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+}
+
+const getProjectIcon = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return { icon: '✅', bg: '#e0f2fe' };
+    case 'in_progress':
+      return { icon: '🔄', bg: '#ecfdf5' };
+    case 'cancelled':
+      return { icon: '❌', bg: '#fee2e2' };
+    default:
+      return { icon: '📋', bg: '#f3f4f6' };
+  }
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
 };
 
 export function DashboardHome() {
   const { user } = useAuth();
-
-  const [recentEvaluations, setRecentEvaluations] = useState<Evaluation[] | null>(null);
-  const [allEvaluations, setAllEvaluations] = useState<Evaluation[] | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch evaluaciones desde la API
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
-        // Intenta cargar desde la API
-        const [recentRes, allRes] = await Promise.all([
-          fetch('/api/evaluations/recent'),
-          fetch('/api/evaluations/all')
-        ]);
-
-        if (!mounted) return;
-
-        // Si la API responde, usa los datos
-        if (recentRes.ok) {
-          const recentData = await recentRes.json();
-          setRecentEvaluations(Array.isArray(recentData) ? recentData : []);
-        } else {
-          // Fallback: datos de ejemplo para recientes
-          setRecentEvaluations([
-            { id: '1', title: 'Evaluación App A', description: 'Chequeo rápido de calidad', date: '2025-10-20', icon: '✅', iconBg: '#e0f2fe' },
-            { id: '2', title: 'Proyecto B - Sprint 3', description: 'Análisis de defectos y métricas', date: '2025-10-18', icon: '📊', iconBg: '#ecfdf5' },
-            { id: '3', title: 'Integración CI', description: 'Pruebas y cobertura', date: '2025-09-30', icon: '🔧', iconBg: '#f5f3ff' },
-          ]);
-        }
-
-        if (allRes.ok) {
-          const allData = await allRes.json();
-          setAllEvaluations(Array.isArray(allData) ? allData : []);
-        } else {
-          // Fallback: datos de ejemplo para todas
-          setAllEvaluations([
-            { id: '4', title: 'API REST v2', description: 'Testing de endpoints', date: '2025-09-25', icon: '🔌', iconBg: '#fffbeb' },
-            { id: '5', title: 'Dashboard Admin', description: 'QA completo', date: '2025-09-20', icon: '🎨', iconBg: '#fef2f2' },
-            { id: '6', title: 'Auth Module', description: 'Seguridad y validación', date: '2025-09-15', icon: '🔐', iconBg: '#f0fdf4' },
-            { id: '7', title: 'Payment Gateway', description: 'Integración de pagos', date: '2025-09-10', icon: '💳', iconBg: '#eff6ff' },
-            { id: '8', title: 'Mobile App', description: 'Testing multiplataforma', date: '2025-09-05', icon: '📱', iconBg: '#fef3c7' },
-            { id: '9', title: 'Database Migration', description: 'Migración de datos', date: '2025-08-30', icon: '💾', iconBg: '#ddd6fe' },
-          ]);
+        // Cargar todos los proyectos
+        const response = await fetch('/api/config-evaluation/projects');
+        if (response.ok) {
+          const data = await response.json();
+          if (mounted && Array.isArray(data)) {
+            // Ordenar los proyectos por fecha de actualización
+            const sortedProjects = data.sort((a, b) => 
+              new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+            );
+            setProjects(sortedProjects);
+          }
         }
       } catch (e) {
-        if (!mounted) return;
-        // Fallback en caso de error
-        setRecentEvaluations([
-          { id: '1', title: 'Evaluación App A', description: 'Chequeo rápido de calidad', date: '2025-10-20', icon: '✅', iconBg: '#e0f2fe' },
-          { id: '2', title: 'Proyecto B - Sprint 3', description: 'Análisis de defectos y métricas', date: '2025-10-18', icon: '📊', iconBg: '#ecfdf5' },
-        ]);
-        setAllEvaluations([
-          { id: '4', title: 'API REST v2', description: 'Testing de endpoints', date: '2025-09-25', icon: '🔌', iconBg: '#fffbeb' },
-          { id: '5', title: 'Dashboard Admin', description: 'QA completo', date: '2025-09-20', icon: '🎨', iconBg: '#fef2f2' },
-        ]);
+        if (mounted) {
+          setProjects([]);
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -81,71 +85,96 @@ export function DashboardHome() {
     };
   }, []);
 
+  // Separar proyectos recientes (últimos 3) y todos los proyectos
+  const recentProjects = projects.slice(0, 3);
+  const allProjects = projects;
+
   return (
     <div className={styles.root}>
       {/* Welcome Section */}
       <header className={styles.greeting}>
         <h2>Hola, {user?.name ?? 'Usuario'}</h2>
+        <a href="/configuration-evaluation" className={styles.newEvaluationBtn}>
+          + Nueva Evaluación
+        </a>
       </header>
 
-      {/* Evaluaciones Recientes - TARJETAS GRANDES */}
+      {/* Proyectos Recientes - TARJETAS GRANDES */}
       <div className={styles.dashedContainer}>
         <section className={styles.sectionWrapper}>
           <div className={styles.sectionHeader}>
-            <h3 className={styles.sectionTitle}>Evaluaciones recientes</h3>
-            <a href="/evaluations" className={styles.viewAllLink}>Ver todas</a>
+            <h3 className={styles.sectionTitle}>Proyectos recientes</h3>
+            <a href="/configuration-evaluation/projects" className={styles.viewAllLink}>Ver todos</a>
           </div>
 
           {loading && <p className={styles.loadingText}>Cargando...</p>}
 
           {!loading && (
             <div className={styles.recentGridLarge}>
-              {(recentEvaluations ?? []).length === 0 && <p className={styles.emptyText}>No tienes evaluaciones recientes.</p>}
+              {recentProjects.length === 0 && <p className={styles.emptyText}>No tienes proyectos recientes.</p>}
 
-              {(recentEvaluations ?? []).map((ev) => (
-                <article key={ev.id} className={styles.recentCardLarge}>
-                  <div className={styles.cardIcon} style={{ background: ev.iconBg || '#e0f2fe' }}>
-                    <span className={styles.cardIconEmoji}>{ev.icon || '📋'}</span>
-                  </div>
-                  <div className={styles.cardContent}>
-                    <h4 className={styles.cardTitle}>{ev.title}</h4>
-                    <p className={styles.cardDesc}>{ev.description}</p>
-                    <div className={styles.cardFooter}>
-                      <time className={styles.cardDate}>{ev.date}</time>
-                      <a href={`/evaluations/${ev.id}`} className={styles.viewBtn}>Abrir</a>
+              {recentProjects.map((project) => {
+                const latestEvaluation = project.evaluations?.[0];
+                const { icon, bg } = getProjectIcon(latestEvaluation?.status || '');
+                
+                return (
+                  <article key={project.id} className={styles.recentCardLarge}>
+                    <div className={styles.cardIcon} style={{ background: bg }}>
+                      <span className={styles.cardIconEmoji}>{icon}</span>
                     </div>
-                  </div>
-                </article>
-              ))}
+                    <div className={styles.cardContent}>
+                      <h4 className={styles.cardTitle}>{project.name}</h4>
+                      <p className={styles.cardDesc}>{project.description || 'Sin descripción'}</p>
+                      <div className={styles.cardFooter}>
+                        <time className={styles.cardDate}>
+                          Actualizado: {formatDate(project.updated_at)}
+                        </time>
+                        <a href={`/data-entry/${project.id}`} className={styles.viewBtn}>
+                          Abrir
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>
       </div>
 
-      {/* Todas las Evaluaciones - TARJETAS PEQUEÑAS */}
+      {/* Todos los Proyectos - TARJETAS PEQUEÑAS */}
       <section className={styles.sectionWrapper}>
         <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>Todas las evaluaciones</h3>
+          <h3 className={styles.sectionTitle}>Todos los proyectos</h3>
         </div>
 
         {!loading && (
           <div className={styles.allGridSmall}>
-            {(allEvaluations ?? []).length === 0 && <p className={styles.emptyText}>No hay evaluaciones disponibles.</p>}
+            {allProjects.length === 0 && <p className={styles.emptyText}>No hay proyectos disponibles.</p>}
 
-            {(allEvaluations ?? []).map((ev) => (
-              <article key={ev.id} className={styles.allCardSmall}>
-                <div className={styles.smallCardIcon} style={{ background: ev.iconBg || '#f3f4f6' }}>
-                  <span className={styles.smallCardIconEmoji}>{ev.icon || '📄'}</span>
-                </div>
-                <div className={styles.smallCardContent}>
-                  <h4 className={styles.smallCardTitle}>{ev.title}</h4>
-                  <p className={styles.smallCardDesc}>{ev.description}</p>
-                </div>
-                <div className={styles.smallCardFooter}>
-                  <a href={`/evaluations/${ev.id}`} className={styles.smallViewBtn}>Abrir</a>
-                </div>
-              </article>
-            ))}
+            {allProjects.map((project) => {
+              const latestEvaluation = project.evaluations?.[0];
+              const { icon, bg } = getProjectIcon(latestEvaluation?.status || '');
+
+              return (
+                <article key={project.id} className={styles.allCardSmall}>
+                  <div className={styles.smallCardIcon} style={{ background: bg }}>
+                    <span className={styles.smallCardIconEmoji}>{icon}</span>
+                  </div>
+                  <div className={styles.smallCardContent}>
+                    <h4 className={styles.smallCardTitle}>{project.name}</h4>
+                    <p className={styles.smallCardDesc}>
+                      {project.description || 'Sin descripción'}
+                    </p>
+                  </div>
+                  <div className={styles.smallCardFooter}>
+                    <a href={`/data-entry/${project.id}`} className={styles.smallViewBtn}>
+                      Abrir
+                    </a>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </section>

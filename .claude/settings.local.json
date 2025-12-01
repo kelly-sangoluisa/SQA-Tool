@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(\"C:\\Users\\Asus\\Documents\\TIC-DevSentinels\\SQA-Tool\\frontend\\src\\components\\configurationEvaluation\\SubCriteriaSelection.tsx\")",
+      "Bash(\"C:\\Users\\Asus\\Documents\\TIC-DevSentinels\\SQA-Tool\\frontend\\src\\components\\configurationEvaluation\\SubCriteriaSelection.module.css\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
