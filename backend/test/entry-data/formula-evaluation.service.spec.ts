@@ -125,7 +125,7 @@ describe('FormulaEvaluationService', () => {
 
       // Act & Assert
       expect(() => service.evaluateFormula(formula, variables))
-        .toThrow('Invalid calculation result');
+        .toThrow('Formula evaluation failed: Calculation error: Division by zero');
     });
 
     it('should replace variables in order of precedence (longer symbols first)', () => {
