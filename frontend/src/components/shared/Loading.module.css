@@ -1,0 +1,39 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.spinner {
+  border-radius: 50%;
+  border: 2px solid rgb(78 94 163 / 0.2);
+  border-top-color: #4E5EA3;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner.sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+.spinner.md {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.spinner.lg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.text {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

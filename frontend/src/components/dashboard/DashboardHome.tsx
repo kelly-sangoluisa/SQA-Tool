@@ -1,114 +1,183 @@
 "use client";
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/auth/useAuth';
 import styles from './DashboardHome.module.css';
 
+interface Project {
+  id: number;
+  name: string;
+  description?: string;
+  creator_user_id: number;
+  status: 'in_progress' | 'completed' | 'cancelled';
+  final_project_score?: number;
+  created_at: string;
+  updated_at: string;
+  evaluations?: Evaluation[];
+  creator?: {
+    name: string;
+  };
+}
+
+interface Evaluation {
+  id: number;
+  project_id: number;
+  standard_id: number;
+  creation_date: string;
+  status: 'in_progress' | 'completed' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+}
+
+const getProjectIcon = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return { icon: '✅', bg: '#e0f2fe' };
+    case 'in_progress':
+      return { icon: '🔄', bg: '#ecfdf5' };
+    case 'cancelled':
+      return { icon: '❌', bg: '#fee2e2' };
+    default:
+      return { icon: '📋', bg: '#f3f4f6' };
+  }
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
 export function DashboardHome() {
   const { user } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const modules = [
-    {
-      name: 'Configuración de Evaluación',
-      description: 'Configura criterios y parámetros de evaluación de calidad',
-      href: '/modules/config-evaluation',
-      icon: '⚙️',
-      iconBg: '#e0f2fe',
-      iconColor: '#0369a1'
-    },
-    {
-      name: 'Entrada de Datos',
-      description: 'Ingresa datos del proyecto para evaluación',
-      href: '/modules/entry-data',
-      icon: '📝',
-      iconBg: '#ecfdf5',
-      iconColor: '#065f46'
-    },
-    {
-      name: 'Parametrización',
-      description: 'Configura parámetros avanzados del sistema',
-      href: '/modules/parameterization',
-      icon: '🎛️',
-      iconBg: '#f5f3ff',
-      iconColor: '#6d28d9'
-    },
-    {
-      name: 'Reportes',
-      description: 'Genera y visualiza reportes de evaluación',
-      href: '/modules/reports',
-      icon: '📊',
-      iconBg: '#fffbeb',
-      iconColor: '#854d0e'
-    },
-  ];
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        // Cargar todos los proyectos
+        const response = await fetch('/api/config-evaluation/projects');
+        if (response.ok) {
+          const data = await response.json();
+          if (mounted && Array.isArray(data)) {
+            // Ordenar los proyectos por fecha de actualización
+            const sortedProjects = data.sort((a, b) => 
+              new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+            );
+            setProjects(sortedProjects);
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setProjects([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Separar proyectos recientes (últimos 3) y todos los proyectos
+  const recentProjects = projects.slice(0, 3);
+  const allProjects = projects;
 
   return (
     <div className={styles.root}>
       {/* Welcome Section */}
-      <div>
-        <h2 className={styles.welcomeTitle}>Bienvenido, {user?.name}</h2>
-        <p className={styles.subtitle}>Selecciona un módulo para comenzar con la evaluación de calidad de software</p>
-      </div>
+      <header className={styles.greeting}>
+        <h2>Hola, {user?.name ?? 'Usuario'}</h2>
+        <a href="/configuration-evaluation" className={styles.newEvaluationBtn}>
+          + Nueva Evaluación
+        </a>
+      </header>
 
-      {/* Modules Grid */}
-      <div className={styles.modulesGrid}>
-        {modules.map((module) => (
-          <a key={module.name} href={module.href} className={styles.moduleCard}>
-            <div className={styles.moduleIconWrap} style={{ background: module.iconBg }}>
-              <span style={{ fontSize: '1.25rem' }}>{module.icon}</span>
+      {/* Proyectos Recientes - TARJETAS GRANDES */}
+      <div className={styles.dashedContainer}>
+        <section className={styles.sectionWrapper}>
+          <div className={styles.sectionHeader}>
+            <h3 className={styles.sectionTitle}>Proyectos recientes</h3>
+            <a href="/configuration-evaluation/projects" className={styles.viewAllLink}>Ver todos</a>
+          </div>
+
+          {loading && <p className={styles.loadingText}>Cargando...</p>}
+
+          {!loading && (
+            <div className={styles.recentGridLarge}>
+              {recentProjects.length === 0 && <p className={styles.emptyText}>No tienes proyectos recientes.</p>}
+
+              {recentProjects.map((project) => {
+                const latestEvaluation = project.evaluations?.[0];
+                const { icon, bg } = getProjectIcon(latestEvaluation?.status || '');
+                
+                return (
+                  <article key={project.id} className={styles.recentCardLarge}>
+                    <div className={styles.cardIcon} style={{ background: bg }}>
+                      <span className={styles.cardIconEmoji}>{icon}</span>
+                    </div>
+                    <div className={styles.cardContent}>
+                      <h4 className={styles.cardTitle}>{project.name}</h4>
+                      <p className={styles.cardDesc}>{project.description || 'Sin descripción'}</p>
+                      <div className={styles.cardFooter}>
+                        <time className={styles.cardDate}>
+                          Actualizado: {formatDate(project.updated_at)}
+                        </time>
+                        <a href={`/data-entry/${project.id}`} className={styles.viewBtn}>
+                          Abrir
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
-            <h3 className={styles.moduleTitle} style={{ color: module.iconColor }}>{module.name}</h3>
-            <p className={styles.moduleDesc}>{module.description}</p>
-          </a>
-        ))}
+          )}
+        </section>
       </div>
 
-      {/* User Info Card */}
-      <div className={styles.cardWhite}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.75rem' }}>Información del usuario</h3>
-        <div className={styles.gridThree}>
-          <div>
-            <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Nombre</p>
-            <p style={{ color: '#0f172a' }}>{user?.name}</p>
-          </div>
-          <div>
-            <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Email</p>
-            <p style={{ color: '#0f172a' }}>{user?.email}</p>
-          </div>
-          <div>
-            <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Rol</p>
-            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.125rem 0.625rem', borderRadius: '9999px', fontSize: '.75rem', fontWeight: 600, background: user?.role.name === 'admin' ? '#fee2e2' : '#e0f2fe', color: user?.role.name === 'admin' ? '#991b1b' : '#075985' }}>
-              {user?.role.name === 'admin' ? 'Administrador' : 'Evaluador'}
-            </span>
-          </div>
+      {/* Todos los Proyectos - TARJETAS PEQUEÑAS */}
+      <section className={styles.sectionWrapper}>
+        <div className={styles.sectionHeader}>
+          <h3 className={styles.sectionTitle}>Todos los proyectos</h3>
         </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className={styles.cardWhite}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.75rem' }}>Acciones rápidas</h3>
-        <div className={styles.gridThree}>
-          <a href="/shared/profile" className={styles.quickAction}>
-            <span style={{ fontSize: '1.25rem', marginRight: '0.75rem' }}>👤</span>
-            <div>
-              <p style={{ fontWeight: 600 }}>Mi Perfil</p>
-              <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Configurar información personal</p>
-            </div>
-          </a>
-          <a href="/shared/settings" className={styles.quickAction}>
-            <span style={{ fontSize: '1.25rem', marginRight: '0.75rem' }}>⚙️</span>
-            <div>
-              <p style={{ fontWeight: 600 }}>Configuración</p>
-              <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Ajustes del sistema</p>
-            </div>
-          </a>
-          <a href="/shared/notifications" className={styles.quickAction}>
-            <span style={{ fontSize: '1.25rem', marginRight: '0.75rem' }}>🔔</span>
-            <div>
-              <p style={{ fontWeight: 600 }}>Notificaciones</p>
-              <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Ver alertas y mensajes</p>
-            </div>
-          </a>
-        </div>
-      </div>
+        {!loading && (
+          <div className={styles.allGridSmall}>
+            {allProjects.length === 0 && <p className={styles.emptyText}>No hay proyectos disponibles.</p>}
+
+            {allProjects.map((project) => {
+              const latestEvaluation = project.evaluations?.[0];
+              const { icon, bg } = getProjectIcon(latestEvaluation?.status || '');
+
+              return (
+                <article key={project.id} className={styles.allCardSmall}>
+                  <div className={styles.smallCardIcon} style={{ background: bg }}>
+                    <span className={styles.smallCardIconEmoji}>{icon}</span>
+                  </div>
+                  <div className={styles.smallCardContent}>
+                    <h4 className={styles.smallCardTitle}>{project.name}</h4>
+                    <p className={styles.smallCardDesc}>
+                      {project.description || 'Sin descripción'}
+                    </p>
+                  </div>
+                  <div className={styles.smallCardFooter}>
+                    <a href={`/data-entry/${project.id}`} className={styles.smallViewBtn}>
+                      Abrir
+                    </a>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
