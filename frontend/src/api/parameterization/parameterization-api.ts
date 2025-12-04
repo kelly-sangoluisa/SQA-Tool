@@ -31,6 +31,27 @@ export interface SubCriterion {
   state: 'active' | 'inactive';
   created_at: string;
   updated_at: string;
+  metrics?: Metric[];
+}
+
+export interface Metric {
+  id: number;
+  sub_criterion_id: number;
+  name: string;
+  description: string | null;
+  code: string | null;
+  formula: string | null;
+  desired_threshold: number | null;
+  state: 'active' | 'inactive';
+  variables?: FormulaVariable[];
+}
+
+export interface FormulaVariable {
+  id: number;
+  metric_id: number;
+  symbol: string;
+  description: string;
+  state: 'active' | 'inactive';
 }
 
 export interface QueryParams {
@@ -40,10 +61,67 @@ export interface QueryParams {
   limit?: number;
 }
 
+// DTOs
+export interface CreateStandardDto {
+  name: string;
+  description?: string;
+  version?: string;
+}
+
+export interface UpdateStandardDto extends Partial<CreateStandardDto> {}
+
+export interface CreateCriterionDto {
+  name: string;
+  description?: string;
+  standard_id: number;
+}
+
+export interface UpdateCriterionDto extends Partial<CreateCriterionDto> {}
+
+export interface CreateSubCriterionDto {
+  name: string;
+  description?: string;
+  criterion_id: number;
+}
+
+export interface UpdateSubCriterionDto extends Partial<CreateSubCriterionDto> {}
+
+export interface CreateMetricDto {
+  name: string;
+  description?: string;
+  sub_criterion_id: number;
+  code?: string;
+  formula?: string;
+  desired_threshold?: number;
+}
+
+export interface UpdateMetricDto extends Partial<CreateMetricDto> {}
+
+export interface CreateFormulaVariableDto {
+  symbol: string;
+  description?: string;
+  metric_id: number;
+}
+
+export interface UpdateFormulaVariableDto extends Partial<CreateFormulaVariableDto> {}
+
+export interface UpdateStateDto {
+  state: 'active' | 'inactive';
+}
+
 /**
  * API service for parameterization endpoints
  */
 export const parameterizationApi = {
+  // === Standards Endpoints ===
+  
+  /**
+   * Create a new standard
+   */
+  async createStandard(data: CreateStandardDto): Promise<Standard> {
+    return apiClient.post('/parameterization/standards', data);
+  },
+
   /**
    * Get all standards (only active by default)
    */
@@ -62,6 +140,29 @@ export const parameterizationApi = {
    */
   async getStandardById(id: number): Promise<Standard> {
     return apiClient.get(`/parameterization/standards/${id}`);
+  },
+
+  /**
+   * Update an existing standard
+   */
+  async updateStandard(id: number, data: UpdateStandardDto): Promise<Standard> {
+    return apiClient.patch(`/parameterization/standards/${id}`, data);
+  },
+
+  /**
+   * Update standard state (active/inactive) - causes cascade effect
+   */
+  async updateStandardState(id: number, data: UpdateStateDto): Promise<void> {
+    return apiClient.patch(`/parameterization/standards/${id}/state`, data);
+  },
+
+  // === Criteria Endpoints ===
+
+  /**
+   * Create a new criterion
+   */
+  async createCriterion(data: CreateCriterionDto): Promise<Criterion> {
+    return apiClient.post('/parameterization/criteria', data);
   },
 
   /**
@@ -90,6 +191,29 @@ export const parameterizationApi = {
   },
 
   /**
+   * Update an existing criterion
+   */
+  async updateCriterion(id: number, data: UpdateCriterionDto): Promise<Criterion> {
+    return apiClient.patch(`/parameterization/criteria/${id}`, data);
+  },
+
+  /**
+   * Update criterion state (active/inactive) - causes cascade effect
+   */
+  async updateCriterionState(id: number, data: UpdateStateDto): Promise<void> {
+    return apiClient.patch(`/parameterization/criteria/${id}/state`, data);
+  },
+
+  // === Sub-Criteria Endpoints ===
+
+  /**
+   * Create a new sub-criterion
+   */
+  async createSubCriterion(data: CreateSubCriterionDto): Promise<SubCriterion> {
+    return apiClient.post('/parameterization/sub-criteria', data);
+  },
+
+  /**
    * Get sub-criteria for a specific criterion (only active by default)
    */
   async getSubCriteriaByCriterion(
@@ -113,4 +237,122 @@ export const parameterizationApi = {
   async getSubCriterionById(id: number): Promise<SubCriterion> {
     return apiClient.get(`/parameterization/sub-criteria/${id}`);
   },
+
+  /**
+   * Update an existing sub-criterion
+   */
+  async updateSubCriterion(id: number, data: UpdateSubCriterionDto): Promise<SubCriterion> {
+    return apiClient.patch(`/parameterization/sub-criteria/${id}`, data);
+  },
+
+  /**
+   * Update sub-criterion state (active/inactive) - causes cascade effect
+   */
+  async updateSubCriterionState(id: number, data: UpdateStateDto): Promise<void> {
+    return apiClient.patch(`/parameterization/sub-criteria/${id}/state`, data);
+  },
+
+  // === Metrics Endpoints ===
+
+  /**
+   * Create a new metric
+   */
+  async createMetric(data: CreateMetricDto): Promise<Metric> {
+    return apiClient.post('/parameterization/metrics', data);
+  },
+
+  /**
+   * Get metrics for a specific sub-criterion (only active by default)
+   */
+  async getMetricsBySubCriterion(
+    subCriterionId: number,
+    params: QueryParams = { state: 'active' }
+  ): Promise<Metric[]> {
+    const queryString = new URLSearchParams(
+      Object.entries(params)
+        .filter(([_, value]) => value !== undefined)
+        .map(([key, value]) => [key, String(value)])
+    ).toString();
+
+    return apiClient.get(
+      `/parameterization/sub-criteria/${subCriterionId}/metrics${queryString ? `?${queryString}` : ''}`
+    );
+  },
+
+  /**
+   * Get metric by ID
+   */
+  async getMetricById(id: number): Promise<Metric> {
+    return apiClient.get(`/parameterization/metrics/${id}`);
+  },
+
+  /**
+   * Update an existing metric
+   */
+  async updateMetric(id: number, data: UpdateMetricDto): Promise<Metric> {
+    return apiClient.patch(`/parameterization/metrics/${id}`, data);
+  },
+
+  /**
+   * Update metric state (active/inactive) - causes cascade effect
+   */
+  async updateMetricState(id: number, data: UpdateStateDto): Promise<void> {
+    return apiClient.patch(`/parameterization/metrics/${id}/state`, data);
+  },
+
+  // === Formula Variables Endpoints ===
+
+  /**
+   * Create a new formula variable
+   */
+  async createVariable(data: CreateFormulaVariableDto): Promise<FormulaVariable> {
+    return apiClient.post('/parameterization/variables', data);
+  },
+
+  /**
+   * Get variables for a specific metric (only active by default)
+   */
+  async getVariablesByMetric(
+    metricId: number,
+    params: QueryParams = { state: 'active' }
+  ): Promise<FormulaVariable[]> {
+    const queryString = new URLSearchParams(
+      Object.entries(params)
+        .filter(([_, value]) => value !== undefined)
+        .map(([key, value]) => [key, String(value)])
+    ).toString();
+
+    return apiClient.get(
+      `/parameterization/metrics/${metricId}/variables${queryString ? `?${queryString}` : ''}`
+    );
+  },
+
+  /**
+   * Get variable by ID
+   */
+  async getVariableById(id: number): Promise<FormulaVariable> {
+    return apiClient.get(`/parameterization/variables/${id}`);
+  },
+
+  /**
+   * Update an existing variable
+   */
+  async updateVariable(id: number, data: UpdateFormulaVariableDto): Promise<FormulaVariable> {
+    return apiClient.patch(`/parameterization/variables/${id}`, data);
+  },
+
+  /**
+   * Update variable state (active/inactive)
+   */
+  async updateVariableState(id: number, data: UpdateStateDto): Promise<void> {
+    return apiClient.patch(`/parameterization/variables/${id}/state`, data);
+  },
+
+  /**
+   * Deactivate a variable (legacy method for compatibility)
+   * @deprecated Use updateVariableState instead
+   */
+  async deleteVariable(id: number): Promise<void> {
+    return this.updateVariableState(id, { state: 'inactive' });
+  }
 };
