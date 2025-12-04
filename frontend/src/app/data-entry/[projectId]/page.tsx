@@ -87,7 +87,7 @@ interface ProjectProgress {
 export default function DataEntryProjectPage() {
   const params = useParams();
   const router = useRouter();
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated, user } = useAuth();
   const projectId = parseInt(params.projectId as string);
 
   // Estados principales
@@ -103,12 +103,19 @@ export default function DataEntryProjectPage() {
   const [allMetrics, setAllMetrics] = useState<Metric[]>([]);
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
 
-  // Verificar autenticación
+  // Verificar autenticación y permisos
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/auth/login');
+      return;
     }
-  }, [isLoading, isAuthenticated, router]);
+    
+    // Solo evaluadores pueden acceder a entrada de datos
+    if (!isLoading && user && user.role?.name === 'admin') {
+      router.push('/admin/parameterization');
+      return;
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   // Cargar datos del proyecto
   useEffect(() => {

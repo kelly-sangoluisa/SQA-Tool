@@ -46,8 +46,15 @@ export default function ConfigurationEvaluationPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/auth/login');
+      return;
     }
-  }, [isLoading, isAuthenticated, router]);
+    
+    // Solo evaluadores pueden acceder a configuración de evaluaciones
+    if (!isLoading && user && user.role?.name === 'admin') {
+      router.push('/admin/parameterization');
+      return;
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   useEffect(() => {
     // Verificar autenticación
