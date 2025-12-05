@@ -43,7 +43,7 @@ export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
       return [
         { 
           label: 'Parametrización', 
-          href: '/admin/parameterization',
+          href: '/parameterization',
           description: 'Gestionar estándares y criterios'
         }
       ];

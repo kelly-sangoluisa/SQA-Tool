@@ -1,10 +1,10 @@
 'use client';
-import { useAuth } from '../../../hooks/auth/useAuth';
+import { useAuth } from '../../hooks/auth/useAuth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
-import { AdminParameterization } from '../../../components/parameterization';
-import '../../../styles/admin/admin.css';
+import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
+import { AdminParameterization } from '../../components/parameterization';
+import '../../styles/admin/admin.css';
 
 export default function AdminParameterizationPage() {
   const { isLoading, isAuthenticated, user } = useAuth();

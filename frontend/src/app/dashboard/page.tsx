@@ -24,7 +24,7 @@ export default function DashboardPage() {
       
       // Redireccionar según el rol del usuario
       if (user && user.role?.name === 'admin') {
-        router.replace('/admin/parameterization');
+        router.replace('/parameterization');
         return;
       }
     }

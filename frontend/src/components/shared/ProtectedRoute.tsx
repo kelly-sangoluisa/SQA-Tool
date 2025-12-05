@@ -40,7 +40,7 @@ export function ProtectedRoute({
     // Verificar rol específico
     if (requiredRole !== 'any' && user.role.name !== requiredRole) {
       const defaultRedirect = user.role.name === 'admin' 
-        ? '/admin/parameterization' 
+        ? '/parameterization' 
         : '/dashboard';
       
       router.push(redirectTo || defaultRedirect);

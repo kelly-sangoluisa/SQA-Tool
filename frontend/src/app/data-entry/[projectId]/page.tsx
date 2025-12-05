@@ -112,7 +112,7 @@ export default function DataEntryProjectPage() {
     
     // Solo evaluadores pueden acceder a entrada de datos
     if (!isLoading && user && user.role?.name === 'admin') {
-      router.push('/admin/parameterization');
+      router.push('/parameterization');
       return;
     }
   }, [isLoading, isAuthenticated, user, router]);

@@ -51,7 +51,7 @@ export default function ConfigurationEvaluationPage() {
     
     // Solo evaluadores pueden acceder a configuración de evaluaciones
     if (!isLoading && user && user.role?.name === 'admin') {
-      router.push('/admin/parameterization');
+      router.push('/parameterization');
       return;
     }
   }, [isLoading, isAuthenticated, user, router]);
