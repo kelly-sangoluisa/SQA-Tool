@@ -61,6 +61,39 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
     }
   };
 
+  const handleCriterionStateChange = (updatedCriterion: Criterion) => {
+    // Si el criterio actualizado es el padre del subcriterio seleccionado
+    if (selectedSubCriterion && selectedSubCriterion.criterion_id === updatedCriterion.id) {
+      // Si el criterio se pone inactivo, poner el subcriterio y todas las métricas como inactivas
+      if (updatedCriterion.state === 'inactive') {
+        setSelectedSubCriterion(prev => prev ? { ...prev, state: 'inactive' } : null);
+        setMetrics(prevMetrics => 
+          prevMetrics.map(metric => ({ ...metric, state: 'inactive' as const }))
+        );
+      } else if (updatedCriterion.state === 'active' && selectedSubCriterion) {
+        // Si el criterio se activa, recargar subcriterio y métricas para obtener estados reales
+        loadMetrics(selectedSubCriterion.id);
+      }
+    }
+  };
+
+  const handleSubCriterionStateChange = (updatedSubCriterion: SubCriterion) => {
+    // Si el subcriterio actualizado es el que está seleccionado, actualizar el estado
+    if (selectedSubCriterion && selectedSubCriterion.id === updatedSubCriterion.id) {
+      setSelectedSubCriterion(updatedSubCriterion);
+      
+      // Si el subcriterio se pone inactivo, poner todas las métricas como inactivas visualmente
+      if (updatedSubCriterion.state === 'inactive') {
+        setMetrics(prevMetrics => 
+          prevMetrics.map(metric => ({ ...metric, state: 'inactive' as const }))
+        );
+      } else if (updatedSubCriterion.state === 'active') {
+        // Si el subcriterio se activa, recargar las métricas para obtener sus estados reales
+        loadMetrics(updatedSubCriterion.id);
+      }
+    }
+  };
+
   const handleSubCriterionSelect = (criterion: Criterion, subCriterion: SubCriterion) => {
     setSelectedCriterion(criterion);
     setSelectedSubCriterion(subCriterion);
@@ -87,6 +120,21 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
       loadMetrics(selectedSubCriterion.id);
     }
     handleCloseDrawer();
+  };
+
+  const handleMetricStateChange = (updatedMetric: Metric) => {
+    // Verificar si el subcriterio está activo antes de permitir activar métricas
+    if (selectedSubCriterion && selectedSubCriterion.state === 'inactive' && updatedMetric.state === 'active') {
+      console.warn('No se puede activar una métrica cuando el subcriterio está inactivo');
+      return; // No permitir la activación
+    }
+    
+    // Actualizar la métrica en el estado local
+    setMetrics(prevMetrics => 
+      prevMetrics.map(metric => 
+        metric.id === updatedMetric.id ? updatedMetric : metric
+      )
+    );
   };
 
   const handleRefreshMetrics = () => {
@@ -136,6 +184,8 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
             onCriterionCreate={handleCriterionCreate}
             onSubCriterionEdit={handleSubCriterionEdit}
             onSubCriterionCreate={handleSubCriterionCreate}
+            onSubCriterionStateChange={handleSubCriterionStateChange}
+            onCriterionStateChange={handleCriterionStateChange}
             onRefresh={loadCriteria}
           />
         </div>
@@ -149,6 +199,7 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
               onEditMetric={handleEditMetric}
               onCreateMetric={handleCreateMetric}
               onRefreshMetrics={handleRefreshMetrics}
+              onMetricStateChange={handleMetricStateChange}
             />
           ) : (
             <div className={styles.emptyState}>

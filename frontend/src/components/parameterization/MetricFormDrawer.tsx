@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Metric, FormulaVariable, parameterizationApi, CreateMetricDto, UpdateMetricDto } from '../../api/parameterization/parameterization-api';
-import styles from './MetricFormDrawer.module.css';
+import { Metric, parameterizationApi, CreateMetricDto, UpdateMetricDto } from '../../api/parameterization/parameterization-api';
+import { Button } from '../shared/Button';
+import styles from './shared/FormDrawer.module.css';
 
 interface MetricFormDrawerProps {
   metric?: Metric | null;
@@ -203,13 +204,13 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
             type="button"
             onClick={handleClose}
             className={styles.closeButton}
-            aria-label="Cerrar"
+            aria-label="Cerrar formulario"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path
                 d="M15 5L5 15M5 5L15 15"
                 stroke="currentColor"
-                strokeWidth="1.5"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -217,7 +218,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={`${styles.form} ${loading ? styles.loading : ''}`}>
           <div className={styles.content}>
             {errors.general && (
               <div className={styles.errorMessage}>
@@ -405,29 +406,23 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
           </div>
 
           <div className={styles.footer}>
-            <button
+            <Button
               type="button"
               onClick={handleClose}
-              className={styles.cancelButton}
+              variant="outline"
               disabled={loading}
             >
               Cancelar
-            </button>
+            </Button>
             
-            <button
+            <Button
               type="submit"
-              className={styles.saveButton}
-              disabled={loading}
+              variant="primary"
+              isLoading={loading}
+              disabled={!formData.name.trim() || !formData.code.trim()}
             >
-              {loading ? (
-                <>
-                  <div className={styles.spinner}></div>
-                  {metric ? 'Actualizando...' : 'Creando...'}
-                </>
-              ) : (
-                metric ? 'Actualizar Métrica' : 'Crear Métrica'
-              )}
-            </button>
+              {metric ? 'Actualizar Métrica' : 'Crear Métrica'}
+            </Button>
           </div>
         </form>
       </div>

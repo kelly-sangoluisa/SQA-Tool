@@ -18,6 +18,8 @@ interface CriteriaNavigationProps {
   onCriterionCreate?: () => void;
   onSubCriterionEdit?: (criterion: Criterion, subCriterion: SubCriterion) => void;
   onSubCriterionCreate?: (criterion: Criterion) => void;
+  onSubCriterionStateChange?: (subCriterion: SubCriterion) => void;
+  onCriterionStateChange?: (criterion: Criterion) => void;
 }
 
 export function CriteriaNavigation({
@@ -28,7 +30,9 @@ export function CriteriaNavigation({
   onCriterionEdit,
   onCriterionCreate,
   onSubCriterionEdit,
-  onSubCriterionCreate
+  onSubCriterionCreate,
+  onSubCriterionStateChange,
+  onCriterionStateChange
 }: CriteriaNavigationProps) {
   const {
     criteria,
@@ -98,19 +102,47 @@ export function CriteriaNavigation({
   const toggleCriterionState = async (criterion: Criterion, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
     const toggleKey = `criterion-${criterion.id}`;
-    setToggleLoading(prev => new Set([...prev, toggleKey]));
     
+    if (toggleLoading.has(toggleKey)) return;
+
+    const newState = criterion.state === 'active' ? 'inactive' : 'active';
+    
+    // Cambio optimista: actualizar UI inmediatamente
+    const updatedCriterion: Criterion = { ...criterion, state: newState as 'active' | 'inactive' };
+    
+    // Si el criterio se pone inactivo, actualizar todos sus subcriterios visualmente
+    if (newState === 'inactive') {
+      setSubCriteria(prev => {
+        const updated = { ...prev };
+        if (updated[criterion.id]) {
+          updated[criterion.id] = updated[criterion.id].map(sc => ({ ...sc, state: 'inactive' as const }));
+        }
+        return updated;
+      });
+    }
+
+    setToggleLoading(prev => new Set([...prev, toggleKey]));
     try {
-      // Llamar a la API directamente para cambiar el estado
-      const newState = criterion.state === 'active' ? 'inactive' : 'active';
       await parameterizationApi.updateCriterionState(criterion.id, { state: newState });
+      
+      // Notificar al padre sobre el cambio de estado
+      onCriterionStateChange?.(updatedCriterion);
       
       // Recargar criterios para mantener consistencia
       await loadCriteria();
+      
+      // Si se activa el criterio, recargar subcriterios para obtener estados reales
+      if (newState === 'active') {
+        await loadSubCriteria(criterion.id, true);
+      }
     } catch (error) {
       console.error('Error updating criterion state:', error);
+      
+      // Revertir el cambio si falla
+      if (newState === 'inactive') {
+        await loadSubCriteria(criterion.id, true);
+      }
     } finally {
       setToggleLoading(prev => {
         const newSet = new Set(prev);
@@ -125,6 +157,15 @@ export function CriteriaNavigation({
     const toggleKey = `subcriterion-${subCriterion.id}`;
     
     if (toggleLoading.has(toggleKey)) return;
+
+    // Encontrar el criterio padre
+    const parentCriterion = criteria.find(c => c.id === subCriterion.criterion_id);
+    
+    // Si el criterio padre está inactivo, no permitir activar subcriterios
+    if (parentCriterion && parentCriterion.state === 'inactive' && subCriterion.state === 'inactive') {
+      console.warn('No se puede activar un subcriterio cuando el criterio padre está inactivo');
+      return;
+    }
 
     const newState = subCriterion.state === 'active' ? 'inactive' : 'active';
     const criterionId = subCriterion.criterion_id;
@@ -145,6 +186,10 @@ export function CriteriaNavigation({
     setToggleLoading(prev => new Set([...prev, toggleKey]));
     try {
       await parameterizationApi.updateSubCriterionState(subCriterion.id, { state: newState });
+      
+      // Notificar al padre sobre el cambio de estado
+      const updatedSubCriterion: SubCriterion = { ...subCriterion, state: newState as 'active' | 'inactive' };
+      onSubCriterionStateChange?.(updatedSubCriterion);
     } catch (error) {
       console.error('Error updating subcriterion state:', error);
       
@@ -478,8 +523,12 @@ export function CriteriaNavigation({
                                   type="button"
                                   onClick={(e) => toggleSubCriterionState(subCriterion, e)}
                                   className={`${styles.toggleButton} ${subCriterion.state === 'active' ? styles.active : styles.inactive}`}
-                                  disabled={isSubToggling}
-                                  title={`${subCriterion.state === 'active' ? 'Desactivar' : 'Activar'} subcriterio`}
+                                  disabled={isSubToggling || (criterion.state === 'inactive' && subCriterion.state === 'inactive')}
+                                  title={
+                                    criterion.state === 'inactive' && subCriterion.state === 'inactive'
+                                      ? 'No se puede activar cuando el criterio padre está inactivo'
+                                      : `${subCriterion.state === 'active' ? 'Desactivar' : 'Activar'} subcriterio`
+                                  }
                                 >
                                   <div className={styles.toggleSlider}></div>
                                 </button>

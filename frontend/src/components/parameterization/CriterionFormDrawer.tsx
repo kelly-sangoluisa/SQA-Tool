@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Criterion, parameterizationApi, CreateCriterionDto, UpdateCriterionDto } from '../../api/parameterization/parameterization-api';
-import styles from './CriterionFormDrawer.module.css';
+import { Button } from '../shared/Button';
+import styles from './shared/FormDrawer.module.css';
 
 interface CriterionFormDrawerProps {
   criterion?: Criterion | null;
@@ -129,22 +130,31 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
 
   return (
     <div className={`${styles.overlay} ${isVisible ? styles.visible : ''}`}>
-      <div className={`${styles.drawer} ${isVisible ? styles.visible : ''}`}>
+      <div className={`${styles.drawer} ${isVisible ? styles.open : ''}`}>
         <div className={styles.header}>
-          <h2 className={styles.title}>
-            {criterion ? 'Editar Criterio' : 'Nuevo Criterio'}
-          </h2>
+          <div className={styles.titleSection}>
+            <h2 className={styles.title}>
+              {criterion ? 'Editar Criterio' : 'Nuevo Criterio'}
+            </h2>
+            <p className={styles.subtitle}>
+              {criterion 
+                ? 'Modifica la información del criterio de evaluación'
+                : 'Define un nuevo criterio para evaluar la calidad del software'
+              }
+            </p>
+          </div>
+          
           <button
             type="button"
             onClick={handleClose}
             className={styles.closeButton}
-            aria-label="Cerrar"
+            aria-label="Cerrar formulario"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path
                 d="M15 5L5 15M5 5L15 15"
                 stroke="currentColor"
-                strokeWidth="1.5"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -152,10 +162,26 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={`${styles.form} ${loading ? styles.loading : ''}`}>
           <div className={styles.content}>
             {errors.general && (
               <div className={styles.errorMessage}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M8 1L15 15H1L8 1Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8 6V8.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="8" cy="11.5" r="0.5" fill="currentColor" />
+                </svg>
                 {errors.general}
               </div>
             )}
@@ -164,8 +190,8 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
               <h3 className={styles.sectionTitle}>Información del Criterio</h3>
               
               <div className={styles.field}>
-                <label htmlFor="name" className={styles.label}>
-                  Nombre *
+                <label htmlFor="name" className={`${styles.label} ${styles.required}`}>
+                  Nombre del Criterio
                 </label>
                 <input
                   type="text"
@@ -173,9 +199,23 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   className={`${styles.input} ${errors.name ? styles.error : ''}`}
-                  placeholder="Ej: Confiabilidad del Software"
+                  placeholder="Ej: Funcionalidad, Confiabilidad, Usabilidad"
+                  disabled={loading}
+                  maxLength={100}
                 />
-                {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
+                {errors.name && (
+                  <div className={styles.errorMessage}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
+                      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
+                    </svg>
+                    {errors.name}
+                  </div>
+                )}
+                <div className={`${styles.characterCount} ${formData.name.length > 80 ? styles.warning : ''} ${formData.name.length > 95 ? styles.error : ''}`}>
+                  {formData.name.length}/100
+                </div>
               </div>
 
               <div className={styles.field}>
@@ -186,37 +226,46 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
                   id="description"
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  className={styles.textarea}
-                  rows={4}
-                  placeholder="Describe qué evalúa este criterio..."
+                  className={`${styles.textarea} ${errors.description ? styles.error : ''}`}
+                  placeholder="Describe qué aspecto de la calidad evalúa este criterio, su importancia y cómo se mide..."
+                  disabled={loading}
+                  maxLength={500}
                 />
-                {errors.description && <span className={styles.fieldError}>{errors.description}</span>}
+                {errors.description && (
+                  <div className={styles.errorMessage}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
+                      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
+                    </svg>
+                    {errors.description}
+                  </div>
+                )}
+                <div className={`${styles.characterCount} ${formData.description.length > 400 ? styles.warning : ''} ${formData.description.length > 480 ? styles.error : ''}`}>
+                  {formData.description.length}/500
+                </div>
               </div>
             </div>
           </div>
 
           <div className={styles.footer}>
-            <button
+            <Button
               type="button"
               onClick={handleClose}
-              className={styles.cancelButton}
+              variant="outline"
+              disabled={loading}
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            
+            <Button
               type="submit"
-              disabled={loading}
-              className={styles.saveButton}
+              variant="primary"
+              isLoading={loading}
+              disabled={!formData.name.trim()}
             >
-              {loading ? (
-                <div className={styles.loadingContent}>
-                  <div className={styles.spinner}></div>
-                  <span>Guardando...</span>
-                </div>
-              ) : (
-                criterion ? 'Actualizar Criterio' : 'Crear Criterio'
-              )}
-            </button>
+              {criterion ? 'Actualizar Criterio' : 'Crear Criterio'}
+            </Button>
           </div>
         </form>
       </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { parameterizationApi, CreateStandardDto, UpdateStandardDto, Standard } from '../../api/parameterization/parameterization-api';
-import styles from './StandardFormDrawer.module.css';
+import { Button } from '../shared/Button';
+import styles from './shared/FormDrawer.module.css';
 
 interface StandardFormDrawerProps {
   standard?: Standard | null;
@@ -147,13 +148,13 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
             type="button"
             onClick={handleClose}
             className={styles.closeButton}
-            aria-label="Cerrar"
+            aria-label="Cerrar formulario"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path
                 d="M15 5L5 15M5 5L15 15"
                 stroke="currentColor"
-                strokeWidth="1.5"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -161,10 +162,26 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={`${styles.form} ${loading ? styles.loading : ''}`}>
           <div className={styles.content}>
             {errors.general && (
               <div className={styles.errorMessage}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M8 1L15 15H1L8 1Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8 6V8.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="8" cy="11.5" r="0.5" fill="currentColor" />
+                </svg>
                 {errors.general}
               </div>
             )}
@@ -172,37 +189,61 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Información Básica</h3>
               
-              <div className={styles.row}>
-                <div className={styles.field}>
-                  <label htmlFor="name" className={styles.label}>
-                    Nombre *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    className={`${styles.input} ${errors.name ? styles.error : ''}`}
-                    placeholder="Ej: ISO 25010"
-                    disabled={loading}
-                  />
-                  {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
+              <div className={styles.field}>
+                <label htmlFor="name" className={`${styles.label} ${styles.required}`}>
+                  Nombre del Estándar
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  className={`${styles.input} ${errors.name ? styles.error : ''}`}
+                  placeholder="Ej: ISO 25010, CMMI, IEEE 730"
+                  disabled={loading}
+                  maxLength={100}
+                />
+                {errors.name && (
+                  <div className={styles.errorMessage}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
+                      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
+                    </svg>
+                    {errors.name}
+                  </div>
+                )}
+                <div className={`${styles.characterCount} ${formData.name.length > 80 ? styles.warning : ''} ${formData.name.length > 95 ? styles.error : ''}`}>
+                  {formData.name.length}/100
                 </div>
+              </div>
 
-                <div className={styles.field}>
-                  <label htmlFor="version" className={styles.label}>
-                    Versión *
-                  </label>
-                  <input
-                    type="text"
-                    id="version"
-                    value={formData.version}
-                    onChange={(e) => handleInputChange('version', e.target.value)}
-                    className={`${styles.input} ${errors.version ? styles.error : ''}`}
-                    placeholder="Ej: 1.0, 2023.1"
-                    disabled={loading}
-                  />
-                  {errors.version && <span className={styles.fieldError}>{errors.version}</span>}
+              <div className={styles.field}>
+                <label htmlFor="version" className={`${styles.label} ${styles.required}`}>
+                  Versión
+                </label>
+                <input
+                  type="text"
+                  id="version"
+                  value={formData.version}
+                  onChange={(e) => handleInputChange('version', e.target.value)}
+                  className={`${styles.input} ${errors.version ? styles.error : ''}`}
+                  placeholder="Ej: 1.0, 2023.1, v2.0"
+                  disabled={loading}
+                  maxLength={20}
+                />
+                {errors.version && (
+                  <div className={styles.errorMessage}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
+                      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
+                    </svg>
+                    {errors.version}
+                  </div>
+                )}
+                <div className={`${styles.characterCount} ${formData.version.length > 15 ? styles.warning : ''} ${formData.version.length > 18 ? styles.error : ''}`}>
+                  {formData.version.length}/20
                 </div>
               </div>
 
@@ -214,39 +255,46 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
                   id="description"
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  className={styles.textarea}
-                  rows={4}
-                  placeholder="Describe el estándar de calidad, su propósito y alcance..."
+                  className={`${styles.textarea} ${errors.description ? styles.error : ''}`}
+                  placeholder="Describe el estándar de calidad, su propósito, alcance y principales características..."
                   disabled={loading}
+                  maxLength={500}
                 />
+                {errors.description && (
+                  <div className={styles.errorMessage}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
+                      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
+                    </svg>
+                    {errors.description}
+                  </div>
+                )}
+                <div className={`${styles.characterCount} ${formData.description.length > 400 ? styles.warning : ''} ${formData.description.length > 480 ? styles.error : ''}`}>
+                  {formData.description.length}/500
+                </div>
               </div>
             </div>
           </div>
 
           <div className={styles.footer}>
-            <button
+            <Button
               type="button"
               onClick={handleClose}
-              className={styles.cancelButton}
+              variant="outline"
               disabled={loading}
             >
               Cancelar
-            </button>
+            </Button>
             
-            <button
+            <Button
               type="submit"
-              className={styles.saveButton}
-              disabled={loading}
+              variant="primary"
+              isLoading={loading}
+              disabled={!formData.name.trim() || !formData.version.trim()}
             >
-              {loading ? (
-                <>
-                  <div className={styles.spinner}></div>
-                  {standard ? 'Actualizando...' : 'Creando...'}
-                </>
-              ) : (
-                standard ? 'Actualizar Estándar' : 'Crear Estándar'
-              )}
-            </button>
+              {standard ? 'Actualizar Estándar' : 'Crear Estándar'}
+            </Button>
           </div>
         </form>
       </div>

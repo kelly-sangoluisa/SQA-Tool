@@ -9,6 +9,7 @@ interface MetricsViewProps {
   onEditMetric: (metric: Metric) => void;
   onCreateMetric: () => void;
   onRefreshMetrics?: () => void;
+  onMetricStateChange?: (updatedMetric: Metric) => void;
 }
 
 export function MetricsView({
@@ -17,18 +18,30 @@ export function MetricsView({
   loading,
   onEditMetric,
   onCreateMetric,
-  onRefreshMetrics
+  onRefreshMetrics,
+  onMetricStateChange
 }: MetricsViewProps) {
   const handleToggleMetricState = async (metric: Metric) => {
+    // Si el subcriterio está inactivo, no permitir activar métricas
+    if (subCriterion.state === 'inactive' && metric.state === 'inactive') {
+      console.warn('No se puede activar una métrica cuando el subcriterio está inactivo');
+      return;
+    }
+    
     try {
       const newState = metric.state === 'active' ? 'inactive' : 'active';
+      
+      // Cambio optimista: notificar al padre inmediatamente
+      const updatedMetric: Metric = { ...metric, state: newState as 'active' | 'inactive' };
+      onMetricStateChange?.(updatedMetric);
+      
+      // Actualizar en el servidor
       await parameterizationApi.updateMetricState(metric.id, { state: newState });
-      // Call parent refresh function instead of reloading the page
-      if (onRefreshMetrics) {
-        onRefreshMetrics();
-      }
     } catch (error) {
       console.error('Error updating metric state:', error);
+      
+      // Si falla, revertir el cambio
+      onMetricStateChange?.(metric);
     }
   };
 
@@ -105,7 +118,12 @@ export function MetricsView({
                         type="button"
                         onClick={() => handleToggleMetricState(metric)}
                         className={`${styles.toggleButton} ${metric.state === 'active' ? styles.active : styles.inactive}`}
-                        title={`${metric.state === 'active' ? 'Desactivar' : 'Activar'} métrica`}
+                        disabled={subCriterion.state === 'inactive' && metric.state === 'inactive'}
+                        title={
+                          subCriterion.state === 'inactive' && metric.state === 'inactive'
+                            ? 'No se puede activar cuando el subcriterio está inactivo'
+                            : `${metric.state === 'active' ? 'Desactivar' : 'Activar'} métrica`
+                        }
                       >
                         <div className={styles.toggleSlider}></div>
                       </button>

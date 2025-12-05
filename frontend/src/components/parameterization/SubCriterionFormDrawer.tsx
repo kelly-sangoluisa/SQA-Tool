@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SubCriterion, parameterizationApi, CreateSubCriterionDto, UpdateSubCriterionDto } from '../../api/parameterization/parameterization-api';
-import styles from './SubCriterionFormDrawer.module.css';
+import { Button } from '../shared/Button';
+import styles from './shared/FormDrawer.module.css';
 
 interface SubCriterionFormDrawerProps {
   subCriterion?: SubCriterion | null;
@@ -126,22 +127,31 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
 
   return (
     <div className={`${styles.overlay} ${isVisible ? styles.visible : ''}`}>
-      <div className={`${styles.drawer} ${isVisible ? styles.visible : ''}`}>
+      <div className={`${styles.drawer} ${isVisible ? styles.open : ''}`}>
         <div className={styles.header}>
-          <h2 className={styles.title}>
-            {subCriterion ? 'Editar Subcriterio' : 'Nuevo Subcriterio'}
-          </h2>
+          <div className={styles.titleSection}>
+            <h2 className={styles.title}>
+              {subCriterion ? 'Editar Subcriterio' : 'Nuevo Subcriterio'}
+            </h2>
+            <p className={styles.subtitle}>
+              {subCriterion 
+                ? 'Modifica la información del subcriterio de evaluación'
+                : 'Define un nuevo subcriterio para medir aspectos específicos del criterio'
+              }
+            </p>
+          </div>
+          
           <button
             type="button"
             onClick={handleClose}
             className={styles.closeButton}
-            aria-label="Cerrar"
+            aria-label="Cerrar formulario"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path
                 d="M15 5L5 15M5 5L15 15"
                 stroke="currentColor"
-                strokeWidth="1.5"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -149,10 +159,26 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={`${styles.form} ${loading ? styles.loading : ''}`}>
           <div className={styles.content}>
             {errors.general && (
               <div className={styles.errorMessage}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M8 1L15 15H1L8 1Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8 6V8.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="8" cy="11.5" r="0.5" fill="currentColor" />
+                </svg>
                 {errors.general}
               </div>
             )}
@@ -161,8 +187,8 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
               <h3 className={styles.sectionTitle}>Información del Subcriterio</h3>
               
               <div className={styles.field}>
-                <label htmlFor="name" className={styles.label}>
-                  Nombre *
+                <label htmlFor="name" className={`${styles.label} ${styles.required}`}>
+                  Nombre del Subcriterio
                 </label>
                 <input
                   type="text"
@@ -170,9 +196,23 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   className={`${styles.input} ${errors.name ? styles.error : ''}`}
-                  placeholder="Ej: Gestión de Defectos"
+                  placeholder="Ej: Gestión de Defectos, Tolerancia a Fallos"
+                  disabled={loading}
+                  maxLength={100}
                 />
-                {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
+                {errors.name && (
+                  <div className={styles.errorMessage}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
+                      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
+                    </svg>
+                    {errors.name}
+                  </div>
+                )}
+                <div className={`${styles.characterCount} ${formData.name.length > 80 ? styles.warning : ''} ${formData.name.length > 95 ? styles.error : ''}`}>
+                  {formData.name.length}/100
+                </div>
               </div>
 
               <div className={styles.field}>
@@ -183,37 +223,46 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
                   id="description"
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  className={styles.textarea}
-                  rows={4}
-                  placeholder="Describe qué evalúa este subcriterio..."
+                  className={`${styles.textarea} ${errors.description ? styles.error : ''}`}
+                  placeholder="Describe qué aspecto específico evalúa este subcriterio, cómo se mide y su importancia..."
+                  disabled={loading}
+                  maxLength={500}
                 />
-                {errors.description && <span className={styles.fieldError}>{errors.description}</span>}
+                {errors.description && (
+                  <div className={styles.errorMessage}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
+                      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
+                    </svg>
+                    {errors.description}
+                  </div>
+                )}
+                <div className={`${styles.characterCount} ${formData.description.length > 400 ? styles.warning : ''} ${formData.description.length > 480 ? styles.error : ''}`}>
+                  {formData.description.length}/500
+                </div>
               </div>
             </div>
           </div>
 
           <div className={styles.footer}>
-            <button
+            <Button
               type="button"
               onClick={handleClose}
-              className={styles.cancelButton}
+              variant="outline"
+              disabled={loading}
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            
+            <Button
               type="submit"
-              disabled={loading}
-              className={styles.saveButton}
+              variant="primary"
+              isLoading={loading}
+              disabled={!formData.name.trim()}
             >
-              {loading ? (
-                <div className={styles.loadingContent}>
-                  <div className={styles.spinner}></div>
-                  <span>Guardando...</span>
-                </div>
-              ) : (
-                subCriterion ? 'Actualizar Subcriterio' : 'Crear Subcriterio'
-              )}
-            </button>
+              {subCriterion ? 'Actualizar Subcriterio' : 'Crear Subcriterio'}
+            </Button>
           </div>
         </form>
       </div>

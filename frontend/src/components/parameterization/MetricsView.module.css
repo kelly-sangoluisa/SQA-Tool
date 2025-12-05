@@ -498,6 +498,16 @@
   background-color: #ef4444;
 }
 
+.toggleButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #d1d5db !important;
+}
+
+.toggleButton:disabled:hover {
+  background-color: #d1d5db !important;
+}
+
 .toggleSlider {
   position: absolute;
   top: 2px;
