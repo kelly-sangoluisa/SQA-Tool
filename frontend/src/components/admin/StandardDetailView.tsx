@@ -95,6 +95,22 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
     }
   };
 
+  const handleCriterionEdit = (criterion: Criterion) => {
+    console.log('Editando criterio:', criterion.name);
+  };
+
+  const handleCriterionCreate = () => {
+    console.log('Creando nuevo criterio');
+  };
+
+  const handleSubCriterionEdit = (criterion: Criterion, subCriterion: SubCriterion) => {
+    console.log('Editando subcriterio:', subCriterion.name, 'del criterio:', criterion.name);
+  };
+
+  const handleSubCriterionCreate = (criterion: Criterion) => {
+    console.log('Creando nuevo subcriterio para criterio:', criterion.name);
+  };
+
   const breadcrumbItems: BreadcrumbItem[] = [
     { label: 'Parámetros', onClick: onBack },
     { label: standard.name, isActive: !selectedCriterion },
@@ -116,6 +132,10 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
           <CriteriaNavigation
             standardId={standard.id}
             onSubCriterionSelect={handleSubCriterionSelect}
+            onCriterionEdit={handleCriterionEdit}
+            onCriterionCreate={handleCriterionCreate}
+            onSubCriterionEdit={handleSubCriterionEdit}
+            onSubCriterionCreate={handleSubCriterionCreate}
             onRefresh={loadCriteria}
           />
         </div>

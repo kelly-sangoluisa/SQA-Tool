@@ -4,6 +4,9 @@ import {
   SubCriterion, 
   parameterizationApi
 } from '../../api/parameterization/parameterization-api';
+import { useCriteriaManagement } from '../../hooks/admin/useCriteriaManagement';
+import { CriterionFormDrawer } from './CriterionFormDrawer';
+import { SubCriterionFormDrawer } from './SubCriterionFormDrawer';
 import styles from './CriteriaNavigation.module.css';
 
 interface CriteriaNavigationProps {
@@ -11,40 +14,46 @@ interface CriteriaNavigationProps {
   standardId?: number;
   onCriterionSelect?: (criterion: Criterion) => void;
   onSubCriterionSelect?: (criterion: Criterion, subCriterion: SubCriterion) => void;
+  onCriterionEdit?: (criterion: Criterion) => void;
+  onCriterionCreate?: () => void;
+  onSubCriterionEdit?: (criterion: Criterion, subCriterion: SubCriterion) => void;
+  onSubCriterionCreate?: (criterion: Criterion) => void;
 }
 
 export function CriteriaNavigation({
   onRefresh,
   standardId,
   onCriterionSelect,
-  onSubCriterionSelect
+  onSubCriterionSelect,
+  onCriterionEdit,
+  onCriterionCreate,
+  onSubCriterionEdit,
+  onSubCriterionCreate
 }: CriteriaNavigationProps) {
-  const [criteria, setCriteria] = useState<Criterion[]>([]);
+  const {
+    criteria,
+    loading,
+    error,
+    loadCriteria,
+    updateCriterion,
+    addCriterion
+  } = useCriteriaManagement(standardId);
+  
   const [subCriteria, setSubCriteria] = useState<Record<number, SubCriterion[]>>({});
   const [expandedCriteria, setExpandedCriteria] = useState<Set<number>>(new Set());
-  const [loading, setLoading] = useState(false);
   const [loadingSubCriteria, setLoadingSubCriteria] = useState<Set<number>>(new Set());
   const [toggleLoading, setToggleLoading] = useState<Set<string>>(new Set());
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingCriterion, setEditingCriterion] = useState<Criterion | null>(null);
+  const [isSubFormOpen, setIsSubFormOpen] = useState(false);
+  const [editingSubCriterion, setEditingSubCriterion] = useState<SubCriterion | null>(null);
+  const [parentCriterion, setParentCriterion] = useState<Criterion | null>(null);
 
   useEffect(() => {
     if (standardId) {
       loadCriteria();
     }
-  }, [standardId]);
-
-  const loadCriteria = async () => {
-    if (!standardId) return;
-    
-    setLoading(true);
-    try {
-      const data = await parameterizationApi.getCriteriaByStandard(standardId, { state: 'all' });
-      setCriteria(data);
-    } catch (error) {
-      console.error('Error loading criteria:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [standardId, loadCriteria]);
 
   const loadSubCriteria = async (criterionId: number) => {
     if (subCriteria[criterionId]) return;
@@ -84,37 +93,21 @@ export function CriteriaNavigation({
   };
 
   const toggleCriterionState = async (criterion: Criterion, e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
+    
     const toggleKey = `criterion-${criterion.id}`;
-    
-    if (toggleLoading.has(toggleKey)) return;
-
-    const newState = criterion.state === 'active' ? 'inactive' : 'active';
-    
-    // Cambio optimista: actualizar UI inmediatamente
-    setCriteria(prevCriteria => 
-      prevCriteria.map(c => 
-        c.id === criterion.id 
-          ? { ...c, state: newState }
-          : c
-      )
-    );
-
     setToggleLoading(prev => new Set([...prev, toggleKey]));
+    
     try {
+      // Llamar a la API directamente para cambiar el estado
+      const newState = criterion.state === 'active' ? 'inactive' : 'active';
       await parameterizationApi.updateCriterionState(criterion.id, { state: newState });
-      onRefresh?.();
+      
+      // Recargar criterios para mantener consistencia
+      await loadCriteria();
     } catch (error) {
       console.error('Error updating criterion state:', error);
-      
-      // Revertir el cambio si falla
-      setCriteria(prevCriteria => 
-        prevCriteria.map(c => 
-          c.id === criterion.id 
-            ? { ...c, state: criterion.state }
-            : c
-        )
-      );
     } finally {
       setToggleLoading(prev => {
         const newSet = new Set(prev);
@@ -177,6 +170,92 @@ export function CriteriaNavigation({
     onSubCriterionSelect?.(criterion, subCriterion);
   };
 
+  const handleEditCriterion = (criterion: Criterion, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingCriterion(criterion);
+    setIsFormOpen(true);
+    onCriterionEdit?.(criterion);
+  };
+
+  const handleCreateCriterion = () => {
+    setEditingCriterion(null);
+    setIsFormOpen(true);
+    onCriterionCreate?.();
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingCriterion(null);
+  };
+
+  const handleCriterionSaved = (savedCriterion?: Criterion) => {
+    if (savedCriterion) {
+      if (editingCriterion) {
+        // Es una actualización
+        updateCriterion(savedCriterion);
+      } else {
+        // Es una creación
+        addCriterion(savedCriterion);
+      }
+    } else {
+      // Fallback: recargar toda la lista si no tenemos el criterio
+      loadCriteria();
+    }
+    handleCloseForm();
+  };
+
+  const handleEditSubCriterion = (criterion: Criterion, subCriterion: SubCriterion, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingSubCriterion(subCriterion);
+    setParentCriterion(criterion);
+    setIsSubFormOpen(true);
+    onSubCriterionEdit?.(criterion, subCriterion);
+  };
+
+  const handleCreateSubCriterion = (criterion: Criterion, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingSubCriterion(null);
+    setParentCriterion(criterion);
+    setIsSubFormOpen(true);
+    onSubCriterionCreate?.(criterion);
+  };
+
+  const handleCloseSubForm = () => {
+    setIsSubFormOpen(false);
+    setEditingSubCriterion(null);
+    setParentCriterion(null);
+  };
+
+  const handleSubCriterionSaved = (savedSubCriterion?: SubCriterion) => {
+    if (savedSubCriterion && parentCriterion) {
+      // Actualizar la lista de subcriterios en el estado local
+      if (editingSubCriterion) {
+        // Es una actualización
+        setSubCriteria(prev => ({
+          ...prev,
+          [parentCriterion.id]: (prev[parentCriterion.id] || []).map(sc =>
+            sc.id === savedSubCriterion.id ? savedSubCriterion : sc
+          )
+        }));
+      } else {
+        // Es una creación
+        setSubCriteria(prev => ({
+          ...prev,
+          [parentCriterion.id]: [...(prev[parentCriterion.id] || []), savedSubCriterion]
+        }));
+      }
+    } else {
+      // Fallback: recargar subcriterios si no tenemos el subcriterio
+      if (parentCriterion) {
+        loadSubCriteria(parentCriterion.id);
+      }
+    }
+    handleCloseSubForm();
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -192,6 +271,24 @@ export function CriteriaNavigation({
     <div className={styles.container}>
       <div className={styles.header}>
         <h3>Estructura de Criterios</h3>
+        {standardId && (
+          <button
+            type="button"
+            onClick={handleCreateCriterion}
+            className={styles.createButton}
+            title="Crear nuevo criterio"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M8 1V15M1 8H15"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+            Nuevo Criterio
+          </button>
+        )}
       </div>
       
       <div className={styles.content}>
@@ -246,6 +343,31 @@ export function CriteriaNavigation({
                       <span className={styles.criterionName}>{criterion.name}</span>
                     </div>
 
+                    {/* Edit Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => handleEditCriterion(criterion, e)}
+                      className={styles.editButton}
+                      title="Editar criterio"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="m18.5 2.5 A2.121 2.121 0 0 1 21 4.5L20 5.5l-3 3L12 13.5 9 12.5 10.5 9.5 18.5 2.5z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+
                     {/* Toggle Switch */}
                     <button
                       type="button"
@@ -269,9 +391,43 @@ export function CriteriaNavigation({
                       ) : criterionSubCriteria.length === 0 ? (
                         <div className={styles.emptySubcriteria}>
                           <p>No hay subcriterios disponibles</p>
+                          <button
+                            type="button"
+                            onClick={(e) => handleCreateSubCriterion(criterion, e)}
+                            className={styles.createSubButton}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                              <path
+                                d="M8 1V15M1 8H15"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                            Agregar Subcriterio
+                          </button>
                         </div>
                       ) : (
-                        <div className={styles.subCriteriaList}>
+                        <div className={styles.subCriteriaListContainer}>
+                          <div className={styles.subCriteriaHeader}>
+                            <span className={styles.subCriteriaTitle}>Subcriterios ({criterionSubCriteria.length})</span>
+                            <button
+                              type="button"
+                              onClick={(e) => handleCreateSubCriterion(criterion, e)}
+                              className={styles.createSubButtonSmall}
+                              title="Agregar subcriterio"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                                <path
+                                  d="M8 1V15M1 8H15"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                          <div className={styles.subCriteriaList}>
                           {criterionSubCriteria.map((subCriterion) => {
                             const subToggleKey = `subcriterion-${subCriterion.id}`;
                             const isSubToggling = toggleLoading.has(subToggleKey);
@@ -294,6 +450,31 @@ export function CriteriaNavigation({
                                   <span className={styles.subCriterionName}>{subCriterion.name}</span>
                                 </div>
 
+                                {/* Edit SubCriterion Button */}
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleEditSubCriterion(criterion, subCriterion, e)}
+                                  className={styles.editSubButton}
+                                  title="Editar subcriterio"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                      d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                    <path
+                                      d="m18.5 2.5 A2.121 2.121 0 0 1 21 4.5L20 5.5l-3 3L12 13.5 9 12.5 10.5 9.5 18.5 2.5z"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </button>
+
                                 {/* Subcriteria toggle switch */}
                                 <button
                                   type="button"
@@ -307,6 +488,7 @@ export function CriteriaNavigation({
                               </div>
                             );
                           })}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -317,6 +499,24 @@ export function CriteriaNavigation({
           </div>
         )}
       </div>
+      
+      {isFormOpen && (
+        <CriterionFormDrawer
+          criterion={editingCriterion}
+          standardId={standardId}
+          onClose={handleCloseForm}
+          onSave={handleCriterionSaved}
+        />
+      )}
+      
+      {isSubFormOpen && (
+        <SubCriterionFormDrawer
+          subCriterion={editingSubCriterion}
+          criterionId={parentCriterion?.id}
+          onClose={handleCloseSubForm}
+          onSave={handleSubCriterionSaved}
+        />
+      )}
     </div>
   );
 }
