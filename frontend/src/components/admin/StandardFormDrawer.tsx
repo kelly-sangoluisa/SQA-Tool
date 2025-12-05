@@ -5,7 +5,7 @@ import styles from './StandardFormDrawer.module.css';
 interface StandardFormDrawerProps {
   standard?: Standard | null;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (savedStandard?: Standard) => void;
 }
 
 interface FormData {
@@ -63,6 +63,8 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
 
     setLoading(true);
     try {
+      let savedStandard: Standard;
+      
       if (standard) {
         // Update existing standard
         const updateData: UpdateStandardDto = {
@@ -71,7 +73,7 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
           version: formData.version.trim() || undefined
         };
         
-        await parameterizationApi.updateStandard(standard.id, updateData);
+        savedStandard = await parameterizationApi.updateStandard(standard.id, updateData);
       } else {
         // Create new standard
         const createData: CreateStandardDto = {
@@ -81,10 +83,10 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
         };
         
         console.log('Creating standard with data:', createData); // Debug log
-        await parameterizationApi.createStandard(createData);
+        savedStandard = await parameterizationApi.createStandard(createData);
       }
       
-      onSave();
+      onSave(savedStandard);
     } catch (error) {
       console.error('Error saving standard:', error);
       

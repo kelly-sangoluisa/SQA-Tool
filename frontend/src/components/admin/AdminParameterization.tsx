@@ -16,7 +16,9 @@ export function AdminParameterization() {
     authLoading,
     isAuthenticated,
     loadStandards,
-    toggleStandardState
+    toggleStandardState,
+    updateStandard,
+    addStandard
   } = useStandardsManagement();
   
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null);
@@ -47,8 +49,20 @@ export function AdminParameterization() {
     setEditingStandard(null);
   };
 
-  const handleStandardSaved = () => {
-    loadStandards();
+  const handleStandardSaved = (savedStandard?: Standard) => {
+    // Si tenemos el estándar actualizado, usarlo para actualización optimista
+    if (savedStandard) {
+      if (editingStandard) {
+        // Es una actualización
+        updateStandard(savedStandard);
+      } else {
+        // Es una creación
+        addStandard(savedStandard);
+      }
+    } else {
+      // Fallback: recargar toda la lista si no tenemos el estándar
+      loadStandards();
+    }
     handleCloseForm();
   };
 

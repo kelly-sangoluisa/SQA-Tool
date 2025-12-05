@@ -89,14 +89,32 @@ export function CriteriaNavigation({
     
     if (toggleLoading.has(toggleKey)) return;
 
+    const newState = criterion.state === 'active' ? 'inactive' : 'active';
+    
+    // Cambio optimista: actualizar UI inmediatamente
+    setCriteria(prevCriteria => 
+      prevCriteria.map(c => 
+        c.id === criterion.id 
+          ? { ...c, state: newState }
+          : c
+      )
+    );
+
     setToggleLoading(prev => new Set([...prev, toggleKey]));
     try {
-      const newState = criterion.state === 'active' ? 'inactive' : 'active';
       await parameterizationApi.updateCriterionState(criterion.id, { state: newState });
-      await loadCriteria();
       onRefresh?.();
     } catch (error) {
       console.error('Error updating criterion state:', error);
+      
+      // Revertir el cambio si falla
+      setCriteria(prevCriteria => 
+        prevCriteria.map(c => 
+          c.id === criterion.id 
+            ? { ...c, state: criterion.state }
+            : c
+        )
+      );
     } finally {
       setToggleLoading(prev => {
         const newSet = new Set(prev);
@@ -112,21 +130,40 @@ export function CriteriaNavigation({
     
     if (toggleLoading.has(toggleKey)) return;
 
+    const newState = subCriterion.state === 'active' ? 'inactive' : 'active';
+    const criterionId = subCriterion.criterion_id;
+    
+    // Cambio optimista: actualizar UI inmediatamente
+    setSubCriteria(prev => {
+      const updated = { ...prev };
+      if (updated[criterionId]) {
+        updated[criterionId] = updated[criterionId].map(sc => 
+          sc.id === subCriterion.id 
+            ? { ...sc, state: newState }
+            : sc
+        );
+      }
+      return updated;
+    });
+
     setToggleLoading(prev => new Set([...prev, toggleKey]));
     try {
-      const newState = subCriterion.state === 'active' ? 'inactive' : 'active';
       await parameterizationApi.updateSubCriterionState(subCriterion.id, { state: newState });
-      
-      // Refresh the subcriteria for this criterion
-      const criterionId = subCriterion.criterion_id;
-      setSubCriteria(prev => {
-        const updated = { ...prev };
-        delete updated[criterionId];
-        return updated;
-      });
-      await loadSubCriteria(criterionId);
     } catch (error) {
       console.error('Error updating subcriterion state:', error);
+      
+      // Revertir el cambio si falla
+      setSubCriteria(prev => {
+        const updated = { ...prev };
+        if (updated[criterionId]) {
+          updated[criterionId] = updated[criterionId].map(sc => 
+            sc.id === subCriterion.id 
+              ? { ...sc, state: subCriterion.state }
+              : sc
+          );
+        }
+        return updated;
+      });
     } finally {
       setToggleLoading(prev => {
         const newSet = new Set(prev);

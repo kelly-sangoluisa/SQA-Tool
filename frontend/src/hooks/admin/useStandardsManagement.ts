@@ -29,14 +29,49 @@ export function useStandardsManagement() {
   };
 
   const toggleStandardState = async (standard: Standard) => {
+    const newState = standard.state === 'active' ? 'inactive' : 'active';
+    
+    // Actualización optimista: cambiar el estado inmediatamente en la UI
+    setStandards(prevStandards => 
+      prevStandards.map(s => 
+        s.id === standard.id 
+          ? { ...s, state: newState }
+          : s
+      )
+    );
+    
     try {
-      const newState = standard.state === 'active' ? 'inactive' : 'active';
+      // Hacer la petición al servidor
       await parameterizationApi.updateStandardState(standard.id, { state: newState });
-      await loadStandards();
     } catch (error) {
       console.error('Error updating standard state:', error);
       setError('Error al actualizar el estado del estándar');
+      
+      // Revertir el cambio si falla la petición
+      setStandards(prevStandards => 
+        prevStandards.map(s => 
+          s.id === standard.id 
+            ? { ...s, state: standard.state }
+            : s
+        )
+      );
     }
+  };
+
+  const updateStandard = (updatedStandard: Standard) => {
+    // Actualización optimista: actualizar el estándar inmediatamente en la UI
+    setStandards(prevStandards => 
+      prevStandards.map(s => 
+        s.id === updatedStandard.id 
+          ? updatedStandard
+          : s
+      )
+    );
+  };
+
+  const addStandard = (newStandard: Standard) => {
+    // Agregar nuevo estándar a la lista
+    setStandards(prevStandards => [...prevStandards, newStandard]);
   };
 
   return {
@@ -46,6 +81,8 @@ export function useStandardsManagement() {
     authLoading,
     isAuthenticated,
     loadStandards,
-    toggleStandardState
+    toggleStandardState,
+    updateStandard,
+    addStandard
   };
 }
