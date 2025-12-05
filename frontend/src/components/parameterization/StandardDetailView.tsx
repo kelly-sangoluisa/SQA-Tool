@@ -40,8 +40,8 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
 
   const loadSubCriteria = async (criterionId: number) => {
     try {
-      const criterion = await parameterizationApi.getCriterionById(criterionId);
-      return criterion.sub_criteria || [];
+      const subCriteriaData = await parameterizationApi.getSubCriteriaByCriterion(criterionId, { state: 'all' });
+      return subCriteriaData || [];
     } catch (error) {
       console.error('Error loading subcriteria:', error);
       return [];

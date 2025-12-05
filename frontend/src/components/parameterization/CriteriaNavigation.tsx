@@ -52,16 +52,19 @@ export function CriteriaNavigation({
   useEffect(() => {
     if (standardId) {
       loadCriteria();
+      // Limpiar subcriterios cuando se cambie de estándar
+      setSubCriteria({});
+      setExpandedCriteria(new Set());
     }
   }, [standardId, loadCriteria]);
 
-  const loadSubCriteria = async (criterionId: number) => {
-    if (subCriteria[criterionId]) return;
+  const loadSubCriteria = async (criterionId: number, forceRefresh: boolean = false) => {
+    if (subCriteria[criterionId] && !forceRefresh) return;
 
     setLoadingSubCriteria(prev => new Set([...prev, criterionId]));
     try {
-      const criterion = await parameterizationApi.getCriterionById(criterionId);
-      const subCriteriaData = criterion.sub_criteria || [];
+      // Usar la función específica para obtener subcriterios con estado 'all'
+      const subCriteriaData = await parameterizationApi.getSubCriteriaByCriterion(criterionId, { state: 'all' });
       setSubCriteria(prev => ({
         ...prev,
         [criterionId]: subCriteriaData
@@ -202,7 +205,16 @@ export function CriteriaNavigation({
       // Fallback: recargar toda la lista si no tenemos el criterio
       loadCriteria();
     }
+    // Limpiar cache de subcriterios para este criterio
+    if (savedCriterion) {
+      setSubCriteria(prev => {
+        const updated = { ...prev };
+        delete updated[savedCriterion.id];
+        return updated;
+      });
+    }
     handleCloseForm();
+    onRefresh?.();
   };
 
   const handleEditSubCriterion = (criterion: Criterion, subCriterion: SubCriterion, e: React.MouseEvent) => {
@@ -231,26 +243,12 @@ export function CriteriaNavigation({
 
   const handleSubCriterionSaved = (savedSubCriterion?: SubCriterion) => {
     if (savedSubCriterion && parentCriterion) {
-      // Actualizar la lista de subcriterios en el estado local
-      if (editingSubCriterion) {
-        // Es una actualización
-        setSubCriteria(prev => ({
-          ...prev,
-          [parentCriterion.id]: (prev[parentCriterion.id] || []).map(sc =>
-            sc.id === savedSubCriterion.id ? savedSubCriterion : sc
-          )
-        }));
-      } else {
-        // Es una creación
-        setSubCriteria(prev => ({
-          ...prev,
-          [parentCriterion.id]: [...(prev[parentCriterion.id] || []), savedSubCriterion]
-        }));
-      }
+      // Forzar recarga de los subcriterios para asegurar datos actualizados
+      loadSubCriteria(parentCriterion.id, true);
     } else {
       // Fallback: recargar subcriterios si no tenemos el subcriterio
       if (parentCriterion) {
-        loadSubCriteria(parentCriterion.id);
+        loadSubCriteria(parentCriterion.id, true);
       }
     }
     handleCloseSubForm();
@@ -389,7 +387,7 @@ export function CriteriaNavigation({
                           <span>Cargando subcriterios...</span>
                         </div>
                       ) : criterionSubCriteria.length === 0 ? (
-                        <div className={styles.emptySubcriteria}>
+                        <div className={styles.emptySubCriteria}>
                           <p>No hay subcriterios disponibles</p>
                           <button
                             type="button"

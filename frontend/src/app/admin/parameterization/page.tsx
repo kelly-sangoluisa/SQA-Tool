@@ -3,7 +3,7 @@ import { useAuth } from '../../../hooks/auth/useAuth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
-import { AdminParameterization } from '../../../components/admin';
+import { AdminParameterization } from '../../../components/parameterization';
 import '../../../styles/admin/admin.css';
 
 export default function AdminParameterizationPage() {
