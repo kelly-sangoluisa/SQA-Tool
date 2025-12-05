@@ -1,16 +1,15 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/auth/useAuth';
-import { parameterizationApi, Standard, Criterion } from '../../api/parameterization/parameterization-api';
+import { parameterizationApi, Standard } from '../../api/parameterization/parameterization-api';
+import { StandardDetailView } from './StandardDetailView';
 import styles from './AdminParameterization.module.css';
 
 export function AdminParameterization() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'standards' | 'criteria' | 'subcriteria' | 'metrics'>('standards');
   const [standards, setStandards] = useState<Standard[]>([]);
-  const [criteria, setCriteria] = useState<Criterion[]>([]);
+  const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null);
   const [loading, setLoading] = useState(false);
-  const [selectedStandard, setSelectedStandard] = useState<number | null>(null);
 
   useEffect(() => {
     loadStandards();
@@ -19,7 +18,8 @@ export function AdminParameterization() {
   const loadStandards = async () => {
     setLoading(true);
     try {
-      const data = await parameterizationApi.getStandards();
+      // Load all standards including inactive ones
+      const data = await parameterizationApi.getStandards({ state: 'all' });
       setStandards(data);
     } catch (error) {
       console.error('Error loading standards:', error);
@@ -28,164 +28,133 @@ export function AdminParameterization() {
     }
   };
 
-  const loadCriteria = async (standardId: number) => {
-    setLoading(true);
+  const handleToggleStandardState = async (standard: Standard) => {
     try {
-      const data = await parameterizationApi.getCriteriaByStandard(standardId);
-      setCriteria(data);
+      const newState = standard.state === 'active' ? 'inactive' : 'active';
+      await parameterizationApi.updateStandardState(standard.id, { state: newState });
+      // Reload standards to reflect the change
+      loadStandards();
     } catch (error) {
-      console.error('Error loading criteria:', error);
-      setCriteria([]);
-    } finally {
-      setLoading(false);
+      console.error('Error updating standard state:', error);
     }
   };
 
-  const handleStandardSelect = (standardId: number) => {
-    setSelectedStandard(standardId);
-    loadCriteria(standardId);
+  const handleStandardSelect = (standard: Standard) => {
+    setSelectedStandard(standard);
   };
 
-  const renderStandards = () => (
-    <div className={styles.tabContent}>
-      <div className={styles.sectionHeader}>
-        <h3>Gestión de Estándares</h3>
-        <button className={styles.addBtn}>+ Nuevo Estándar</button>
-      </div>
-      
-      {loading ? (
-        <div className={styles.loading}>Cargando estándares...</div>
-      ) : (
-        <div className={styles.grid}>
-          {standards.map((standard) => (
-            <div 
-              key={standard.id} 
-              className={`${styles.card} ${selectedStandard === standard.id ? styles.selected : ''}`}
-              onClick={() => handleStandardSelect(standard.id)}
-            >
-              <div className={styles.cardHeader}>
-                <h4>{standard.name}</h4>
-                <span className={`${styles.status} ${styles[standard.state]}`}>
-                  {standard.state}
-                </span>
-              </div>
-              <p className={styles.cardDescription}>
-                {standard.description || 'Sin descripción'}
-              </p>
-              <div className={styles.cardFooter}>
-                <span className={styles.cardDate}>
-                  Creado: {new Date(standard.created_at).toLocaleDateString()}
-                </span>
-                <div className={styles.cardActions}>
-                  <button className={styles.editBtn}>Editar</button>
-                  <button className={styles.toggleBtn}>
-                    {standard.state === 'active' ? 'Desactivar' : 'Activar'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  const handleBackToStandards = () => {
+    setSelectedStandard(null);
+  };
 
-  const renderCriteria = () => (
-    <div className={styles.tabContent}>
-      <div className={styles.sectionHeader}>
-        <h3>Gestión de Criterios</h3>
-        {selectedStandard && (
-          <button className={styles.addBtn}>+ Nuevo Criterio</button>
-        )}
-      </div>
+  // If a standard is selected, show the detail view
+  if (selectedStandard) {
+    return (
+      <StandardDetailView 
+        standard={selectedStandard} 
+        onBack={handleBackToStandards}
+      />
+    );
+  }
 
-      {!selectedStandard ? (
-        <div className={styles.emptyState}>
-          <p>Selecciona un estándar desde la pestaña "Estándares" para ver sus criterios</p>
-        </div>
-      ) : loading ? (
-        <div className={styles.loading}>Cargando criterios...</div>
-      ) : (
-        <div className={styles.grid}>
-          {criteria.map((criterion) => (
-            <div key={criterion.id} className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h4>{criterion.name}</h4>
-                <span className={`${styles.status} ${styles[criterion.state]}`}>
-                  {criterion.state}
-                </span>
-              </div>
-              <p className={styles.cardDescription}>
-                {criterion.description || 'Sin descripción'}
-              </p>
-              <div className={styles.cardFooter}>
-                <span className={styles.cardDate}>
-                  Creado: {new Date(criterion.created_at).toLocaleDateString()}
-                </span>
-                <div className={styles.cardActions}>
-                  <button className={styles.editBtn}>Editar</button>
-                  <button className={styles.toggleBtn}>
-                    {criterion.state === 'active' ? 'Desactivar' : 'Activar'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
+  // Otherwise, show the standards grid (Level 1)
   return (
-    <div className={styles.root}>
+    <div className={styles.container}>
       <header className={styles.header}>
-        <h1>Panel de Administración - Parametrización</h1>
-        <p>Gestiona estándares, criterios, subcriterios y métricas del sistema</p>
+        <h1 className={styles.title}>Gestión de Parámetros</h1>
+        <p className={styles.subtitle}>
+          Administra estándares, criterios, sub-criterios y métricas para la evaluación de calidad.
+        </p>
       </header>
 
-      <nav className={styles.tabNav}>
-        <button
-          className={`${styles.tabBtn} ${activeTab === 'standards' ? styles.active : ''}`}
-          onClick={() => setActiveTab('standards')}
-        >
-          Estándares
-        </button>
-        <button
-          className={`${styles.tabBtn} ${activeTab === 'criteria' ? styles.active : ''}`}
-          onClick={() => setActiveTab('criteria')}
-        >
-          Criterios
-        </button>
-        <button
-          className={`${styles.tabBtn} ${activeTab === 'subcriteria' ? styles.active : ''}`}
-          onClick={() => setActiveTab('subcriteria')}
-        >
-          Subcriterios
-        </button>
-        <button
-          className={`${styles.tabBtn} ${activeTab === 'metrics' ? styles.active : ''}`}
-          onClick={() => setActiveTab('metrics')}
-        >
-          Métricas
-        </button>
-      </nav>
+      <div className={styles.content}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Estándares de Calidad</h2>
+          <button className={styles.createButton}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M8 1V15M1 8H15"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+            Nuevo Estándar
+          </button>
+        </div>
+        
+        {loading ? (
+          <div className={styles.loading}>
+            <div className={styles.loadingSpinner}></div>
+            <p>Cargando estándares...</p>
+          </div>
+        ) : (
+          <div className={styles.standardsGrid}>
+            {standards.map((standard) => (
+              <div 
+                key={standard.id} 
+                className={styles.standardCard}
+                onClick={() => handleStandardSelect(standard)}
+              >
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>{standard.name}</h3>
+                  <div className={styles.cardActions}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleStandardState(standard);
+                      }}
+                      className={`${styles.toggleButton} ${standard.state === 'active' ? styles.active : styles.inactive}`}
+                      title={`${standard.state === 'active' ? 'Desactivar' : 'Activar'} estándar`}
+                    >
+                      <div className={styles.toggleSlider}></div>
+                    </button>
+                    <span className={`${styles.status} ${styles[standard.state]}`}>
+                      {standard.state}
+                    </span>
+                  </div>
+                </div>
+                
+                <p className={styles.cardDescription}>
+                  {standard.description || 'Sin descripción disponible'}
+                </p>
+                
+                <div className={styles.cardMeta}>
+                  <span className={styles.version}>v{standard.version}</span>
+                  <span className={styles.date}>
+                    {new Date(standard.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                
+                <div className={styles.cardFooter}>
+                  <button className={styles.viewButton}>
+                    Ver Detalle
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M6 12L10 8L6 4"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
-      <main className={styles.main}>
-        {activeTab === 'standards' && renderStandards()}
-        {activeTab === 'criteria' && renderCriteria()}
-        {activeTab === 'subcriteria' && (
-          <div className={styles.comingSoon}>
-            <h3>Subcriterios</h3>
-            <p>Funcionalidad en desarrollo...</p>
+        {!loading && standards.length === 0 && (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>📊</div>
+            <h3>No hay estándares definidos</h3>
+            <p>Comienza creando el primer estándar de calidad para tu organización.</p>
+            <button className={styles.emptyButton}>Crear Primer Estándar</button>
           </div>
         )}
-        {activeTab === 'metrics' && (
-          <div className={styles.comingSoon}>
-            <h3>Métricas</h3>
-            <p>Funcionalidad en desarrollo...</p>
-          </div>
-        )}
-      </main>
+      </div>
     </div>
   );
 }
