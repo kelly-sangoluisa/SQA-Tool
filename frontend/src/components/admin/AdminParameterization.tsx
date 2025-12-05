@@ -7,15 +7,19 @@ import { StandardFormDrawer } from './StandardFormDrawer';
 import styles from './AdminParameterization.module.css';
 
 export function AdminParameterization() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [standards, setStandards] = useState<Standard[]>([]);
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null);
   const [loading, setLoading] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingStandard, setEditingStandard] = useState<Standard | null>(null);
 
   useEffect(() => {
-    loadStandards();
-  }, []);
+    // Only load standards when authenticated and not loading auth
+    if (isAuthenticated && !authLoading) {
+      loadStandards();
+    }
+  }, [isAuthenticated, authLoading]);
 
   const loadStandards = async () => {
     setLoading(true);
@@ -50,11 +54,19 @@ export function AdminParameterization() {
   };
 
   const handleCreateStandard = () => {
+    setEditingStandard(null);
+    setIsFormOpen(true);
+  };
+
+  const handleEditStandard = (standard: Standard, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card selection
+    setEditingStandard(standard);
     setIsFormOpen(true);
   };
 
   const handleCloseForm = () => {
     setIsFormOpen(false);
+    setEditingStandard(null);
   };
 
   const handleStandardSaved = () => {
@@ -69,6 +81,17 @@ export function AdminParameterization() {
         standard={selectedStandard} 
         onBack={handleBackToStandards}
       />
+    );
+  }
+
+  // Show loading while auth is being checked
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>
+          {authLoading ? 'Verificando autenticación...' : 'No autorizado'}
+        </div>
+      </div>
     );
   }
 
@@ -116,40 +139,39 @@ export function AdminParameterization() {
                 onClick={() => handleStandardSelect(standard)}
               >
                 <div className={styles.cardHeader}>
-                  <h3 className={styles.cardTitle}>{standard.name}</h3>
-                  <div className={styles.cardActions}>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleStandardState(standard);
-                      }}
-                      className={`${styles.toggleButton} ${standard.state === 'active' ? styles.active : styles.inactive}`}
-                      title={`${standard.state === 'active' ? 'Desactivar' : 'Activar'} estándar`}
-                    >
-                      <div className={styles.toggleSlider}></div>
-                    </button>
-                    <span className={`${styles.status} ${styles[standard.state]}`}>
-                      {standard.state}
+                  <div className={styles.titleSection}>
+                    <h3 className={styles.cardTitle}>{standard.name}</h3>
+                    <span className={styles.date}>
+                      {new Date(standard.created_at).toLocaleDateString()}
                     </span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={(e) => handleEditStandard(standard, e)}
+                    className={styles.editButton}
+                    title="Editar estándar"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M11.013 1.987L12.013 0.987C12.3984 0.6016 12.9496 0.3867 13.5225 0.3867C14.0954 0.3867 14.6466 0.6016 15.032 0.987C15.4174 1.3724 15.6323 1.9236 15.6323 2.4965C15.6323 3.0694 15.4174 3.6206 15.032 3.006L5.5 13.538H1V9.038L11.013 1.025V1.987Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        fill="none"
+                      />
+                    </svg>
+                  </button>
                 </div>
                 
                 <p className={styles.cardDescription}>
                   {standard.description || 'Sin descripción disponible'}
                 </p>
                 
-                <div className={styles.cardMeta}>
-                  <span className={styles.version}>v{standard.version}</span>
-                  <span className={styles.date}>
-                    {new Date(standard.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-                
                 <div className={styles.cardFooter}>
                   <button className={styles.viewButton}>
                     Ver Detalle
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                       <path
                         d="M6 12L10 8L6 4"
                         stroke="currentColor"
@@ -158,6 +180,18 @@ export function AdminParameterization() {
                         strokeLinejoin="round"
                       />
                     </svg>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleStandardState(standard);
+                    }}
+                    className={`${styles.toggleButton} ${standard.state === 'active' ? styles.active : styles.inactive}`}
+                    title={`${standard.state === 'active' ? 'Desactivar' : 'Activar'} estándar`}
+                  >
+                    <div className={styles.toggleSlider}></div>
                   </button>
                 </div>
               </div>
@@ -177,6 +211,7 @@ export function AdminParameterization() {
       
       {isFormOpen && (
         <StandardFormDrawer
+          standard={editingStandard}
           onClose={handleCloseForm}
           onSave={handleStandardSaved}
         />

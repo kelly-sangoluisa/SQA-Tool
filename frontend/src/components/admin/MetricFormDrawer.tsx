@@ -30,6 +30,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isVisible, setIsVisible] = useState(false);
+  const [tempIdCounter, setTempIdCounter] = useState(0);
 
   useEffect(() => {
     setIsVisible(true);
@@ -159,11 +160,12 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
   };
 
   const addVariable = () => {
+    setTempIdCounter(prev => prev + 1);
     setFormData(prev => ({
       ...prev,
       variables: [
         ...prev.variables,
-        { symbol: '', description: '', tempId: `temp-${Date.now()}` }
+        { symbol: '', description: '', tempId: `temp-${tempIdCounter + 1}` }
       ]
     }));
   };

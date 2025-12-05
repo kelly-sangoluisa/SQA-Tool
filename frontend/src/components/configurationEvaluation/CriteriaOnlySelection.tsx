@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { parameterizationApi, Criterion } from '@/api/parameterization/parameterization-api';
 import { Button, Loading } from '../shared';
 import { ImportanceLevel, SelectedCriterion } from '@/types/configurationEvaluation.types';
@@ -31,6 +32,7 @@ export function CriteriaOnlySelection({
   onNext,
   onBack,
 }: CriteriaOnlySelectionProps) {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set(initialSelectedIds));
   const [criteriaImportance, setCriteriaImportance] = useState<Map<number, CriteriaImportanceData>>(new Map());
@@ -39,8 +41,11 @@ export function CriteriaOnlySelection({
   const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadCriteria();
-  }, [standardId]);
+    // Only load criteria when authenticated and not loading auth
+    if (isAuthenticated && !authLoading) {
+      loadCriteria();
+    }
+  }, [standardId, isAuthenticated, authLoading]);
 
   const loadCriteria = async () => {
     try {

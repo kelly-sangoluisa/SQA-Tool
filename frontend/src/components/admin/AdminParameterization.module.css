@@ -98,16 +98,16 @@
 
 .standardsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .standardCard {
   background: var(--color-white);
-  border-radius: 16px;
-  padding: 2rem 1.5rem;
-  box-shadow: 0 4px 20px rgb(78 94 163 / 0.08);
+  border-radius: 12px;
+  padding: 1.5rem 1.25rem;
+  box-shadow: 0 2px 12px rgb(78 94 163 / 0.08);
   border: 1px solid rgb(78 94 163 / 0.1);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -125,16 +125,42 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.titleSection {
+  flex: 1;
+  min-width: 0;
 }
 
 .cardTitle {
-  font-size: 1.25rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--color-primary);
-  margin: 0;
-  line-height: 1.3;
-  flex: 1;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.date {
+  font-size: 0.7rem;
+  color: rgb(107 114 128 / 1);
+  font-weight: 400;
+}
+
+.cardHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.toggleActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .status {
@@ -160,14 +186,14 @@
 }
 
 .cardDescription {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: rgb(107 114 128 / 1);
-  line-height: 1.6;
-  margin: 0 0 1.5rem 0;
-  min-height: 2.4em;
+  line-height: 1.3;
+  margin: 0 0 1rem 0;
+  min-height: auto;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -176,11 +202,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.4rem 0.6rem;
   background: rgb(249 250 251 / 1);
-  border-radius: 8px;
-  font-size: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
 }
 
 .version {
@@ -198,19 +224,23 @@
 
 .cardFooter {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgb(229 231 235 / 1);
 }
 
 .viewButton {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   background: none;
   border: 2px solid var(--color-primary);
   color: var(--color-primary);
-  border-radius: 10px;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+  border-radius: 6px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -293,6 +323,13 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .standardsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
@@ -314,11 +351,11 @@
   
   .standardsGrid {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
   }
   
   .standardCard {
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 1rem;
   }
   
   .cardHeader {
@@ -544,13 +581,40 @@
   gap: 0.75rem;
 }
 
+.editButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 5px;
+  color: #3b82f6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.editButton:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.editButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
 .toggleButton {
   position: relative;
-  width: 44px;
-  height: 24px;
+  width: 40px;
+  height: 22px;
   background-color: #e5e7eb;
   border: none;
-  border-radius: 12px;
+  border-radius: 11px;
   cursor: pointer;
   transition: background-color 0.3s ease;
   padding: 0;
@@ -573,8 +637,8 @@
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   background-color: white;
   border-radius: 50%;
   transition: transform 0.3s ease;
@@ -582,7 +646,7 @@
 }
 
 .toggleButton.active .toggleSlider {
-  transform: translateX(20px);
+  transform: translateX(18px);
 }
 
 .toggleButton.inactive .toggleSlider {

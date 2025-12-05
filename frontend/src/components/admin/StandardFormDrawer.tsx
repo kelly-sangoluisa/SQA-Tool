@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { parameterizationApi, CreateStandardDto } from '../../api/parameterization/parameterization-api';
+import { parameterizationApi, CreateStandardDto, UpdateStandardDto, Standard } from '../../api/parameterization/parameterization-api';
 import styles from './StandardFormDrawer.module.css';
 
 interface StandardFormDrawerProps {
+  standard?: Standard | null;
   onClose: () => void;
   onSave: () => void;
 }
@@ -13,11 +14,11 @@ interface FormData {
   version: string;
 }
 
-export function StandardFormDrawer({ onClose, onSave }: StandardFormDrawerProps) {
+export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDrawerProps) {
   const [formData, setFormData] = useState<FormData>({
-    name: '',
-    description: '',
-    version: '1.0'
+    name: standard?.name || '',
+    description: standard?.description || '',
+    version: standard?.version || '1.0'
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -51,17 +52,30 @@ export function StandardFormDrawer({ onClose, onSave }: StandardFormDrawerProps)
 
     setLoading(true);
     try {
-      const createData: CreateStandardDto = {
-        name: formData.name,
-        description: formData.description || undefined,
-        version: formData.version
-      };
+      if (standard) {
+        // Update existing standard
+        const updateData: UpdateStandardDto = {
+          name: formData.name,
+          description: formData.description || undefined,
+          version: formData.version
+        };
+        
+        await parameterizationApi.updateStandard(standard.id, updateData);
+      } else {
+        // Create new standard
+        const createData: CreateStandardDto = {
+          name: formData.name,
+          description: formData.description || undefined,
+          version: formData.version
+        };
+        
+        await parameterizationApi.createStandard(createData);
+      }
       
-      await parameterizationApi.createStandard(createData);
       onSave();
     } catch (error) {
-      console.error('Error creating standard:', error);
-      setErrors({ general: 'Error al crear el estándar' });
+      console.error('Error saving standard:', error);
+      setErrors({ general: standard ? 'Error al actualizar el estándar' : 'Error al crear el estándar' });
     } finally {
       setLoading(false);
     }
@@ -85,9 +99,14 @@ export function StandardFormDrawer({ onClose, onSave }: StandardFormDrawerProps)
       <div className={`${styles.drawer} ${isVisible ? styles.open : ''}`}>
         <div className={styles.header}>
           <div className={styles.titleSection}>
-            <h2 className={styles.title}>Nuevo Estándar</h2>
+            <h2 className={styles.title}>
+              {standard ? 'Editar Estándar' : 'Nuevo Estándar'}
+            </h2>
             <p className={styles.subtitle}>
-              Crea un nuevo estándar de calidad para tu organización
+              {standard 
+                ? 'Modifica la información del estándar de calidad'
+                : 'Crea un nuevo estándar de calidad para tu organización'
+              }
             </p>
           </div>
           
@@ -189,10 +208,10 @@ export function StandardFormDrawer({ onClose, onSave }: StandardFormDrawerProps)
               {loading ? (
                 <>
                   <div className={styles.spinner}></div>
-                  Creando...
+                  {standard ? 'Actualizando...' : 'Creando...'}
                 </>
               ) : (
-                'Crear Estándar'
+                standard ? 'Actualizar Estándar' : 'Crear Estándar'
               )}
             </button>
           </div>
