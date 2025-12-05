@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/auth/useAuth';
 import { parameterizationApi, Standard } from '../../api/parameterization/parameterization-api';
 import { StandardDetailView } from './StandardDetailView';
+import { StandardFormDrawer } from './StandardFormDrawer';
 import styles from './AdminParameterization.module.css';
 
 export function AdminParameterization() {
@@ -10,6 +11,7 @@ export function AdminParameterization() {
   const [standards, setStandards] = useState<Standard[]>([]);
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     loadStandards();
@@ -47,6 +49,19 @@ export function AdminParameterization() {
     setSelectedStandard(null);
   };
 
+  const handleCreateStandard = () => {
+    setIsFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+  };
+
+  const handleStandardSaved = () => {
+    loadStandards();
+    handleCloseForm();
+  };
+
   // If a standard is selected, show the detail view
   if (selectedStandard) {
     return (
@@ -70,7 +85,11 @@ export function AdminParameterization() {
       <div className={styles.content}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Estándares de Calidad</h2>
-          <button className={styles.createButton}>
+          <button 
+            className={styles.createButton}
+            onClick={handleCreateStandard}
+            disabled={loading}
+          >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path
                 d="M8 1V15M1 8H15"
@@ -155,6 +174,13 @@ export function AdminParameterization() {
           </div>
         )}
       </div>
+      
+      {isFormOpen && (
+        <StandardFormDrawer
+          onClose={handleCloseForm}
+          onSave={handleStandardSaved}
+        />
+      )}
     </div>
   );
 }
