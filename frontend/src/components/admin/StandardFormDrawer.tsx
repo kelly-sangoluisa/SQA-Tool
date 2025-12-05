@@ -31,12 +31,23 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
+    // Validar nombre (requerido)
     if (!formData.name.trim()) {
       newErrors.name = 'El nombre es requerido';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'El nombre debe tener al menos 2 caracteres';
+    } else if (formData.name.trim().length > 100) {
+      newErrors.name = 'El nombre no puede exceder 100 caracteres';
     }
 
-    if (!formData.version.trim()) {
-      newErrors.version = 'La versión es requerida';
+    // Validar descripción (opcional pero con límites)
+    if (formData.description.trim() && formData.description.trim().length > 500) {
+      newErrors.description = 'La descripción no puede exceder 500 caracteres';
+    }
+
+    // Validar versión (opcional pero con límites)
+    if (formData.version.trim() && formData.version.trim().length > 20) {
+      newErrors.version = 'La versión no puede exceder 20 caracteres';
     }
 
     setErrors(newErrors);
@@ -55,27 +66,47 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
       if (standard) {
         // Update existing standard
         const updateData: UpdateStandardDto = {
-          name: formData.name,
-          description: formData.description || undefined,
-          version: formData.version
+          name: formData.name.trim(),
+          description: formData.description.trim() || undefined,
+          version: formData.version.trim() || undefined
         };
         
         await parameterizationApi.updateStandard(standard.id, updateData);
       } else {
         // Create new standard
         const createData: CreateStandardDto = {
-          name: formData.name,
-          description: formData.description || undefined,
-          version: formData.version
+          name: formData.name.trim(),
+          description: formData.description.trim() || undefined,
+          version: formData.version.trim() || undefined
         };
         
+        console.log('Creating standard with data:', createData); // Debug log
         await parameterizationApi.createStandard(createData);
       }
       
       onSave();
     } catch (error) {
       console.error('Error saving standard:', error);
-      setErrors({ general: standard ? 'Error al actualizar el estándar' : 'Error al crear el estándar' });
+      
+      // Mejorar el manejo de errores
+      let errorMessage = standard ? 'Error al actualizar el estándar' : 'Error al crear el estándar';
+      
+      if (error instanceof Error) {
+        // Intentar extraer más información del error
+        if (error.message.includes('name')) {
+          errorMessage = 'Error: El nombre del estándar ya existe o es inválido';
+        } else if (error.message.includes('version')) {
+          errorMessage = 'Error: La versión del estándar es inválida';
+        } else if (error.message.includes('description')) {
+          errorMessage = 'Error: La descripción es muy larga';
+        } else if (error.message.includes('Internal server error')) {
+          errorMessage = 'Error del servidor. Verifica que todos los campos sean válidos.';
+        } else {
+          errorMessage = `${errorMessage}: ${error.message}`;
+        }
+      }
+      
+      setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
     }

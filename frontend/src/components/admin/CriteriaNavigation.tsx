@@ -145,7 +145,7 @@ export function CriteriaNavigation({
       <div className={styles.container}>
         <div className={styles.loading}>
           <div className={styles.loadingSpinner}></div>
-          <p>Loading criteria...</p>
+          <p>Cargando criterios...</p>
         </div>
       </div>
     );
@@ -154,13 +154,13 @@ export function CriteriaNavigation({
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3>Criteria Structure</h3>
+        <h3>Estructura de Criterios</h3>
       </div>
       
       <div className={styles.content}>
         {criteria.length === 0 ? (
           <div className={styles.empty}>
-            <p>No criteria available</p>
+            <p>No hay criterios disponibles</p>
           </div>
         ) : (
           <div className={styles.criteriaList}>
@@ -175,58 +175,50 @@ export function CriteriaNavigation({
                 <div key={criterion.id} className={styles.criterionItem}>
                   {/* Criterion Header */}
                   <div className={`${styles.criterionHeader} ${styles[criterion.state]}`}>
-                    {/* Clickable area for expansion */}
+                    {/* Expand/Collapse Icon */}
+                    <button
+                      className={styles.expandButton}
+                      onClick={() => toggleCriterionExpansion(criterion)}
+                      title={isExpanded ? 'Contraer' : 'Expandir'}
+                    >
+                      <svg 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 16 16" 
+                        style={{ 
+                          transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.2s ease'
+                        }}
+                      >
+                        <path
+                          d="M6 12L10 8L6 4"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                        />
+                      </svg>
+                    </button>
+
+                    {/* Criterion Name - Clickable */}
                     <div
                       className={styles.criterionClickArea}
-                      onClick={() => toggleCriterionExpansion(criterion)}
+                      onClick={() => onCriterionSelect?.(criterion)}
                     >
-                      <div className={styles.criterionContent}>
-                        <div className={styles.criterionInfo}>
-                          <span className={styles.criterionName}>{criterion.name}</span>
-                          <span className={`${styles.status} ${styles[criterion.state]}`}>
-                            {criterion.state}
-                          </span>
-                        </div>
-                        
-                        {criterion.description && (
-                          <p className={styles.criterionDescription}>{criterion.description}</p>
-                        )}
-                        
-                        <div className={styles.expandIcon}>
-                          <svg 
-                            width="16" 
-                            height="16" 
-                            viewBox="0 0 16 16" 
-                            style={{ 
-                              transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                              transition: 'transform 0.2s ease'
-                            }}
-                          >
-                            <path
-                              d="M6 12L10 8L6 4"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              fill="none"
-                            />
-                          </svg>
-                        </div>
-                      </div>
+                      <span className={styles.criterionName}>{criterion.name}</span>
                     </div>
 
-                    {/* Toggle switch - separate from clickable area */}
-                    <div className={styles.criterionActions}>
-                      <button
-                        type="button"
-                        onClick={(e) => toggleCriterionState(criterion, e)}
-                        className={`${styles.toggleButton} ${criterion.state === 'active' ? styles.active : styles.inactive}`}
-                        disabled={isToggling}
-                        title={`${criterion.state === 'active' ? 'Deactivate' : 'Activate'} criterion`}
-                      >
-                        <div className={styles.toggleSlider}></div>
-                      </button>
-                    </div>
+                    {/* Toggle Switch */}
+                    <button
+                      type="button"
+                      onClick={(e) => toggleCriterionState(criterion, e)}
+                      className={`${styles.toggleButton} ${criterion.state === 'active' ? styles.active : styles.inactive}`}
+                      disabled={isToggling}
+                      title={`${criterion.state === 'active' ? 'Desactivar' : 'Activar'} criterio`}
+                    >
+                      <div className={styles.toggleSlider}></div>
+                    </button>
                   </div>
 
                   {/* Subcriteria */}
@@ -235,11 +227,11 @@ export function CriteriaNavigation({
                       {isLoadingSubCriteria ? (
                         <div className={styles.loadingSubcriteria}>
                           <div className={styles.loadingSpinner}></div>
-                          <span>Loading subcriteria...</span>
+                          <span>Cargando subcriterios...</span>
                         </div>
                       ) : criterionSubCriteria.length === 0 ? (
                         <div className={styles.emptySubcriteria}>
-                          <p>No subcriteria available</p>
+                          <p>No hay subcriterios disponibles</p>
                         </div>
                       ) : (
                         <div className={styles.subCriteriaList}>
@@ -252,36 +244,29 @@ export function CriteriaNavigation({
                                 key={subCriterion.id}
                                 className={`${styles.subCriterionItem} ${styles[subCriterion.state]}`}
                               >
-                                {/* Subcriteria clickable area */}
+                                {/* Subcriteria icon placeholder */}
+                                <div className={styles.subCriterionIcon}>
+                                  <div className={styles.subCriterionDot}></div>
+                                </div>
+
+                                {/* Subcriteria name - clickable */}
                                 <div
                                   className={styles.subCriterionClickArea}
                                   onClick={() => handleSubCriterionClick(criterion, subCriterion)}
                                 >
-                                  <div className={styles.subCriterionContent}>
-                                    <div className={styles.subCriterionInfo}>
-                                      <span className={styles.subCriterionName}>{subCriterion.name}</span>
-                                      <span className={`${styles.status} ${styles[subCriterion.state]} ${styles.small}`}>
-                                        {subCriterion.state}
-                                      </span>
-                                    </div>
-                                    {subCriterion.description && (
-                                      <p className={styles.subCriterionDescription}>{subCriterion.description}</p>
-                                    )}
-                                  </div>
+                                  <span className={styles.subCriterionName}>{subCriterion.name}</span>
                                 </div>
 
                                 {/* Subcriteria toggle switch */}
-                                <div className={styles.subCriterionActions}>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => toggleSubCriterionState(subCriterion, e)}
-                                    className={`${styles.toggleButton} ${subCriterion.state === 'active' ? styles.active : styles.inactive}`}
-                                    disabled={isSubToggling}
-                                    title={`${subCriterion.state === 'active' ? 'Deactivate' : 'Activate'} subcriterion`}
-                                  >
-                                    <div className={styles.toggleSlider}></div>
-                                  </button>
-                                </div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => toggleSubCriterionState(subCriterion, e)}
+                                  className={`${styles.toggleButton} ${subCriterion.state === 'active' ? styles.active : styles.inactive}`}
+                                  disabled={isSubToggling}
+                                  title={`${subCriterion.state === 'active' ? 'Desactivar' : 'Activar'} subcriterio`}
+                                >
+                                  <div className={styles.toggleSlider}></div>
+                                </button>
                               </div>
                             );
                           })}

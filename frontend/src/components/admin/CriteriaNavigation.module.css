@@ -71,39 +71,48 @@
   background: var(--color-white);
 }
 
-.criterionButton {
-  width: 100%;
-  background: none;
-  border: none;
-  padding: 1rem;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: 10px;
-}
-
-.criterionButton:hover {
-  background: rgb(249 250 251 / 1);
-}
-
-.criterionButton.selected {
-  background: rgb(78 94 163 / 0.05);
-  border-color: var(--color-primary);
-}
-
-.criterionContent {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.criterionInfo {
-  flex: 1;
+.criterionHeader {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  padding: 1rem;
+  background: var(--color-white);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.criterionHeader:hover {
+  background: rgb(249 250 251 / 1);
+}
+
+.expandButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgb(249 250 251 / 1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.expandButton:hover {
+  background: rgb(229 231 235 / 1);
+}
+
+.criterionClickArea {
+  flex: 1;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.criterionClickArea:hover {
+  background: rgb(243 244 246 / 1);
 }
 
 .criterionName {
@@ -111,22 +120,10 @@
   color: var(--color-primary);
   font-size: 0.875rem;
   line-height: 1.4;
-}
-
-.criterionDescription {
-  margin: 0.5rem 0 0 0;
-  font-size: 0.75rem;
-  color: rgb(107 114 128 / 1);
-  line-height: 1.4;
-}
-
-.expandIcon {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .chevron {
@@ -138,13 +135,50 @@
   transform: rotate(90deg);
 }
 
-.miniSpinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgb(229 231 235 / 1);
-  border-top: 2px solid var(--color-primary);
+/* Toggle Switch Styles */
+.toggleButton {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  outline: none;
+}
+
+.toggleButton.active {
+  background: var(--color-primary);
+}
+
+.toggleButton.inactive {
+  background: rgb(209 213 219 / 1);
+}
+
+.toggleButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggleSlider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  transition: transform 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.toggleButton.active .toggleSlider {
+  transform: translateX(20px);
+}
+
+.toggleButton.inactive .toggleSlider {
+  transform: translateX(0);
 }
 
 .subCriteriaContainer {
@@ -205,6 +239,10 @@
   color: var(--color-secondary);
   font-size: 0.75rem;
   line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .subCriterionDescription {
@@ -326,4 +364,97 @@
 .status.small {
   padding: 0.125rem 0.5rem;
   font-size: 0.625rem;
+}
+
+/* New Layout Styles */
+.criterionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--color-white);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.criterionHeader:hover {
+  background: rgb(249 250 251 / 1);
+}
+
+.expandButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgb(249 250 251 / 1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  color: rgb(107 114 128 / 1);
+}
+
+.expandButton:hover {
+  background: rgb(229 231 235 / 1);
+  color: var(--color-primary);
+}
+
+.criterionClickArea {
+  flex: 1;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  min-width: 0; /* Permite que el flex child se encoja */
+  overflow: hidden;
+}
+
+.criterionClickArea:hover {
+  background: rgb(243 244 246 / 1);
+}
+
+.subCriterionItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  background: rgb(249 250 251 / 0.5);
+  transition: all 0.2s ease;
+  border-top: 1px solid rgb(229 231 235 / 0.3);
+}
+
+.subCriterionItem:hover {
+  background: rgb(243 244 246 / 1);
+}
+
+.subCriterionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.subCriterionDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(156 163 175 / 1);
+}
+
+.subCriterionClickArea {
+  flex: 1;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  min-width: 0; /* Permite que el flex child se encoja */
+  overflow: hidden;
+}
+
+.subCriterionClickArea:hover {
+  background: rgb(229 231 235 / 0.4);
 }
