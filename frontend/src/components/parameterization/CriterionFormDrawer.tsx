@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Criterion, parameterizationApi, CreateCriterionDto, UpdateCriterionDto } from '../../api/parameterization/parameterization-api';
 import { Button } from '../shared/Button';
-import styles from './shared/FormDrawer.module.css';
+import styles from '../shared/FormDrawer.module.css';
 
 interface CriterionFormDrawerProps {
   criterion?: Criterion | null;

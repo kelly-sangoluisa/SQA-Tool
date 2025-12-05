@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Metric, parameterizationApi, CreateMetricDto, UpdateMetricDto } from '../../api/parameterization/parameterization-api';
 import { Button } from '../shared/Button';
-import styles from './shared/FormDrawer.module.css';
+import styles from '../shared/FormDrawer.module.css';
 
 interface MetricFormDrawerProps {
   metric?: Metric | null;

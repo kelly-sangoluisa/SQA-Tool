@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { parameterizationApi, CreateStandardDto, UpdateStandardDto, Standard } from '../../api/parameterization/parameterization-api';
 import { Button } from '../shared/Button';
-import styles from './shared/FormDrawer.module.css';
+import styles from '../shared/FormDrawer.module.css';
 
 interface StandardFormDrawerProps {
   standard?: Standard | null;
