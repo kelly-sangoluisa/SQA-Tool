@@ -13,7 +13,7 @@ interface StandardDetailViewProps {
 }
 
 export function StandardDetailView({ standard, onBack }: StandardDetailViewProps) {
-  const [_criteria, setCriteria] = useState<Criterion[]>([]);
+  const [, setCriteria] = useState<Criterion[]>([]);
   const [selectedCriterion, setSelectedCriterion] = useState<Criterion | null>(null);
   const [selectedSubCriterion, setSelectedSubCriterion] = useState<SubCriterion | null>(null);
   const [metrics, setMetrics] = useState<Metric[]>([]);
