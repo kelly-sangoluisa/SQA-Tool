@@ -217,6 +217,12 @@
   font-family: inherit;
 }
 
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+  max-height: 200px;
+}
+
 .input:hover,
 .textarea:hover {
   border-color: rgb(203 213 225 / 1);
@@ -228,12 +234,6 @@
   border-color: var(--color-primary, #4E5EA3);
   box-shadow: 0 0 0 4px rgb(78 94 163 / 0.1);
   background: rgb(249 250 251 / 0.5);
-}
-
-.textarea {
-  resize: vertical;
-  min-height: 80px;
-  max-height: 200px;
 }
 
 .input.error,
@@ -318,6 +318,13 @@
   box-shadow: 0 4px 12px rgb(78 94 163 / 0.15);
 }
 
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 4px 12px rgb(78 94 163 / 0.15);
+}
+
 .saveButton:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgb(78 94 163 / 0.25);
@@ -325,13 +332,6 @@
 
 .saveButton:active:not(:disabled) {
   transform: translateY(0);
-}
-
-.saveButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: 0 4px 12px rgb(78 94 163 / 0.15);
 }
 
 .loadingSpinner {
