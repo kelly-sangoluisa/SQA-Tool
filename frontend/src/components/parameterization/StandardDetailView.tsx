@@ -8,12 +8,12 @@ import { MetricsView } from './MetricsView';
 import { MetricFormDrawer } from './MetricFormDrawer';
 
 interface StandardDetailViewProps {
-  standard: Standard;
-  onBack: () => void;
+  readonly standard: Standard;
+  readonly onBack: () => void;
 }
 
 export function StandardDetailView({ standard, onBack }: StandardDetailViewProps) {
-  const [, setCriteria] = useState<Criterion[]>([]);
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [selectedCriterion, setSelectedCriterion] = useState<Criterion | null>(null);
   const [selectedSubCriterion, setSelectedSubCriterion] = useState<SubCriterion | null>(null);
   const [metrics, setMetrics] = useState<Metric[]>([]);
@@ -127,7 +127,7 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
 
   const handleMetricStateChange = (updatedMetric: Metric) => {
     // Verificar si el subcriterio está activo antes de permitir activar métricas
-    if (selectedSubCriterion && selectedSubCriterion.state === 'inactive' && updatedMetric.state === 'active') {
+    if (selectedSubCriterion?.state === 'inactive' && updatedMetric.state === 'active') {
       console.warn('No se puede activar una métrica cuando el subcriterio está inactivo');
       return; // No permitir la activación
     }

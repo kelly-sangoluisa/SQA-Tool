@@ -7,10 +7,10 @@ import { validateForm, handleApiError } from '../../utils/validation';
 import styles from '../shared/FormDrawer.module.css';
 
 interface CriterionFormDrawerProps {
-  criterion?: Criterion | null;
-  standardId?: number;
-  onClose: () => void;
-  onSave: (savedCriterion?: Criterion) => void;
+  readonly criterion?: Criterion | null;
+  readonly standardId?: number;
+  readonly onClose: () => void;
+  readonly onSave: (savedCriterion?: Criterion) => void;
 }
 
 interface FormData {

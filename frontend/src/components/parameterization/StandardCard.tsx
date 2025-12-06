@@ -3,10 +3,10 @@ import { Standard } from '../../api/parameterization/parameterization-api';
 import styles from './AdminParameterization.module.css';
 
 interface StandardCardProps {
-  standard: Standard;
-  onSelect: (standard: Standard) => void;
-  onEdit: (standard: Standard, e: React.MouseEvent) => void;
-  onToggleState: (standard: Standard) => void;
+  readonly standard: Standard;
+  readonly onSelect: (standard: Standard) => void;
+  readonly onEdit: (standard: Standard, e: React.MouseEvent) => void;
+  readonly onToggleState: (standard: Standard) => void;
 }
 
 export function StandardCard({ standard, onSelect, onEdit, onToggleState }: StandardCardProps) {
@@ -20,6 +20,14 @@ export function StandardCard({ standard, onSelect, onEdit, onToggleState }: Stan
       key={standard.id} 
       className={styles.standardCard}
       onClick={() => onSelect(standard)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect(standard);
+        }
+      }}
     >
       <div className={styles.cardHeader}>
         <div className={styles.titleSection}>

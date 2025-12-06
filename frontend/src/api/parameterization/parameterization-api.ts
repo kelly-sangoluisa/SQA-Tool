@@ -266,17 +266,18 @@ export const parameterizationApi = {
    */
   async getMetricsBySubCriterion(
     subCriterionId: number,
-    params: QueryParams = { state: 'active' }
+    params?: QueryParams
   ): Promise<Metric[]> {
+    const effectiveParams = params ?? { state: 'active' };
     const queryString = new URLSearchParams(
-      Object.entries(params)
+      Object.entries(effectiveParams)
         .filter(([, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString();
 
-    return apiClient.get(
-      `/parameterization/sub-criteria/${subCriterionId}/metrics${queryString ? `?${queryString}` : ''}`
-    );
+    const baseUrl = `/parameterization/sub-criteria/${subCriterionId}/metrics`;
+    const fullUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+    return apiClient.get(fullUrl);
   },
 
   /**
@@ -314,17 +315,18 @@ export const parameterizationApi = {
    */
   async getVariablesByMetric(
     metricId: number,
-    params: QueryParams = { state: 'active' }
+    params?: QueryParams
   ): Promise<FormulaVariable[]> {
+    const effectiveParams = params ?? { state: 'active' };
     const queryString = new URLSearchParams(
-      Object.entries(params)
+      Object.entries(effectiveParams)
         .filter(([, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString();
 
-    return apiClient.get(
-      `/parameterization/metrics/${metricId}/variables${queryString ? `?${queryString}` : ''}`
-    );
+    const baseUrl = `/parameterization/metrics/${metricId}/variables`;
+    const fullUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+    return apiClient.get(fullUrl);
   },
 
   /**

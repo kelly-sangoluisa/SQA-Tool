@@ -98,7 +98,7 @@
   border-radius: 10px;
   padding: 1rem;
   margin-bottom: 1.5rem;
-  color: rgb(239 68 68 / 1);
+  color: rgb(185 28 28 / 1);
   font-size: 0.875rem;
   font-weight: 500;
 }
@@ -266,7 +266,7 @@
 .removeButton {
   background: rgb(254 242 242 / 1);
   border: 1px solid rgb(252 165 165 / 1);
-  color: rgb(239 68 68 / 1);
+  color: rgb(185 28 28 / 1);
   border-radius: 6px;
   padding: 0.5rem;
   cursor: pointer;

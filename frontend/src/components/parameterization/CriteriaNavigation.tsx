@@ -10,16 +10,16 @@ import { SubCriterionFormDrawer } from './SubCriterionFormDrawer';
 import styles from './CriteriaNavigation.module.css';
 
 interface CriteriaNavigationProps {
-  onRefresh?: () => void;
-  standardId?: number;
-  onCriterionSelect?: (criterion: Criterion) => void;
-  onSubCriterionSelect?: (criterion: Criterion, subCriterion: SubCriterion) => void;
-  onCriterionEdit?: (criterion: Criterion) => void;
-  onCriterionCreate?: () => void;
-  onSubCriterionEdit?: (criterion: Criterion, subCriterion: SubCriterion) => void;
-  onSubCriterionCreate?: (criterion: Criterion) => void;
-  onSubCriterionStateChange?: (subCriterion: SubCriterion) => void;
-  onCriterionStateChange?: (criterion: Criterion) => void;
+  readonly onRefresh?: () => void;
+  readonly standardId?: number;
+  readonly onCriterionSelect?: (criterion: Criterion) => void;
+  readonly onSubCriterionSelect?: (criterion: Criterion, subCriterion: SubCriterion) => void;
+  readonly onCriterionEdit?: (criterion: Criterion) => void;
+  readonly onCriterionCreate?: () => void;
+  readonly onSubCriterionEdit?: (criterion: Criterion, subCriterion: SubCriterion) => void;
+  readonly onSubCriterionCreate?: (criterion: Criterion) => void;
+  readonly onSubCriterionStateChange?: (subCriterion: SubCriterion) => void;
+  readonly onCriterionStateChange?: (criterion: Criterion) => void;
 }
 
 export function CriteriaNavigation({
@@ -289,11 +289,9 @@ export function CriteriaNavigation({
     if (savedSubCriterion && parentCriterion) {
       // Forzar recarga de los subcriterios para asegurar datos actualizados
       loadSubCriteria(parentCriterion.id, true);
-    } else {
+    } else if (parentCriterion) {
       // Fallback: recargar subcriterios si no tenemos el subcriterio
-      if (parentCriterion) {
-        loadSubCriteria(parentCriterion.id, true);
-      }
+      loadSubCriteria(parentCriterion.id, true);
     }
     handleCloseSubForm();
   };
@@ -381,6 +379,14 @@ export function CriteriaNavigation({
                     <div
                       className={styles.criterionClickArea}
                       onClick={() => onCriterionSelect?.(criterion)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onCriterionSelect?.(criterion);
+                        }
+                      }}
                     >
                       <span className={styles.criterionName}>{criterion.name}</span>
                     </div>
@@ -430,26 +436,27 @@ export function CriteriaNavigation({
                           <div className={styles.loadingSpinner}></div>
                           <span>Cargando subcriterios...</span>
                         </div>
-                      ) : criterionSubCriteria.length === 0 ? (
-                        <div className={styles.emptySubCriteria}>
-                          <p>No hay subcriterios disponibles</p>
-                          <button
-                            type="button"
-                            onClick={(e) => handleCreateSubCriterion(criterion, e)}
-                            className={styles.createSubButton}
-                          >
-                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                              <path
-                                d="M8 1V15M1 8H15"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                            Agregar Subcriterio
-                          </button>
-                        </div>
                       ) : (
+                        criterionSubCriteria.length === 0 ? (
+                          <div className={styles.emptySubCriteria}>
+                            <p>No hay subcriterios disponibles</p>
+                            <button
+                              type="button"
+                              onClick={(e) => handleCreateSubCriterion(criterion, e)}
+                              className={styles.createSubButton}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                                <path
+                                  d="M8 1V15M1 8H15"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                              Agregar Subcriterio
+                            </button>
+                          </div>
+                        ) : (
                         <div className={styles.subCriteriaListContainer}>
                           <div className={styles.subCriteriaHeader}>
                             <span className={styles.subCriteriaTitle}>Subcriterios ({criterionSubCriteria.length})</span>
@@ -488,6 +495,14 @@ export function CriteriaNavigation({
                                 <div
                                   className={styles.subCriterionClickArea}
                                   onClick={() => handleSubCriterionClick(criterion, subCriterion)}
+                                  role="button"
+                                  tabIndex={0}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      e.preventDefault();
+                                      handleSubCriterionClick(criterion, subCriterion);
+                                    }
+                                  }}
                                 >
                                   <span className={styles.subCriterionName}>{subCriterion.name}</span>
                                 </div>
@@ -524,9 +539,12 @@ export function CriteriaNavigation({
                                   className={`${styles.toggleButton} ${subCriterion.state === 'active' ? styles.active : styles.inactive}`}
                                   disabled={isSubToggling || (criterion.state === 'inactive' && subCriterion.state === 'inactive')}
                                   title={
-                                    criterion.state === 'inactive' && subCriterion.state === 'inactive'
-                                      ? 'No se puede activar cuando el criterio padre está inactivo'
-                                      : `${subCriterion.state === 'active' ? 'Desactivar' : 'Activar'} subcriterio`
+                                    (() => {
+                                      if (criterion.state === 'inactive' && subCriterion.state === 'inactive') {
+                                        return 'No se puede activar cuando el criterio padre está inactivo';
+                                      }
+                                      return subCriterion.state === 'active' ? 'Desactivar subcriterio' : 'Activar subcriterio';
+                                    })()
                                   }
                                 >
                                   <div className={styles.toggleSlider}></div>

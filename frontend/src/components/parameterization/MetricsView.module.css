@@ -401,13 +401,13 @@
 .status.active,
 .metricStatus.active {
   background: rgb(220 252 231 / 1);
-  color: rgb(22 163 74 / 1);
+  color: rgb(21 128 61 / 1);
 }
 
 .status.inactive,
 .metricStatus.inactive {
   background: rgb(254 242 242 / 1);
-  color: rgb(239 68 68 / 1);
+  color: rgb(185 28 28 / 1);
 }
 
 @keyframes spin {
@@ -466,12 +466,6 @@
 }
 
 /* Toggle Switch Styles */
-.metricActions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 .toggleButton {
   position: relative;
   width: 44px;
@@ -490,10 +484,6 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
-.toggleButton.active {
-  background-color: #10b981;
-}
-
 .toggleButton.inactive {
   background-color: #ef4444;
 }
@@ -508,22 +498,6 @@
   background-color: #d1d5db !important;
 }
 
-.toggleSlider {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 20px;
-  height: 20px;
-  background-color: white;
-  border-radius: 50%;
-  transition: transform 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.toggleButton.active .toggleSlider {
-  transform: translateX(20px);
-}
-
-.toggleButton.inactive .toggleSlider {
+.toggleButton.active .toggleSlider { {
   transform: translateX(0);
 }

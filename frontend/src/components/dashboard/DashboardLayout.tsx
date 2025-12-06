@@ -37,7 +37,7 @@ export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
   };
 
   const getNavigationOptions = () => {
-    if (!user || !user.role) return [];
+    if (!user?.role) return [];
 
     if (user.role.name === 'admin') {
       return [
@@ -64,7 +64,7 @@ export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
   };
 
   const getDashboardTitle = () => {
-    if (!user || !user.role) return 'Dashboard SQA Tool';
+    if (!user?.role) return 'Dashboard SQA Tool';
     
     if (user.role.name === 'admin') {
       return '🔧 Panel de Administración - SQA Tool';

@@ -8,10 +8,11 @@ export class ApiClient {
   }
 
   private getToken(): string | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof globalThis.window === 'undefined') return null;
     
     // Try to get from cookie first (most reliable for SSR)
-    const cookie = document.cookie.match(/(?:^|;\s*)sb-access-token=([^;]+)/);
+    const cookieRegex = /(?:^|;\s*)sb-access-token=([^;]+)/;
+    const cookie = cookieRegex.exec(document.cookie);
     if (cookie) {
       return decodeURIComponent(cookie[1]);
     }

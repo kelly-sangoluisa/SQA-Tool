@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './AdminParameterization.module.css';
 
 interface LoadingSpinnerProps {
-  message?: string;
+  readonly message?: string;
 }
 
 export function LoadingSpinner({ message = 'Cargando...' }: LoadingSpinnerProps) {

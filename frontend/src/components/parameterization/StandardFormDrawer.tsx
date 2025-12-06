@@ -7,9 +7,9 @@ import { validateForm, handleApiError } from '../../utils/validation';
 import styles from '../shared/FormDrawer.module.css';
 
 interface StandardFormDrawerProps {
-  standard?: Standard | null;
-  onClose: () => void;
-  onSave: (savedStandard?: Standard) => void;
+  readonly standard?: Standard | null;
+  readonly onClose: () => void;
+  readonly onSave: (savedStandard?: Standard) => void;
 }
 
 interface FormData {

@@ -6,12 +6,12 @@ import { EmptyState } from './EmptyState';
 import styles from './AdminParameterization.module.css';
 
 interface StandardsListProps {
-  standards: Standard[];
-  loading: boolean;
-  onStandardSelect: (standard: Standard) => void;
-  onEditStandard: (standard: Standard, e: React.MouseEvent) => void;
-  onToggleStandardState: (standard: Standard) => void;
-  onCreateStandard: () => void;
+  readonly standards: Standard[];
+  readonly loading: boolean;
+  readonly onStandardSelect: (standard: Standard) => void;
+  readonly onEditStandard: (standard: Standard, e: React.MouseEvent) => void;
+  readonly onToggleStandardState: (standard: Standard) => void;
+  readonly onCreateStandard: () => void;
 }
 
 export function StandardsList({ 

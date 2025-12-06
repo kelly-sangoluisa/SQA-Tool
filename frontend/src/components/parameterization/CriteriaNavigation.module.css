@@ -434,12 +434,12 @@
 
 .status.active {
   background: rgb(220 252 231 / 1);
-  color: rgb(22 163 74 / 1);
+  color: rgb(21 128 61 / 1);
 }
 
 .status.inactive {
   background: rgb(254 242 242 / 1);
-  color: rgb(239 68 68 / 1);
+  color: rgb(185 28 28 / 1);
 }
 
 @keyframes spin {
@@ -479,107 +479,16 @@
   gap: 0.5rem;
 }
 
-.toggleButton {
-  position: relative;
-  width: 36px;
-  height: 20px;
-  background-color: #e5e7eb;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  padding: 0;
-  outline: none;
-  flex-shrink: 0;
-}
-
 .toggleButton:focus {
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
-.toggleButton.active {
-  background-color: #10b981;
-}
-
-.toggleButton.inactive {
-  background-color: #ef4444;
-}
-
-.toggleSlider {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 16px;
-  height: 16px;
-  background-color: white;
-  border-radius: 50%;
-  transition: transform 0.3s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.toggleButton.active .toggleSlider {
-  transform: translateX(16px);
-}
-
-.toggleButton.inactive .toggleSlider {
-  transform: translateX(0);
-}
-
-.status.small {
-  padding: 0.125rem 0.5rem;
-  font-size: 0.625rem;
-}
-
-/* New Layout Styles */
-.criterionHeader {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: var(--color-white);
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.criterionHeader:hover {
+.toggleButton.inactive {ggleSlider { {
+.criterionHeader {over {
   background: rgb(249 250 251 / 1);
 }
 
-.expandButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: rgb(249 250 251 / 1);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  color: rgb(107 114 128 / 1);
-}
-
-.expandButton:hover {
-  background: rgb(229 231 235 / 1);
-  color: var(--color-primary);
-}
-
-.criterionClickArea {
-  flex: 1;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-  min-width: 0; /* Permite que el flex child se encoja */
-  overflow: hidden;
-}
-
-.criterionClickArea:hover {
-  background: rgb(243 244 246 / 1);
-}
-
-.subCriterionItem {
+.expandButton:hover {over {
   display: flex;
   align-items: center;
   gap: 0.75rem;

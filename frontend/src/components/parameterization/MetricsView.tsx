@@ -3,12 +3,12 @@ import { SubCriterion, Metric, parameterizationApi } from '../../api/parameteriz
 import styles from './MetricsView.module.css';
 
 interface MetricsViewProps {
-  subCriterion: SubCriterion;
-  metrics: Metric[];
-  loading: boolean;
-  onEditMetric: (metric: Metric) => void;
-  onCreateMetric: () => void;
-  onMetricStateChange?: (updatedMetric: Metric) => void;
+  readonly subCriterion: SubCriterion;
+  readonly metrics: Metric[];
+  readonly loading: boolean;
+  readonly onEditMetric: (metric: Metric) => void;
+  readonly onCreateMetric: () => void;
+  readonly onMetricStateChange?: (updatedMetric: Metric) => void;
 }
 
 export function MetricsView({
@@ -118,9 +118,12 @@ export function MetricsView({
                         className={`${styles.toggleButton} ${metric.state === 'active' ? styles.active : styles.inactive}`}
                         disabled={subCriterion.state === 'inactive' && metric.state === 'inactive'}
                         title={
-                          subCriterion.state === 'inactive' && metric.state === 'inactive'
-                            ? 'No se puede activar cuando el subcriterio está inactivo'
-                            : `${metric.state === 'active' ? 'Desactivar' : 'Activar'} métrica`
+                          (() => {
+                            if (subCriterion.state === 'inactive' && metric.state === 'inactive') {
+                              return 'No se puede activar cuando el subcriterio está inactivo';
+                            }
+                            return metric.state === 'active' ? 'Desactivar métrica' : 'Activar métrica';
+                          })()
                         }
                       >
                         <div className={styles.toggleSlider}></div>

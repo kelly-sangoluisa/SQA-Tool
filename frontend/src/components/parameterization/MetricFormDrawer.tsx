@@ -4,10 +4,10 @@ import { Button } from '../shared/Button';
 import styles from '../shared/FormDrawer.module.css';
 
 interface MetricFormDrawerProps {
-  metric?: Metric | null;
-  subCriterionId?: number;
-  onClose: () => void;
-  onSave: () => void;
+  readonly metric?: Metric | null;
+  readonly subCriterionId?: number;
+  readonly onClose: () => void;
+  readonly onSave: () => void;
 }
 
 interface FormData {
@@ -284,7 +284,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                   value={formData.desired_threshold || ''}
                   onChange={(e) => setFormData(prev => ({ 
                     ...prev, 
-                    desired_threshold: e.target.value ? parseFloat(e.target.value) : null 
+                    desired_threshold: e.target.value ? Number.parseFloat(e.target.value) : null 
                   }))}
                   className={styles.input}
                   placeholder="Ej: 95"
@@ -346,12 +346,18 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                               type="text"
                               value={variable.symbol}
                               onChange={(e) => updateVariable(index, 'symbol', e.target.value)}
-                              className={`${styles.input} ${styles.symbolInput} ${errors[`variable-symbol-${index}`] ? styles.error : ''}`}
+                              className={`${styles.input} ${styles.symbolInput} ${(() => {
+                                const errorKey = `variable-symbol-${index}`;
+                                return errors[errorKey] ? styles.error : '';
+                              })()}`}
                               placeholder="Símbolo (ej: N_EXITO)"
                             />
-                            {errors[`variable-symbol-${index}`] && (
-                              <span className={styles.fieldError}>{errors[`variable-symbol-${index}`]}</span>
-                            )}
+                            {(() => {
+                              const errorKey = `variable-symbol-${index}`;
+                              return errors[errorKey] && (
+                                <span className={styles.fieldError}>{errors[errorKey]}</span>
+                              );
+                            })()}
                           </div>
                           
                           <div className={styles.field}>
@@ -359,12 +365,18 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                               type="text"
                               value={variable.description}
                               onChange={(e) => updateVariable(index, 'description', e.target.value)}
-                              className={`${styles.input} ${styles.descriptionInput} ${errors[`variable-description-${index}`] ? styles.error : ''}`}
+                              className={`${styles.input} ${styles.descriptionInput} ${(() => {
+                                const errorKey = `variable-description-${index}`;
+                                return errors[errorKey] ? styles.error : '';
+                              })()}`}
                               placeholder="Descripción (ej: Número de casos exitosos)"
                             />
-                            {errors[`variable-description-${index}`] && (
-                              <span className={styles.fieldError}>{errors[`variable-description-${index}`]}</span>
-                            )}
+                            {(() => {
+                              const errorKey = `variable-description-${index}`;
+                              return errors[errorKey] && (
+                                <span className={styles.fieldError}>{errors[errorKey]}</span>
+                              );
+                            })()}
                           </div>
                         </div>
                         
@@ -392,8 +404,8 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                   <div className={styles.variablesPreview}>
                     <h5>Vista Previa de Variables:</h5>
                     <div className={styles.chipsContainer}>
-                      {formData.variables.filter(v => v.symbol && v.description).map((variable, index) => (
-                        <span key={index} className={styles.variableChip}>
+                      {formData.variables.filter(v => v.symbol && v.description).map((variable) => (
+                        <span key={variable.tempId || variable.symbol} className={styles.variableChip}>
                           <span className={styles.chipSymbol}>{variable.symbol}</span>
                           <span className={styles.chipDescription}>{variable.description}</span>
                         </span>

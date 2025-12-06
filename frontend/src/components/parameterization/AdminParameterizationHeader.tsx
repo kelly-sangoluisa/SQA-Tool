@@ -2,8 +2,8 @@ import React from 'react';
 import styles from './AdminParameterization.module.css';
 
 interface AdminParameterizationHeaderProps {
-  onCreateStandard: () => void;
-  loading: boolean;
+  readonly onCreateStandard: () => void;
+  readonly loading: boolean;
 }
 
 export function AdminParameterizationHeader({ onCreateStandard, loading }: AdminParameterizationHeaderProps) {

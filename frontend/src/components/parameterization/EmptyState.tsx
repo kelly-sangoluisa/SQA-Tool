@@ -2,11 +2,11 @@ import React from 'react';
 import styles from './AdminParameterization.module.css';
 
 interface EmptyStateProps {
-  title: string;
-  description: string;
-  buttonText?: string;
-  onButtonClick?: () => void;
-  icon?: string;
+  readonly title: string;
+  readonly description: string;
+  readonly buttonText?: string;
+  readonly onButtonClick?: () => void;
+  readonly icon?: string;
 }
 
 export function EmptyState({ 
