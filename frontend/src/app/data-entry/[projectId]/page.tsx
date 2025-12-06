@@ -454,7 +454,6 @@ export default function DataEntryProjectPage() {
           <div className="sidebar-section">
             <EvaluationSidebar
               evaluations={evaluations}
-              currentEvaluationIndex={currentEvaluationIndex}
               currentMetricIndex={currentMetricIndex}
               allMetrics={allMetrics}
               variableValues={variableValues}
@@ -550,6 +549,7 @@ function MetricForm({
         <h4>Variables:</h4>
         {metric.variables && metric.variables.length > 0 ? (
           metric.variables.map((variable) => {
+            const key = `${metric.id}-${variable.symbol}`;
             return (
               <div key={variable.id} className="variable-input">
                 <label htmlFor={key}>
