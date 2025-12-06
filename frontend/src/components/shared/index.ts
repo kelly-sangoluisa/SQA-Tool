@@ -3,4 +3,5 @@ export { Input } from './Input';
 export { Loading } from './Loading';
 export { ProtectedRoute } from './ProtectedRoute';
 export { Breadcrumbs } from './Breadcrumbs';
+export { Switch } from './Switch';
 export type { BreadcrumbItem } from './Breadcrumbs';

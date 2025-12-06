@@ -131,6 +131,7 @@
   background: var(--color-white);
   border-radius: 8px;
   transition: all 0.2s ease;
+  min-height: 52px;
 }
 
 .criterionHeader:hover {
@@ -161,6 +162,8 @@
   padding: 0.5rem;
   border-radius: 4px;
   transition: background-color 0.2s ease;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .criterionClickArea:hover {
@@ -171,11 +174,11 @@
   font-weight: 600;
   color: var(--color-primary);
   font-size: 0.875rem;
-  line-height: 1.4;
+  line-height: 1.5;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  display: block;
 }
 
 .chevron {
@@ -201,11 +204,11 @@
 }
 
 .toggleButton.active {
-  background: var(--color-primary);
+  background: #10b981;
 }
 
 .toggleButton.inactive {
-  background: rgb(209 213 219 / 1);
+  background: #ef4444;
 }
 
 .toggleButton:disabled {
@@ -246,6 +249,7 @@
   border-radius: 0.25rem;
   transition: all 0.2s ease;
   margin-right: 0.5rem;
+  flex-shrink: 0;
 }
 
 .editButton:hover {
@@ -329,6 +333,7 @@
   border-radius: 0.25rem;
   transition: all 0.2s ease;
   margin-right: 0.25rem;
+  flex-shrink: 0;
 }
 
 .editSubButton:hover {
@@ -402,11 +407,11 @@
   font-weight: 500;
   color: var(--color-secondary);
   font-size: 0.75rem;
-  line-height: 1.4;
+  line-height: 1.5;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  display: block;
 }
 
 .subCriterionDescription {
@@ -496,6 +501,7 @@
   background: rgb(249 250 251 / 0.5);
   transition: all 0.2s ease;
   border-top: 1px solid rgb(229 231 235 / 0.3);
+  min-height: 44px;
 }
 
 .subCriterionItem:hover {
@@ -524,8 +530,7 @@
   padding: 0.25rem;
   border-radius: 4px;
   transition: background-color 0.2s ease;
-  min-width: 0; /* Permite que el flex child se encoja */
-  overflow: hidden;
+  min-width: 0;
 }
 
 .subCriterionClickArea:hover {

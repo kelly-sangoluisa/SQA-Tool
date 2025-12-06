@@ -1,5 +1,6 @@
 import React from 'react';
 import { SubCriterion, Metric, parameterizationApi } from '../../api/parameterization/parameterization-api';
+import { Switch } from '../shared';
 import styles from './MetricsView.module.css';
 
 interface MetricsViewProps {
@@ -112,10 +113,9 @@ export function MetricsView({
                     </div>
                     
                     <div className={styles.metricActions}>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleMetricState(metric)}
-                        className={`${styles.toggleButton} ${metric.state === 'active' ? styles.active : styles.inactive}`}
+                      <Switch
+                        checked={metric.state === 'active'}
+                        onChange={() => handleToggleMetricState(metric)}
                         disabled={subCriterion.state === 'inactive' && metric.state === 'inactive'}
                         title={
                           (() => {
@@ -125,9 +125,7 @@ export function MetricsView({
                             return metric.state === 'active' ? 'Desactivar métrica' : 'Activar métrica';
                           })()
                         }
-                      >
-                        <div className={styles.toggleSlider}></div>
-                      </button>
+                      />
                     </div>
                   </div>
                 </div>

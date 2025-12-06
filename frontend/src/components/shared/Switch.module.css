@@ -1,0 +1,76 @@
+/* Toggle Switch Styles */
+.toggleButton {
+  position: relative;
+  background-color: #ef4444;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  padding: 0;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.toggleButton.medium {
+  width: 44px;
+  height: 24px;
+}
+
+.toggleButton.small {
+  width: 36px;
+  height: 20px;
+}
+
+.toggleButton:focus {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.toggleButton.active {
+  background-color: #10b981;
+}
+
+.toggleButton.inactive {
+  background-color: #ef4444;
+}
+
+.toggleButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #d1d5db !important;
+}
+
+.toggleButton:disabled:hover {
+  background-color: #d1d5db !important;
+}
+
+.toggleSlider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.toggleButton.medium .toggleSlider {
+  width: 20px;
+  height: 20px;
+}
+
+.toggleButton.small .toggleSlider {
+  width: 16px;
+  height: 16px;
+}
+
+.toggleButton.inactive .toggleSlider {
+  transform: translateX(0);
+}
+
+.toggleButton.medium.active .toggleSlider {
+  transform: translateX(20px);
+}
+
+.toggleButton.small.active .toggleSlider {
+  transform: translateX(16px);
+}
