@@ -34,7 +34,7 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const validationErrors = validateForm(formData as Record<string, unknown>, {
+    const validationErrors = validateForm(formData as unknown as Record<string, unknown>, {
       name: { required: true, minLength: 2, maxLength: 100 },
       description: { maxLength: 500 },
       version: { maxLength: 20 }
