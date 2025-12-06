@@ -201,7 +201,6 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
               loading={loading}
               onEditMetric={handleEditMetric}
               onCreateMetric={handleCreateMetric}
-              onRefreshMetrics={handleRefreshMetrics}
               onMetricStateChange={handleMetricStateChange}
             />
           ) : (
