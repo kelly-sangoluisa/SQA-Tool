@@ -498,6 +498,6 @@
   background-color: #d1d5db !important;
 }
 
-.toggleButton.active .toggleSlider { {
+.toggleButton.active .toggleSlider {
   transform: translateX(0);
 }
