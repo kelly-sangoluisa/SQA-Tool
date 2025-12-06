@@ -42,23 +42,28 @@ const clearUserFromStorage = () => {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [state, setState] = useState<AuthState>(() => {
-    // Inicialización optimista SEGURA
-    const storedUser = getUserFromStorage();
-    return {
-      user: storedUser, // Solo datos no sensibles del localStorage
-      isLoading: !storedUser, // Si hay usuario en cache, no loading
-      isAuthenticated: !!storedUser, // Asumir autenticado si hay cache
-      error: null
-    };
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    isLoading: true,
+    isAuthenticated: false,
+    error: null
   });
 
   const [hasLoggedOut, setHasLoggedOut] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
-  // Detectar cuando estamos en el cliente
+  // Detectar cuando estamos en el cliente e inicializar estado
   useEffect(() => {
     setIsClient(true);
+    
+    // Inicialización SOLO en el cliente para evitar hidration mismatch
+    const storedUser = getUserFromStorage();
+    setState({
+      user: storedUser,
+      isLoading: !storedUser,
+      isAuthenticated: !!storedUser,
+      error: null
+    });
   }, []);
 
   const checkAuth = useCallback(async () => {
@@ -70,6 +75,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isLoading: false,
         error: null
       }));
+      return;
+    }
+
+    // Check if we have a token before making API calls
+    const hasToken = typeof window !== 'undefined' && (
+      document.cookie.includes('sb-access-token=') ||
+      localStorage.getItem('sb-access-token')
+    );
+
+    if (!hasToken) {
+      setState(prev => ({
+        ...prev,
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null
+      }));
+      clearUserFromStorage();
       return;
     }
 
@@ -131,7 +154,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error('Error inesperado en checkAuth:', error);
       }
     }
-  }, [isClient, hasLoggedOut]); // ELIMINADO state.user para evitar bucle
+  }, [isClient, hasLoggedOut, state.user]); // Include state.user but handle carefully
 
   const signIn = useCallback(async (data: SignInData) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -239,6 +262,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (isClient) {
       checkAuth();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isClient]); // SOLO isClient - quitar checkAuth para evitar bucle
 
   const contextValue: AuthContextType = useMemo(() => ({

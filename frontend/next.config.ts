@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   async rewrites() {
@@ -10,5 +11,7 @@ const nextConfig: NextConfig = {
     ];
   },
 };
+
+// Note: turbopack configuration is handled by Next.js automatically in this version
 
 export default nextConfig;

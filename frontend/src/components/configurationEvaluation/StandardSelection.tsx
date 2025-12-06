@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { parameterizationApi, Standard } from '@/api/parameterization/parameterization-api';
 import { Button, Loading } from '../shared';
 import styles from './StandardSelection.module.css';
@@ -12,14 +13,11 @@ interface StandardSelectionProps {
 }
 
 export function StandardSelection({ initialSelectedId, onNext, onBack }: StandardSelectionProps) {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [standards, setStandards] = useState<Standard[]>([]);
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadStandards();
-  }, []);
 
   const loadStandards = async () => {
     try {
@@ -40,6 +38,14 @@ export function StandardSelection({ initialSelectedId, onNext, onBack }: Standar
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Only load standards when authenticated and not loading auth
+    if (isAuthenticated && !authLoading) {
+      loadStandards();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, authLoading]);
 
   const handleSelectStandard = (standard: Standard) => {
     setSelectedStandard(standard);

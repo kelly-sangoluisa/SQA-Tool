@@ -7,13 +7,49 @@ export class ApiClient {
     this.baseURL = baseURL;
   }
 
+  private getToken(): string | null {
+    if (typeof globalThis.window === 'undefined') return null;
+    
+    // Try to get from cookie first (most reliable for SSR)
+    const cookieRegex = /(?:^|;\s*)sb-access-token=([^;]+)/;
+    const cookie = cookieRegex.exec(document.cookie);
+    if (cookie) {
+      return decodeURIComponent(cookie[1]);
+    }
+    
+    // Fallback to localStorage if needed
+    try {
+      const token = localStorage.getItem('sb-access-token');
+      if (token) return token;
+    } catch {
+      // localStorage might not be available
+    }
+    
+    // Last resort: check for other possible token locations
+    try {
+      const authData = localStorage.getItem('auth');
+      if (authData) {
+        const parsed = JSON.parse(authData);
+        if (parsed.access_token) return parsed.access_token;
+      }
+    } catch {
+      // Failed to parse auth data
+    }
+    
+    return null;
+  }
+
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
+    
+    // Get authentication token
+    const token = this.getToken();
     
     const config: RequestInit = {
       credentials: 'include', // Para las cookies de Supabase
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
@@ -78,6 +114,13 @@ export class ApiClient {
 
   async delete<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'DELETE' });
+  }
+
+  async patch<T>(endpoint: string, data?: unknown): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
   }
 }
 

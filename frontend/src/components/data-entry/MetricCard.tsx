@@ -59,7 +59,7 @@ export function MetricCard({
             {variables.length > 0 && (
               <div className={styles.variablesInfo}>
                 <div className={styles.variablesTitle}>Donde:</div>
-                {variables.map((variable, index) => (
+                {variables.map((variable) => (
                   <div key={variable.symbol} className={styles.variableDefinition}>
                     <span className={styles.variableSymbol}>{variable.symbol}</span>
                     <span className={styles.equals}>=</span>
@@ -75,7 +75,7 @@ export function MetricCard({
         <div className={styles.rightColumn}>
           {variables.length > 0 && (
             <div className={styles.inputsSection}>
-              {variables.map((variable, index) => (
+              {variables.map((variable) => (
                 <div key={variable.symbol} className={styles.inputGroup}>
                   <label className={styles.inputLabel}>
                     {variable.symbol} =
