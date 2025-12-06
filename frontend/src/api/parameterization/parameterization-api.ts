@@ -68,7 +68,7 @@ export interface CreateStandardDto {
   version?: string;
 }
 
-export interface UpdateStandardDto extends Partial<CreateStandardDto> {}
+export type UpdateStandardDto = Partial<CreateStandardDto>;
 
 export interface CreateCriterionDto {
   name: string;
@@ -76,7 +76,7 @@ export interface CreateCriterionDto {
   standard_id: number;
 }
 
-export interface UpdateCriterionDto extends Partial<CreateCriterionDto> {}
+export type UpdateCriterionDto = Partial<CreateCriterionDto>;
 
 export interface CreateSubCriterionDto {
   name: string;
@@ -84,7 +84,7 @@ export interface CreateSubCriterionDto {
   criterion_id: number;
 }
 
-export interface UpdateSubCriterionDto extends Partial<CreateSubCriterionDto> {}
+export type UpdateSubCriterionDto = Partial<CreateSubCriterionDto>;
 
 export interface CreateMetricDto {
   name: string;
@@ -95,7 +95,7 @@ export interface CreateMetricDto {
   desired_threshold?: number;
 }
 
-export interface UpdateMetricDto extends Partial<CreateMetricDto> {}
+export type UpdateMetricDto = Partial<CreateMetricDto>;
 
 export interface CreateFormulaVariableDto {
   symbol: string;
@@ -103,7 +103,7 @@ export interface CreateFormulaVariableDto {
   metric_id: number;
 }
 
-export interface UpdateFormulaVariableDto extends Partial<CreateFormulaVariableDto> {}
+export type UpdateFormulaVariableDto = Partial<CreateFormulaVariableDto>;
 
 export interface UpdateStateDto {
   state: 'active' | 'inactive';
@@ -128,7 +128,7 @@ export const parameterizationApi = {
   async getStandards(params: QueryParams = { state: 'active' }): Promise<Standard[]> {
     const queryString = new URLSearchParams(
       Object.entries(params)
-        .filter(([_, value]) => value !== undefined)
+        .filter(([, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString();
 
@@ -174,7 +174,7 @@ export const parameterizationApi = {
   ): Promise<Criterion[]> {
     const queryString = new URLSearchParams(
       Object.entries(params)
-        .filter(([_, value]) => value !== undefined)
+        .filter(([, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString();
 
@@ -222,7 +222,7 @@ export const parameterizationApi = {
   ): Promise<SubCriterion[]> {
     const queryString = new URLSearchParams(
       Object.entries(params)
-        .filter(([_, value]) => value !== undefined)
+        .filter(([, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString();
 
@@ -270,7 +270,7 @@ export const parameterizationApi = {
   ): Promise<Metric[]> {
     const queryString = new URLSearchParams(
       Object.entries(params)
-        .filter(([_, value]) => value !== undefined)
+        .filter(([, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString();
 
@@ -318,7 +318,7 @@ export const parameterizationApi = {
   ): Promise<FormulaVariable[]> {
     const queryString = new URLSearchParams(
       Object.entries(params)
-        .filter(([_, value]) => value !== undefined)
+        .filter(([, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString();
 

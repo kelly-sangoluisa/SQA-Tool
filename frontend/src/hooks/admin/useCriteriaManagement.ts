@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Criterion, parameterizationApi, CreateCriterionDto, UpdateCriterionDto } from '../../api/parameterization/parameterization-api';
+import { Criterion, parameterizationApi } from '../../api/parameterization/parameterization-api';
 
 export function useCriteriaManagement(standardId?: number) {
   const [criteria, setCriteria] = useState<Criterion[]>([]);

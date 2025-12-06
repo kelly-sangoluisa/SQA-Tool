@@ -15,7 +15,6 @@ import { configEvaluationApi } from '@/api/config-evaluation/config-evaluation-a
 import {
   EvaluationInfo,
   SelectedCriterion,
-  EvaluationConfiguration,
   ImportanceLevel,
 } from '@/types/configurationEvaluation.types';
 import styles from './page.module.css';
@@ -119,14 +118,14 @@ export default function ConfigurationEvaluationPage() {
         })),
       });
 
-      // Create final configuration object
-      const configuration: EvaluationConfiguration = {
-        info: evaluationInfo!,
-        standardId: selectedStandard!.id,
-        standardName: selectedStandard!.name,
-        standardVersion: selectedStandard!.version,
-        selectedCriteria: subCriteria,
-      };
+      // Create final configuration object (currently not used but kept for future reference)
+      // const configuration: EvaluationConfiguration = {
+      //   info: evaluationInfo!,
+      //   standardId: selectedStandard!.id,
+      //   standardName: selectedStandard!.name,
+      //   standardVersion: selectedStandard!.version,
+      //   selectedCriteria: subCriteria,
+      // };
 
       // Mostrar mensaje de éxito y redirigir
       alert(`¡Configuración de evaluación completada exitosamente!

@@ -19,13 +19,6 @@ export function StandardSelection({ initialSelectedId, onNext, onBack }: Standar
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Only load standards when authenticated and not loading auth
-    if (isAuthenticated && !authLoading) {
-      loadStandards();
-    }
-  }, [isAuthenticated, authLoading]);
-
   const loadStandards = async () => {
     try {
       setIsLoading(true);
@@ -45,6 +38,14 @@ export function StandardSelection({ initialSelectedId, onNext, onBack }: Standar
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Only load standards when authenticated and not loading auth
+    if (isAuthenticated && !authLoading) {
+      loadStandards();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, authLoading]);
 
   const handleSelectStandard = (standard: Standard) => {
     setSelectedStandard(standard);

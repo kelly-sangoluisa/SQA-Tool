@@ -13,17 +13,13 @@ interface StandardDetailViewProps {
 }
 
 export function StandardDetailView({ standard, onBack }: StandardDetailViewProps) {
-  const [criteria, setCriteria] = useState<Criterion[]>([]);
+  const [, setCriteria] = useState<Criterion[]>([]);
   const [selectedCriterion, setSelectedCriterion] = useState<Criterion | null>(null);
   const [selectedSubCriterion, setSelectedSubCriterion] = useState<SubCriterion | null>(null);
   const [metrics, setMetrics] = useState<Metric[]>([]);
   const [loading, setLoading] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingMetric, setEditingMetric] = useState<Metric | null>(null);
-
-  useEffect(() => {
-    loadCriteria();
-  }, [standard.id]);
 
   const loadCriteria = async () => {
     setLoading(true);
@@ -38,15 +34,22 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
     }
   };
 
-  const loadSubCriteria = async (criterionId: number) => {
-    try {
-      const subCriteriaData = await parameterizationApi.getSubCriteriaByCriterion(criterionId, { state: 'all' });
-      return subCriteriaData || [];
-    } catch (error) {
-      console.error('Error loading subcriteria:', error);
-      return [];
-    }
-  };
+  // loadSubCriteria is defined but not used in current implementation
+  // Keeping for potential future use
+  // const loadSubCriteria = async (criterionId: number) => {
+  //   try {
+  //     const subCriteriaData = await parameterizationApi.getSubCriteriaByCriterion(criterionId, { state: 'all' });
+  //     return subCriteriaData || [];
+  //   } catch (error) {
+  //     console.error('Error loading subcriteria:', error);
+  //     return [];
+  //   }
+  // };
+
+  useEffect(() => {
+    loadCriteria();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [standard.id]);
 
   const loadMetrics = async (subCriterionId: number) => {
     setLoading(true);

@@ -34,12 +34,14 @@ interface Subcriterion {
   updated_at: string;
 }
 
-interface Criterion {
-  id: number;
-  name: string;
-  description?: string;
-  subcriteria?: Subcriterion[];
-}
+// Note: Criterion interface defined but not currently used in this file
+// Kept for potential future use
+// interface Criterion {
+//   id: number;
+//   name: string;
+//   description?: string;
+//   subcriteria?: Subcriterion[];
+// }
 
 interface Evaluation {
   id: number;
@@ -133,187 +135,165 @@ export default function DataEntryProjectPage() {
         setProject(projectData);
 
         // **DATOS MOCK TEMPORALES** - Reemplazar cuando backend esté listo
+        // Helper para crear estructura base de evaluación
+        const createMockEvaluation = (
+          id: number, 
+          standardId: number, 
+          standardName: string, 
+          standardVersion: string,
+          criteriaData: Array<{
+            id: number;
+            criterionId: number;
+            name: string;
+            description: string;
+            importance: string;
+            percentage: number;
+            subcriteriaData: Array<{
+              id: number;
+              name: string;
+              description: string;
+              metricsData: Array<{
+                id: number;
+                name: string;
+                description: string;
+                formula: string;
+                variables: Array<{ symbol: string; description: string; id: number }>;
+              }>;
+            }>;
+          }>
+        ) => ({
+          id,
+          project_id: 4,
+          standard_id: standardId,
+          creation_date: '2025-11-30T04:55:23.514Z',
+          status: 'in_progress' as const,
+          standard: { id: standardId, name: standardName, version: standardVersion },
+          evaluation_criteria: criteriaData.map(c => ({
+            id: c.id,
+            evaluation_id: id,
+            criterion_id: c.criterionId,
+            importance_level: c.importance,
+            importance_percentage: c.percentage,
+            criterion: {
+              id: c.criterionId,
+              name: c.name,
+              description: c.description,
+              subcriteria: c.subcriteriaData.map(sc => ({
+                id: sc.id,
+                name: sc.name,
+                description: sc.description,
+                criterion_id: c.criterionId,
+                state: 'active',
+                created_at: '2025-11-30T04:22:45.217Z',
+                updated_at: '2025-11-30T04:22:45.217Z',
+                metrics: sc.metricsData.map(m => ({
+                  id: m.id,
+                  name: m.name,
+                  description: m.description,
+                  formula: m.formula,
+                  variables: m.variables.map((v, idx) => ({
+                    id: v.id,
+                    metric_id: m.id,
+                    symbol: v.symbol,
+                    description: v.description,
+                    state: 'active'
+                  }))
+                }))
+              }))
+            }
+          }))
+        });
+
         const mockEvaluationsWithMetrics = [
-          {
-            id: 6,
-            project_id: 4,
-            standard_id: 2,
-            creation_date: '2025-11-30T04:55:23.514Z',
-            status: 'in_progress' as const,
-            standard: {
-              id: 2,
-              name: 'OWASP ASVS',
-              version: '4.0.3'
+          createMockEvaluation(6, 2, 'OWASP ASVS', '4.0.3', [
+            {
+              id: 8, criterionId: 4, name: 'V2: Autenticación',
+              description: 'Verificación de mecanismos de autenticación',
+              importance: 'A', percentage: 50.00,
+              subcriteriaData: [{
+                id: 10, name: 'Gestión de Contraseñas',
+                description: 'Políticas y gestión segura de contraseñas',
+                metricsData: [
+                  {
+                    id: 20, name: 'Complejidad de Contraseña',
+                    description: 'Evalúa el nivel de complejidad requerido',
+                    formula: '(U + L + N + S) / 4',
+                    variables: [
+                      { id: 40, symbol: 'U', description: 'Letras mayúsculas requeridas' },
+                      { id: 41, symbol: 'L', description: 'Letras minúsculas requeridas' },
+                      { id: 42, symbol: 'N', description: 'Números requeridos' },
+                      { id: 43, symbol: 'S', description: 'Símbolos especiales requeridos' }
+                    ]
+                  },
+                  {
+                    id: 21, name: 'Tiempo de Expiración',
+                    description: 'Tiempo máximo de validez de una contraseña',
+                    formula: 'T / D',
+                    variables: [
+                      { id: 44, symbol: 'T', description: 'Tiempo actual de la contraseña (días)' },
+                      { id: 45, symbol: 'D', description: 'Días máximos permitidos' }
+                    ]
+                  }
+                ]
+              }]
             },
-            evaluation_criteria: [
-              {
-                id: 8,
-                evaluation_id: 6,
-                criterion_id: 4,
-                importance_level: 'A',
-                importance_percentage: 50.00,
-                criterion: {
-                  id: 4,
-                  name: 'V2: Autenticación',
-                  description: 'Verificación de mecanismos de autenticación',
-                  subcriteria: [
-                    {
-                      id: 10,
-                      name: 'Gestión de Contraseñas',
-                      description: 'Políticas y gestión segura de contraseñas',
-                      criterion_id: 4,
-                      state: 'active',
-                      created_at: '2025-11-30T04:22:45.217Z',
-                      updated_at: '2025-11-30T04:22:45.217Z',
-                      metrics: [
-                        {
-                          id: 20,
-                          name: 'Complejidad de Contraseña',
-                          description: 'Evalúa el nivel de complejidad requerido para contraseñas',
-                          formula: '(U + L + N + S) / 4',
-                          variables: [
-                            { id: 40, metric_id: 20, symbol: 'U', description: 'Letras mayúsculas requeridas', state: 'active' },
-                            { id: 41, metric_id: 20, symbol: 'L', description: 'Letras minúsculas requeridas', state: 'active' },
-                            { id: 42, metric_id: 20, symbol: 'N', description: 'Números requeridos', state: 'active' },
-                            { id: 43, metric_id: 20, symbol: 'S', description: 'Símbolos especiales requeridos', state: 'active' }
-                          ]
-                        },
-                        {
-                          id: 21,
-                          name: 'Tiempo de Expiración',
-                          description: 'Tiempo máximo de validez de una contraseña',
-                          formula: 'T / D',
-                          variables: [
-                            { id: 44, metric_id: 21, symbol: 'T', description: 'Tiempo actual de la contraseña (días)', state: 'active' },
-                            { id: 45, metric_id: 21, symbol: 'D', description: 'Días máximos permitidos', state: 'active' }
-                          ]
-                        }
-                      ]
-                    }
+            {
+              id: 9, criterionId: 5, name: 'V4: Control de Acceso',
+              description: 'Verificación de controles de acceso',
+              importance: 'A', percentage: 50.00,
+              subcriteriaData: [{
+                id: 11, name: 'Autorización de Recursos',
+                description: 'Control de acceso a recursos del sistema',
+                metricsData: [{
+                  id: 22, name: 'Porcentaje de Recursos Protegidos',
+                  description: 'Porcentaje de recursos que requieren autorización',
+                  formula: 'RP / TR * 100',
+                  variables: [
+                    { id: 46, symbol: 'RP', description: 'Recursos protegidos' },
+                    { id: 47, symbol: 'TR', description: 'Total de recursos' }
                   ]
-                }
-              },
-              {
-                id: 9,
-                evaluation_id: 6,
-                criterion_id: 5,
-                importance_level: 'A',
-                importance_percentage: 50.00,
-                criterion: {
-                  id: 5,
-                  name: 'V4: Control de Acceso',
-                  description: 'Verificación de controles de acceso',
-                  subcriteria: [
-                    {
-                      id: 11,
-                      name: 'Autorización de Recursos',
-                      description: 'Control de acceso a recursos del sistema',
-                      criterion_id: 5,
-                      state: 'active',
-                      created_at: '2025-11-30T04:22:45.217Z',
-                      updated_at: '2025-11-30T04:22:45.217Z',
-                      metrics: [
-                        {
-                          id: 22,
-                          name: 'Porcentaje de Recursos Protegidos',
-                          description: 'Porcentaje de recursos que requieren autorización',
-                          formula: 'RP / TR * 100',
-                          variables: [
-                            { id: 46, metric_id: 22, symbol: 'RP', description: 'Recursos protegidos', state: 'active' },
-                            { id: 47, metric_id: 22, symbol: 'TR', description: 'Total de recursos', state: 'active' }
-                          ]
-                        }
-                      ]
-                    }
+                }]
+              }]
+            }
+          ]),
+          createMockEvaluation(5, 1, 'ISO/IEC 25010', '2023', [
+            {
+              id: 6, criterionId: 1, name: 'Adecuación funcional',
+              description: 'Capacidad del producto software para proporcionar funciones',
+              importance: 'A', percentage: 70.00,
+              subcriteriaData: [{
+                id: 12, name: 'Completitud Funcional',
+                description: 'Grado en que el conjunto de funciones cubre todas las tareas',
+                metricsData: [{
+                  id: 23, name: 'Cobertura de Requisitos',
+                  description: 'Porcentaje de requisitos funcionales implementados',
+                  formula: 'RF / TR * 100',
+                  variables: [
+                    { id: 48, symbol: 'RF', description: 'Requisitos funcionales implementados' },
+                    { id: 49, symbol: 'TR', description: 'Total de requisitos' }
                   ]
-                }
-              }
-            ]
-          },
-          {
-            id: 5,
-            project_id: 4,
-            standard_id: 1,
-            creation_date: '2025-11-30T04:55:16.945Z',
-            status: 'in_progress' as const,
-            standard: {
-              id: 1,
-              name: 'ISO/IEC 25010',
-              version: '2023'
+                }]
+              }]
             },
-            evaluation_criteria: [
-              {
-                id: 6,
-                evaluation_id: 5,
-                criterion_id: 1,
-                importance_level: 'A',
-                importance_percentage: 70.00,
-                criterion: {
-                  id: 1,
-                  name: 'Adecuación funcional',
-                  description: 'Capacidad del producto software para proporcionar funciones',
-                  subcriteria: [
-                    {
-                      id: 12,
-                      name: 'Completitud Funcional',
-                      description: 'Grado en que el conjunto de funciones cubre todas las tareas',
-                      criterion_id: 1,
-                      state: 'active',
-                      created_at: '2025-11-30T04:22:45.217Z',
-                      updated_at: '2025-11-30T04:22:45.217Z',
-                      metrics: [
-                        {
-                          id: 23,
-                          name: 'Cobertura de Requisitos',
-                          description: 'Porcentaje de requisitos funcionales implementados',
-                          formula: 'RF / TR * 100',
-                          variables: [
-                            { id: 48, metric_id: 23, symbol: 'RF', description: 'Requisitos funcionales implementados', state: 'active' },
-                            { id: 49, metric_id: 23, symbol: 'TR', description: 'Total de requisitos', state: 'active' }
-                          ]
-                        }
-                      ]
-                    }
+            {
+              id: 7, criterionId: 2, name: 'Usabilidad',
+              description: 'Capacidad del producto software para ser entendido',
+              importance: 'M', percentage: 30.00,
+              subcriteriaData: [{
+                id: 13, name: 'Aprendizaje',
+                description: 'Capacidad del usuario para aprender a usar el software',
+                metricsData: [{
+                  id: 24, name: 'Tiempo de Aprendizaje',
+                  description: 'Tiempo promedio que tarda un usuario en aprender',
+                  formula: 'T / N',
+                  variables: [
+                    { id: 50, symbol: 'T', description: 'Tiempo total de aprendizaje (minutos)' },
+                    { id: 51, symbol: 'N', description: 'Número de usuarios' }
                   ]
-                }
-              },
-              {
-                id: 7,
-                evaluation_id: 5,
-                criterion_id: 2,
-                importance_level: 'M',
-                importance_percentage: 30.00,
-                criterion: {
-                  id: 2,
-                  name: 'Usabilidad',
-                  description: 'Capacidad del producto software para ser entendido',
-                  subcriteria: [
-                    {
-                      id: 13,
-                      name: 'Aprendizaje',
-                      description: 'Capacidad del usuario para aprender a usar el software',
-                      criterion_id: 2,
-                      state: 'active',
-                      created_at: '2025-11-30T04:22:45.217Z',
-                      updated_at: '2025-11-30T04:22:45.217Z',
-                      metrics: [
-                        {
-                          id: 24,
-                          name: 'Tiempo promedio para aprender una tarea',
-                          description: 'Tiempo que toma a un usuario aprender una nueva funcionalidad',
-                          formula: 'T / N',
-                          variables: [
-                            { id: 50, metric_id: 24, symbol: 'T', description: 'Tiempo total de aprendizaje (minutos)', state: 'active' },
-                            { id: 51, metric_id: 24, symbol: 'N', description: 'Número de usuarios', state: 'active' }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
+                }]
+              }]
+            }
+          ])
         ];
 
         setEvaluations(mockEvaluationsWithMetrics);
@@ -543,7 +523,7 @@ function MetricForm({
   metric,
   values,
   onVariableUpdate,
-  evaluationIndex,
+  evaluationIndex: _evaluationIndex,
   metricIndex,
   totalMetrics,
   onNext,
@@ -570,7 +550,6 @@ function MetricForm({
         <h4>Variables:</h4>
         {metric.variables && metric.variables.length > 0 ? (
           metric.variables.map((variable) => {
-            const key = `metric-${metric.id}-${variable.symbol}`;
             return (
               <div key={variable.id} className="variable-input">
                 <label htmlFor={key}>

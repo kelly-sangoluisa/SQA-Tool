@@ -8,7 +8,6 @@ interface MetricsViewProps {
   loading: boolean;
   onEditMetric: (metric: Metric) => void;
   onCreateMetric: () => void;
-  onRefreshMetrics?: () => void;
   onMetricStateChange?: (updatedMetric: Metric) => void;
 }
 
@@ -18,7 +17,6 @@ export function MetricsView({
   loading,
   onEditMetric,
   onCreateMetric,
-  onRefreshMetrics,
   onMetricStateChange
 }: MetricsViewProps) {
   const handleToggleMetricState = async (metric: Metric) => {

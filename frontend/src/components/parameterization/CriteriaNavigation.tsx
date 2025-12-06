@@ -37,7 +37,6 @@ export function CriteriaNavigation({
   const {
     criteria,
     loading,
-    error,
     loadCriteria,
     updateCriterion,
     addCriterion

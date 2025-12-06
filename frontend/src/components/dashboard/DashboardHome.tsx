@@ -71,7 +71,7 @@ export function DashboardHome() {
             setProjects(sortedProjects);
           }
         }
-      } catch (e) {
+      } catch {
         if (mounted) {
           setProjects([]);
         }

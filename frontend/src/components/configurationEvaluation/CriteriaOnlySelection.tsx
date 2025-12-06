@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { parameterizationApi, Criterion } from '@/api/parameterization/parameterization-api';
 import { Button, Loading } from '../shared';
-import { ImportanceLevel, SelectedCriterion } from '@/types/configurationEvaluation.types';
+import { ImportanceLevel } from '@/types/configurationEvaluation.types';
 import styles from './CriteriaOnlySelection.module.css';
 
 interface CriteriaImportanceData {
@@ -40,13 +40,6 @@ export function CriteriaOnlySelection({
   const [error, setError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Only load criteria when authenticated and not loading auth
-    if (isAuthenticated && !authLoading) {
-      loadCriteria();
-    }
-  }, [standardId, isAuthenticated, authLoading]);
-
   const loadCriteria = async () => {
     try {
       setIsLoading(true);
@@ -60,6 +53,14 @@ export function CriteriaOnlySelection({
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Only load criteria when authenticated and not loading auth
+    if (isAuthenticated && !authLoading) {
+      loadCriteria();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [standardId, isAuthenticated, authLoading]);
 
   const handleToggle = (criterionId: number) => {
     const newSelected = new Set(selectedIds);

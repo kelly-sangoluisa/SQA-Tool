@@ -56,7 +56,6 @@ interface Evaluation {
 
 interface EvaluationSidebarProps {
   evaluations: Evaluation[];
-  currentEvaluationIndex: number;
   currentMetricIndex: number;
   allMetrics: Metric[];
   variableValues: Record<string, string>;
@@ -65,7 +64,6 @@ interface EvaluationSidebarProps {
 
 export function EvaluationSidebar({ 
   evaluations,
-  currentEvaluationIndex,
   currentMetricIndex,
   allMetrics,
   variableValues,

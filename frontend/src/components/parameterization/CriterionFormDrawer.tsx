@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Criterion, parameterizationApi, CreateCriterionDto, UpdateCriterionDto } from '../../api/parameterization/parameterization-api';
-import { Button } from '../shared/Button';
+import { BaseFormDrawer } from '../shared/BaseFormDrawer';
+import { FormField } from '../shared/FormField';
+import { useFormDrawer } from '../../hooks/shared/useFormDrawer';
+import { validateForm, handleApiError } from '../../utils/validation';
 import styles from '../shared/FormDrawer.module.css';
 
 interface CriterionFormDrawerProps {
@@ -20,39 +23,23 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
     name: criterion?.name || '',
     description: criterion?.description || ''
   });
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isVisible, setIsVisible] = useState(false);
 
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    // Validar nombre (requerido)
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es requerido';
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'El nombre debe tener al menos 2 caracteres';
-    } else if (formData.name.trim().length > 100) {
-      newErrors.name = 'El nombre no puede exceder 100 caracteres';
-    }
-
-    // Validar descripción (opcional pero con límites)
-    if (formData.description.trim() && formData.description.trim().length > 500) {
-      newErrors.description = 'La descripción no puede exceder 500 caracteres';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const { isVisible, loading, errors, setLoading, setErrors, handleClose, clearError } = useFormDrawer({
+    initialData: criterion,
+    onSave,
+    onClose
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    const validationErrors = validateForm(formData, {
+      name: { required: true, minLength: 2, maxLength: 100 },
+      description: { maxLength: 500 }
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
@@ -61,26 +48,21 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
       let savedCriterion: Criterion;
       
       if (criterion) {
-        // Update existing criterion
         const updateData: UpdateCriterionDto = {
           name: formData.name.trim(),
           description: formData.description.trim() || undefined
         };
-        
         savedCriterion = await parameterizationApi.updateCriterion(criterion.id, updateData);
       } else {
-        // Create new criterion
         if (!standardId) {
           setErrors({ general: 'Error: Se requiere un ID de estándar para crear un criterio' });
           return;
         }
-        
         const createData: CreateCriterionDto = {
           name: formData.name.trim(),
           description: formData.description.trim() || undefined,
           standard_id: standardId
         };
-        
         console.log('Creating criterion with data:', createData);
         console.log('StandardId provided:', standardId);
         savedCriterion = await parameterizationApi.createCriterion(createData);
@@ -89,186 +71,65 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
       onSave(savedCriterion);
     } catch (error) {
       console.error('Error saving criterion:', error);
-      
-      let errorMessage = criterion ? 'Error al actualizar el criterio' : 'Error al crear el criterio';
-      
+      const errorMessage = handleApiError(error, criterion ? 'actualizar' : 'crear', 'el criterio');
       if (error instanceof Error) {
-        if (error.message.includes('name')) {
-          errorMessage = 'Error: El nombre del criterio ya existe o es inválido';
-        } else if (error.message.includes('description')) {
-          errorMessage = 'Error: La descripción es muy larga';
-        } else if (error.message.includes('Internal server error')) {
-          errorMessage = 'Error del servidor. Verifica que todos los campos sean válidos.';
-        } else {
-          errorMessage = `${errorMessage}: ${error.message}`;
+        if (error.message.includes('Internal server error')) {
+          // Error already handled by handleApiError
         }
       }
-      
       setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(onClose, 300);
-  };
-
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear field error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
+    clearError(field);
   };
 
   return (
-    <div className={`${styles.overlay} ${isVisible ? styles.visible : ''}`}>
-      <div className={`${styles.drawer} ${isVisible ? styles.open : ''}`}>
-        <div className={styles.header}>
-          <div className={styles.titleSection}>
-            <h2 className={styles.title}>
-              {criterion ? 'Editar Criterio' : 'Nuevo Criterio'}
-            </h2>
-            <p className={styles.subtitle}>
-              {criterion 
-                ? 'Modifica la información del criterio de evaluación'
-                : 'Define un nuevo criterio para evaluar la calidad del software'
-              }
-            </p>
-          </div>
-          
-          <button
-            type="button"
-            onClick={handleClose}
-            className={styles.closeButton}
-            aria-label="Cerrar formulario"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M15 5L5 15M5 5L15 15"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
+    <BaseFormDrawer
+      isVisible={isVisible}
+      title={criterion ? 'Editar Criterio' : 'Nuevo Criterio'}
+      subtitle={criterion 
+        ? 'Modifica la información del criterio de evaluación'
+        : 'Define un nuevo criterio para evaluar la calidad del software'
+      }
+      onClose={handleClose}
+      onSubmit={handleSubmit}
+      loading={loading}
+      submitLabel={criterion ? 'Actualizar Criterio' : 'Crear Criterio'}
+      submitDisabled={!formData.name.trim()}
+      generalError={errors.general}
+    >
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>Información del Criterio</h3>
+        
+        <FormField
+          id="name"
+          label="Nombre del Criterio"
+          value={formData.name}
+          onChange={(value) => handleInputChange('name', value)}
+          placeholder="Ej: Funcionalidad, Confiabilidad, Usabilidad"
+          disabled={loading}
+          error={errors.name}
+          required
+          maxLength={100}
+        />
 
-        <form onSubmit={handleSubmit} className={`${styles.form} ${loading ? styles.loading : ''}`}>
-          <div className={styles.content}>
-            {errors.general && (
-              <div className={styles.errorMessage}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M8 1L15 15H1L8 1Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M8 6V8.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                  <circle cx="8" cy="11.5" r="0.5" fill="currentColor" />
-                </svg>
-                {errors.general}
-              </div>
-            )}
-
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Información del Criterio</h3>
-              
-              <div className={styles.field}>
-                <label htmlFor="name" className={`${styles.label} ${styles.required}`}>
-                  Nombre del Criterio
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  className={`${styles.input} ${errors.name ? styles.error : ''}`}
-                  placeholder="Ej: Funcionalidad, Confiabilidad, Usabilidad"
-                  disabled={loading}
-                  maxLength={100}
-                />
-                {errors.name && (
-                  <div className={styles.errorMessage}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
-                      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
-                    </svg>
-                    {errors.name}
-                  </div>
-                )}
-                <div className={`${styles.characterCount} ${formData.name.length > 80 ? styles.warning : ''} ${formData.name.length > 95 ? styles.error : ''}`}>
-                  {formData.name.length}/100
-                </div>
-              </div>
-
-              <div className={styles.field}>
-                <label htmlFor="description" className={styles.label}>
-                  Descripción
-                </label>
-                <textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  className={`${styles.textarea} ${errors.description ? styles.error : ''}`}
-                  placeholder="Describe qué aspecto de la calidad evalúa este criterio, su importancia y cómo se mide..."
-                  disabled={loading}
-                  maxLength={500}
-                />
-                {errors.description && (
-                  <div className={styles.errorMessage}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
-                      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
-                    </svg>
-                    {errors.description}
-                  </div>
-                )}
-                <div className={`${styles.characterCount} ${formData.description.length > 400 ? styles.warning : ''} ${formData.description.length > 480 ? styles.error : ''}`}>
-                  {formData.description.length}/500
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.footer}>
-            <Button
-              type="button"
-              onClick={handleClose}
-              variant="outline"
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-            
-            <Button
-              type="submit"
-              variant="primary"
-              isLoading={loading}
-              disabled={!formData.name.trim()}
-            >
-              {criterion ? 'Actualizar Criterio' : 'Crear Criterio'}
-            </Button>
-          </div>
-        </form>
+        <FormField
+          id="description"
+          label="Descripción"
+          value={formData.description}
+          onChange={(value) => handleInputChange('description', value)}
+          placeholder="Describe qué aspecto de la calidad evalúa este criterio, su importancia y cómo se mide..."
+          disabled={loading}
+          error={errors.description}
+          maxLength={500}
+          type="textarea"
+        />
       </div>
-    </div>
+    </BaseFormDrawer>
   );
 }

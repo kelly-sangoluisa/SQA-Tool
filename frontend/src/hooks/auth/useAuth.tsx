@@ -262,6 +262,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (isClient) {
       checkAuth();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isClient]); // SOLO isClient - quitar checkAuth para evitar bucle
 
   const contextValue: AuthContextType = useMemo(() => ({

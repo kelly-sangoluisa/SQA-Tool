@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { parameterizationApi, CreateStandardDto, UpdateStandardDto, Standard } from '../../api/parameterization/parameterization-api';
-import { Button } from '../shared/Button';
+import { BaseFormDrawer } from '../shared/BaseFormDrawer';
+import { FormField } from '../shared/FormField';
+import { useFormDrawer } from '../../hooks/shared/useFormDrawer';
+import { validateForm, handleApiError } from '../../utils/validation';
 import styles from '../shared/FormDrawer.module.css';
 
 interface StandardFormDrawerProps {
@@ -21,44 +24,24 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
     description: standard?.description || '',
     version: standard?.version || '1.0'
   });
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isVisible, setIsVisible] = useState(false);
 
-  React.useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    // Validar nombre (requerido)
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es requerido';
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'El nombre debe tener al menos 2 caracteres';
-    } else if (formData.name.trim().length > 100) {
-      newErrors.name = 'El nombre no puede exceder 100 caracteres';
-    }
-
-    // Validar descripción (opcional pero con límites)
-    if (formData.description.trim() && formData.description.trim().length > 500) {
-      newErrors.description = 'La descripción no puede exceder 500 caracteres';
-    }
-
-    // Validar versión (opcional pero con límites)
-    if (formData.version.trim() && formData.version.trim().length > 20) {
-      newErrors.version = 'La versión no puede exceder 20 caracteres';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const { isVisible, loading, errors, setLoading, setErrors, handleClose, clearError } = useFormDrawer({
+    initialData: standard,
+    onSave,
+    onClose
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    const validationErrors = validateForm(formData, {
+      name: { required: true, minLength: 2, maxLength: 100 },
+      description: { maxLength: 500 },
+      version: { maxLength: 20 }
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
@@ -67,237 +50,96 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
       let savedStandard: Standard;
       
       if (standard) {
-        // Update existing standard
         const updateData: UpdateStandardDto = {
           name: formData.name.trim(),
           description: formData.description.trim() || undefined,
           version: formData.version.trim() || undefined
         };
-        
         savedStandard = await parameterizationApi.updateStandard(standard.id, updateData);
       } else {
-        // Create new standard
         const createData: CreateStandardDto = {
           name: formData.name.trim(),
           description: formData.description.trim() || undefined,
           version: formData.version.trim() || undefined
         };
-        
-        console.log('Creating standard with data:', createData); // Debug log
+        console.log('Creating standard with data:', createData);
         savedStandard = await parameterizationApi.createStandard(createData);
       }
       
       onSave(savedStandard);
     } catch (error) {
       console.error('Error saving standard:', error);
-      
-      // Mejorar el manejo de errores
-      let errorMessage = standard ? 'Error al actualizar el estándar' : 'Error al crear el estándar';
-      
+      const errorMessage = handleApiError(error, standard ? 'actualizar' : 'crear', 'el estándar');
       if (error instanceof Error) {
-        // Intentar extraer más información del error
         if (error.message.includes('name')) {
-          errorMessage = 'Error: El nombre del estándar ya existe o es inválido';
-        } else if (error.message.includes('version')) {
-          errorMessage = 'Error: La versión del estándar es inválida';
-        } else if (error.message.includes('description')) {
-          errorMessage = 'Error: La descripción es muy larga';
-        } else if (error.message.includes('Internal server error')) {
-          errorMessage = 'Error del servidor. Verifica que todos los campos sean válidos.';
-        } else {
-          errorMessage = `${errorMessage}: ${error.message}`;
+          // Error already handled by handleApiError
         }
       }
-      
       setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(onClose, 300); // Wait for animation
-  };
-
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
+    clearError(field);
   };
 
   return (
-    <div className={`${styles.overlay} ${isVisible ? styles.visible : ''}`}>
-      <div className={`${styles.drawer} ${isVisible ? styles.open : ''}`}>
-        <div className={styles.header}>
-          <div className={styles.titleSection}>
-            <h2 className={styles.title}>
-              {standard ? 'Editar Estándar' : 'Nuevo Estándar'}
-            </h2>
-            <p className={styles.subtitle}>
-              {standard 
-                ? 'Modifica la información del estándar de calidad'
-                : 'Crea un nuevo estándar de calidad para tu organización'
-              }
-            </p>
-          </div>
-          
-          <button
-            type="button"
-            onClick={handleClose}
-            className={styles.closeButton}
-            aria-label="Cerrar formulario"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M15 5L5 15M5 5L15 15"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
+    <BaseFormDrawer
+      isVisible={isVisible}
+      title={standard ? 'Editar Estándar' : 'Nuevo Estándar'}
+      subtitle={standard 
+        ? 'Modifica la información del estándar de calidad'
+        : 'Crea un nuevo estándar de calidad para tu organización'
+      }
+      onClose={handleClose}
+      onSubmit={handleSubmit}
+      loading={loading}
+      submitLabel={standard ? 'Actualizar Estándar' : 'Crear Estándar'}
+      submitDisabled={!formData.name.trim() || !formData.version.trim()}
+      generalError={errors.general}
+    >
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>Información Básica</h3>
+        
+        <FormField
+          id="name"
+          label="Nombre del Estándar"
+          value={formData.name}
+          onChange={(value) => handleInputChange('name', value)}
+          placeholder="Ej: ISO 25010, CMMI, IEEE 730"
+          disabled={loading}
+          error={errors.name}
+          required
+          maxLength={100}
+        />
 
-        <form onSubmit={handleSubmit} className={`${styles.form} ${loading ? styles.loading : ''}`}>
-          <div className={styles.content}>
-            {errors.general && (
-              <div className={styles.errorMessage}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M8 1L15 15H1L8 1Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M8 6V8.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                  <circle cx="8" cy="11.5" r="0.5" fill="currentColor" />
-                </svg>
-                {errors.general}
-              </div>
-            )}
+        <FormField
+          id="version"
+          label="Versión"
+          value={formData.version}
+          onChange={(value) => handleInputChange('version', value)}
+          placeholder="Ej: 1.0, 2023.1, v2.0"
+          disabled={loading}
+          error={errors.version}
+          required
+          maxLength={20}
+        />
 
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Información Básica</h3>
-              
-              <div className={styles.field}>
-                <label htmlFor="name" className={`${styles.label} ${styles.required}`}>
-                  Nombre del Estándar
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  className={`${styles.input} ${errors.name ? styles.error : ''}`}
-                  placeholder="Ej: ISO 25010, CMMI, IEEE 730"
-                  disabled={loading}
-                  maxLength={100}
-                />
-                {errors.name && (
-                  <div className={styles.errorMessage}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
-                      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
-                    </svg>
-                    {errors.name}
-                  </div>
-                )}
-                <div className={`${styles.characterCount} ${formData.name.length > 80 ? styles.warning : ''} ${formData.name.length > 95 ? styles.error : ''}`}>
-                  {formData.name.length}/100
-                </div>
-              </div>
-
-              <div className={styles.field}>
-                <label htmlFor="version" className={`${styles.label} ${styles.required}`}>
-                  Versión
-                </label>
-                <input
-                  type="text"
-                  id="version"
-                  value={formData.version}
-                  onChange={(e) => handleInputChange('version', e.target.value)}
-                  className={`${styles.input} ${errors.version ? styles.error : ''}`}
-                  placeholder="Ej: 1.0, 2023.1, v2.0"
-                  disabled={loading}
-                  maxLength={20}
-                />
-                {errors.version && (
-                  <div className={styles.errorMessage}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
-                      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
-                    </svg>
-                    {errors.version}
-                  </div>
-                )}
-                <div className={`${styles.characterCount} ${formData.version.length > 15 ? styles.warning : ''} ${formData.version.length > 18 ? styles.error : ''}`}>
-                  {formData.version.length}/20
-                </div>
-              </div>
-
-              <div className={styles.field}>
-                <label htmlFor="description" className={styles.label}>
-                  Descripción
-                </label>
-                <textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  className={`${styles.textarea} ${errors.description ? styles.error : ''}`}
-                  placeholder="Describe el estándar de calidad, su propósito, alcance y principales características..."
-                  disabled={loading}
-                  maxLength={500}
-                />
-                {errors.description && (
-                  <div className={styles.errorMessage}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
-                      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
-                    </svg>
-                    {errors.description}
-                  </div>
-                )}
-                <div className={`${styles.characterCount} ${formData.description.length > 400 ? styles.warning : ''} ${formData.description.length > 480 ? styles.error : ''}`}>
-                  {formData.description.length}/500
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.footer}>
-            <Button
-              type="button"
-              onClick={handleClose}
-              variant="outline"
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-            
-            <Button
-              type="submit"
-              variant="primary"
-              isLoading={loading}
-              disabled={!formData.name.trim() || !formData.version.trim()}
-            >
-              {standard ? 'Actualizar Estándar' : 'Crear Estándar'}
-            </Button>
-          </div>
-        </form>
+        <FormField
+          id="description"
+          label="Descripción"
+          value={formData.description}
+          onChange={(value) => handleInputChange('description', value)}
+          placeholder="Describe el estándar de calidad, su propósito, alcance y principales características..."
+          disabled={loading}
+          error={errors.description}
+          maxLength={500}
+          type="textarea"
+        />
       </div>
-    </div>
+    </BaseFormDrawer>
   );
 }
