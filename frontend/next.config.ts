@@ -10,11 +10,8 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  experimental: {
-    turbopack: {
-      root: path.resolve(__dirname),
-    },
-  },
 };
+
+// Note: turbopack configuration is handled by Next.js automatically in this version
 
 export default nextConfig;
