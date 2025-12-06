@@ -553,6 +553,8 @@ export function CriteriaNavigation({
                             );
                           })}
                         </div>
+                        </div>
+                        )
                       )}
                     </div>
                   )}
