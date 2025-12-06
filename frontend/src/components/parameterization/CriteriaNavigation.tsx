@@ -7,6 +7,7 @@ import {
 import { useCriteriaManagement } from '../../hooks/admin/useCriteriaManagement';
 import { CriterionFormDrawer } from './CriterionFormDrawer';
 import { SubCriterionFormDrawer } from './SubCriterionFormDrawer';
+import { Switch } from '../shared';
 import styles from './CriteriaNavigation.module.css';
 
 interface CriteriaNavigationProps {
@@ -417,15 +418,15 @@ export function CriteriaNavigation({
                     </button>
 
                     {/* Toggle Switch */}
-                    <button
-                      type="button"
-                      onClick={(e) => toggleCriterionState(criterion, e)}
-                      className={`${styles.toggleButton} ${criterion.state === 'active' ? styles.active : styles.inactive}`}
+                    <Switch
+                      checked={criterion.state === 'active'}
+                      onChange={(checked) => {
+                        const e = { stopPropagation: () => {}, preventDefault: () => {} } as React.MouseEvent;
+                        toggleCriterionState(criterion, e);
+                      }}
                       disabled={isToggling}
                       title={`${criterion.state === 'active' ? 'Desactivar' : 'Activar'} criterio`}
-                    >
-                      <div className={styles.toggleSlider}></div>
-                    </button>
+                    />
                   </div>
 
                   {/* Subcriteria */}
@@ -533,10 +534,12 @@ export function CriteriaNavigation({
                                 </button>
 
                                 {/* Subcriteria toggle switch */}
-                                <button
-                                  type="button"
-                                  onClick={(e) => toggleSubCriterionState(subCriterion, e)}
-                                  className={`${styles.toggleButton} ${subCriterion.state === 'active' ? styles.active : styles.inactive}`}
+                                <Switch
+                                  checked={subCriterion.state === 'active'}
+                                  onChange={(checked) => {
+                                    const e = { stopPropagation: () => {}, preventDefault: () => {} } as React.MouseEvent;
+                                    toggleSubCriterionState(subCriterion, e);
+                                  }}
                                   disabled={isSubToggling || (criterion.state === 'inactive' && subCriterion.state === 'inactive')}
                                   title={
                                     (() => {
@@ -546,9 +549,7 @@ export function CriteriaNavigation({
                                       return subCriterion.state === 'active' ? 'Desactivar subcriterio' : 'Activar subcriterio';
                                     })()
                                   }
-                                >
-                                  <div className={styles.toggleSlider}></div>
-                                </button>
+                                />
                               </div>
                             );
                           })}

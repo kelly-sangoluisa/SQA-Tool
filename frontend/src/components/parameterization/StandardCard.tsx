@@ -1,5 +1,6 @@
 import React from 'react';
 import { Standard } from '../../api/parameterization/parameterization-api';
+import { Switch } from '../shared';
 import styles from './AdminParameterization.module.css';
 
 interface StandardCardProps {
@@ -73,14 +74,11 @@ export function StandardCard({ standard, onSelect, onEdit, onToggleState }: Stan
           </svg>
         </button>
         
-        <button
-          type="button"
-          onClick={handleToggleClick}
-          className={`${styles.toggleButton} ${standard.state === 'active' ? styles.active : styles.inactive}`}
+        <Switch
+          checked={standard.state === 'active'}
+          onChange={() => onToggleState(standard)}
           title={`${standard.state === 'active' ? 'Desactivar' : 'Activar'} estándar`}
-        >
-          <div className={styles.toggleSlider}></div>
-        </button>
+        />
       </div>
     </div>
   );

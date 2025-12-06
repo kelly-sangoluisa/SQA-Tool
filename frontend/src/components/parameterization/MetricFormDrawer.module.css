@@ -147,6 +147,12 @@
   font-family: inherit;
 }
 
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+}
+
 .input:focus,
 .textarea:focus {
   outline: none;
@@ -158,12 +164,6 @@
 .textarea.error {
   border-color: rgb(239 68 68 / 1);
   background: rgb(254 242 242 / 0.5);
-}
-
-.textarea {
-  resize: vertical;
-  min-height: 80px;
-  line-height: 1.6;
 }
 
 .textarea.formula {
@@ -366,15 +366,15 @@
   justify-content: center;
 }
 
-.saveButton:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgb(78 94 163 / 0.25);
-}
-
 .saveButton:disabled {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
+}
+
+.saveButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgb(78 94 163 / 0.25);
 }
 
 .spinner {
