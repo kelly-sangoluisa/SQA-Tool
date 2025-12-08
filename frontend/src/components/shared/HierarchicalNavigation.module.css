@@ -447,6 +447,19 @@
   color: rgb(185 28 28 / 1);
 }
 
+.loadingSubcriteria {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+}
+
+.loadingSubcriteria span {
+  color: rgb(107 114 128 / 1);
+  font-size: 0.875rem;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
