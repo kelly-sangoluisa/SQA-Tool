@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Criterion, 
   SubCriterion, 
@@ -55,7 +55,7 @@ export function CriteriaNavigation({
   const [isSubFormOpen, setIsSubFormOpen] = useState(false);
   const [editingSubCriterion, setEditingSubCriterion] = useState<SubCriterion | null>(null);
   const [parentCriterion, setParentCriterion] = useState<Criterion | null>(null);
-  const [refreshSubCriteriaFn, setRefreshSubCriteriaFn] = useState<((criterionId: number) => Promise<void>) | null>(null);
+  const refreshSubCriteriaFnRef = useRef<((criterionId: number) => Promise<void>) | null>(null);
 
   useEffect(() => {
     if (standardId) {
@@ -156,12 +156,17 @@ export function CriteriaNavigation({
   // Handler for sub-criterion saved
   const handleSubCriterionSaved = async (savedSubCriterion?: SubCriterion) => {
     // Refresh sub-criteria for the parent criterion
-    if (parentCriterion && refreshSubCriteriaFn) {
-      await refreshSubCriteriaFn(parentCriterion.id);
+    if (parentCriterion && refreshSubCriteriaFnRef.current) {
+      await refreshSubCriteriaFnRef.current(parentCriterion.id);
     }
     handleCloseSubForm();
     onRefresh?.();
   };
+
+  // Callback to receive the refresh function from HierarchicalNavigation
+  const handleRefreshSubCriteriaRef = useCallback((fn: (criterionId: number) => Promise<void>) => {
+    refreshSubCriteriaFnRef.current = fn;
+  }, []);
 
   return (
     <>
@@ -181,7 +186,7 @@ export function CriteriaNavigation({
         onCriterionStateChange={onCriterionStateChange}
         onSubCriterionStateChange={onSubCriterionStateChange}
         onRefresh={onRefresh}
-        onRefreshSubCriteriaRef={(fn) => setRefreshSubCriteriaFn(() => fn)}
+        onRefreshSubCriteriaRef={handleRefreshSubCriteriaRef}
         headerTitle="Estructura de Criterios"
         createButtonLabel="Nuevo Criterio"
         showCreateButton={true}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Switch } from './Switch';
 import styles from './HierarchicalNavigation.module.css';
 
@@ -144,10 +144,13 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
     }
   }, [parentId]);
   
-  const loadSubCriteriaForCriterion = async (criterionId: number, forceRefresh: boolean = false) => {
-    if (subCriteria[criterionId] && !forceRefresh) return;
+  const loadSubCriteriaForCriterion = useCallback(async (criterionId: number, forceRefresh: boolean = false) => {
+    setLoadingSubCriteria(prev => {
+      // Solo proceder si no está cargando ya o es un force refresh
+      if (prev.has(criterionId) && !forceRefresh) return prev;
+      return new Set([...prev, criterionId]);
+    });
 
-    setLoadingSubCriteria(prev => new Set([...prev, criterionId]));
     try {
       const subCriteriaData = await loadSubCriteria(criterionId, forceRefresh);
       setSubCriteria(prev => ({
@@ -163,14 +166,12 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
         return newSet;
       });
     }
-  };
+  }, [loadSubCriteria]);
   
   // Expose refresh function to parent
   useEffect(() => {
     if (onRefreshSubCriteriaRef) {
-      onRefreshSubCriteriaRef(async (criterionId: number) => {
-        await loadSubCriteriaForCriterion(criterionId, true);
-      });
+      onRefreshSubCriteriaRef(loadSubCriteriaForCriterion);
     }
   }, [onRefreshSubCriteriaRef, loadSubCriteriaForCriterion]);
 
