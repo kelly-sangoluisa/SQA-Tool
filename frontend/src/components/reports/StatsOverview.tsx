@@ -2,6 +2,7 @@
 
 import type { EvaluationStats, EvaluationReport } from '@/api/reports/reports.types';
 import { RadarChart } from './RadarChart';
+import { FaClipboardList, FaChartBar, FaArrowUp, FaStar, FaExclamationTriangle } from 'react-icons/fa';
 
 interface StatsOverviewProps {
   stats: EvaluationStats;
@@ -15,9 +16,7 @@ export function StatsOverview({ stats, report }: StatsOverviewProps) {
       <div className="stats-grid">
         <div className="stat-card stat-card--primary">
           <div className="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <FaClipboardList size={24} />
           </div>
           <div className="stat-content">
             <div className="stat-value">{stats.total_criteria}</div>
@@ -27,9 +26,7 @@ export function StatsOverview({ stats, report }: StatsOverviewProps) {
 
         <div className="stat-card stat-card--secondary">
           <div className="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <FaChartBar size={24} />
           </div>
           <div className="stat-content">
             <div className="stat-value">{stats.total_metrics}</div>
@@ -39,9 +36,7 @@ export function StatsOverview({ stats, report }: StatsOverviewProps) {
 
         <div className="stat-card stat-card--success">
           <div className="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <FaArrowUp size={24} />
           </div>
           <div className="stat-content">
             <div className="stat-value">{stats.average_criteria_score.toFixed(1)}</div>
@@ -50,30 +45,39 @@ export function StatsOverview({ stats, report }: StatsOverviewProps) {
         </div>
       </div>
 
-      {/* Mejor y Peor Criterio */}
-      <div className="comparison-grid">
-        <div className="comparison-card comparison-card--best">
-          <div className="comparison-header">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M10 3l2.5 5.5L18 9.5l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-1L10 3z" fill="currentColor"/>
-            </svg>
-            <h4>Mejor Criterio</h4>
+      {/* Mejor y Peor Criterio - Solo mostrar si son diferentes */}
+      {stats.best_criterion.name !== stats.worst_criterion.name ? (
+        <div className="comparison-grid">
+          <div className="comparison-card comparison-card--best">
+            <div className="comparison-header">
+              <FaStar size={20} />
+              <h4>Mejor Criterio</h4>
+            </div>
+            <p className="comparison-name">{stats.best_criterion.name}</p>
+            <div className="comparison-score">{stats.best_criterion.score.toFixed(1)}</div>
           </div>
-          <p className="comparison-name">{stats.best_criterion.name}</p>
-          <div className="comparison-score">{stats.best_criterion.score.toFixed(1)}</div>
-        </div>
 
-        <div className="comparison-card comparison-card--worst">
-          <div className="comparison-header">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M10 18l-2.5-5.5L2 11.5l4-4-1-6 5 3 5-3-1 6 4 4-5.5 1L10 18z" fill="currentColor"/>
-            </svg>
-            <h4>Área de Mejora</h4>
+          <div className="comparison-card comparison-card--worst">
+            <div className="comparison-header">
+              <FaExclamationTriangle size={20} />
+              <h4>Área de Mejora</h4>
+            </div>
+            <p className="comparison-name">{stats.worst_criterion.name}</p>
+            <div className="comparison-score">{stats.worst_criterion.score.toFixed(1)}</div>
           </div>
-          <p className="comparison-name">{stats.worst_criterion.name}</p>
-          <div className="comparison-score">{stats.worst_criterion.score.toFixed(1)}</div>
         </div>
-      </div>
+      ) : (
+        <div className="comparison-grid">
+          <div className="comparison-card comparison-card--single">
+            <div className="comparison-header">
+              <FaStar size={20} />
+              <h4>Criterio Evaluado</h4>
+            </div>
+            <p className="comparison-name">{stats.best_criterion.name}</p>
+            <div className="comparison-score">{stats.best_criterion.score.toFixed(1)}</div>
+          </div>
+        </div>
+      )}
 
       {/* Distribución por Importancia */}
       <div className="importance-section">
@@ -226,6 +230,14 @@ export function StatsOverview({ stats, report }: StatsOverviewProps) {
           background: linear-gradient(135deg, #fffbeb 0%, white 100%);
         }
 
+        .comparison-card--single {
+          border-color: var(--color-primary);
+          background: linear-gradient(135deg, #f0f4ff 0%, white 100%);
+          grid-column: 1 / -1;
+          max-width: 500px;
+          margin: 0 auto;
+        }
+
         .comparison-header {
           display: flex;
           align-items: center;
@@ -239,6 +251,10 @@ export function StatsOverview({ stats, report }: StatsOverviewProps) {
 
         .comparison-card--worst .comparison-header {
           color: #f59e0b;
+        }
+
+        .comparison-card--single .comparison-header {
+          color: var(--color-primary);
         }
 
         .comparison-header h4 {
@@ -268,6 +284,10 @@ export function StatsOverview({ stats, report }: StatsOverviewProps) {
 
         .comparison-card--worst .comparison-score {
           color: #f59e0b;
+        }
+
+        .comparison-card--single .comparison-score {
+          color: var(--color-primary);
         }
 
         .importance-section {

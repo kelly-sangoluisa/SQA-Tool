@@ -246,19 +246,29 @@ export class PDFGenerator {
 
     this.currentY = boxY + boxHeight + 15;
 
-    // Mejor y peor criterio
+    // Mejor y peor criterio - Solo mostrar ambos si son diferentes
     this.pdf.setTextColor(0, 0, 0);
     this.pdf.setFontSize(12);
-    this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Mejor Criterio:', this.margin, this.currentY);
-    this.pdf.setFont('helvetica', 'normal');
-    this.pdf.text(`${stats.best_criterion.name} (${stats.best_criterion.score.toFixed(1)}%)`, this.margin + 35, this.currentY);
+    
+    if (stats.best_criterion.name !== stats.worst_criterion.name) {
+      // Hay múltiples criterios - mostrar mejor y peor
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text('Mejor Criterio:', this.margin, this.currentY);
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.text(`${stats.best_criterion.name} (${stats.best_criterion.score.toFixed(1)}%)`, this.margin + 35, this.currentY);
 
-    this.currentY += 10;
-    this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Criterio a Mejorar:', this.margin, this.currentY);
-    this.pdf.setFont('helvetica', 'normal');
-    this.pdf.text(`${stats.worst_criterion.name} (${stats.worst_criterion.score.toFixed(1)}%)`, this.margin + 42, this.currentY);
+      this.currentY += 10;
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text('Criterio a Mejorar:', this.margin, this.currentY);
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.text(`${stats.worst_criterion.name} (${stats.worst_criterion.score.toFixed(1)}%)`, this.margin + 42, this.currentY);
+    } else {
+      // Solo un criterio - mostrar una vez
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text('Criterio Evaluado:', this.margin, this.currentY);
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.text(`${stats.best_criterion.name} (${stats.best_criterion.score.toFixed(1)}%)`, this.margin + 40, this.currentY);
+    }
 
     this.currentY += 15;
     

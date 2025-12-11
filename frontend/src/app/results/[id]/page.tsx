@@ -228,10 +228,6 @@ export default function EvaluationDetailPage() {
           </div>
           
           <div className="header-actions">
-            <div className="header-score">
-              <ScoreGauge score={report.final_score} size="medium" />
-            </div>
-            
             <div className="export-section">
               <button 
                 className="export-pdf-btn"
@@ -267,6 +263,10 @@ export default function EvaluationDetailPage() {
                   <span>Incluir Certificado de Cumplimiento</span>
                 </label>
               )}
+            </div>
+            
+            <div className="header-score">
+              <ScoreGauge score={report.final_score} size="medium" />
             </div>
           </div>
         </div>
