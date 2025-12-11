@@ -6,6 +6,7 @@ interface PDFGenerationOptions {
   report: EvaluationReport;
   stats: EvaluationStats;
   radarImageData?: string | null;
+  includeCertificate?: boolean;
 }
 
 export class PDFGenerator {
@@ -26,7 +27,7 @@ export class PDFGenerator {
   }
 
   async generateReport(options: PDFGenerationOptions): Promise<void> {
-    const { report, stats, radarImageData } = options;
+    const { report, stats, radarImageData, includeCertificate } = options;
 
     // Página 1: Portada
     this.addCoverPage(report);
@@ -51,8 +52,19 @@ export class PDFGenerator {
     this.addNewPage();
     this.addConclusion(report);
 
-    // Pie de página en todas las páginas
-    this.addPageNumbers();
+    // Certificado de Cumplimiento (solo si cumple umbral y está habilitado)
+    const shouldIncludeCertificate = includeCertificate && report.meets_threshold;
+    if (shouldIncludeCertificate) {
+      this.addNewPage();
+      this.addCertificate(report);
+      
+      // Agregar sello en la portada solo si se incluye certificado
+      this.pdf.setPage(1);
+      await this.addApprovalSeal();
+    }
+
+    // Pie de página en todas las páginas (excepto certificado)
+    this.addPageNumbers(shouldIncludeCertificate);
 
     // Descargar
     const fileName = `Evaluacion_${report.project_name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -137,6 +149,38 @@ export class PDFGenerator {
     this.pdf.text('Generado automáticamente por SQA Tool', this.pageWidth / 2, this.pageHeight - 28, { align: 'center' });
     this.pdf.text(new Date().toLocaleDateString('es-ES'), this.pageWidth / 2, this.pageHeight - 20, { align: 'center' });
     this.pdf.text(new Date().toLocaleTimeString('es-ES'), this.pageWidth / 2, this.pageHeight - 14, { align: 'center' });
+
+  }
+
+  private async addApprovalSeal(): Promise<void> {
+    try {
+      // Cargar la imagen del sello
+      const response = await fetch('/seal.png');
+      const blob = await response.blob();
+      const reader = new FileReader();
+      
+      return new Promise((resolve) => {
+        reader.onloadend = () => {
+          const base64data = reader.result as string;
+          
+          // Posición y tamaño del sello (más grande y más abajo)
+          const sealX = this.pageWidth - 78;
+          const sealY = 130;
+          const sealWidth = 65;
+          const sealHeight = 65;
+          
+          // Agregar la imagen del sello al PDF
+          this.pdf.addImage(base64data, 'PNG', sealX, sealY, sealWidth, sealHeight);
+          
+          resolve();
+        };
+        
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error al cargar el sello:', error);
+      // Si falla, no hace nada (el PDF se genera sin sello)
+    }
   }
 
   private addTableOfContents(): void {
@@ -451,6 +495,147 @@ export class PDFGenerator {
     this.pdf.text('Evaluador de Calidad', this.margin, this.currentY);
   }
 
+  private addCertificate(report: EvaluationReport): void {
+    // Fondo con gradiente sutil (usando rectángulos)
+    this.pdf.setFillColor(248, 250, 252);
+    this.pdf.rect(0, 0, this.pageWidth, this.pageHeight, 'F');
+
+    // Borde decorativo externo
+    this.pdf.setDrawColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+    this.pdf.setLineWidth(3);
+    this.pdf.rect(15, 15, this.pageWidth - 30, this.pageHeight - 30, 'S');
+
+    // Borde decorativo interno
+    this.pdf.setLineWidth(0.5);
+    this.pdf.rect(18, 18, this.pageWidth - 36, this.pageHeight - 36, 'S');
+
+    // Título principal
+    this.currentY = 40;
+    this.pdf.setFontSize(28);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+    this.pdf.text('CERTIFICADO DE CUMPLIMIENTO', this.pageWidth / 2, this.currentY, { align: 'center' });
+
+    // Línea decorativa debajo del título
+    this.currentY += 6;
+    this.pdf.setDrawColor(this.secondaryColor[0], this.secondaryColor[1], this.secondaryColor[2]);
+    this.pdf.setLineWidth(1);
+    this.pdf.line(40, this.currentY, this.pageWidth - 40, this.currentY);
+
+    // Subtítulo
+    this.currentY += 15;
+    this.pdf.setFontSize(12);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setTextColor(80, 80, 80);
+    this.pdf.text('Sistema de Evaluación de Calidad de Software', this.pageWidth / 2, this.currentY, { align: 'center' });
+
+    // Texto introductorio
+    this.currentY += 20;
+    this.pdf.setFontSize(11);
+    this.pdf.setTextColor(60, 60, 60);
+    const introText = 'Se certifica que el proyecto evaluado ha cumplido satisfactoriamente con los';
+    this.pdf.text(introText, this.pageWidth / 2, this.currentY, { align: 'center' });
+    this.currentY += 6;
+    this.pdf.text('estándares de calidad establecidos, alcanzando los criterios requeridos.', this.pageWidth / 2, this.currentY, { align: 'center' });
+
+    // Box con información del proyecto
+    this.currentY += 20;
+    const boxX = 30;
+    const boxWidth = this.pageWidth - 60;
+    const boxHeight = 65;
+    
+    // Fondo del box
+    this.pdf.setFillColor(255, 255, 255);
+    this.pdf.roundedRect(boxX, this.currentY, boxWidth, boxHeight, 3, 3, 'F');
+    this.pdf.setDrawColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+    this.pdf.setLineWidth(0.5);
+    this.pdf.roundedRect(boxX, this.currentY, boxWidth, boxHeight, 3, 3, 'S');
+
+    // Información del proyecto dentro del box
+    let infoY = this.currentY + 12;
+    this.pdf.setFontSize(11);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+    this.pdf.text('Nombre del Proyecto:', boxX + 10, infoY);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setTextColor(40, 40, 40);
+    this.pdf.text(report.project_name, boxX + 60, infoY);
+
+    infoY += 10;
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+    this.pdf.text('Estándar Aplicado:', boxX + 10, infoY);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setTextColor(40, 40, 40);
+    this.pdf.text(report.standard_name, boxX + 60, infoY);
+
+    infoY += 10;
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+    this.pdf.text('Puntuación Final:', boxX + 10, infoY);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setFontSize(14);
+    const scoreColor = report.final_score >= 80 ? [16, 185, 129] : [245, 158, 11];
+    this.pdf.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
+    this.pdf.text(`${report.final_score.toFixed(1)}%`, boxX + 60, infoY);
+
+    infoY += 10;
+    this.pdf.setFontSize(11);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+    this.pdf.text('Umbral Requerido:', boxX + 10, infoY);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setTextColor(40, 40, 40);
+    this.pdf.text(`${report.project_threshold}%`, boxX + 60, infoY);
+
+    infoY += 10;
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+    this.pdf.text('Fecha de Evaluación:', boxX + 10, infoY);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setTextColor(40, 40, 40);
+    this.pdf.text(new Date(report.created_at).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }), boxX + 60, infoY);
+
+    // Badge de aprobación
+    this.currentY = this.currentY + boxHeight + 25;
+    this.pdf.setFillColor(16, 185, 129);
+    const badgeWidth = 55;
+    const badgeHeight = 14;
+    this.pdf.roundedRect((this.pageWidth - badgeWidth) / 2, this.currentY - 8, badgeWidth, badgeHeight, 3, 3, 'F');
+    this.pdf.setFontSize(12);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(255, 255, 255);
+    this.pdf.text('APROBADO', this.pageWidth / 2, this.currentY, { align: 'center' });
+
+    // Espacio para firma
+    this.currentY += 35;
+    this.pdf.setDrawColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+    this.pdf.setLineWidth(0.5);
+    this.pdf.line(this.pageWidth / 2 - 40, this.currentY, this.pageWidth / 2 + 40, this.currentY);
+    
+    this.currentY += 5;
+    this.pdf.setFontSize(10);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(80, 80, 80);
+    this.pdf.text(report.created_by_name, this.pageWidth / 2, this.currentY, { align: 'center' });
+    
+    this.currentY += 5;
+    this.pdf.setFontSize(9);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setTextColor(100, 100, 100);
+    this.pdf.text('Evaluador de Calidad', this.pageWidth / 2, this.currentY, { align: 'center' });
+
+    // Footer del certificado - dentro del marco
+    this.pdf.setFontSize(8);
+    this.pdf.setTextColor(120, 120, 120);
+    this.pdf.text('Este certificado es generado automáticamente por el Sistema de Evaluación SQA', this.pageWidth / 2, this.pageHeight - 32, { align: 'center' });
+    this.pdf.text(`Documento emitido el ${new Date().toLocaleDateString('es-ES')}`, this.pageWidth / 2, this.pageHeight - 26, { align: 'center' });
+  }
+
   private addSectionTitle(title: string): void {
     this.pdf.setFontSize(18);
     this.pdf.setFont('helvetica', 'bold');
@@ -472,15 +657,16 @@ export class PDFGenerator {
     this.currentY = this.margin;
   }
 
-  private addPageNumbers(): void {
+  private addPageNumbers(includeCertificate: boolean = false): void {
     const pageCount = this.pdf.getNumberOfPages();
+    const pagesWithNumbers = includeCertificate ? pageCount - 1 : pageCount;
     
-    for (let i = 1; i <= pageCount; i++) {
+    for (let i = 1; i <= pagesWithNumbers; i++) {
       this.pdf.setPage(i);
       this.pdf.setFontSize(9);
       this.pdf.setTextColor(150, 150, 150);
       this.pdf.text(
-        `Página ${i} de ${pageCount}`,
+        `Página ${i} de ${pagesWithNumbers}`,
         this.pageWidth / 2,
         this.pageHeight - 10,
         { align: 'center' }

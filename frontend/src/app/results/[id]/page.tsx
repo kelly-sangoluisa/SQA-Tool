@@ -23,6 +23,7 @@ export default function EvaluationDetailPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'stats'>('overview');
   const [showAllCriteria, setShowAllCriteria] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [includeCertificate, setIncludeCertificate] = useState(true);
 
   useEffect(() => {
     if (evaluationId) {
@@ -92,7 +93,7 @@ export default function EvaluationDetailPage() {
         await new Promise(resolve => setTimeout(resolve, 400));
       }
       
-      await generateEvaluationPDF({ report, stats, radarImageData });
+      await generateEvaluationPDF({ report, stats, radarImageData, includeCertificate });
     } catch (error) {
       console.error('Error generando PDF:', error);
       alert('Error al generar el PDF. Por favor intente nuevamente.');
@@ -231,28 +232,42 @@ export default function EvaluationDetailPage() {
               <ScoreGauge score={report.final_score} size="medium" />
             </div>
             
-            <button 
-              className="export-pdf-btn"
-              onClick={handleExportPDF}
-              disabled={isExporting}
-            >
-              {isExporting ? (
-                <>
-                  <svg className="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"/>
-                    <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"/>
-                  </svg>
-                  Generando...
-                </>
-              ) : (
-                <>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Exportar PDF
-                </>
+            <div className="export-section">
+              <button 
+                className="export-pdf-btn"
+                onClick={handleExportPDF}
+                disabled={isExporting}
+              >
+                {isExporting ? (
+                  <>
+                    <svg className="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"/>
+                      <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"/>
+                    </svg>
+                    Generando...
+                  </>
+                ) : (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Exportar PDF
+                  </>
+                )}
+              </button>
+              
+              {report.meets_threshold && (
+                <label className="certificate-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={includeCertificate}
+                    onChange={(e) => setIncludeCertificate(e.target.checked)}
+                    disabled={isExporting}
+                  />
+                  <span>Incluir Certificado de Cumplimiento</span>
+                </label>
               )}
-            </button>
+            </div>
           </div>
         </div>
       </div>
@@ -482,15 +497,23 @@ export default function EvaluationDetailPage() {
           gap: 1.5rem;
         }
 
+        .export-section {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          align-items: center;
+        }
+
         .header-score {
           /* ScoreGauge wrapper - styles from component */
         }
 
         .export-pdf-btn {
-          display: flex;
+          display: inline-flex;
           align-items: center;
+          justify-content: center;
           gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
+          padding: 0.875rem 2rem;
           background: linear-gradient(135deg, #10b981 0%, #059669 100%);
           color: white;
           border: none;
@@ -500,6 +523,7 @@ export default function EvaluationDetailPage() {
           cursor: pointer;
           transition: all 0.3s ease;
           box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+          min-width: 180px;
         }
 
         .export-pdf-btn:hover:not(:disabled) {
@@ -511,6 +535,45 @@ export default function EvaluationDetailPage() {
           opacity: 0.6;
           cursor: not-allowed;
           transform: none;
+        }
+
+        .certificate-checkbox {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.625rem 0.875rem;
+          font-size: 0.875rem;
+          color: #475569;
+          cursor: pointer;
+          user-select: none;
+          background: #f8fafc;
+          border-radius: 8px;
+          transition: all 0.2s ease;
+          border: 1px solid #e2e8f0;
+        }
+
+        .certificate-checkbox:hover {
+          background: #f1f5f9;
+        }
+
+        .certificate-checkbox input[type="checkbox"] {
+          width: 18px;
+          height: 18px;
+          cursor: pointer;
+          accent-color: var(--color-primary);
+        }
+
+        .certificate-checkbox input[type="checkbox"]:disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
+        }
+
+        .certificate-checkbox span {
+          font-weight: 500;
+        }
+
+        .certificate-checkbox:hover span {
+          color: var(--color-primary);
         }
 
         .spinner {
