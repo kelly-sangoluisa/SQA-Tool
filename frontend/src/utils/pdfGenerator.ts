@@ -42,7 +42,7 @@ export class PDFGenerator {
 
     // Detalles de Criterios
     this.addNewPage();
-    await this.addCriteriaDetails(report);
+    this.addCriteriaDetails(report);
 
     // Gráficos
     this.addNewPage();

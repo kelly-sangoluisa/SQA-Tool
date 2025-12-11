@@ -231,6 +231,37 @@ export function EvaluationSidebar({
                               const subcriterionKey = `${evaluationIndex}-${criterion.id}-${subcriterion.id}`;
                               const isSubcriterionExpanded = expandedSubcriteria.has(subcriterionKey);
 
+                              const renderMetrics = () => {
+                                if (!subcriterion.metrics || subcriterion.metrics.length === 0) {
+                                  return (
+                                    <div style={{ padding: '0.5rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.75rem' }}>
+                                      No hay métricas configuradas
+                                    </div>
+                                  );
+                                }
+
+                                return subcriterion.metrics.map((metric) => {
+                                  const metricGlobalIndex = getMetricGlobalIndex(metric);
+                                  const isCompleted = isMetricCompleted(metric);
+                                  const isActive = metricGlobalIndex === currentMetricIndex;
+
+                                  return (
+                                    <button
+                                      key={metric.id}
+                                      className={`metric-button ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+                                      onClick={() => onMetricSelect(evaluationIndex, metricGlobalIndex)}
+                                    >
+                                      <div className="metric-info">
+                                        <span className="metric-name">{metric.name}</span>
+                                        <span className="metric-status">
+                                          {isCompleted ? '✓' : '○'}
+                                        </span>
+                                      </div>
+                                    </button>
+                                  );
+                                });
+                              };
+
                               return (
                                 <div key={subcriterion.id} className="subcriterion-group">
                                   <button
@@ -250,32 +281,7 @@ export function EvaluationSidebar({
 
                                   {isSubcriterionExpanded && (
                                     <div className="metrics-container">
-                                      {subcriterion.metrics && subcriterion.metrics.length > 0 ? (
-                                        subcriterion.metrics.map((metric) => {
-                                        const metricGlobalIndex = getMetricGlobalIndex(metric);
-                                        const isCompleted = isMetricCompleted(metric);
-                                        const isActive = metricGlobalIndex === currentMetricIndex;
-
-                                        return (
-                                          <button
-                                            key={metric.id}
-                                            className={`metric-button ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
-                                            onClick={() => onMetricSelect(evaluationIndex, metricGlobalIndex)}
-                                          >
-                                            <div className="metric-info">
-                                              <span className="metric-name">{metric.name}</span>
-                                              <span className="metric-status">
-                                                {isCompleted ? '✓' : '○'}
-                                              </span>
-                                            </div>
-                                          </button>
-                                        );
-                                        })
-                                      ) : (
-                                        <div style={{ padding: '0.5rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.75rem' }}>
-                                          No hay métricas configuradas
-                                        </div>
-                                      )}
+                                      {renderMetrics()}
                                     </div>
                                   )}
                                 </div>
