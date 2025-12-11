@@ -4,7 +4,7 @@ import { Repository, DataSource } from 'typeorm';
 
 // Entities
 import { Project, ProjectStatus } from '../entities/project.entity';
-import { Evaluation, EvaluationStatus } from '../entities/evaluation.entity';
+import { Evaluation } from '../entities/evaluation.entity';
 import { EvaluationCriterion } from '../entities/evaluation-criterion.entity';
 import { Standard } from '../../parameterization/entities/standard.entity';
 import { Criterion } from '../../parameterization/entities/criterion.entity';
@@ -95,8 +95,6 @@ export class ConfigEvaluationService {
       const newEvaluation = evaluationRepo.create({
         project_id: createEvaluationDto.project_id,
         standard_id: createEvaluationDto.standard_id,
-        creation_date: new Date(createEvaluationDto.creation_date),
-        status: EvaluationStatus.IN_PROGRESS,
       });
 
       const savedEvaluation = await evaluationRepo.save(newEvaluation);

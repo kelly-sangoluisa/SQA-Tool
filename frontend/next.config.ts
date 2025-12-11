@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Suppress hydration warnings caused by browser extensions
+  reactStrictMode: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
 };
 
 // Note: turbopack configuration is handled by Next.js automatically in this version

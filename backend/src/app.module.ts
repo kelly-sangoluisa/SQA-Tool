@@ -17,6 +17,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ParameterizationModule } from './modules/parameterization/parameterization.module';
 import { ConfigEvaluationModule } from './modules/config-evaluation/config-evaluation.module';
 import { EntryDataModule } from './modules/entry-data/entry-data.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 
 @Module({
@@ -48,6 +49,7 @@ import { EntryDataModule } from './modules/entry-data/entry-data.module';
     ParameterizationModule,
     ConfigEvaluationModule,
     EntryDataModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [
