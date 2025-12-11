@@ -576,17 +576,18 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
                                     {showStateToggles && (
                                       <Switch
                                         checked={subCriterion.state === 'active'}
-                                        onChange={() => {
+                                        onChange={(checked) => {
                                           const e = { stopPropagation: () => {}, preventDefault: () => {} } as React.MouseEvent;
                                           toggleSubCriterionState(subCriterion, e);
                                         }}
                                         disabled={isSubToggling || (criterion.state === 'inactive' && subCriterion.state === 'inactive')}
                                         title={
-                                          criterion.state === 'inactive' && subCriterion.state === 'inactive'
-                                            ? 'No se puede activar cuando el criterio padre está inactivo'
-                                            : subCriterion.state === 'active'
-                                            ? 'Desactivar subcriterio'
-                                            : 'Activar subcriterio'
+                                          (() => {
+                                            if (criterion.state === 'inactive' && subCriterion.state === 'inactive') {
+                                              return 'No se puede activar cuando el criterio padre está inactivo';
+                                            }
+                                            return subCriterion.state === 'active' ? 'Desactivar subcriterio' : 'Activar subcriterio';
+                                          })()
                                         }
                                       />
                                     )}
