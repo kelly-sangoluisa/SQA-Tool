@@ -9,7 +9,7 @@ interface Props {
 }
 
 export function CriterionAccordion({ criterion, index }: Props) {
-  const [isOpen, setIsOpen] = useState(index === 0); // Primer criterio abierto por defecto
+  const [isOpen, setIsOpen] = useState(false); // Todos cerrados por defecto
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return '#10b981'; // Verde

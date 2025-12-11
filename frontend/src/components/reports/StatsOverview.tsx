@@ -77,44 +77,50 @@ export function StatsOverview({ stats }: StatsOverviewProps) {
       <div className="importance-section">
         <h4 className="importance-title">Puntuación por Nivel de Importancia</h4>
         <div className="importance-bars">
-          <div className="importance-bar">
-            <div className="bar-header">
-              <span className="bar-label">Alta Importancia</span>
-              <span className="bar-value">{stats.score_by_importance.high.toFixed(1)}</span>
+          {stats.score_by_importance.high > 0 && (
+            <div className="importance-bar">
+              <div className="bar-header">
+                <span className="bar-label">Alta Importancia</span>
+                <span className="bar-value">{stats.score_by_importance.high.toFixed(1)}</span>
+              </div>
+              <div className="bar-container">
+                <div 
+                  className="bar-fill bar-fill--high"
+                  style={{ width: `${stats.score_by_importance.high}%` }}
+                />
+              </div>
             </div>
-            <div className="bar-container">
-              <div 
-                className="bar-fill bar-fill--high"
-                style={{ width: `${stats.score_by_importance.high}%` }}
-              />
-            </div>
-          </div>
+          )}
 
-          <div className="importance-bar">
-            <div className="bar-header">
-              <span className="bar-label">Importancia Media</span>
-              <span className="bar-value">{stats.score_by_importance.medium.toFixed(1)}</span>
+          {stats.score_by_importance.medium > 0 && (
+            <div className="importance-bar">
+              <div className="bar-header">
+                <span className="bar-label">Importancia Media</span>
+                <span className="bar-value">{stats.score_by_importance.medium.toFixed(1)}</span>
+              </div>
+              <div className="bar-container">
+                <div 
+                  className="bar-fill bar-fill--medium"
+                  style={{ width: `${stats.score_by_importance.medium}%` }}
+                />
+              </div>
             </div>
-            <div className="bar-container">
-              <div 
-                className="bar-fill bar-fill--medium"
-                style={{ width: `${stats.score_by_importance.medium}%` }}
-              />
-            </div>
-          </div>
+          )}
 
-          <div className="importance-bar">
-            <div className="bar-header">
-              <span className="bar-label">Baja Importancia</span>
-              <span className="bar-value">{stats.score_by_importance.low.toFixed(1)}</span>
+          {stats.score_by_importance.low > 0 && (
+            <div className="importance-bar">
+              <div className="bar-header">
+                <span className="bar-label">Baja Importancia</span>
+                <span className="bar-value">{stats.score_by_importance.low.toFixed(1)}</span>
+              </div>
+              <div className="bar-container">
+                <div 
+                  className="bar-fill bar-fill--low"
+                  style={{ width: `${stats.score_by_importance.low}%` }}
+                />
+              </div>
             </div>
-            <div className="bar-container">
-              <div 
-                className="bar-fill bar-fill--low"
-                style={{ width: `${stats.score_by_importance.low}%` }}
-              />
-            </div>
-          </div>
+          )}
         </div>
       </div>
 

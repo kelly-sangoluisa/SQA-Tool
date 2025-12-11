@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ScoreGauge } from '@/components/reports/ScoreGauge';
 import { CriterionCard } from '@/components/reports/CriterionCard';
+import { CriterionAccordion } from '@/components/reports/CriterionAccordion';
+import { ChartsSection } from '@/components/reports/ChartsSection';
 import { StatsOverview } from '@/components/reports/StatsOverview';
 import { getEvaluationReport, getEvaluationStats } from '@/api/reports/reports.api';
 import type { EvaluationReport, EvaluationStats } from '@/api/reports/reports.types';
@@ -18,6 +20,7 @@ export default function EvaluationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'stats'>('overview');
+  const [showAllCriteria, setShowAllCriteria] = useState(false);
 
   useEffect(() => {
     if (evaluationId) {
@@ -267,13 +270,40 @@ export default function EvaluationDetailPage() {
               </div>
             </div>
 
+            {/* Gráficos Visuales */}
+            <ChartsSection report={report} />
+
+            {/* Resultados por Criterio */}
             <div className="criteria-section">
               <h3 className="section-title">Resultados por Criterio</h3>
               <div className="criteria-grid">
-                {report.criteria_results.map((criterion, index) => (
+                {(showAllCriteria ? report.criteria_results : report.criteria_results.slice(0, 3)).map((criterion, index) => (
                   <CriterionCard key={index} criterion={criterion} />
                 ))}
               </div>
+              
+              {report.criteria_results.length > 3 && (
+                <button 
+                  className="show-more-criteria-btn"
+                  onClick={() => setShowAllCriteria(!showAllCriteria)}
+                >
+                  {showAllCriteria ? (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 15l7-7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Mostrar menos
+                    </>
+                  ) : (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 9l-7 7-7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Ver todos los criterios ({report.criteria_results.length})
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -314,92 +344,12 @@ export default function EvaluationDetailPage() {
 
             <div className="criteria-section">
               <h3 className="section-title">Desglose por Criterio y Métrica</h3>
-              {report.criteria_results.map((criterion, criterionIndex) => (
-                <div key={criterionIndex} className="criterion-detail-card">
-                  <div className="criterion-detail-header">
-                    <div>
-                      <h4 className="criterion-detail-title">{criterion.criterion_name}</h4>
-                      {criterion.criterion_description && (
-                        <p className="criterion-detail-description">{criterion.criterion_description}</p>
-                      )}
-                    </div>
-                    <div className="criterion-detail-score">
-                      <span className="criterion-score-value">{criterion.final_score.toFixed(2)}</span>
-                      <span className="criterion-score-label">Puntuación</span>
-                    </div>
-                  </div>
-
-                  {criterion.metrics.map((metric, metricIndex) => (
-                    <div key={metricIndex} className="metric-detail-card">
-                      <div className="metric-header">
-                        <div className="metric-info">
-                          <div className="metric-name-row">
-                            <h5 className="metric-name">{metric.metric_name}</h5>
-                            {metric.metric_code && (
-                              <span className="metric-code">{metric.metric_code}</span>
-                            )}
-                          </div>
-                          {metric.metric_description && (
-                            <p className="metric-description">{metric.metric_description}</p>
-                          )}
-                        </div>
-                        
-                        <div className={`metric-threshold-badge ${metric.meets_threshold ? 'metric-threshold-badge--success' : 'metric-threshold-badge--warning'}`}>
-                          {metric.meets_threshold ? (
-                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                            </svg>
-                          ) : (
-                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
-                            </svg>
-                          )}
-                          {metric.meets_threshold ? 'Cumple' : 'No Cumple'}
-                        </div>
-                      </div>
-
-                      {metric.formula && (
-                        <div className="metric-formula">
-                          <span className="formula-label">Fórmula:</span>
-                          <code className="formula-code">{metric.formula}</code>
-                        </div>
-                      )}
-
-                      {metric.variables && metric.variables.length > 0 && (
-                        <div className="variables-section">
-                          <h6 className="variables-title">Variables:</h6>
-                          <div className="variables-grid">
-                            {metric.variables.map((variable, varIndex) => (
-                              <div key={varIndex} className="variable-item">
-                                <span className="variable-symbol">{variable.symbol}</span>
-                                <div className="variable-content">
-                                  <span className="variable-description">{variable.description}</span>
-                                  <span className="variable-value">{variable.value}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="metric-values">
-                        <div className="metric-value-item">
-                          <span className="metric-value-label">Valor Calculado:</span>
-                          <span className="metric-value-number">{metric.calculated_value.toFixed(2)}</span>
-                        </div>
-                        <div className="metric-value-item">
-                          <span className="metric-value-label">Umbral Deseado:</span>
-                          <span className="metric-value-number">{metric.desired_threshold.toFixed(2)}</span>
-                        </div>
-                        <div className="metric-value-item">
-                          <span className="metric-value-label">Valor Ponderado:</span>
-                          <span className="metric-value-number metric-value-number--highlight">{metric.weighted_value.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
+              <p className="section-subtitle">Expandir cada criterio para ver el detalle de sus métricas, variables y cálculos</p>
+              <div className="accordion-list">
+                {report.criteria_results.map((criterion, index) => (
+                  <CriterionAccordion key={index} criterion={criterion} index={index} />
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -940,6 +890,64 @@ export default function EvaluationDetailPage() {
         .metric-value-number--highlight {
           color: var(--color-primary);
           font-size: 1.25rem;
+        }
+
+        .section-title {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: var(--color-primary-dark);
+          margin: 0 0 0.5rem 0;
+        }
+
+        .section-subtitle {
+          font-size: 0.875rem;
+          color: #6b7280;
+          margin: 0 0 1.5rem 0;
+        }
+
+        .accordion-list {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .criteria-section {
+          margin-top: 2rem;
+        }
+
+        .criteria-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .show-more-criteria-btn {
+          width: 100%;
+          padding: 0.875rem;
+          margin-top: 1rem;
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          color: var(--color-primary);
+          font-weight: 600;
+          font-size: 0.875rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+
+        .show-more-criteria-btn:hover {
+          background: white;
+          border-color: var(--color-primary);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(78, 94, 163, 0.15);
+        }
+
+        .show-more-criteria-btn svg {
+          transition: transform 0.3s ease;
         }
 
         @keyframes fadeIn {
