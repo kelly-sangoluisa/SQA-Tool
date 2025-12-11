@@ -14,6 +14,8 @@ import { EvaluationMetric } from '../config-evaluation/entities/evaluation_metri
 import { Criterion } from '../parameterization/entities/criterion.entity';
 import { Metric } from '../parameterization/entities/metric.entity';
 import { Standard } from '../parameterization/entities/standard.entity';
+import { EvaluationVariable } from '../entry-data/entities/evaluation_variable.entity';
+import { FormulaVariable } from '../parameterization/entities/formula-variable.entity';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { Standard } from '../parameterization/entities/standard.entity';
       Criterion,
       Metric,
       Standard,
+      EvaluationVariable,
+      FormulaVariable,
     ]),
   ],
   controllers: [ReportsController],

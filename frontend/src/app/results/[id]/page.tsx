@@ -159,6 +159,25 @@ export default function EvaluationDetailPage() {
             <h1 className="page-title">{report.project_name}</h1>
             <p className="page-subtitle">{report.standard_name}</p>
             <p className="page-date">{formatDate(report.created_at)}</p>
+            
+            {/* Threshold Indicator */}
+            <div className={`threshold-badge ${report.meets_threshold ? 'threshold-badge--success' : 'threshold-badge--warning'}`}>
+              {report.meets_threshold ? (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                  </svg>
+                  Cumple con el umbral del proyecto ({report.project_threshold}%)
+                </>
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                  </svg>
+                  No cumple con el umbral del proyecto ({report.project_threshold}%)
+                </>
+              )}
+            </div>
           </div>
           
           <div className="header-score">
@@ -280,16 +299,107 @@ export default function EvaluationDetailPage() {
                   <span className="detail-label">Puntuación Final:</span>
                   <span className="detail-value detail-value--score">{report.final_score.toFixed(2)}</span>
                 </div>
+                <div className="detail-item">
+                  <span className="detail-label">Umbral del Proyecto:</span>
+                  <span className="detail-value">{report.project_threshold}%</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Estado:</span>
+                  <span className={`detail-value ${report.meets_threshold ? 'detail-value--success' : 'detail-value--warning'}`}>
+                    {report.meets_threshold ? 'Aprobado' : 'No Cumple'}
+                  </span>
+                </div>
               </div>
             </div>
 
             <div className="criteria-section">
-              <h3 className="section-title">Desglose Completo</h3>
-              <div className="criteria-list">
-                {report.criteria_results.map((criterion, index) => (
-                  <CriterionCard key={index} criterion={criterion} />
-                ))}
-              </div>
+              <h3 className="section-title">Desglose por Criterio y Métrica</h3>
+              {report.criteria_results.map((criterion, criterionIndex) => (
+                <div key={criterionIndex} className="criterion-detail-card">
+                  <div className="criterion-detail-header">
+                    <div>
+                      <h4 className="criterion-detail-title">{criterion.criterion_name}</h4>
+                      {criterion.criterion_description && (
+                        <p className="criterion-detail-description">{criterion.criterion_description}</p>
+                      )}
+                    </div>
+                    <div className="criterion-detail-score">
+                      <span className="criterion-score-value">{criterion.final_score.toFixed(2)}</span>
+                      <span className="criterion-score-label">Puntuación</span>
+                    </div>
+                  </div>
+
+                  {criterion.metrics.map((metric, metricIndex) => (
+                    <div key={metricIndex} className="metric-detail-card">
+                      <div className="metric-header">
+                        <div className="metric-info">
+                          <div className="metric-name-row">
+                            <h5 className="metric-name">{metric.metric_name}</h5>
+                            {metric.metric_code && (
+                              <span className="metric-code">{metric.metric_code}</span>
+                            )}
+                          </div>
+                          {metric.metric_description && (
+                            <p className="metric-description">{metric.metric_description}</p>
+                          )}
+                        </div>
+                        
+                        <div className={`metric-threshold-badge ${metric.meets_threshold ? 'metric-threshold-badge--success' : 'metric-threshold-badge--warning'}`}>
+                          {metric.meets_threshold ? (
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                            </svg>
+                          ) : (
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+                            </svg>
+                          )}
+                          {metric.meets_threshold ? 'Cumple' : 'No Cumple'}
+                        </div>
+                      </div>
+
+                      {metric.formula && (
+                        <div className="metric-formula">
+                          <span className="formula-label">Fórmula:</span>
+                          <code className="formula-code">{metric.formula}</code>
+                        </div>
+                      )}
+
+                      {metric.variables && metric.variables.length > 0 && (
+                        <div className="variables-section">
+                          <h6 className="variables-title">Variables:</h6>
+                          <div className="variables-grid">
+                            {metric.variables.map((variable, varIndex) => (
+                              <div key={varIndex} className="variable-item">
+                                <span className="variable-symbol">{variable.symbol}</span>
+                                <div className="variable-content">
+                                  <span className="variable-description">{variable.description}</span>
+                                  <span className="variable-value">{variable.value}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="metric-values">
+                        <div className="metric-value-item">
+                          <span className="metric-value-label">Valor Calculado:</span>
+                          <span className="metric-value-number">{metric.calculated_value.toFixed(2)}</span>
+                        </div>
+                        <div className="metric-value-item">
+                          <span className="metric-value-label">Umbral Deseado:</span>
+                          <span className="metric-value-number">{metric.desired_threshold.toFixed(2)}</span>
+                        </div>
+                        <div className="metric-value-item">
+                          <span className="metric-value-label">Valor Ponderado:</span>
+                          <span className="metric-value-number metric-value-number--highlight">{metric.weighted_value.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -546,6 +656,292 @@ export default function EvaluationDetailPage() {
           color: var(--color-primary);
         }
 
+        .detail-value--success {
+          color: #10b981;
+        }
+
+        .detail-value--warning {
+          color: #f59e0b;
+        }
+
+        .threshold-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          font-size: 0.875rem;
+          font-weight: 600;
+          margin-top: 0.75rem;
+        }
+
+        .threshold-badge--success {
+          background: rgba(16, 185, 129, 0.1);
+          color: #059669;
+          border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .threshold-badge--warning {
+          background: rgba(245, 158, 11, 0.1);
+          color: #d97706;
+          border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .criterion-detail-card {
+          background: white;
+          border-radius: 16px;
+          padding: 1.5rem;
+          box-shadow: 0 4px 20px rgba(78, 94, 163, 0.08);
+          margin-bottom: 1.5rem;
+        }
+
+        .criterion-detail-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          padding-bottom: 1rem;
+          margin-bottom: 1rem;
+          border-bottom: 2px solid #f1f5f9;
+        }
+
+        .criterion-detail-title {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: var(--color-primary-dark);
+          margin: 0 0 0.5rem 0;
+        }
+
+        .criterion-detail-description {
+          font-size: 0.875rem;
+          color: #6b7280;
+          margin: 0;
+          line-height: 1.5;
+        }
+
+        .criterion-detail-score {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 0.25rem;
+        }
+
+        .criterion-score-value {
+          font-size: 2rem;
+          font-weight: 700;
+          color: var(--color-primary);
+        }
+
+        .criterion-score-label {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #6b7280;
+          text-transform: uppercase;
+        }
+
+        .metric-detail-card {
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          border-radius: 12px;
+          padding: 1.25rem;
+          margin-bottom: 1rem;
+          border-left: 4px solid var(--color-primary);
+        }
+
+        .metric-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 1rem;
+        }
+
+        .metric-info {
+          flex: 1;
+        }
+
+        .metric-name-row {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .metric-name {
+          font-size: 1.05rem;
+          font-weight: 700;
+          color: var(--color-primary-dark);
+          margin: 0;
+        }
+
+        .metric-code {
+          padding: 0.25rem 0.625rem;
+          background: var(--color-primary);
+          color: white;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          font-weight: 600;
+        }
+
+        .metric-description {
+          font-size: 0.875rem;
+          color: #6b7280;
+          margin: 0;
+          line-height: 1.5;
+        }
+
+        .metric-threshold-badge {
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+          padding: 0.5rem 0.875rem;
+          border-radius: 8px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+
+        .metric-threshold-badge--success {
+          background: rgba(16, 185, 129, 0.1);
+          color: #059669;
+          border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .metric-threshold-badge--warning {
+          background: rgba(245, 158, 11, 0.1);
+          color: #d97706;
+          border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .metric-formula {
+          background: white;
+          padding: 0.75rem;
+          border-radius: 8px;
+          margin-bottom: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          border: 1px solid #e5e7eb;
+        }
+
+        .formula-label {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--color-primary-dark);
+          flex-shrink: 0;
+        }
+
+        .formula-code {
+          font-family: 'Courier New', monospace;
+          font-size: 0.875rem;
+          color: #4b5563;
+          background: #f9fafb;
+          padding: 0.375rem 0.625rem;
+          border-radius: 6px;
+          flex: 1;
+        }
+
+        .variables-section {
+          background: white;
+          padding: 1rem;
+          border-radius: 8px;
+          margin-bottom: 1rem;
+          border: 1px solid #e5e7eb;
+        }
+
+        .variables-title {
+          font-size: 0.875rem;
+          font-weight: 700;
+          color: var(--color-primary-dark);
+          margin: 0 0 0.75rem 0;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .variables-grid {
+          display: grid;
+          gap: 0.75rem;
+        }
+
+        .variable-item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.625rem;
+          background: #f9fafb;
+          border-radius: 8px;
+        }
+
+        .variable-symbol {
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+          color: white;
+          font-weight: 700;
+          font-size: 0.875rem;
+          border-radius: 8px;
+          flex-shrink: 0;
+        }
+
+        .variable-content {
+          flex: 1;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .variable-description {
+          font-size: 0.875rem;
+          color: #4b5563;
+          flex: 1;
+        }
+
+        .variable-value {
+          font-size: 0.875rem;
+          font-weight: 700;
+          color: var(--color-primary);
+          padding: 0.25rem 0.625rem;
+          background: white;
+          border-radius: 6px;
+          border: 1px solid #e5e7eb;
+        }
+
+        .metric-values {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 0.75rem;
+          background: white;
+          padding: 1rem;
+          border-radius: 8px;
+          border: 1px solid #e5e7eb;
+        }
+
+        .metric-value-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.375rem;
+        }
+
+        .metric-value-label {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .metric-value-number {
+          font-size: 1.125rem;
+          font-weight: 700;
+          color: var(--color-primary-dark);
+        }
+
+        .metric-value-number--highlight {
+          color: var(--color-primary);
+          font-size: 1.25rem;
+        }
+
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
@@ -567,6 +963,30 @@ export default function EvaluationDetailPage() {
 
           .tab {
             justify-content: flex-start;
+          }
+
+          .metric-header {
+            flex-direction: column;
+            gap: 0.75rem;
+          }
+
+          .metric-threshold-badge {
+            align-self: flex-start;
+          }
+
+          .criterion-detail-header {
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          .criterion-detail-score {
+            align-items: flex-start;
+          }
+
+          .variable-content {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
           }
         }
       `}</style>

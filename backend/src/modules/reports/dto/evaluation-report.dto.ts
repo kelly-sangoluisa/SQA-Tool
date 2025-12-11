@@ -9,8 +9,14 @@ export class EvaluationReportDto {
   @ApiProperty({ description: 'ID de la evaluación' })
   evaluation_id: number;
 
+  @ApiProperty({ description: 'ID del proyecto' })
+  project_id: number;
+
   @ApiProperty({ description: 'Nombre del proyecto' })
   project_name: string;
+
+  @ApiProperty({ description: 'Umbral mínimo del proyecto' })
+  project_threshold: number | null;
 
   @ApiProperty({ description: 'Nombre del estándar aplicado' })
   standard_name: string;
@@ -20,6 +26,9 @@ export class EvaluationReportDto {
 
   @ApiProperty({ description: 'Puntuación final de la evaluación (0-100)' })
   final_score: number;
+
+  @ApiProperty({ description: 'Indica si cumple con el umbral del proyecto' })
+  meets_threshold: boolean;
 
   @ApiProperty({ description: 'Conclusión de la evaluación' })
   conclusion: string;
@@ -45,6 +54,9 @@ export class CriterionResultDto {
   @ApiProperty({ description: 'Nombre del criterio' })
   criterion_name: string;
 
+  @ApiProperty({ description: 'Descripción del criterio' })
+  criterion_description: string;
+
   @ApiProperty({ description: 'Nivel de importancia', enum: ImportanceLevel })
   importance_level: ImportanceLevel;
 
@@ -59,8 +71,20 @@ export class CriterionResultDto {
 }
 
 export class MetricResultDto {
+  @ApiProperty({ description: 'Código de la métrica' })
+  metric_code: string;
+
   @ApiProperty({ description: 'Nombre de la métrica' })
   metric_name: string;
+
+  @ApiProperty({ description: 'Descripción de la métrica' })
+  metric_description: string;
+
+  @ApiProperty({ description: 'Fórmula de la métrica' })
+  formula: string;
+
+  @ApiProperty({ description: 'Umbral deseado' })
+  desired_threshold: number | null;
 
   @ApiProperty({ description: 'Valor calculado' })
   calculated_value: number;
@@ -68,8 +92,22 @@ export class MetricResultDto {
   @ApiProperty({ description: 'Valor ponderado' })
   weighted_value: number;
 
-  @ApiProperty({ description: 'Peso de la métrica' })
-  weight: number;
+  @ApiProperty({ description: 'Cumple con el umbral deseado' })
+  meets_threshold: boolean;
+
+  @ApiProperty({ description: 'Variables utilizadas en el cálculo' })
+  variables: VariableResultDto[];
+}
+
+export class VariableResultDto {
+  @ApiProperty({ description: 'Símbolo de la variable' })
+  symbol: string;
+
+  @ApiProperty({ description: 'Descripción de la variable' })
+  description: string;
+
+  @ApiProperty({ description: 'Valor de la variable' })
+  value: number;
 }
 
 /**

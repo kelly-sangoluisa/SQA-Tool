@@ -14,12 +14,15 @@ import { EvaluationMetric } from '../../config-evaluation/entities/evaluation_me
 import { Criterion } from '../../parameterization/entities/criterion.entity';
 import { Metric } from '../../parameterization/entities/metric.entity';
 import { Standard } from '../../parameterization/entities/standard.entity';
+import { EvaluationVariable } from '../../entry-data/entities/evaluation_variable.entity';
+import { FormulaVariable } from '../../parameterization/entities/formula-variable.entity';
 
 // DTOs
 import { 
   EvaluationReportDto, 
   CriterionResultDto, 
   MetricResultDto,
+  VariableResultDto,
   EvaluationListItemDto,
   EvaluationStatsDto
 } from '../dto/evaluation-report.dto';
@@ -49,6 +52,10 @@ export class ReportsService {
     private readonly metricRepo: Repository<Metric>,
     @InjectRepository(Standard)
     private readonly standardRepo: Repository<Standard>,
+    @InjectRepository(EvaluationVariable)
+    private readonly evaluationVariableRepo: Repository<EvaluationVariable>,
+    @InjectRepository(FormulaVariable)
+    private readonly formulaVariableRepo: Repository<FormulaVariable>,
   ) {}
 
   /**
@@ -109,17 +116,38 @@ export class ReportsService {
         });
 
         if (metricResult && evalMetric.metric) {
+          // Obtener las variables de evaluación para esta métrica
+          const evaluationVariables = await this.evaluationVariableRepo.find({
+            where: { eval_metric_id: evalMetric.id },
+            relations: ['variable'],
+          });
+
+          const variables: VariableResultDto[] = evaluationVariables.map(evalVar => ({
+            symbol: evalVar.variable?.symbol || '',
+            description: evalVar.variable?.description || '',
+            value: Number(evalVar.value),
+          }));
+
+          const calculatedValue = Number(metricResult.calculated_value);
+          const desiredThreshold = Number(evalMetric.metric.desired_threshold || 0);
+
           metricsResults.push({
             metric_name: evalMetric.metric.name,
-            calculated_value: Number(metricResult.calculated_value),
+            metric_code: evalMetric.metric.code || '',
+            metric_description: evalMetric.metric.description || '',
+            formula: evalMetric.metric.formula || '',
+            calculated_value: calculatedValue,
             weighted_value: Number(metricResult.weighted_value),
-            weight: 0, // El peso se maneja a nivel de ponderación, no en la métrica
+            desired_threshold: desiredThreshold,
+            meets_threshold: calculatedValue >= desiredThreshold,
+            variables,
           });
         }
       }
 
       criteriaResults.push({
         criterion_name: evalCriterion.criterion?.name || 'Unknown',
+        criterion_description: evalCriterion.criterion?.description || '',
         importance_level: evalCriterion.importance_level,
         importance_percentage: Number(evalCriterion.importance_percentage || 0),
         final_score: Number(criteriaResult.final_score),
@@ -127,12 +155,18 @@ export class ReportsService {
       });
     }
 
+    const finalScore = Number(evaluationResult.evaluation_score);
+    const projectThreshold = Number(evaluation.project?.minimum_threshold || 0);
+
     return {
       evaluation_id: evaluation.id,
+      project_id: evaluation.project_id,
       project_name: evaluation.project?.name || 'Unknown',
       standard_name: evaluation.standard?.name || 'Unknown',
       created_at: evaluation.created_at,
-      final_score: Number(evaluationResult.evaluation_score),
+      final_score: finalScore,
+      project_threshold: projectThreshold,
+      meets_threshold: finalScore >= projectThreshold,
       conclusion: evaluationResult.conclusion || '',
       criteria_results: criteriaResults,
     };
