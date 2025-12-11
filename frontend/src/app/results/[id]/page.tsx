@@ -194,7 +194,7 @@ export default function EvaluationDetailPage() {
     <div className="detail-page">
       {/* Header */}
       <div className="page-header">
-        <button onClick={() => router.push('/results')} className="back-button">
+        <button onClick={() => router.back()} className="back-button">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>

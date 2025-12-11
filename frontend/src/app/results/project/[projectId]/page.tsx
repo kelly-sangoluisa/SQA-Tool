@@ -1,66 +1,67 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ProjectCard } from '@/components/reports/ProjectCard';
-import { getMyProjects } from '@/api/reports/reports.api';
-import type { ProjectSummary } from '@/api/reports/reports.types';
+import { useParams, useRouter } from 'next/navigation';
+import { EvaluationCard } from '@/components/reports/EvaluationCard';
+import { getEvaluationsByProject } from '@/api/reports/reports.api';
+import type { EvaluationListItem } from '@/api/reports/reports.types';
 
-export default function ResultsPage() {
-  const [projects, setProjects] = useState<ProjectSummary[]>([]);
+export default function ProjectEvaluationsPage() {
+  const params = useParams();
+  const router = useRouter();
+  const projectId = Number(params.projectId);
+
+  const [evaluations, setEvaluations] = useState<EvaluationListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'approved' | 'rejected' | 'no-score'>('all');
+  const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
 
   useEffect(() => {
-    loadProjects();
-  }, []);
+    loadEvaluations();
+  }, [projectId]);
 
-  const loadProjects = async () => {
+  const loadEvaluations = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getMyProjects();
-      setProjects(data);
+      const data = await getEvaluationsByProject(projectId);
+      setEvaluations(data);
     } catch (err) {
-      setError('Error al cargar los proyectos. Por favor intenta de nuevo.');
-      console.error('Error loading projects:', err);
+      setError('Error al cargar las evaluaciones del proyecto.');
+      console.error('Error loading evaluations:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredProjects = (projects || []).filter(project => {
+  const filteredEvaluations = (evaluations || []).filter(evaluation => {
     if (filter === 'all') return true;
-    if (filter === 'approved') return project.final_project_score !== null && project.meets_threshold;
-    if (filter === 'rejected') return project.final_project_score !== null && !project.meets_threshold;
-    if (filter === 'no-score') return project.final_project_score === null;
+    if (filter === 'completed') return evaluation.has_results;
+    if (filter === 'pending') return !evaluation.has_results;
     return true;
   });
 
-  const approvedCount = (projects || []).filter(p => p.final_project_score !== null && p.meets_threshold).length;
-  const rejectedCount = (projects || []).filter(p => p.final_project_score !== null && !p.meets_threshold).length;
-  const noScoreCount = (projects || []).filter(p => p.final_project_score === null).length;
+  const completedCount = (evaluations || []).filter(e => e.has_results).length;
+  const pendingCount = (evaluations || []).filter(e => !e.has_results).length;
 
-  // Mostrar loading inicial sin contenido para evitar FOUC
-  if (loading && projects.length === 0) {
+  // Obtener nombre del proyecto de la primera evaluación
+  const projectName = evaluations[0]?.project_name || 'Proyecto';
+
+  if (loading) {
     return (
-      <div className="results-page">
+      <div className="evaluations-page">
         <div className="page-header">
-          <div className="header-content">
-            <div className="skeleton skeleton-title"></div>
-            <div className="skeleton skeleton-subtitle"></div>
-          </div>
+          <div className="skeleton skeleton-title"></div>
+          <div className="skeleton skeleton-subtitle"></div>
         </div>
-
         <div className="content-container">
           <div className="skeleton skeleton-filters"></div>
-          <div className="projects-grid">
-            {[1, 2, 3].map((i) => (
+          <div className="evaluations-grid">
+            {[1, 2].map((i) => (
               <div key={i} className="skeleton skeleton-card"></div>
             ))}
           </div>
         </div>
-
         <style jsx>{`
           .skeleton {
             background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
@@ -68,58 +69,13 @@ export default function ResultsPage() {
             animation: loading 1.5s ease-in-out infinite;
             border-radius: 8px;
           }
-
-          .skeleton-title {
-            height: 40px;
-            width: 300px;
-            margin-bottom: 0.5rem;
-          }
-
-          .skeleton-subtitle {
-            height: 20px;
-            width: 400px;
-          }
-
-          .skeleton-filters {
-            height: 60px;
-            width: 100%;
-            margin-bottom: 2rem;
-          }
-
-          .skeleton-card {
-            height: 200px;
-            width: 100%;
-          }
-
+          .skeleton-title { height: 40px; width: 300px; margin-bottom: 0.5rem; }
+          .skeleton-subtitle { height: 20px; width: 400px; }
+          .skeleton-filters { height: 60px; width: 100%; margin-bottom: 2rem; }
+          .skeleton-card { height: 180px; width: 100%; }
           @keyframes loading {
-            0% {
-              background-position: 200% 0;
-            }
-            100% {
-              background-position: -200% 0;
-            }
-          }
-
-          .results-page {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            padding: 2rem;
-          }
-
-          .page-header {
-            max-width: 1200px;
-            margin: 0 auto 2rem;
-          }
-
-          .content-container {
-            max-width: 1200px;
-            margin: 0 auto;
-          }
-
-          .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 1.5rem;
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
           }
         `}</style>
       </div>
@@ -127,31 +83,30 @@ export default function ResultsPage() {
   }
 
   return (
-    <div className="results-page">
+    <div className="evaluations-page">
       <div className="page-header">
+        <button onClick={() => router.back()} className="back-button">
+          ← Volver a Proyectos
+        </button>
         <div className="header-content">
-          <h1 className="page-title">Resultados de Proyectos</h1>
+          <h1 className="page-title">Evaluaciones: {projectName}</h1>
           <p className="page-subtitle">
-            Visualiza y analiza los resultados de todos tus proyectos de calidad de software
+            Visualiza y analiza los resultados de las evaluaciones de calidad
           </p>
         </div>
 
         <div className="stats-summary">
           <div className="stat-chip stat-chip--total">
-            <span className="stat-number">{projects?.length || 0}</span>
+            <span className="stat-number">{evaluations?.length || 0}</span>
             <span className="stat-text">Total</span>
           </div>
-          <div className="stat-chip stat-chip--approved">
-            <span className="stat-number">{approvedCount}</span>
-            <span className="stat-text">Aprobados</span>
-          </div>
-          <div className="stat-chip stat-chip--rejected">
-            <span className="stat-number">{rejectedCount}</span>
-            <span className="stat-text">No Aprobados</span>
+          <div className="stat-chip stat-chip--completed">
+            <span className="stat-number">{completedCount}</span>
+            <span className="stat-text">Completadas</span>
           </div>
           <div className="stat-chip stat-chip--pending">
-            <span className="stat-number">{noScoreCount}</span>
-            <span className="stat-text">Sin Resultados</span>
+            <span className="stat-number">{pendingCount}</span>
+            <span className="stat-text">Pendientes</span>
           </div>
         </div>
       </div>
@@ -161,32 +116,26 @@ export default function ResultsPage() {
           className={`filter-btn ${filter === 'all' ? 'filter-btn--active' : ''}`}
           onClick={() => setFilter('all')}
         >
-          Todos ({projects?.length || 0})
+          Todas ({evaluations?.length || 0})
         </button>
         <button
-          className={`filter-btn ${filter === 'approved' ? 'filter-btn--active' : ''}`}
-          onClick={() => setFilter('approved')}
+          className={`filter-btn ${filter === 'completed' ? 'filter-btn--active' : ''}`}
+          onClick={() => setFilter('completed')}
         >
-          Aprobados ({approvedCount})
+          Completadas ({completedCount})
         </button>
         <button
-          className={`filter-btn ${filter === 'rejected' ? 'filter-btn--active' : ''}`}
-          onClick={() => setFilter('rejected')}
+          className={`filter-btn ${filter === 'pending' ? 'filter-btn--active' : ''}`}
+          onClick={() => setFilter('pending')}
         >
-          No Aprobados ({rejectedCount})
-        </button>
-        <button
-          className={`filter-btn ${filter === 'no-score' ? 'filter-btn--active' : ''}`}
-          onClick={() => setFilter('no-score')}
-        >
-          Sin Resultados ({noScoreCount})
+          Pendientes ({pendingCount})
         </button>
       </div>
 
       {loading && (
         <div className="loading-state">
           <div className="loader"></div>
-          <p>Cargando proyectos...</p>
+          <p>Cargando evaluaciones...</p>
         </div>
       )}
 
@@ -196,40 +145,38 @@ export default function ResultsPage() {
             <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <p>{error}</p>
-          <button className="retry-btn" onClick={loadProjects}>
+          <button className="retry-btn" onClick={loadEvaluations}>
             Reintentar
           </button>
         </div>
       )}
 
-      {!loading && !error && filteredProjects.length === 0 && (
+      {!loading && !error && filteredEvaluations.length === 0 && (
         <div className="empty-state">
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <h3>No hay datos para visualizar</h3>
           <p>
-            {filter === 'approved' 
-              ? 'No hay proyectos aprobados disponibles. Una vez que completes las evaluaciones, los proyectos aprobados aparecerán aquí.'
-              : filter === 'rejected'
-              ? 'No hay proyectos no aprobados. Los proyectos que no cumplan el umbral aparecerán aquí.'
-              : filter === 'no-score'
-              ? 'No hay proyectos sin resultados. Los proyectos sin evaluaciones completadas aparecerán aquí.'
-              : 'No se encontraron proyectos. Comienza creando un nuevo proyecto para ver los resultados.'}
+            {filter === 'completed' 
+              ? 'No hay evaluaciones completadas disponibles. Una vez que finalices una evaluación, los resultados aparecerán aquí.'
+              : filter === 'pending'
+              ? 'No hay evaluaciones pendientes. Las evaluaciones sin resultados aparecerán aquí.'
+              : 'Este proyecto no tiene evaluaciones registradas. Comienza creando una nueva evaluación.'}
           </p>
         </div>
       )}
 
-      {!loading && !error && filteredProjects.length > 0 && (
-        <div className="projects-grid">
-          {filteredProjects.map(project => (
-            <ProjectCard key={project.project_id} project={project} />
+      {!loading && !error && filteredEvaluations.length > 0 && (
+        <div className="evaluations-grid">
+          {filteredEvaluations.map((evaluation) => (
+            <EvaluationCard key={evaluation.evaluation_id} evaluation={evaluation} />
           ))}
         </div>
       )}
 
       <style jsx>{`
-        .results-page {
+        .evaluations-page {
           min-height: 100vh;
           background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
           padding: 2rem;
@@ -243,6 +190,26 @@ export default function ResultsPage() {
           align-items: center;
           flex-wrap: wrap;
           gap: 2rem;
+        }
+
+        .back-button {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: white;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          color: var(--color-primary);
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin-bottom: 1.5rem;
+        }
+
+        .back-button:hover {
+          border-color: var(--color-primary);
+          box-shadow: 0 4px 12px rgba(78, 94, 163, 0.15);
         }
 
         .header-content {
@@ -296,12 +263,8 @@ export default function ResultsPage() {
           border-left: 4px solid var(--color-primary);
         }
 
-        .stat-chip--approved {
+        .stat-chip--completed {
           border-left: 4px solid #10b981;
-        }
-
-        .stat-chip--rejected {
-          border-left: 4px solid #ef4444;
         }
 
         .stat-chip--pending {
@@ -318,12 +281,8 @@ export default function ResultsPage() {
           color: var(--color-primary);
         }
 
-        .stat-chip--approved .stat-number {
+        .stat-chip--completed .stat-number {
           color: #10b981;
-        }
-
-        .stat-chip--rejected .stat-number {
-          color: #ef4444;
         }
 
         .stat-chip--pending .stat-number {
@@ -391,7 +350,7 @@ export default function ResultsPage() {
           z-index: 1;
         }
 
-        .projects-grid {
+        .evaluations-grid {
           max-width: 1200px;
           margin: 0 auto;
           display: grid;
@@ -497,7 +456,7 @@ export default function ResultsPage() {
         }
 
         @media (max-width: 768px) {
-          .results-page {
+          .evaluations-page {
             padding: 1rem;
           }
 
@@ -506,7 +465,7 @@ export default function ResultsPage() {
             align-items: flex-start;
           }
 
-          .projects-grid {
+          .evaluations-grid {
             grid-template-columns: 1fr;
           }
         }

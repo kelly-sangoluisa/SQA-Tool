@@ -7,6 +7,7 @@ import {
   EvaluationListItemDto,
   EvaluationStatsDto
 } from '../dto/evaluation-report.dto';
+import { ProjectSummaryDto } from '../dto/project-summary.dto';
 
 @ApiTags('Reports - Visualización de Resultados')
 @Controller('reports')
@@ -15,6 +16,30 @@ export class ReportsController {
   private readonly logger = new Logger(ReportsController.name);
   
   constructor(private readonly reportsService: ReportsService) {}
+
+  @Get('my-projects')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({
+    summary: 'Listar mis proyectos',
+    description: 'Obtiene todos los proyectos creados por el usuario actual con su estado de aprobación'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de proyectos del usuario obtenida exitosamente',
+    type: [ProjectSummaryDto]
+  })
+  async getMyProjects(@Request() req): Promise<ProjectSummaryDto[]> {
+    this.logger.log(`🎯 Controller: getMyProjects llamado`);
+    const userId = req.currentUser?.id;
+    if (!userId) {
+      this.logger.error('❌ No se pudo obtener user_id del currentUser');
+      throw new Error('User ID not found');
+    }
+    this.logger.log(`🎯 Controller: getMyProjects para usuario ${userId}`);
+    const result = await this.reportsService.getProjectsByUserId(userId);
+    this.logger.log(`🎯 Controller: Devolviendo ${result.length} proyectos del usuario`);
+    return result;
+  }
 
   @Get('my-evaluations')
   @ROLES('admin', 'evaluator')

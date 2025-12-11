@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { Evaluation } from '../../config-evaluation/entities/evaluation.entity';
 import { Project } from '../../config-evaluation/entities/project.entity';
 import { EvaluationResult } from '../../entry-data/entities/evaluation_result.entity';
+import { ProjectResult } from '../../entry-data/entities/project_result.entity';
 import { ImportanceLevel } from '../../config-evaluation/entities/evaluation-criterion.entity';
 import { EvaluationCriteriaResult } from '../../entry-data/entities/evaluation_criteria_result.entity';
 import { EvaluationMetricResult } from '../../entry-data/entities/evaluation_metric_result.entity';
@@ -27,6 +28,7 @@ import {
   EvaluationListItemDto,
   EvaluationStatsDto
 } from '../dto/evaluation-report.dto';
+import { ProjectSummaryDto } from '../dto/project-summary.dto';
 
 @Injectable()
 export class ReportsService {
@@ -39,6 +41,8 @@ export class ReportsService {
     private readonly projectRepo: Repository<Project>,
     @InjectRepository(EvaluationResult)
     private readonly evaluationResultRepo: Repository<EvaluationResult>,
+    @InjectRepository(ProjectResult)
+    private readonly projectResultRepo: Repository<ProjectResult>,
     @InjectRepository(EvaluationCriteriaResult)
     private readonly criteriaResultRepo: Repository<EvaluationCriteriaResult>,
     @InjectRepository(EvaluationMetricResult)
@@ -410,5 +414,54 @@ export class ReportsService {
       },
       score_by_importance: avgByImportance,
     };
+  }
+
+  /**
+   * Obtiene todos los proyectos de un usuario con su estado de aprobación
+   */
+  async getProjectsByUserId(userId: number): Promise<ProjectSummaryDto[]> {
+    this.logger.log(`🔍 Obteniendo proyectos para usuario ${userId}`);
+
+    // Obtener proyectos del usuario con sus evaluaciones
+    const projects = await this.projectRepo.find({
+      where: { creator_user_id: userId },
+      order: { created_at: 'DESC' },
+    });
+
+    this.logger.log(`📁 Proyectos encontrados: ${projects.length}`);
+
+    const projectSummaries: ProjectSummaryDto[] = [];
+
+    for (const project of projects) {
+      // Contar evaluaciones del proyecto
+      const evaluationCount = await this.evaluationRepo.count({
+        where: { project_id: project.id },
+      });
+
+      // Obtener resultado del proyecto (si existe)
+      const projectResult = await this.projectResultRepo.findOne({
+        where: { project_id: project.id },
+      });
+
+      const finalScore = projectResult ? Number(projectResult.final_project_score) : null;
+      const threshold = project.minimum_threshold ? Number(project.minimum_threshold) : null;
+      const meetsThreshold = finalScore !== null && threshold !== null ? finalScore >= threshold : false;
+
+      projectSummaries.push({
+        project_id: project.id,
+        project_name: project.name,
+        project_description: project.description,
+        minimum_threshold: threshold,
+        final_project_score: finalScore,
+        meets_threshold: meetsThreshold,
+        status: project.status,
+        evaluation_count: evaluationCount,
+        created_at: project.created_at,
+        updated_at: project.updated_at,
+      });
+    }
+
+    this.logger.log(`✅ Devolviendo ${projectSummaries.length} proyectos`);
+    return projectSummaries;
   }
 }

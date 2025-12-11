@@ -7,6 +7,7 @@ import { ReportsService } from './services/reports.service';
 import { Evaluation } from '../config-evaluation/entities/evaluation.entity';
 import { Project } from '../config-evaluation/entities/project.entity';
 import { EvaluationResult } from '../entry-data/entities/evaluation_result.entity';
+import { ProjectResult } from '../entry-data/entities/project_result.entity';
 import { EvaluationCriteriaResult } from '../entry-data/entities/evaluation_criteria_result.entity';
 import { EvaluationMetricResult } from '../entry-data/entities/evaluation_metric_result.entity';
 import { EvaluationCriterion } from '../config-evaluation/entities/evaluation-criterion.entity';
@@ -24,6 +25,7 @@ import { User } from '../../users/entities/user.entity';
       Evaluation,
       Project,
       EvaluationResult,
+      ProjectResult,
       EvaluationCriteriaResult,
       EvaluationMetricResult,
       EvaluationCriterion,

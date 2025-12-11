@@ -2,13 +2,24 @@ import { apiClient } from '../shared/api-client';
 import type { 
   EvaluationListItem, 
   EvaluationReport,
-  EvaluationStats 
+  EvaluationStats,
+  ProjectSummary
 } from './reports.types';
 
 /**
  * API para el módulo de Resultados/Reportes
  * Consume los endpoints del ReportsController
  */
+
+/**
+ * Obtiene todos los proyectos del usuario actual
+ */
+export async function getMyProjects(): Promise<ProjectSummary[]> {
+  console.log('🌐 API: Llamando a /reports/my-projects');
+  const result = await apiClient.get<ProjectSummary[]>('/reports/my-projects');
+  console.log('🌐 API: Respuesta recibida:', result);
+  return result;
+}
 
 /**
  * Obtiene las evaluaciones de los proyectos del usuario actual

@@ -2,6 +2,19 @@
  * Tipos para el módulo de Resultados/Reportes
  */
 
+export interface ProjectSummary {
+  project_id: number;
+  project_name: string;
+  project_description: string | null;
+  minimum_threshold: number | null;
+  final_project_score: number | null;
+  meets_threshold: boolean;
+  status: string;
+  evaluation_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface EvaluationListItem {
   evaluation_id: number;
   project_id: number;
