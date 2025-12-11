@@ -234,7 +234,14 @@ export class ConfigEvaluationService {
    */
   async findAllEvaluations(): Promise<Evaluation[]> {
     return this.evaluationRepo.find({
-      relations: ['project', 'standard', 'evaluation_criteria', 'evaluation_criteria.criterion'],
+      relations: [
+        'project',
+        'standard',
+        'evaluation_criteria',
+        'evaluation_criteria.criterion',
+        'evaluation_criteria.criteria_results',
+        'evaluation_result',
+      ],
       order: { created_at: 'DESC' },
     });
   }
@@ -251,6 +258,8 @@ export class ConfigEvaluationService {
         'standard',
         'evaluation_criteria',
         'evaluation_criteria.criterion',
+        'evaluation_criteria.criteria_results',
+        'evaluation_result',
       ],
     });
     if (!evaluation) {
@@ -265,7 +274,13 @@ export class ConfigEvaluationService {
   async findEvaluationsByProjectId(projectId: number): Promise<Evaluation[]> {
     return this.evaluationRepo.find({
       where: { project_id: projectId },
-      relations: ['standard', 'evaluation_criteria', 'evaluation_criteria.criterion'],
+      relations: [
+        'standard',
+        'evaluation_criteria',
+        'evaluation_criteria.criterion',
+        'evaluation_criteria.criteria_results',
+        'evaluation_result',
+      ],
       order: { created_at: 'DESC' },
     });
   }

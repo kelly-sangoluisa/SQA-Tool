@@ -1,9 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseTimestampEntity } from '../../../common/entities/base.entity';
 import { Project } from './project.entity';
 import { Standard } from '../../parameterization/entities/standard.entity';
 import { EvaluationCriterion } from './evaluation-criterion.entity';
+import { EvaluationResult } from '../../entry-data/entities/evaluation_result.entity';
 
 export enum EvaluationStatus {
   IN_PROGRESS = 'in_progress',
@@ -59,4 +60,11 @@ export class Evaluation extends BaseTimestampEntity {
 
   @OneToMany(() => EvaluationCriterion, criterion => criterion.evaluation)
   evaluation_criteria: EvaluationCriterion[];
+
+  @ApiProperty({ description: 'Resultado final de la evaluación', required: false })
+  @OneToOne(() => EvaluationResult, result => result.evaluation, {
+    eager: false,
+    nullable: true,
+  })
+  evaluation_result?: EvaluationResult;
 }
