@@ -113,41 +113,114 @@ export function ChartsSection({ report }: Props) {
           </div>
         </div>
 
-        {/* Gráfico de Distribución de Importancia */}
-        <div className="chart-card">
+        {/* Gráfico de DONA - Distribución de Importancia */}
+        <div className="chart-card donut-card">
           <div className="chart-header">
-            <h4 className="chart-title">Peso por Nivel de Importancia</h4>
-            <p className="chart-subtitle">Distribución del peso total de evaluación</p>
+            <h4 className="chart-title">🍩 Distribución de Importancia</h4>
+            <p className="chart-subtitle">Peso relativo por nivel de importancia</p>
           </div>
-          <div className="pie-chart">
-            {Object.entries(importanceWeights)
-              .filter(([level, weight]) => weight > 0) // Solo mostrar niveles con peso
-              .map(([level, weight]) => {
-              const levelLabel = level === 'A' ? 'Alta' : level === 'M' ? 'Media' : level === 'B' ? 'Baja' : 'N/A';
-              const avgScore = importanceScores[level] ? importanceScores[level].totalScore / importanceScores[level].count : 0;
+          <div className="donut-chart-container">
+            <svg viewBox="0 0 200 200" className="donut-svg">
+              {(() => {
+                const centerX = 100;
+                const centerY = 100;
+                const radius = 60;
+                const innerRadius = 40;
+                
+                // Filtrar niveles con peso > 0
+                const filteredWeights = Object.entries(importanceWeights)
+                  .filter(([_, weight]) => weight > 0)
+                  .map(([level, weight]) => ({
+                    level,
+                    weight,
+                    percentage: weight,
+                    color: getImportanceColor(level),
+                    label: level === 'A' ? 'Alta' : level === 'M' ? 'Media' : level === 'B' ? 'Baja' : 'N/A',
+                    score: importanceScores[level] ? importanceScores[level].totalScore / importanceScores[level].count : 0
+                  }));
+
+                let currentAngle = -90; // Empezar desde arriba
+                
+                return filteredWeights.map((item, index) => {
+                  const angle = (item.percentage / 100) * 360;
+                  const startAngle = currentAngle;
+                  const endAngle = currentAngle + angle;
+                  
+                  // Convertir ángulos a radianes
+                  const startRad = (startAngle * Math.PI) / 180;
+                  const endRad = (endAngle * Math.PI) / 180;
+                  
+                  // Calcular puntos del arco exterior
+                  const x1 = centerX + radius * Math.cos(startRad);
+                  const y1 = centerY + radius * Math.sin(startRad);
+                  const x2 = centerX + radius * Math.cos(endRad);
+                  const y2 = centerY + radius * Math.sin(endRad);
+                  
+                  // Calcular puntos del arco interior
+                  const x3 = centerX + innerRadius * Math.cos(endRad);
+                  const y3 = centerY + innerRadius * Math.sin(endRad);
+                  const x4 = centerX + innerRadius * Math.cos(startRad);
+                  const y4 = centerY + innerRadius * Math.sin(startRad);
+                  
+                  const largeArc = angle > 180 ? 1 : 0;
+                  
+                  const pathData = [
+                    `M ${x1} ${y1}`,
+                    `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+                    `L ${x3} ${y3}`,
+                    `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4}`,
+                    'Z'
+                  ].join(' ');
+                  
+                  currentAngle = endAngle;
+                  
+                  return (
+                    <g key={index}>
+                      <path
+                        d={pathData}
+                        fill={item.color}
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                      <title>{`${item.label}: ${item.percentage.toFixed(1)}% (Score: ${item.score.toFixed(1)}%)`}</title>
+                    </g>
+                  );
+                });
+              })()}
               
-              return (
-                <div key={level} className="pie-item">
-                  <div className="pie-bar-container">
+              {/* Centro del donut con score total */}
+              <circle cx="100" cy="100" r="38" fill="white" />
+              <text x="100" y="95" textAnchor="middle" fontSize="20" fontWeight="bold" fill="#1f2937">
+                {report.final_score.toFixed(1)}%
+              </text>
+              <text x="100" y="110" textAnchor="middle" fontSize="10" fill="#6b7280">
+                Score Total
+              </text>
+            </svg>
+            
+            {/* Leyenda */}
+            <div className="donut-legend">
+              {Object.entries(importanceWeights)
+                .filter(([_, weight]) => weight > 0)
+                .map(([level, weight]) => {
+                const levelLabel = level === 'A' ? 'Alta' : level === 'M' ? 'Media' : level === 'B' ? 'Baja' : 'N/A';
+                const avgScore = importanceScores[level] ? importanceScores[level].totalScore / importanceScores[level].count : 0;
+                
+                return (
+                  <div key={level} className="donut-legend-item">
                     <div 
-                      className="pie-bar"
-                      style={{
-                        width: `${weight}%`,
-                        background: getImportanceColor(level)
-                      }}
+                      className="donut-color-indicator"
+                      style={{ backgroundColor: getImportanceColor(level) }}
                     ></div>
+                    <div className="donut-legend-text">
+                      <span className="donut-legend-label">{levelLabel}</span>
+                      <span className="donut-legend-value">{weight.toFixed(1)}%</span>
+                      <span className="donut-legend-score">Score: {avgScore.toFixed(1)}%</span>
+                    </div>
                   </div>
-                  <div className="pie-legend">
-                    <div 
-                      className="pie-color-box"
-                      style={{ background: getImportanceColor(level) }}
-                    ></div>
-                    <span className="pie-label">{levelLabel}</span>
-                    <span className="pie-value">{weight.toFixed(1)}% • Score: {avgScore.toFixed(1)}</span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -221,6 +294,7 @@ export function ChartsSection({ report }: Props) {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
           gap: 1.5rem;
+          align-items: start;
         }
 
         .chart-card {
@@ -228,6 +302,7 @@ export function ChartsSection({ report }: Props) {
           border-radius: 16px;
           padding: 1.5rem;
           box-shadow: 0 4px 20px rgba(78, 94, 163, 0.08);
+          height: fit-content;
         }
 
         .chart-card--full {
@@ -436,12 +511,87 @@ export function ChartsSection({ report }: Props) {
           display: inline-block;
         }
 
+        /* DONUT CHART STYLES */
+        .donut-card {
+          grid-column: span 1;
+        }
+
+        .donut-chart-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1.5rem;
+        }
+
+        .donut-svg {
+          width: 100%;
+          max-width: 300px;
+          height: auto;
+        }
+
+        .donut-legend {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          width: 100%;
+        }
+
+        .donut-legend-item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.5rem;
+          background: #f9fafb;
+          border-radius: 8px;
+          transition: all 0.2s ease;
+        }
+
+        .donut-legend-item:hover {
+          background: #f3f4f6;
+          transform: translateX(4px);
+        }
+
+        .donut-color-indicator {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+
+        .donut-legend-text {
+          display: flex;
+          flex-direction: column;
+          gap: 0.125rem;
+          flex: 1;
+        }
+
+        .donut-legend-label {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #1f2937;
+        }
+
+        .donut-legend-value {
+          font-size: 0.75rem;
+          color: #6b7280;
+        }
+
+        .donut-legend-score {
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: #4E5EA3;
+        }
+
         @media (max-width: 768px) {
           .charts-grid {
             grid-template-columns: 1fr;
           }
 
           .chart-card--wide {
+            grid-column: 1;
+          }
+          
+          .donut-card {
             grid-column: 1;
           }
         }

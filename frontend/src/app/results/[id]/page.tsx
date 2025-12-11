@@ -356,7 +356,7 @@ export default function EvaluationDetailPage() {
 
         {activeTab === 'stats' && (
           <div className="tab-content">
-            <StatsOverview stats={stats} />
+            <StatsOverview stats={stats} report={report} />
           </div>
         )}
       </div>

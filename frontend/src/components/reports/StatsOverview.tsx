@@ -1,12 +1,14 @@
 'use client';
 
-import type { EvaluationStats } from '@/api/reports/reports.types';
+import type { EvaluationStats, EvaluationReport } from '@/api/reports/reports.types';
+import { RadarChart } from './RadarChart';
 
 interface StatsOverviewProps {
   stats: EvaluationStats;
+  report: EvaluationReport;
 }
 
-export function StatsOverview({ stats }: StatsOverviewProps) {
+export function StatsOverview({ stats, report }: StatsOverviewProps) {
   return (
     <div className="stats-overview">
       {/* Tarjetas de estadísticas principales */}
@@ -123,6 +125,9 @@ export function StatsOverview({ stats }: StatsOverviewProps) {
           )}
         </div>
       </div>
+
+      {/* Gráfico de Radar - Activable por el usuario */}
+      <RadarChart report={report} />
 
       <style jsx>{`
         .stats-overview {
