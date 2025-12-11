@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { EvaluationReport } from '@/api/reports/reports.types';
+import { FaInfoCircle } from 'react-icons/fa';
 
 interface Props {
   report: EvaluationReport;
@@ -12,6 +13,8 @@ export function RadarChart({ report }: Props) {
   const [selectedCriteriaForRadar, setSelectedCriteriaForRadar] = useState<number[]>(
     report.criteria_results.slice(0, Math.min(5, report.criteria_results.length)).map((_, idx) => idx)
   );
+
+  const hasMinimumCriteria = report.criteria_results.length >= 3;
 
   // Toggle criterio para radar
   const toggleCriterionForRadar = (index: number) => {
@@ -57,7 +60,9 @@ export function RadarChart({ report }: Props) {
       <div className="radar-toggle-container">
         <button 
           className="radar-toggle-btn"
-          onClick={() => setIsExpanded(true)}
+          onClick={() => hasMinimumCriteria && setIsExpanded(true)}
+          disabled={!hasMinimumCriteria}
+          title={!hasMinimumCriteria ? 'Se requieren al menos 3 criterios para generar el gráfico de radar' : ''}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -65,6 +70,12 @@ export function RadarChart({ report }: Props) {
           </svg>
           Ver Gráfico de Radar
         </button>
+        {!hasMinimumCriteria && (
+          <p className="radar-info-message">
+            <FaInfoCircle style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
+            Se requieren al menos 3 criterios para visualizar el gráfico de radar
+          </p>
+        )}
 
         <style jsx>{`
           .radar-toggle-container {
@@ -92,9 +103,29 @@ export function RadarChart({ report }: Props) {
             box-shadow: 0 4px 6px rgba(78, 94, 163, 0.2);
           }
 
-          .radar-toggle-btn:hover {
+          .radar-toggle-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(78, 94, 163, 0.3);
+          }
+
+          .radar-toggle-btn:disabled {
+            background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+            cursor: not-allowed;
+            opacity: 0.6;
+          }
+
+          .radar-info-message {
+            margin-top: 0.75rem;
+            padding: 0.625rem 1rem;
+            background: rgba(59, 130, 246, 0.08);
+            border-left: 3px solid rgba(59, 130, 246, 0.4);
+            border-radius: 6px;
+            color: #475569;
+            font-size: 0.8125rem;
+            text-align: left;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
           }
 
           .radar-toggle-btn svg {

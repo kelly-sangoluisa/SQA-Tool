@@ -139,6 +139,30 @@ export function ChartsSection({ report }: Props) {
                     score: importanceScores[level] ? importanceScores[level].totalScore / importanceScores[level].count : 0
                   }));
 
+                // Caso especial: solo un nivel de importancia (100%)
+                if (filteredWeights.length === 1) {
+                  const item = filteredWeights[0];
+                  return (
+                    <g>
+                      <circle
+                        cx={centerX}
+                        cy={centerY}
+                        r={radius}
+                        fill={item.color}
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                      <circle
+                        cx={centerX}
+                        cy={centerY}
+                        r={innerRadius}
+                        fill="white"
+                      />
+                      <title>{`${item.label}: ${item.percentage.toFixed(1)}% (Score: ${item.score.toFixed(1)}%)`}</title>
+                    </g>
+                  );
+                }
+
                 let currentAngle = -90; // Empezar desde arriba
                 
                 return filteredWeights.map((item, index) => {
