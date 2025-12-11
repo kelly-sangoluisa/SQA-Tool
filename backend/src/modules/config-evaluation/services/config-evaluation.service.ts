@@ -54,6 +54,7 @@ export class ConfigEvaluationService {
       const newProject = projectRepo.create({
         name: createProjectDto.name,
         description: createProjectDto.description,
+        minimum_threshold: createProjectDto.minimum_threshold,
         creator_user_id: createProjectDto.creator_user_id,
         status: ProjectStatus.IN_PROGRESS,
       });
@@ -95,6 +96,7 @@ export class ConfigEvaluationService {
       const newEvaluation = evaluationRepo.create({
         project_id: createEvaluationDto.project_id,
         standard_id: createEvaluationDto.standard_id,
+        // status se establece automáticamente por el default
       });
 
       const savedEvaluation = await evaluationRepo.save(newEvaluation);
@@ -232,7 +234,14 @@ export class ConfigEvaluationService {
    */
   async findAllEvaluations(): Promise<Evaluation[]> {
     return this.evaluationRepo.find({
-      relations: ['project', 'standard', 'evaluation_criteria', 'evaluation_criteria.criterion'],
+      relations: [
+        'project',
+        'standard',
+        'evaluation_criteria',
+        'evaluation_criteria.criterion',
+        'evaluation_criteria.criteria_results',
+        'evaluation_result',
+      ],
       order: { created_at: 'DESC' },
     });
   }
@@ -249,6 +258,8 @@ export class ConfigEvaluationService {
         'standard',
         'evaluation_criteria',
         'evaluation_criteria.criterion',
+        'evaluation_criteria.criteria_results',
+        'evaluation_result',
       ],
     });
     if (!evaluation) {
@@ -263,7 +274,13 @@ export class ConfigEvaluationService {
   async findEvaluationsByProjectId(projectId: number): Promise<Evaluation[]> {
     return this.evaluationRepo.find({
       where: { project_id: projectId },
-      relations: ['standard', 'evaluation_criteria', 'evaluation_criteria.criterion'],
+      relations: [
+        'standard',
+        'evaluation_criteria',
+        'evaluation_criteria.criterion',
+        'evaluation_criteria.criteria_results',
+        'evaluation_result',
+      ],
       order: { created_at: 'DESC' },
     });
   }

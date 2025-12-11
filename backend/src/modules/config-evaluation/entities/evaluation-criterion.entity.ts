@@ -1,8 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseTimestampEntity } from '../../../common/entities/base.entity';
 import { Evaluation } from './evaluation.entity';
 import { Criterion } from '../../parameterization/entities/criterion.entity';
+import { EvaluationCriteriaResult } from '../../entry-data/entities/evaluation_criteria_result.entity';
 
 export enum ImportanceLevel {
   HIGH = 'A',
@@ -67,4 +68,11 @@ export class EvaluationCriterion extends BaseTimestampEntity {
     nullable: true
   })
   importance_percentage: number;
+
+  @ApiProperty({ description: 'Resultados del criterio de evaluación', required: false })
+  @OneToMany(() => EvaluationCriteriaResult, result => result.evaluation_criterion, {
+    eager: false,
+    nullable: true,
+  })
+  criteria_results?: EvaluationCriteriaResult[];
 }

@@ -1,17 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { EvaluationInfo, ValidationErrors } from '@/types/configurationEvaluation.types';
 import { Input, Button } from '../shared';
+import { configEvaluationApi, Project } from '@/api/config-evaluation/config-evaluation-api';
 import styles from './EvaluationInfoForm.module.css';
 
 interface EvaluationInfoFormProps {
   initialData?: EvaluationInfo;
-  onNext: (data: EvaluationInfo) => void;
+  onNext: (data: EvaluationInfo, projectId?: number) => void;
   onCancel?: () => void;
 }
 
 export function EvaluationInfoForm({ initialData, onNext, onCancel }: EvaluationInfoFormProps) {
+  const [projectType, setProjectType] = useState<'new' | 'existing'>('new');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+
   const [formData, setFormData] = useState<EvaluationInfo>(
     initialData || {
       name: '',
@@ -24,6 +30,25 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
 
   const [errors, setErrors] = useState<ValidationErrors>({});
 
+  // Load projects when user selects existing project
+  useEffect(() => {
+    if (projectType === 'existing') {
+      loadProjects();
+    }
+  }, [projectType]);
+
+  const loadProjects = async () => {
+    try {
+      setLoadingProjects(true);
+      const projectsList = await configEvaluationApi.getAllProjects();
+      setProjects(projectsList);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
   const handleChange = (field: keyof EvaluationInfo, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user types
@@ -35,20 +60,28 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
   const validate = (): boolean => {
     const newErrors: ValidationErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre de la evaluación es requerido';
-    }
+    if (projectType === 'existing') {
+      // Para proyecto existente, solo validar que se haya seleccionado un proyecto
+      if (!selectedProjectId) {
+        newErrors.name = 'Debe seleccionar un proyecto';
+      }
+    } else {
+      // Para proyecto nuevo, validar todos los campos
+      if (!formData.name.trim()) {
+        newErrors.name = 'El nombre de la evaluación es requerido';
+      }
 
-    if (!formData.version.trim()) {
-      newErrors.version = 'La versión es requerida';
-    }
+      if (!formData.version.trim()) {
+        newErrors.version = 'La versión es requerida';
+      }
 
-    if (!formData.company.trim()) {
-      newErrors.company = 'El nombre de la empresa es requerido';
-    }
+      if (!formData.company.trim()) {
+        newErrors.company = 'El nombre de la empresa es requerido';
+      }
 
-    if (formData.minQualityThreshold < 0 || formData.minQualityThreshold > 100) {
-      newErrors.minQualityThreshold = 'El umbral debe estar entre 0 y 100';
+      if (formData.minQualityThreshold < 0 || formData.minQualityThreshold > 100) {
+        newErrors.minQualityThreshold = 'El umbral debe estar entre 0 y 100';
+      }
     }
 
     setErrors(newErrors);
@@ -58,7 +91,13 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      onNext(formData);
+      if (projectType === 'existing') {
+        // Pasar el ID del proyecto existente
+        onNext(formData, selectedProjectId!);
+      } else {
+        // Crear proyecto nuevo
+        onNext(formData);
+      }
     }
   };
 
@@ -67,12 +106,67 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
       <div className={styles.header}>
         <h2 className={styles.title}>Información de la Evaluación</h2>
         <p className={styles.subtitle}>
-          Ingrese los datos básicos para identificar esta evaluación de calidad
+          Seleccione si desea crear un proyecto nuevo o evaluar uno existente
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.formGrid}>
+        {/* Selector de tipo de proyecto */}
+        <div className={styles.projectTypeSelector}>
+          <label className={styles.label}>
+            Tipo de Proyecto <span className={styles.required}>*</span>
+          </label>
+          <div className={styles.radioGroup}>
+            <label className={styles.radioLabel}>
+              <input
+                type="radio"
+                value="new"
+                checked={projectType === 'new'}
+                onChange={() => setProjectType('new')}
+                className={styles.radioInput}
+              />
+              <span>Crear Proyecto Nuevo</span>
+            </label>
+            <label className={styles.radioLabel}>
+              <input
+                type="radio"
+                value="existing"
+                checked={projectType === 'existing'}
+                onChange={() => setProjectType('existing')}
+                className={styles.radioInput}
+              />
+              <span>Usar Proyecto Existente</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Mostrar selector de proyecto existente o formulario de proyecto nuevo */}
+        {projectType === 'existing' ? (
+          <div className={styles.formGroup}>
+            <label htmlFor="project" className={styles.label}>
+              Seleccionar Proyecto <span className={styles.required}>*</span>
+            </label>
+            {loadingProjects ? (
+              <p className={styles.loadingText}>Cargando proyectos...</p>
+            ) : (
+              <select
+                id="project"
+                className={styles.select}
+                value={selectedProjectId || ''}
+                onChange={(e) => setSelectedProjectId(Number(e.target.value))}
+              >
+                <option value="">-- Seleccione un proyecto --</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            {errors.name && <span className={styles.errorText}>{errors.name}</span>}
+          </div>
+        ) : (
+          <div className={styles.formGrid}>
           <div className={styles.formGroup}>
             <label htmlFor="name" className={styles.label}>
               Nombre de la Evaluación <span className={styles.required}>*</span>
@@ -155,6 +249,7 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
             </p>
           </div>
         </div>
+        )}
 
         <div className={styles.actions}>
           {onCancel && (
