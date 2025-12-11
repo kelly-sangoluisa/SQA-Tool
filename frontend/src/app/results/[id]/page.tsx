@@ -9,6 +9,7 @@ import { ChartsSection } from '@/components/reports/ChartsSection';
 import { StatsOverview } from '@/components/reports/StatsOverview';
 import { getEvaluationReport, getEvaluationStats } from '@/api/reports/reports.api';
 import type { EvaluationReport, EvaluationStats } from '@/api/reports/reports.types';
+import { generateEvaluationPDF } from '@/utils/pdfGenerator';
 
 export default function EvaluationDetailPage() {
   const params = useParams();
@@ -21,6 +22,7 @@ export default function EvaluationDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'stats'>('overview');
   const [showAllCriteria, setShowAllCriteria] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     if (evaluationId) {
@@ -56,6 +58,20 @@ export default function EvaluationDetailPage() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleExportPDF = async () => {
+    if (!report || !stats) return;
+
+    try {
+      setIsExporting(true);
+      await generateEvaluationPDF({ report, stats });
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+      alert('Error al generar el PDF. Por favor intente nuevamente.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (loading) {
@@ -183,8 +199,33 @@ export default function EvaluationDetailPage() {
             </div>
           </div>
           
-          <div className="header-score">
-            <ScoreGauge score={report.final_score} size="medium" />
+          <div className="header-actions">
+            <div className="header-score">
+              <ScoreGauge score={report.final_score} size="medium" />
+            </div>
+            
+            <button 
+              className="export-pdf-btn"
+              onClick={handleExportPDF}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <svg className="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"/>
+                    <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"/>
+                  </svg>
+                  Generando...
+                </>
+              ) : (
+                <>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Exportar PDF
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -406,6 +447,56 @@ export default function EvaluationDetailPage() {
 
         .header-info {
           flex: 1;
+        }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+        }
+
+        .header-score {
+          /* ScoreGauge wrapper - styles from component */
+        }
+
+        .export-pdf-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.75rem 1.5rem;
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 0.9375rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .export-pdf-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .export-pdf-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .spinner {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
         }
 
         .page-title {
