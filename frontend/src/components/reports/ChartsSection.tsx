@@ -275,7 +275,7 @@ export function ChartsSection({ report }: Props) {
                 className="gauge-arc"
               />
               {/* Threshold marker */}
-              {!!report.project_threshold && (
+              {report.project_threshold && (
                 <line
                   x1={100 + 70 * Math.cos(Math.PI - (report.project_threshold / 100) * Math.PI)}
                   y1={100 - 70 * Math.sin(Math.PI - (report.project_threshold / 100) * Math.PI)}
@@ -292,7 +292,7 @@ export function ChartsSection({ report }: Props) {
                 {report.final_score.toFixed(1)}
               </div>
               <div className="gauge-label">Puntuación Final</div>
-              {!!report.project_threshold && (
+              {report.project_threshold && (
                 <div className="gauge-threshold">
                   Umbral: {report.project_threshold}%
                 </div>
