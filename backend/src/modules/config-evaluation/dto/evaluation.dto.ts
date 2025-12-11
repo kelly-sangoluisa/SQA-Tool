@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsNotEmpty, IsDateString } from 'class-validator';
+import { IsNumber, IsNotEmpty } from 'class-validator';
 
 export class CreateEvaluationDto {
   @ApiProperty({ description: 'ID del proyecto' })
@@ -11,12 +11,4 @@ export class CreateEvaluationDto {
   @IsNumber()
   @IsNotEmpty()
   standard_id: number;
-
-  @ApiProperty({
-    description: 'Fecha de creación de la evaluación',
-    example: '2025-11-03T10:30:00Z'
-  })
-  @IsDateString()
-  @IsNotEmpty()
-  creation_date: string;
 }

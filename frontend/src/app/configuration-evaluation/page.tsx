@@ -28,6 +28,7 @@ export default function ConfigurationEvaluationPage() {
 
   // Store data from each step
   const [evaluationInfo, setEvaluationInfo] = useState<EvaluationInfo | null>(null);
+  const [existingProjectId, setExistingProjectId] = useState<number | null>(null);
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null);
   const [selectedCriteriaIds, setSelectedCriteriaIds] = useState<number[]>([]);
   const [selectedCriteriaFull, setSelectedCriteriaFull] = useState<Criterion[]>([]);
@@ -63,12 +64,30 @@ export default function ConfigurationEvaluationPage() {
     return null;
   }
 
-  const handleStep1Complete = (data: EvaluationInfo) => {
+  const handleStep1Complete = (data: EvaluationInfo, projectId?: number) => {
     setEvaluationInfo(data);
+    setExistingProjectId(projectId || null);
     setCurrentStep(2);
   };
 
-  const handleStep2Complete = (standard: Standard) => {
+  const handleStep2Complete = async (standard: Standard) => {
+    // Si es un proyecto existente, validar que no tenga ya una evaluación con este estándar
+    if (existingProjectId) {
+      try {
+        const evaluations = await configEvaluationApi.getEvaluationsByProjectId(existingProjectId);
+        const hasStandard = evaluations.some(evaluation => evaluation.standard_id === standard.id);
+
+        if (hasStandard) {
+          setSaveError(`El proyecto ya tiene una evaluación con el estándar "${standard.name}". Por favor, seleccione otro estándar o cree un proyecto nuevo.`);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+      } catch (error) {
+        console.error('Error validating standard:', error);
+      }
+    }
+
+    setSaveError(null);
     setSelectedStandard(standard);
     setCurrentStep(3);
   };
@@ -102,38 +121,49 @@ export default function ConfigurationEvaluationPage() {
         throw new Error(`Usuario autenticado pero sin ID. Datos del usuario: ${JSON.stringify(user)}`);
       }
 
-      // Llamar a las APIs en orden:
-      // 1. POST /config-evaluation/projects (retorna project.id)
-      // 2. POST /config-evaluation/evaluations (usa project.id, retorna evaluation.id)
-      // 3. POST /config-evaluation/evaluation-criteria/bulk (usa evaluation.id)
-      const result = await configEvaluationApi.completeEvaluationConfiguration({
-        projectName: evaluationInfo!.name,
-        projectDescription: evaluationInfo!.description,
-        standardId: selectedStandard!.id,
-        creatorUserId: user.id,
-        criteria: criteriaImportance.map((item) => ({
-          criterionId: item.criterionId,
-          importanceLevel: item.importanceLevel,
-          importancePercentage: item.importancePercentage,
-        })),
-      });
+      let projectId: number;
+      let evaluationId: number;
+      let criteriaCount: number;
 
-      // Create final configuration object (currently not used but kept for future reference)
-      // const configuration: EvaluationConfiguration = {
-      //   info: evaluationInfo!,
-      //   standardId: selectedStandard!.id,
-      //   standardName: selectedStandard!.name,
-      //   standardVersion: selectedStandard!.version,
-      //   selectedCriteria: subCriteria,
-      // };
+      // Decidir si crear proyecto nuevo o usar existente
+      if (existingProjectId) {
+        // Proyecto existente: solo crear evaluación y criterios
+        const result = await configEvaluationApi.createEvaluationForExistingProject({
+          projectId: existingProjectId,
+          standardId: selectedStandard!.id,
+          criteria: criteriaImportance.map((item) => ({
+            criterionId: item.criterionId,
+            importanceLevel: item.importanceLevel,
+            importancePercentage: item.importancePercentage,
+          })),
+        });
+
+        projectId = existingProjectId;
+        evaluationId = result.evaluation.id;
+        criteriaCount = result.criteria.length;
+      } else {
+        // Proyecto nuevo: crear proyecto, evaluación y criterios
+        const result = await configEvaluationApi.completeEvaluationConfiguration({
+          projectName: evaluationInfo!.name,
+          projectDescription: evaluationInfo!.description,
+          minQualityThreshold: evaluationInfo!.minQualityThreshold,
+          standardId: selectedStandard!.id,
+          creatorUserId: user.id,
+          criteria: criteriaImportance.map((item) => ({
+            criterionId: item.criterionId,
+            importanceLevel: item.importanceLevel,
+            importancePercentage: item.importancePercentage,
+          })),
+        });
+
+        projectId = result.project.id;
+        evaluationId = result.evaluation.id;
+        criteriaCount = result.criteria.length;
+      }
 
       // Mostrar mensaje de éxito y redirigir
-      alert(`¡Configuración de evaluación completada exitosamente!
-      
-Proyecto ID: ${result.project.id}
-Evaluación ID: ${result.evaluation.id}
-Criterios creados: ${result.criteria.length}`);
-      
+      alert(`✅ ¡Evaluación creada exitosamente!\n\nSe ha configurado la evaluación con ${criteriaCount} ${criteriaCount === 1 ? 'criterio' : 'criterios'}.\nRedirigiendo al dashboard...`);
+
       router.push('/dashboard');
     } catch (error) {
       console.error('❌ Error al crear la evaluación:', error);

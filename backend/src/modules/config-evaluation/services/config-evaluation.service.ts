@@ -54,6 +54,7 @@ export class ConfigEvaluationService {
       const newProject = projectRepo.create({
         name: createProjectDto.name,
         description: createProjectDto.description,
+        minimum_threshold: createProjectDto.minimum_threshold,
         creator_user_id: createProjectDto.creator_user_id,
         status: ProjectStatus.IN_PROGRESS,
       });
@@ -95,8 +96,7 @@ export class ConfigEvaluationService {
       const newEvaluation = evaluationRepo.create({
         project_id: createEvaluationDto.project_id,
         standard_id: createEvaluationDto.standard_id,
-        creation_date: new Date(createEvaluationDto.creation_date),
-        status: EvaluationStatus.IN_PROGRESS,
+        // status se establece automáticamente por el default
       });
 
       const savedEvaluation = await evaluationRepo.save(newEvaluation);

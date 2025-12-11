@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '../../hooks/auth/useAuth';
 import styles from './DashboardHome.module.css';
 
@@ -94,9 +95,9 @@ export function DashboardHome() {
       {/* Welcome Section */}
       <header className={styles.greeting}>
         <h2>Hola, {user?.name ?? 'Usuario'}</h2>
-        <a href="/configuration-evaluation" className={styles.newEvaluationBtn}>
+        <Link href="/configuration-evaluation" className={styles.newEvaluationBtn}>
           + Nueva Evaluación
-        </a>
+        </Link>
       </header>
 
       {/* Proyectos Recientes - TARJETAS GRANDES */}
@@ -104,7 +105,7 @@ export function DashboardHome() {
         <section className={styles.sectionWrapper}>
           <div className={styles.sectionHeader}>
             <h3 className={styles.sectionTitle}>Proyectos recientes</h3>
-            <a href="/configuration-evaluation/projects" className={styles.viewAllLink}>Ver todos</a>
+            <Link href="/configuration-evaluation/projects" className={styles.viewAllLink}>Ver todos</Link>
           </div>
 
           {loading && <p className={styles.loadingText}>Cargando...</p>}
@@ -129,9 +130,9 @@ export function DashboardHome() {
                         <time className={styles.cardDate}>
                           Actualizado: {formatDate(project.updated_at)}
                         </time>
-                        <a href={`/data-entry/${project.id}`} className={styles.viewBtn}>
+                        <Link href={`/data-entry/${project.id}`} className={styles.viewBtn}>
                           Abrir
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </article>
@@ -168,9 +169,9 @@ export function DashboardHome() {
                     </p>
                   </div>
                   <div className={styles.smallCardFooter}>
-                    <a href={`/data-entry/${project.id}`} className={styles.smallViewBtn}>
+                    <Link href={`/data-entry/${project.id}`} className={styles.smallViewBtn}>
                       Abrir
-                    </a>
+                    </Link>
                   </div>
                 </article>
               );

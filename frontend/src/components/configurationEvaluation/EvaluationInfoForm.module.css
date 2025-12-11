@@ -91,6 +91,63 @@
   color: #9ca3af;
 }
 
+.projectTypeSelector {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+  transition: color 0.2s ease;
+}
+
+.radioLabel:hover {
+  color: #4E5EA3;
+}
+
+.radioInput {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: #4E5EA3;
+}
+
+.select {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #4E5EA3;
+  box-shadow: 0 0 0 3px rgba(78, 94, 163, 0.1);
+}
+
+.loadingText {
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

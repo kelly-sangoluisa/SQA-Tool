@@ -18,7 +18,6 @@ export interface Evaluation {
   id: number;
   project_id: number;
   standard_id: number;
-  creation_date: string;
   status: 'in_progress' | 'completed' | 'cancelled';
   created_at: string;
   updated_at: string;
@@ -38,13 +37,13 @@ export interface EvaluationCriterion {
 export interface CreateProjectDto {
   name: string;
   description?: string;
+  minimum_threshold?: number;
   creator_user_id: number;
 }
 
 export interface CreateEvaluationDto {
   project_id: number;
   standard_id: number;
-  creation_date: string;
 }
 
 export interface CreateEvaluationCriterionDto {
@@ -96,6 +95,13 @@ export const configEvaluationApi = {
   },
 
   /**
+   * Get all projects
+   */
+  async getAllProjects(): Promise<Project[]> {
+    return apiClient.get('/config-evaluation/projects');
+  },
+
+  /**
    * Get project by ID
    */
   async getProjectById(id: number): Promise<Project> {
@@ -110,12 +116,20 @@ export const configEvaluationApi = {
   },
 
   /**
+   * Get evaluations by project ID
+   */
+  async getEvaluationsByProjectId(projectId: number): Promise<Evaluation[]> {
+    return apiClient.get(`/config-evaluation/projects/${projectId}/evaluations`);
+  },
+
+  /**
    * Complete evaluation configuration flow
    * Creates project, evaluation, and criteria in order
    */
   async completeEvaluationConfiguration(data: {
     projectName: string;
     projectDescription?: string;
+    minQualityThreshold?: number;
     standardId: number;
     creatorUserId: number;
     criteria: Array<{
@@ -133,6 +147,7 @@ export const configEvaluationApi = {
       const project = await this.createProject({
         name: data.projectName,
         description: data.projectDescription,
+        minimum_threshold: data.minQualityThreshold,
         creator_user_id: data.creatorUserId,
       });
 
@@ -140,7 +155,6 @@ export const configEvaluationApi = {
       const evaluation = await this.createEvaluation({
         project_id: project.id,
         standard_id: data.standardId,
-        creation_date: new Date().toISOString(),
       });
 
       // Step 3: Create evaluation criteria
@@ -154,6 +168,45 @@ export const configEvaluationApi = {
       });
 
       return { project, evaluation, criteria };
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Create evaluation for existing project
+   * Creates evaluation and criteria for a project that already exists
+   */
+  async createEvaluationForExistingProject(data: {
+    projectId: number;
+    standardId: number;
+    criteria: Array<{
+      criterionId: number;
+      importanceLevel: ImportanceLevel;
+      importancePercentage: number;
+    }>;
+  }): Promise<{
+    evaluation: Evaluation;
+    criteria: EvaluationCriterion[];
+  }> {
+    try {
+      // Step 1: Create evaluation
+      const evaluation = await this.createEvaluation({
+        project_id: data.projectId,
+        standard_id: data.standardId,
+      });
+
+      // Step 2: Create evaluation criteria
+      const criteria = await this.bulkCreateEvaluationCriteria({
+        criteria: data.criteria.map((criterion) => ({
+          evaluation_id: evaluation.id,
+          criterion_id: criterion.criterionId,
+          importance_level: criterion.importanceLevel,
+          importance_percentage: criterion.importancePercentage,
+        })),
+      });
+
+      return { evaluation, criteria };
     } catch (error) {
       throw error;
     }
