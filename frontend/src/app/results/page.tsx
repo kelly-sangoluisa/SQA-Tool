@@ -143,24 +143,24 @@ export default function ResultsPage() {
           <p className="page-subtitle">
             Visualiza y analiza los resultados de todos tus proyectos de calidad de software
           </p>
-        </div>
 
-        <div className="stats-summary">
-          <div className="stat-chip stat-chip--total">
-            <span className="stat-number">{projects?.length || 0}</span>
-            <span className="stat-text">Total</span>
-          </div>
-          <div className="stat-chip stat-chip--approved">
-            <span className="stat-number">{approvedCount}</span>
-            <span className="stat-text">Aprobados</span>
-          </div>
-          <div className="stat-chip stat-chip--rejected">
-            <span className="stat-number">{rejectedCount}</span>
-            <span className="stat-text">No Aprobados</span>
-          </div>
-          <div className="stat-chip stat-chip--pending">
-            <span className="stat-number">{noScoreCount}</span>
-            <span className="stat-text">Sin Resultados</span>
+          <div className="stats-summary">
+            <div className="stat-chip stat-chip--total">
+              <span className="stat-number">{projects?.length || 0}</span>
+              <span className="stat-text">Total</span>
+            </div>
+            <div className="stat-chip stat-chip--approved">
+              <span className="stat-number">{approvedCount}</span>
+              <span className="stat-text">Aprobados</span>
+            </div>
+            <div className="stat-chip stat-chip--rejected">
+              <span className="stat-number">{rejectedCount}</span>
+              <span className="stat-text">No Aprobados</span>
+            </div>
+            <div className="stat-chip stat-chip--pending">
+              <span className="stat-number">{noScoreCount}</span>
+              <span className="stat-text">Sin Resultados</span>
+            </div>
           </div>
         </div>
       </div>
@@ -246,11 +246,6 @@ export default function ResultsPage() {
         .page-header {
           max-width: 1200px;
           margin: 0 auto 3rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 2rem;
         }
 
         .back-button {
@@ -274,8 +269,7 @@ export default function ResultsPage() {
         }
 
         .header-content {
-          flex: 1;
-          min-width: 300px;
+          margin-bottom: 2rem;
         }
 
         .page-title {
@@ -285,21 +279,30 @@ export default function ResultsPage() {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          margin: 0 0 0.5rem 0;
+          margin: 0 0 0.75rem 0;
           animation: fadeInDown 0.6s ease;
         }
 
         .page-subtitle {
           font-size: 1.125rem;
           color: #6b7280;
-          margin: 0;
+          margin: 0 0 1.5rem 0;
+          max-width: 600px;
           animation: fadeInUp 0.6s ease;
         }
 
         .stats-summary {
-          display: flex;
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
           gap: 1rem;
-          flex-wrap: wrap;
+          max-width: 500px;
+        }
+
+        @media (min-width: 640px) {
+          .stats-summary {
+            grid-template-columns: repeat(4, 1fr);
+            max-width: 100%;
+          }
         }
 
         .stat-chip {
@@ -307,11 +310,10 @@ export default function ResultsPage() {
           flex-direction: column;
           align-items: center;
           gap: 0.25rem;
-          padding: 1rem 1.5rem;
+          padding: 1rem;
           border-radius: 12px;
           background: white;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-          min-width: 100px;
           transition: all 0.3s ease;
         }
 
@@ -338,8 +340,16 @@ export default function ResultsPage() {
 
         .stat-number {
           font-size: 2rem;
-          font-weight: 800;
+          font-weight: 700;
           line-height: 1;
+          min-width: 40px;
+          text-align: center;
+        }
+
+        .stat-text {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #6b7280;
         }
 
         .stat-chip--total .stat-number {
