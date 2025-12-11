@@ -5,6 +5,7 @@ import type { EvaluationReport, EvaluationStats } from '@/api/reports/reports.ty
 interface PDFGenerationOptions {
   report: EvaluationReport;
   stats: EvaluationStats;
+  radarImageData?: string | null;
 }
 
 export class PDFGenerator {
@@ -25,7 +26,7 @@ export class PDFGenerator {
   }
 
   async generateReport(options: PDFGenerationOptions): Promise<void> {
-    const { report, stats } = options;
+    const { report, stats, radarImageData } = options;
 
     // Página 1: Portada
     this.addCoverPage(report);
@@ -44,7 +45,7 @@ export class PDFGenerator {
 
     // Gráficos
     this.addNewPage();
-    await this.addCharts();
+    await this.addCharts(radarImageData);
 
     // Conclusión
     this.addNewPage();
@@ -104,18 +105,38 @@ export class PDFGenerator {
     this.currentY += 12;
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.text('Puntuación:', this.margin, this.currentY);
+    
+    // Score con más separación
     this.pdf.setFont('helvetica', 'normal');
     const scoreColor = report.final_score >= 80 ? [16, 185, 129] : 
                         report.final_score >= 60 ? [245, 158, 11] : [239, 68, 68];
     this.pdf.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-    this.pdf.setFontSize(18);
-    this.pdf.text(`${report.final_score.toFixed(1)}%`, this.margin + 30, this.currentY);
+    this.pdf.setFontSize(24);
+    this.pdf.text(`${report.final_score.toFixed(1)}%`, this.margin + 40, this.currentY);
 
-    // Footer
+    // Badge de estado
+    this.currentY += 15;
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFontSize(14);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('Estado:', this.margin, this.currentY);
+    
+    const meetsThreshold = report.meets_threshold;
+    const badgeColor = meetsThreshold ? [16, 185, 129] : [239, 68, 68];
+    this.pdf.setFillColor(badgeColor[0], badgeColor[1], badgeColor[2]);
+    this.pdf.roundedRect(this.margin + 23, this.currentY - 6, 35, 10, 2, 2, 'F');
+    this.pdf.setTextColor(255, 255, 255);
+    this.pdf.setFontSize(11);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text(meetsThreshold ? 'APROBADO' : 'NO APROBADO', this.margin + 40.5, this.currentY, { align: 'center' });
+
+    // Footer en 3 líneas bien separadas con más espacio
     this.pdf.setTextColor(128, 128, 128);
-    this.pdf.setFontSize(10);
-    this.pdf.text('Generado automáticamente por SQA Tool', this.pageWidth / 2, this.pageHeight - 15, { align: 'center' });
-    this.pdf.text(new Date().toLocaleString('es-ES'), this.pageWidth / 2, this.pageHeight - 10, { align: 'center' });
+    this.pdf.setFontSize(9);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text('Generado automáticamente por SQA Tool', this.pageWidth / 2, this.pageHeight - 28, { align: 'center' });
+    this.pdf.text(new Date().toLocaleDateString('es-ES'), this.pageWidth / 2, this.pageHeight - 20, { align: 'center' });
+    this.pdf.text(new Date().toLocaleTimeString('es-ES'), this.pageWidth / 2, this.pageHeight - 14, { align: 'center' });
   }
 
   private addTableOfContents(): void {
@@ -197,23 +218,33 @@ export class PDFGenerator {
 
     this.currentY += 15;
     
-    // Estado de cumplimiento
+    // Estado de cumplimiento - centrado
     this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Estado de Cumplimiento:', this.margin, this.currentY);
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFontSize(12);
+    const cumplimientoWidth = this.pdf.getTextWidth('Estado de Cumplimiento:');
+    this.pdf.text('Estado de Cumplimiento:', (this.pageWidth - cumplimientoWidth) / 2, this.currentY);
     this.currentY += 8;
     
-    const meetsThreshold = report.meets_threshold;
-    const statusColor = meetsThreshold ? [16, 185, 129] : [239, 68, 68];
+    const meetsThresholdExec = report.meets_threshold;
+    const statusColor = meetsThresholdExec ? [16, 185, 129] : [239, 68, 68];
+    const statusWidth = meetsThresholdExec ? 45 : 55;
+    const badgeHeight = 11;
+    const badgeX = (this.pageWidth - statusWidth) / 2;
     this.pdf.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
-    this.pdf.roundedRect(this.margin, this.currentY - 5, 60, 10, 2, 2, 'F');
+    this.pdf.roundedRect(badgeX, this.currentY - 6, statusWidth, badgeHeight, 2, 2, 'F');
     this.pdf.setTextColor(255, 255, 255);
     this.pdf.setFontSize(10);
-    this.pdf.text(meetsThreshold ? '✓ APROBADO' : '✗ NO APROBADO', this.margin + 30, this.currentY, { align: 'center' });
+    this.pdf.setFont('helvetica', 'bold');
+    const statusText = meetsThresholdExec ? 'APROBADO' : 'NO APROBADO';
+    this.pdf.text(statusText, this.pageWidth / 2, this.currentY, { align: 'center' });
 
     this.currentY += 12;
     this.pdf.setTextColor(100, 100, 100);
     this.pdf.setFontSize(9);
-    this.pdf.text(`Umbral mínimo: ${report.project_threshold}% | Obtenido: ${report.final_score.toFixed(1)}%`, this.margin, this.currentY);
+    const umbralText = `Umbral mínimo: ${report.project_threshold}% | Obtenido: ${report.final_score.toFixed(1)}%`;
+    const umbralWidth = this.pdf.getTextWidth(umbralText);
+    this.pdf.text(umbralText, (this.pageWidth - umbralWidth) / 2, this.currentY);
   }
 
   private addCriteriaDetails(report: EvaluationReport): void {
@@ -222,7 +253,7 @@ export class PDFGenerator {
     this.pdf.setFontSize(10);
     
     report.criteria_results.forEach((criterion, index) => {
-      if (this.currentY > this.pageHeight - 50) {
+      if (this.currentY > this.pageHeight - 60) {
         this.addNewPage();
       }
 
@@ -255,11 +286,66 @@ export class PDFGenerator {
       const splitDesc = this.pdf.splitTextToSize(description, this.pageWidth - 2 * this.margin - 10);
       this.pdf.setFontSize(8);
       this.pdf.text(splitDesc, this.margin + 5, this.currentY);
-      this.currentY += splitDesc.length * 4 + 8;
+      this.currentY += splitDesc.length * 4 + 5;
+
+      // Métricas del criterio
+      if (criterion.metrics && criterion.metrics.length > 0) {
+        this.pdf.setFont('helvetica', 'bold');
+        this.pdf.setFontSize(9);
+        this.pdf.setTextColor(50, 50, 50);
+        this.pdf.text('Métricas:', this.margin + 5, this.currentY);
+        this.currentY += 5;
+
+        criterion.metrics.forEach((metric, metricIdx) => {
+          if (this.currentY > this.pageHeight - 50) {
+            this.addNewPage();
+          }
+
+          // Código y descripción de métrica
+          this.pdf.setFont('helvetica', 'bold');
+          this.pdf.setFontSize(8);
+          this.pdf.setTextColor(70, 70, 70);
+          this.pdf.text(`  ${metricIdx + 1}) ${metric.metric_code}: ${metric.metric_description}`, this.margin + 8, this.currentY);
+          this.currentY += 4;
+
+          // Fórmula
+          if (metric.formula) {
+            this.pdf.setFont('helvetica', 'italic');
+            this.pdf.setTextColor(100, 100, 100);
+            this.pdf.text(`     Fórmula: ${metric.formula}`, this.margin + 8, this.currentY);
+            this.currentY += 4;
+          }
+
+          // Variables
+          if (metric.variables && metric.variables.length > 0) {
+            this.pdf.setFont('helvetica', 'normal');
+            this.pdf.setFontSize(7);
+            metric.variables.forEach(variable => {
+              this.pdf.text(`     ${variable.symbol} = ${variable.value} (${variable.description})`, this.margin + 8, this.currentY);
+              this.currentY += 3.5;
+            });
+          }
+
+          // Valores calculados
+          this.pdf.setFont('helvetica', 'normal');
+          this.pdf.setFontSize(8);
+          this.pdf.setTextColor(60, 60, 60);
+          this.pdf.text(`     Calculado: ${metric.calculated_value.toFixed(2)} | Ponderado: ${metric.weighted_value.toFixed(2)} | Umbral: ${metric.desired_threshold}`, this.margin + 8, this.currentY);
+          
+          // Indicador de cumplimiento
+          const meetsMetric = metric.meets_threshold;
+          this.pdf.setTextColor(meetsMetric ? 16 : 239, meetsMetric ? 185 : 68, meetsMetric ? 129 : 68);
+          this.pdf.text(meetsMetric ? ' ✓' : ' ✗', this.pageWidth - this.margin - 15, this.currentY);
+          
+          this.currentY += 6;
+        });
+      }
+
+      this.currentY += 3;
     });
   }
 
-  private async addCharts(): Promise<void> {
+  private async addCharts(radarImageData?: string | null): Promise<void> {
     this.addSectionTitle('3. Análisis Gráfico');
 
     this.pdf.setFontSize(10);
@@ -267,17 +353,24 @@ export class PDFGenerator {
     this.pdf.text('Los gráficos muestran la distribución de puntuaciones y análisis visual de los criterios evaluados.', this.margin, this.currentY);
     this.currentY += 10;
 
-    // Capturar gráficos del DOM
+    // Pequeño delay para asegurar que el DOM esté completamente renderizado
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Capturar gráficos principales del DOM
     try {
-      const chartsSection = document.querySelector('.charts-section');
-      if (chartsSection) {
-        const canvas = await html2canvas(chartsSection as HTMLElement, {
+      const chartsSection = document.querySelector('.charts-section') as HTMLElement;
+      
+      if (chartsSection && chartsSection.offsetHeight > 0) {
+        // Capturar con escala balanceada
+        const canvas = await html2canvas(chartsSection, {
           scale: 2,
           logging: false,
-          useCORS: true
+          useCORS: true,
+          backgroundColor: '#ffffff',
         });
         
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        // Mantener márgenes consistentes
         const imgWidth = this.pageWidth - 2 * this.margin;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
@@ -286,7 +379,43 @@ export class PDFGenerator {
         }
 
         this.pdf.addImage(imgData, 'PNG', this.margin, this.currentY, imgWidth, imgHeight);
-        this.currentY += imgHeight + 10;
+        this.currentY += imgHeight + 15;
+      } else {
+        console.warn('ChartsSection no encontrada o no visible');
+        this.pdf.setTextColor(200, 100, 0);
+        this.pdf.text('No se pudieron capturar los gráficos principales.', this.margin, this.currentY);
+        this.currentY += 10;
+      }
+
+      // Usar la imagen pre-capturada del radar si existe
+      if (radarImageData) {
+        // Verificar espacio
+        if (this.currentY + 80 > this.pageHeight - this.margin) {
+          this.addNewPage();
+        }
+
+        this.pdf.setFontSize(11);
+        this.pdf.setFont('helvetica', 'bold');
+        this.pdf.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+        this.pdf.text('Gráfico de Radar - Balance de Criterios', this.margin, this.currentY);
+        this.currentY += 8;
+
+        // Crear imagen temporal para obtener dimensiones
+        const img = new Image();
+        img.src = radarImageData;
+        await new Promise((resolve) => {
+          img.onload = resolve;
+        });
+
+        const radarImgWidth = this.pageWidth - 2 * this.margin;
+        const radarImgHeight = (img.height * radarImgWidth) / img.width;
+
+        if (this.currentY + radarImgHeight > this.pageHeight - this.margin) {
+          this.addNewPage();
+        }
+
+        this.pdf.addImage(radarImageData, 'PNG', this.margin, this.currentY, radarImgWidth, radarImgHeight);
+        this.currentY += radarImgHeight + 10;
       }
     } catch (error) {
       console.error('Error capturando gráficos:', error);
@@ -306,15 +435,19 @@ export class PDFGenerator {
     const splitConclusion = this.pdf.splitTextToSize(conclusion, this.pageWidth - 2 * this.margin);
     
     this.pdf.text(splitConclusion, this.margin, this.currentY);
-    this.currentY += splitConclusion.length * 6 + 15;
+    this.currentY += splitConclusion.length * 6 + 30;
 
-    // Firma/Sello
+    // Línea de firma
     this.pdf.setDrawColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
     this.pdf.setLineWidth(0.5);
     this.pdf.line(this.margin, this.currentY, this.pageWidth / 2 - 10, this.currentY);
     this.currentY += 5;
     this.pdf.setFontSize(9);
+    this.pdf.setFont('helvetica', 'normal');
     this.pdf.setTextColor(100, 100, 100);
+    this.pdf.text(`Firma: ${report.created_by_name}`, this.margin, this.currentY);
+    this.currentY += 4;
+    this.pdf.setFontSize(8);
     this.pdf.text('Evaluador de Calidad', this.margin, this.currentY);
   }
 

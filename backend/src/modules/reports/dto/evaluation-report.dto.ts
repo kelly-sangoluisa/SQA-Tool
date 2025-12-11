@@ -15,6 +15,9 @@ export class EvaluationReportDto {
   @ApiProperty({ description: 'Nombre del proyecto' })
   project_name: string;
 
+  @ApiProperty({ description: 'Nombre del usuario que creó la evaluación' })
+  created_by_name: string;
+
   @ApiProperty({ description: 'Umbral mínimo del proyecto' })
   project_threshold: number | null;
 

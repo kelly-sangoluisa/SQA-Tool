@@ -16,6 +16,7 @@ import { Metric } from '../../parameterization/entities/metric.entity';
 import { Standard } from '../../parameterization/entities/standard.entity';
 import { EvaluationVariable } from '../../entry-data/entities/evaluation_variable.entity';
 import { FormulaVariable } from '../../parameterization/entities/formula-variable.entity';
+import { User } from '../../../users/entities/user.entity';
 
 // DTOs
 import { 
@@ -56,6 +57,8 @@ export class ReportsService {
     private readonly evaluationVariableRepo: Repository<EvaluationVariable>,
     @InjectRepository(FormulaVariable)
     private readonly formulaVariableRepo: Repository<FormulaVariable>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {}
 
   /**
@@ -158,10 +161,22 @@ export class ReportsService {
     const finalScore = Number(evaluationResult.evaluation_score);
     const projectThreshold = Number(evaluation.project?.minimum_threshold || 0);
 
+    // Obtener el nombre del usuario creador del proyecto
+    let createdByName = 'Usuario Desconocido';
+    if (evaluation.project?.creator_user_id) {
+      const creator = await this.userRepo.findOne({
+        where: { id: evaluation.project.creator_user_id },
+      });
+      if (creator) {
+        createdByName = creator.name;
+      }
+    }
+
     return {
       evaluation_id: evaluation.id,
       project_id: evaluation.project_id,
       project_name: evaluation.project?.name || 'Unknown',
+      created_by_name: createdByName,
       standard_name: evaluation.standard?.name || 'Unknown',
       created_at: evaluation.created_at,
       final_score: finalScore,

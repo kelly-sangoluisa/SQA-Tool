@@ -43,6 +43,7 @@ export interface EvaluationReport {
   evaluation_id: number;
   project_id: number;
   project_name: string;
+  created_by_name: string;
   standard_name: string;
   created_at: string;
   final_score: number;

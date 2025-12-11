@@ -65,7 +65,34 @@ export default function EvaluationDetailPage() {
 
     try {
       setIsExporting(true);
-      await generateEvaluationPDF({ report, stats });
+      
+      // Detectar si el radar está expandido ANTES de cambiar de tab
+      const radarWrapper = document.querySelector('.radar-chart-wrapper') as HTMLElement;
+      const isRadarExpanded = radarWrapper && 
+                             radarWrapper.offsetParent !== null && 
+                             radarWrapper.offsetHeight > 100;
+      
+      // Si el radar está expandido, capturarlo ahora antes de cambiar de tab
+      let radarImageData: string | null = null;
+      if (isRadarExpanded) {
+        const html2canvas = (await import('html2canvas')).default;
+        const radarCanvas = await html2canvas(radarWrapper, {
+          scale: 2,
+          logging: false,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        });
+        radarImageData = radarCanvas.toDataURL('image/png', 1.0);
+      }
+      
+      // Cambiar a overview para que los gráficos se rendericen
+      if (activeTab !== 'overview') {
+        setActiveTab('overview');
+        // Esperar a que React renderice el nuevo tab
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
+      
+      await generateEvaluationPDF({ report, stats, radarImageData });
     } catch (error) {
       console.error('Error generando PDF:', error);
       alert('Error al generar el PDF. Por favor intente nuevamente.');

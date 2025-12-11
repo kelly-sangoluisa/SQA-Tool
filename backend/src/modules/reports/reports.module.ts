@@ -16,6 +16,7 @@ import { Metric } from '../parameterization/entities/metric.entity';
 import { Standard } from '../parameterization/entities/standard.entity';
 import { EvaluationVariable } from '../entry-data/entities/evaluation_variable.entity';
 import { FormulaVariable } from '../parameterization/entities/formula-variable.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { FormulaVariable } from '../parameterization/entities/formula-variable.e
       Standard,
       EvaluationVariable,
       FormulaVariable,
+      User,
     ]),
   ],
   controllers: [ReportsController],
