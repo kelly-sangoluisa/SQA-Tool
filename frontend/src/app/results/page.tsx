@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ProjectCard } from '@/components/reports/ProjectCard';
 import { getMyProjects } from '@/api/reports/reports.api';
 import type { ProjectSummary } from '@/api/reports/reports.types';
 
 export default function ResultsPage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -129,6 +131,13 @@ export default function ResultsPage() {
   return (
     <div className="results-page">
       <div className="page-header">
+        <button onClick={() => router.push('/dashboard')} className="back-button">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Volver al Dashboard
+        </button>
+
         <div className="header-content">
           <h1 className="page-title">Resultados de Proyectos</h1>
           <p className="page-subtitle">
@@ -234,7 +243,6 @@ export default function ResultsPage() {
           background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
           padding: 2rem;
         }
-
         .page-header {
           max-width: 1200px;
           margin: 0 auto 3rem;
@@ -243,6 +251,26 @@ export default function ResultsPage() {
           align-items: center;
           flex-wrap: wrap;
           gap: 2rem;
+        }
+
+        .back-button {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: white;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          color: var(--color-primary);
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin-bottom: 1.5rem;
+        }
+
+        .back-button:hover {
+          border-color: var(--color-primary);
+          box-shadow: 0 4px 12px rgba(78, 94, 163, 0.15);
         }
 
         .header-content {
