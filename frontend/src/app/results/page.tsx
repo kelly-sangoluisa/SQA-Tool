@@ -42,6 +42,91 @@ export default function ResultsPage() {
   const completedCount = (evaluations || []).filter(evaluation => evaluation.has_results).length;
   const pendingCount = (evaluations || []).filter(evaluation => !evaluation.has_results).length;
 
+  // Mostrar loading inicial sin contenido para evitar FOUC
+  if (loading && evaluations.length === 0) {
+    return (
+      <div className="results-page">
+        <div className="page-header">
+          <div className="header-content">
+            <div className="skeleton skeleton-title"></div>
+            <div className="skeleton skeleton-subtitle"></div>
+          </div>
+        </div>
+
+        <div className="content-container">
+          <div className="skeleton skeleton-filters"></div>
+          <div className="evaluations-grid">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="skeleton skeleton-card"></div>
+            ))}
+          </div>
+        </div>
+
+        <style jsx>{`
+          .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s ease-in-out infinite;
+            border-radius: 8px;
+          }
+
+          .skeleton-title {
+            height: 40px;
+            width: 300px;
+            margin-bottom: 0.5rem;
+          }
+
+          .skeleton-subtitle {
+            height: 20px;
+            width: 400px;
+          }
+
+          .skeleton-filters {
+            height: 60px;
+            width: 100%;
+            margin-bottom: 2rem;
+          }
+
+          .skeleton-card {
+            height: 200px;
+            width: 100%;
+          }
+
+          @keyframes loading {
+            0% {
+              background-position: 200% 0;
+            }
+            100% {
+              background-position: -200% 0;
+            }
+          }
+
+          .results-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 2rem;
+          }
+
+          .page-header {
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+          }
+
+          .content-container {
+            max-width: 1200px;
+            margin: 0 auto;
+          }
+
+          .evaluations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div className="results-page">
       <div className="page-header">
