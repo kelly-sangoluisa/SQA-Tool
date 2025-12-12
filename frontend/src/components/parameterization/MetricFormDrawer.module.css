@@ -1,9 +1,6 @@
 .overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0 0 0 0;
   background: rgb(0 0 0 / 0.5);
   z-index: 1000;
   opacity: 0;
@@ -167,7 +164,7 @@
 }
 
 .textarea.formula {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-family: 'SF Mono', Monaco, Inconsolata, monospace;
   background: rgb(249 250 251 / 1);
 }
 
@@ -259,7 +256,7 @@
 }
 
 .symbolInput {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-family: 'SF Mono', Monaco, Inconsolata, monospace;
   font-weight: 600;
 }
 
@@ -313,7 +310,7 @@
 }
 
 .chipSymbol {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-family: 'SF Mono', Monaco, Inconsolata, monospace;
   font-weight: 600;
   color: var(--color-accent-5);
 }

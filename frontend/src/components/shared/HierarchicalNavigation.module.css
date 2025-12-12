@@ -40,7 +40,7 @@
 .createButton:hover {
   background: var(--color-primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 8px rgb(0, 0, 0, 0.12);
 }
 
 .createButton:active {
@@ -49,8 +49,7 @@
 
 .content {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
   padding: 1rem;
   min-height: 0;
   scrollbar-width: thin;
@@ -225,7 +224,7 @@
   background: white;
   border-radius: 50%;
   transition: transform 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgb(0, 0, 0, 0.1);
 }
 
 .toggleButton.active .toggleSlider {
@@ -498,7 +497,7 @@
 }
 
 .toggleButton:focus {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 0 2px rgb(59, 130, 246, 0.3);
 }
 
 .toggleButton:disabled:hover {

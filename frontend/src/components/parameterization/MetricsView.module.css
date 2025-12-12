@@ -189,7 +189,7 @@
   align-items: center;
   background: rgb(243 244 246 / 1);
   color: var(--color-secondary);
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-family: 'SF Mono', Monaco, Inconsolata, monospace;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.25rem 0.5rem;
@@ -282,7 +282,7 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: rgb(146 64 14 / 1);
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-family: 'SF Mono', Monaco, Inconsolata, monospace;
 }
 
 .formula {
@@ -302,7 +302,7 @@
 }
 
 .formulaCode {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-family: 'SF Mono', Monaco, Inconsolata, monospace;
   font-size: 0.875rem;
   background: rgb(243 244 246 / 1);
   padding: 0.5rem 0.75rem;
@@ -343,7 +343,7 @@
 }
 
 .variableSymbol {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-family: 'SF Mono', Monaco, Inconsolata, monospace;
   font-weight: 600;
   color: var(--color-accent-5);
 }

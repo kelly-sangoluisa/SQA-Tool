@@ -15,12 +15,12 @@
   justify-content: center;
   color: #374151;
   transition: background 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgb(0, 0, 0, 0.1);
 }
 
 .toggleButton:hover {
   background: #f3f4f6;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgb(0, 0, 0, 0.15);
 }
 
 /* El botón NO se mueve cuando el sidebar está abierto */
@@ -38,12 +38,11 @@
   width: 280px;
   background: #ffffff;
   border-right: 1px solid #e5e7eb;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
   transition: left 0.3s ease;
   z-index: 1001;
   padding: 0;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 0 8px rgb(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
 }
@@ -79,11 +78,8 @@
 /* Overlay for mobile */
 .overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0 0 0 0;
+  background: rgb(0, 0, 0, 0.5);
   z-index: 1000;
   display: none;
 }
@@ -119,10 +115,10 @@
 .searchSection {
   padding: 16px;
   padding-bottom: 12px;
-  animation: slideDown 0.2s ease;
+  animation: slide-down 0.2s ease;
 }
 
-@keyframes slideDown {
+@keyframes slide-down {
   from {
     opacity: 0;
     transform: translateY(-10px);
@@ -206,21 +202,12 @@
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px rgb(102, 126, 234, 0.3);
 }
 
 .backToHomeBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.searchInfo {
-  padding: 10px 16px;
-  background: #f0f9ff;
-  border-bottom: 1px solid #e0f2fe;
-  font-size: 12px;
-  color: #1e40af;
-  text-align: center;
+  box-shadow: 0 4px 12px rgb(102, 126, 234, 0.4);
 }
 
 .newEvaluationBtn {
@@ -238,12 +225,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+  box-shadow: 0 2px 8px rgb(102, 126, 234, 0.25);
 }
 
 .newEvaluationBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+  box-shadow: 0 4px 12px rgb(102, 126, 234, 0.35);
 }
 
 .newEvaluationBtn:active {
