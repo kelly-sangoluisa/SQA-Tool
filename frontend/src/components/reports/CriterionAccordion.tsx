@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { CriterionResult } from '@/api/reports/reports.types';
+import { getScoreColor } from '@/lib/shared/formatters';
 
 interface Props {
   criterion: CriterionResult;
@@ -10,12 +11,6 @@ interface Props {
 
 export function CriterionAccordion({ criterion, index }: Props) {
   const [isOpen, setIsOpen] = useState(false); // Todos cerrados por defecto
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return '#10b981'; // Verde
-    if (score >= 60) return '#f59e0b'; // Amarillo
-    return '#ef4444'; // Rojo
-  };
 
   const getImportanceLabel = (level: string) => {
     switch (level) {

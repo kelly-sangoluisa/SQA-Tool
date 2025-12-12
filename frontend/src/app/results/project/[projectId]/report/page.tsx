@@ -7,6 +7,7 @@ import { EvaluationCard } from '@/components/reports/EvaluationCard';
 import { getProjectReport, getProjectStats } from '@/api/reports/reports.api';
 import type { ProjectReport, ProjectStats } from '@/api/reports/reports.types';
 import { generateProjectPDF } from '@/utils/projectPDFGenerator';
+import { formatDate } from '@/lib/shared/formatters';
 
 export default function ProjectReportPage() {
   const params = useParams();
@@ -44,16 +45,6 @@ export default function ProjectReportPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   const handleExportPDF = async () => {

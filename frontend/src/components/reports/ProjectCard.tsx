@@ -1,39 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
 import type { ProjectSummary } from '@/api/reports/reports.types';
+import { formatDate, getStatusLabel, getStatusColor } from '@/lib/shared/formatters';
 
 interface ProjectCardProps {
   project: ProjectSummary;
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const getStatusLabel = (status: string) => {
-    const statusMap: Record<string, string> = {
-      'completed': 'Completado',
-      'in_progress': 'En Progreso',
-      'pending': 'Pendiente',
-      'cancelled': 'Cancelado'
-    };
-    return statusMap[status] || status;
-  };
-
-  const getStatusColor = (status: string) => {
-    const colorMap: Record<string, string> = {
-      'completed': '#10b981',
-      'in_progress': '#f59e0b',
-      'pending': '#6b7280',
-      'cancelled': '#ef4444'
-    };
-    return colorMap[status] || '#6b7280';
-  };
 
   const hasScore = project.final_project_score !== null;
   const hasThreshold = project.minimum_threshold !== null;

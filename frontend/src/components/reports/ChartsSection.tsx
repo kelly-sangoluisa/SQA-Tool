@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { EvaluationReport } from '@/api/reports/reports.types';
+import { getScoreColor } from '@/lib/shared/formatters';
 
 interface Props {
   report: EvaluationReport;
@@ -48,12 +49,6 @@ export function ChartsSection({ report }: Props) {
       case 'NA': return '#6b7280';
       default: return '#6b7280';
     }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return '#10b981';
-    if (score >= 60) return '#f59e0b';
-    return '#ef4444';
   };
 
   return (

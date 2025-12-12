@@ -2,33 +2,13 @@
 
 import Link from 'next/link';
 import type { EvaluationListItem } from '@/api/reports/reports.types';
+import { formatDate, getScoreColor, getScoreLabel, validateScore } from '@/lib/shared/formatters';
 
 interface EvaluationCardProps {
   evaluation: EvaluationListItem;
 }
 
 export function EvaluationCard({ evaluation }: EvaluationCardProps) {
-  const getScoreColor = (score: number | null) => {
-    if (score === null) return 'var(--color-light)';
-    if (score >= 80) return '#10b981'; // Verde
-    if (score >= 60) return '#f59e0b'; // Amarillo
-    return '#ef4444'; // Rojo
-  };
-
-  const getScoreLabel = (score: number | null) => {
-    if (score === null) return 'Pendiente';
-    if (score >= 80) return 'Excelente';
-    if (score >= 60) return 'Bueno';
-    return 'Necesita mejora';
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
   return (
     <div className="evaluation-card">
@@ -47,14 +27,10 @@ export function EvaluationCard({ evaluation }: EvaluationCardProps) {
             }}
           >
             <div className="score-value">
-              {typeof evaluation.final_score === 'number' && !isNaN(evaluation.final_score) 
-                ? evaluation.final_score.toFixed(1) 
-                : '0.0'}
+              {validateScore(evaluation.final_score).toFixed(1)}
             </div>
             <div className="score-label">
-              {typeof evaluation.final_score === 'number' && !isNaN(evaluation.final_score)
-                ? getScoreLabel(evaluation.final_score)
-                : 'Sin datos'}
+              {getScoreLabel(evaluation.final_score)}
             </div>
           </div>
         )}

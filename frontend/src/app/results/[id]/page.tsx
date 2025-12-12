@@ -10,6 +10,7 @@ import { StatsOverview } from '@/components/reports/StatsOverview';
 import { getEvaluationReport, getEvaluationStats } from '@/api/reports/reports.api';
 import type { EvaluationReport, EvaluationStats } from '@/api/reports/reports.types';
 import { generateEvaluationPDF } from '@/utils/pdfGenerator';
+import { formatDate } from '@/lib/shared/formatters';
 
 export default function EvaluationDetailPage() {
   const params = useParams();
@@ -49,16 +50,6 @@ export default function EvaluationDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   const handleExportPDF = async () => {
