@@ -185,7 +185,7 @@ export class ReportsController {
   @Post('projects/:projectId/ai-analysis')
   @ROLES('admin', 'evaluator')
   @ApiOperation({
-    summary: '🤖 Generar análisis de IA',
+    summary: 'Generar análisis de IA',
     description: 'Genera un análisis detallado de calidad del proyecto usando IA (Gemini). Incluye fortalezas, debilidades, recomendaciones priorizadas y plan de acción.'
   })
   @ApiParam({
