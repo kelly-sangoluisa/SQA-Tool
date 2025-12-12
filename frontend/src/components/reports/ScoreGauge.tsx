@@ -4,9 +4,14 @@ interface ScoreGaugeProps {
   score: number;
   size?: 'small' | 'medium' | 'large';
   showLabel?: boolean;
+  threshold?: number | null; // Umbral opcional para mostrar la línea
 }
 
-export function ScoreGauge({ score, size = 'medium', showLabel = true }: ScoreGaugeProps) {
+export function ScoreGauge({ score, size = 'medium', showLabel = true, threshold = null }: ScoreGaugeProps) {
+  // Validar que score sea un número válido
+  const validScore = typeof score === 'number' && !isNaN(score) ? score : 0;
+  const validThreshold = threshold !== null && typeof threshold === 'number' && !isNaN(threshold) ? threshold : null;
+  
   const getColor = (value: number) => {
     if (value >= 80) return '#10b981';
     if (value >= 60) return '#f59e0b';
@@ -28,8 +33,18 @@ export function ScoreGauge({ score, size = 'medium', showLabel = true }: ScoreGa
   const config = sizes[size];
   const radius = (config.width / 2) - config.stroke;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-  const color = getColor(score);
+  const offset = circumference - (validScore / 100) * circumference;
+  const color = getColor(validScore);
+
+  // Calcular posición de la línea del umbral si existe
+  const thresholdAngle = validThreshold !== null ? (validThreshold / 100) * 360 - 90 : null;
+  const thresholdRadians = thresholdAngle !== null ? (thresholdAngle * Math.PI) / 180 : null;
+  
+  // Coordenadas para la línea del umbral (desde el borde interno hasta el externo)
+  const innerRadius = radius - config.stroke / 2;
+  const outerRadius = radius + config.stroke / 2;
+  const centerX = config.width / 2;
+  const centerY = config.height / 2;
 
   return (
     <div className="score-gauge">
@@ -59,6 +74,20 @@ export function ScoreGauge({ score, size = 'medium', showLabel = true }: ScoreGa
           className="gauge-progress"
         />
         
+        {/* Línea indicadora del umbral */}
+        {thresholdRadians !== null && (
+          <line
+            x1={centerX + innerRadius * Math.cos(thresholdRadians)}
+            y1={centerY + innerRadius * Math.sin(thresholdRadians)}
+            x2={centerX + outerRadius * Math.cos(thresholdRadians)}
+            y2={centerY + outerRadius * Math.sin(thresholdRadians)}
+            stroke="#dc2626"
+            strokeWidth="4"
+            strokeLinecap="round"
+            className="threshold-marker"
+          />
+        )}
+        
         {/* Texto del score */}
         <text
           x="50%"
@@ -68,13 +97,13 @@ export function ScoreGauge({ score, size = 'medium', showLabel = true }: ScoreGa
           className="gauge-text"
           style={{ fontSize: config.fontSize }}
         >
-          {score.toFixed(1)}
+          {validScore.toFixed(1)}
         </text>
       </svg>
       
       {showLabel && (
         <p className="gauge-label" style={{ fontSize: config.labelSize }}>
-          {getLabel(score)}
+          {getLabel(validScore)}
         </p>
       )}
 
@@ -92,6 +121,20 @@ export function ScoreGauge({ score, size = 'medium', showLabel = true }: ScoreGa
 
         .gauge-progress {
           transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .threshold-marker {
+          filter: drop-shadow(0 2px 6px rgba(220, 38, 38, 0.6));
+          animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.8;
+          }
         }
 
         .gauge-text {

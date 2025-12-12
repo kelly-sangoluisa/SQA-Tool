@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { EvaluationCard } from '@/components/reports/EvaluationCard';
 import { getEvaluationsByProject } from '@/api/reports/reports.api';
 import type { EvaluationListItem } from '@/api/reports/reports.types';
+
+const ITEMS_PER_PAGE = 6;
 
 export default function ProjectEvaluationsPage() {
   const params = useParams();
@@ -15,10 +17,17 @@ export default function ProjectEvaluationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
+  const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadEvaluations();
   }, [projectId]);
+
+  useEffect(() => {
+    // Reset display count cuando cambia el filtro
+    setDisplayCount(ITEMS_PER_PAGE);
+  }, [filter]);
 
   const loadEvaluations = async () => {
     try {
@@ -40,6 +49,37 @@ export default function ProjectEvaluationsPage() {
     if (filter === 'pending') return !evaluation.has_results;
     return true;
   });
+
+  const displayedEvaluations = filteredEvaluations.slice(0, displayCount);
+  const hasMore = displayCount < filteredEvaluations.length;
+
+  const loadMore = useCallback(() => {
+    if (hasMore && !loading) {
+      setDisplayCount(prev => prev + ITEMS_PER_PAGE);
+    }
+  }, [hasMore, loading]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, loadMore]);
 
   const completedCount = (evaluations || []).filter(e => e.has_results).length;
   const pendingCount = (evaluations || []).filter(e => !e.has_results).length;
@@ -168,11 +208,20 @@ export default function ProjectEvaluationsPage() {
       )}
 
       {!loading && !error && filteredEvaluations.length > 0 && (
-        <div className="evaluations-grid">
-          {filteredEvaluations.map((evaluation) => (
-            <EvaluationCard key={evaluation.evaluation_id} evaluation={evaluation} />
-          ))}
-        </div>
+        <>
+          <div className="evaluations-grid">
+            {displayedEvaluations.map((evaluation) => (
+              <EvaluationCard key={evaluation.evaluation_id} evaluation={evaluation} />
+            ))}
+          </div>
+          
+          {hasMore && (
+            <div ref={observerTarget} className="load-more-trigger">
+              <div className="loader-small"></div>
+              <p>Cargando más evaluaciones...</p>
+            </div>
+          )}
+        </>
       )}
 
       <style jsx>{`
@@ -422,6 +471,32 @@ export default function ProjectEvaluationsPage() {
         .empty-state h3 {
           color: var(--color-primary-dark);
           margin: 0 0 0.5rem 0;
+        }
+
+        .load-more-trigger {
+          max-width: 1200px;
+          margin: 2rem auto;
+          padding: 2rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .loader-small {
+          width: 32px;
+          height: 32px;
+          border: 3px solid #f1f5f9;
+          border-top-color: var(--color-primary);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 0.75rem;
+        }
+
+        .load-more-trigger p {
+          color: #6b7280;
+          font-size: 0.875rem;
+          font-weight: 500;
         }
 
         @keyframes fadeIn {

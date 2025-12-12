@@ -251,8 +251,8 @@ export function ChartsSection({ report }: Props) {
         {/* Indicador de Cumplimiento del Proyecto */}
         <div className="chart-card">
           <div className="chart-header">
-            <h4 className="chart-title">Cumplimiento del Proyecto</h4>
-            <p className="chart-subtitle">Respecto al umbral mínimo</p>
+            <h4 className="chart-title">Puntuación de la Evaluación</h4>
+            <p className="chart-subtitle">Resultado obtenido en la evaluación</p>
           </div>
           <div className="gauge-container">
             <svg className="gauge-svg" viewBox="0 0 200 120">
@@ -274,29 +274,12 @@ export function ChartsSection({ report }: Props) {
                 strokeDasharray={`${(report.final_score / 100) * 220} 220`}
                 className="gauge-arc"
               />
-              {/* Threshold marker */}
-              {!!report.project_threshold && (
-                <line
-                  x1={100 + 70 * Math.cos(Math.PI - (report.project_threshold / 100) * Math.PI)}
-                  y1={100 - 70 * Math.sin(Math.PI - (report.project_threshold / 100) * Math.PI)}
-                  x2={100 + 85 * Math.cos(Math.PI - (report.project_threshold / 100) * Math.PI)}
-                  y2={100 - 85 * Math.sin(Math.PI - (report.project_threshold / 100) * Math.PI)}
-                  stroke="#ef4444"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-              )}
             </svg>
             <div className="gauge-info">
               <div className="gauge-score" style={{ color: getScoreColor(report.final_score) }}>
                 {report.final_score.toFixed(1)}
               </div>
               <div className="gauge-label">Puntuación Final</div>
-              {!!report.project_threshold && (
-                <div className="gauge-threshold">
-                  Umbral: {report.project_threshold}%
-                </div>
-              )}
             </div>
           </div>
         </div>

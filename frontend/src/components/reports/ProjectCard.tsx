@@ -15,14 +15,43 @@ export function ProjectCard({ project }: ProjectCardProps) {
     });
   };
 
+  const getStatusLabel = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'completed': 'Completado',
+      'in_progress': 'En Progreso',
+      'pending': 'Pendiente',
+      'cancelled': 'Cancelado'
+    };
+    return statusMap[status] || status;
+  };
+
+  const getStatusColor = (status: string) => {
+    const colorMap: Record<string, string> = {
+      'completed': '#10b981',
+      'in_progress': '#f59e0b',
+      'pending': '#6b7280',
+      'cancelled': '#ef4444'
+    };
+    return colorMap[status] || '#6b7280';
+  };
+
   const hasScore = project.final_project_score !== null;
   const hasThreshold = project.minimum_threshold !== null;
+  const canViewResults = project.status === 'completed' && hasScore && hasThreshold;
 
   return (
     <div className="project-card">
       <div className="project-card-header">
         <div className="project-card-info">
-          <h3 className="project-card-title">{project.project_name}</h3>
+          <div className="title-row">
+            <h3 className="project-card-title">{project.project_name}</h3>
+            <span 
+              className="status-badge"
+              style={{ backgroundColor: getStatusColor(project.status) }}
+            >
+              {getStatusLabel(project.status)}
+            </span>
+          </div>
           {project.project_description && (
             <p className="project-card-description">{project.project_description}</p>
           )}
@@ -48,7 +77,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         )}
       </div>
 
-      {hasScore && hasThreshold && (
+      {hasThreshold && (
         <div className="project-threshold-info">
           <span className="threshold-label">Umbral mínimo:</span>
           <span className="threshold-value">{project.minimum_threshold?.toFixed(1)}</span>
@@ -60,11 +89,40 @@ export function ProjectCard({ project }: ProjectCardProps) {
           href={`/results/project/${project.project_id}`}
           className="btn-view-evaluations"
         >
-          <span>Ver Evaluaciones</span>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <div className="btn-content">
+            <span>Ver Evaluaciones</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
         </Link>
+        
+        {canViewResults ? (
+          <Link 
+            href={`/results/project/${project.project_id}/report`}
+            className="btn-view-results"
+          >
+            <div className="btn-content">
+              <span>Ver Resultados</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </Link>
+        ) : (
+          <button 
+            className="btn-view-results btn-view-results--disabled"
+            disabled
+            title="El proyecto debe estar completado y tener resultados"
+          >
+            <div className="btn-content">
+              <span>Ver Resultados</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </button>
+        )}
       </div>
 
       <style jsx>{`
@@ -77,6 +135,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           position: relative;
           overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
         }
 
         .project-card::before {
@@ -107,23 +168,44 @@ export function ProjectCard({ project }: ProjectCardProps) {
           align-items: flex-start;
           gap: 1rem;
           margin-bottom: 1rem;
+          flex-grow: 1;
         }
 
         .project-card-info {
           flex: 1;
         }
 
+        .title-row {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+        }
+
         .project-card-title {
           font-size: 1.25rem;
           font-weight: 700;
           color: var(--color-primary-dark);
-          margin: 0 0 0.5rem 0;
+          margin: 0;
+        }
+
+        .status-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 0.25rem 0.75rem;
+          border-radius: 20px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: white;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .project-card-description {
           font-size: 0.875rem;
           color: #6b7280;
-          margin: 0 0 0.75rem 0;
+          margin: 0.5rem 0 0.75rem 0;
           line-height: 1.4;
         }
 
@@ -209,29 +291,67 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
         .project-card-footer {
           display: flex;
-          justify-content: flex-end;
+          gap: 0.75rem;
+          justify-content: center;
+          padding-top: 0.5rem;
+          margin-top: auto;
+        }
+
+        .btn-view-evaluations,
+        .btn-view-results {
+          flex: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          padding: 0.875rem 1.25rem;
+          border: none;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 0.875rem;
+          line-height: 1;
+          cursor: pointer;
+          text-decoration: none;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+          overflow: hidden;
+          max-width: 200px;
+        }
+
+        .btn-content {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+
+        .btn-view-evaluations svg,
+        .btn-view-results svg {
+          flex-shrink: 0;
+          display: block;
         }
 
         .btn-view-evaluations {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
           background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
           color: white;
-          border: none;
-          border-radius: 10px;
-          font-weight: 600;
-          font-size: 0.875rem;
-          cursor: pointer;
-          text-decoration: none;
-          transition: all 0.25s ease;
-          box-shadow: 0 2px 8px rgba(78, 94, 163, 0.2);
-          position: relative;
-          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(78, 94, 163, 0.25);
         }
 
-        .btn-view-evaluations::before {
+        .btn-view-results {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
+
+        .btn-view-results--disabled {
+          background: #e5e7eb;
+          color: #9ca3af;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        .btn-view-evaluations::before,
+        .btn-view-results::before {
           content: '';
           position: absolute;
           top: 0;
@@ -243,17 +363,32 @@ export function ProjectCard({ project }: ProjectCardProps) {
           transition: opacity 0.3s ease;
         }
 
-        .btn-view-evaluations:hover::before {
+        .btn-view-evaluations:hover:not(:disabled)::before,
+        .btn-view-results:not(.btn-view-results--disabled):hover::before {
           opacity: 1;
         }
 
-        .btn-view-evaluations:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 16px rgba(78, 94, 163, 0.3);
+        .btn-view-evaluations:hover:not(:disabled),
+        .btn-view-results:not(.btn-view-results--disabled):hover {
+          transform: translateY(-3px) scale(1.02);
         }
 
-        .btn-view-evaluations:active {
-          transform: translateY(0);
+        .btn-view-evaluations:hover:not(:disabled) {
+          box-shadow: 0 8px 24px rgba(78, 94, 163, 0.4);
+        }
+
+        .btn-view-results:not(.btn-view-results--disabled):hover {
+          box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-view-evaluations:active,
+        .btn-view-results:active {
+          transform: translateY(-1px) scale(1);
+        }
+
+        .btn-view-results--disabled:hover {
+          transform: none;
+          cursor: not-allowed;
         }
 
         @media (max-width: 768px) {

@@ -26,7 +26,10 @@ import {
   MetricResultDto,
   VariableResultDto,
   EvaluationListItemDto,
-  EvaluationStatsDto
+  EvaluationStatsDto,
+  ProjectReportDto,
+  ProjectStatsDto,
+  ProjectEvaluationSummaryDto
 } from '../dto/evaluation-report.dto';
 import { ProjectSummaryDto } from '../dto/project-summary.dto';
 
@@ -463,5 +466,182 @@ export class ReportsService {
 
     this.logger.log(`✅ Devolviendo ${projectSummaries.length} proyectos`);
     return projectSummaries;
+  }
+
+  async getProjectReport(projectId: number): Promise<ProjectReportDto> {
+    this.logger.log(`📊 Obteniendo reporte del proyecto ${projectId}`);
+
+    // Obtener proyecto básico
+    const project = await this.projectRepo.findOne({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Proyecto con ID ${projectId} no encontrado`);
+    }
+
+    this.logger.log(`📦 Proyecto encontrado: ${project.name}`);
+
+    // Obtener creador
+    const creator = await this.userRepo.findOne({
+      where: { id: project.creator_user_id },
+    });
+
+    // Obtener evaluaciones del proyecto
+    const evaluations = await this.evaluationRepo.find({
+      where: { project_id: projectId },
+    });
+
+    this.logger.log(`📋 Evaluaciones encontradas: ${evaluations.length}`);
+
+    // Obtener el resultado del proyecto
+    const projectResult = await this.projectResultRepo.findOne({
+      where: { project_id: projectId },
+    });
+
+    this.logger.log(`📊 Resultado del proyecto: ${projectResult ? projectResult.final_project_score : 'Sin resultado'}`);
+
+    // Mapear evaluaciones con sus datos completos
+    const evaluationSummaries: ProjectEvaluationSummaryDto[] = [];
+    
+    for (const evaluation of evaluations) {
+      // Obtener estándar
+      const standard = await this.standardRepo.findOne({
+        where: { id: evaluation.standard_id },
+      });
+
+      // Obtener resultado de la evaluación
+      const evalResult = await this.evaluationResultRepo.findOne({
+        where: { evaluation_id: evaluation.id },
+      });
+
+      const score = evalResult?.evaluation_score;
+      const scoreNumber = score != null ? Number(score) : 0;
+      this.logger.log(`  📝 Evaluación ${evaluation.id}: ${standard?.name} - Score: ${scoreNumber}`);
+
+      evaluationSummaries.push({
+        evaluation_id: evaluation.id,
+        standard_name: standard?.name || 'Sin estándar',
+        final_score: scoreNumber,
+        status: evaluation.status || 'in_progress',
+        created_at: evaluation.created_at,
+        meets_evaluation_threshold: scoreNumber >= (project.minimum_threshold || 0),
+      });
+    }
+
+    // Calcular si cumple el umbral del proyecto
+    const finalScore = projectResult ? Number(projectResult.final_project_score) : 0;
+    const threshold = project.minimum_threshold ? Number(project.minimum_threshold) : 0;
+    const meetsThreshold = projectResult && threshold > 0 ? finalScore >= threshold : false;
+
+    this.logger.log(`🎯 Score final: ${finalScore}, Umbral: ${threshold}, Cumple: ${meetsThreshold}`);
+
+    // Construir DTO del reporte del proyecto
+    const projectReport: ProjectReportDto = {
+      project_id: project.id,
+      project_name: project.name,
+      project_description: project.description || null,
+      created_by_name: creator?.name || 'Desconocido',
+      created_at: project.created_at,
+      final_project_score: finalScore,
+      minimum_threshold: threshold,
+      meets_threshold: meetsThreshold,
+      status: project.status,
+      evaluations: evaluationSummaries,
+    };
+
+    this.logger.log(`✅ Reporte del proyecto ${projectId} generado exitosamente`);
+    return projectReport;
+  }
+
+  async getProjectStats(projectId: number): Promise<ProjectStatsDto> {
+    this.logger.log(`📈 Calculando estadísticas del proyecto ${projectId}`);
+
+    // Verificar que el proyecto existe
+    const project = await this.projectRepo.findOne({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Proyecto con ID ${projectId} no encontrado`);
+    }
+
+    // Obtener todas las evaluaciones del proyecto
+    const evaluations = await this.evaluationRepo.find({
+      where: { project_id: projectId },
+    });
+
+    this.logger.log(`📋 Evaluaciones encontradas: ${evaluations.length}`);
+
+    const totalEvaluations = evaluations.length;
+    const completedEvaluations = evaluations.filter(e => e.status === 'completed').length;
+
+    this.logger.log(`✅ Completadas: ${completedEvaluations}/${totalEvaluations}`);
+
+    // Calcular estadísticas de puntajes - obtener resultados de evaluaciones
+    const evaluationsWithScores: Array<{ score: number; standardName: string }> = [];
+    
+    for (const evaluation of evaluations) {
+      if (evaluation.status === 'completed') {
+        const evalResult = await this.evaluationResultRepo.findOne({
+          where: { evaluation_id: evaluation.id },
+        });
+
+        if (evalResult?.evaluation_score != null) {
+          const standard = await this.standardRepo.findOne({
+            where: { id: evaluation.standard_id },
+          });
+
+          evaluationsWithScores.push({
+            score: evalResult.evaluation_score,
+            standardName: standard?.name || 'Sin estándar',
+          });
+        }
+      }
+    }
+
+    let averageScore = 0;
+    let highestEvaluation: { standard_name: string; score: number } | null = null;
+    let lowestEvaluation: { standard_name: string; score: number } | null = null;
+
+    if (evaluationsWithScores.length > 0) {
+      const scores = evaluationsWithScores.map(e => Number(e.score));
+      
+      averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+      this.logger.log(`📊 Promedio: ${averageScore.toFixed(2)}`);
+      
+      // Encontrar evaluación con mayor puntaje
+      const maxScore = Math.max(...scores);
+      const highestEval = evaluationsWithScores.find(e => Number(e.score) === maxScore);
+      if (highestEval) {
+        highestEvaluation = {
+          standard_name: highestEval.standardName,
+          score: maxScore,
+        };
+        this.logger.log(`🏆 Mejor: ${highestEval.standardName} - ${maxScore}`);
+      }
+
+      // Encontrar evaluación con menor puntaje
+      const minScore = Math.min(...scores);
+      const lowestEval = evaluationsWithScores.find(e => Number(e.score) === minScore);
+      if (lowestEval) {
+        lowestEvaluation = {
+          standard_name: lowestEval.standardName,
+          score: minScore,
+        };
+        this.logger.log(`📉 Menor: ${lowestEval.standardName} - ${minScore}`);
+      }
+    }
+
+    const stats: ProjectStatsDto = {
+      total_evaluations: totalEvaluations,
+      completed_evaluations: completedEvaluations,
+      average_evaluation_score: averageScore,
+      highest_evaluation: highestEvaluation || { standard_name: 'N/A', score: 0 },
+      lowest_evaluation: lowestEvaluation || { standard_name: 'N/A', score: 0 },
+    };
+
+    this.logger.log(`✅ Estadísticas del proyecto ${projectId} calculadas`);
+    return stats;
   }
 }

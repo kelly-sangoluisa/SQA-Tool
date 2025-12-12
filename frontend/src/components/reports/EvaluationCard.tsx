@@ -34,8 +34,8 @@ export function EvaluationCard({ evaluation }: EvaluationCardProps) {
     <div className="evaluation-card">
       <div className="evaluation-card-header">
         <div className="evaluation-card-info">
-          <h3 className="evaluation-card-title">{evaluation.project_name}</h3>
-          <p className="evaluation-card-standard">{evaluation.standard_name}</p>
+          <h3 className="evaluation-card-title">{evaluation.standard_name}</h3>
+          <p className="evaluation-card-standard">{evaluation.project_name}</p>
           <p className="evaluation-card-date">{formatDate(evaluation.created_at)}</p>
         </div>
         
@@ -46,8 +46,16 @@ export function EvaluationCard({ evaluation }: EvaluationCardProps) {
               background: `linear-gradient(135deg, ${getScoreColor(evaluation.final_score)}, ${getScoreColor(evaluation.final_score)}dd)`
             }}
           >
-            <div className="score-value">{evaluation.final_score.toFixed(1)}</div>
-            <div className="score-label">{getScoreLabel(evaluation.final_score)}</div>
+            <div className="score-value">
+              {typeof evaluation.final_score === 'number' && !isNaN(evaluation.final_score) 
+                ? evaluation.final_score.toFixed(1) 
+                : '0.0'}
+            </div>
+            <div className="score-label">
+              {typeof evaluation.final_score === 'number' && !isNaN(evaluation.final_score)
+                ? getScoreLabel(evaluation.final_score)
+                : 'Sin datos'}
+            </div>
           </div>
         )}
 
@@ -64,14 +72,18 @@ export function EvaluationCard({ evaluation }: EvaluationCardProps) {
             href={`/results/${evaluation.evaluation_id}`}
             className="btn-view-results"
           >
-            <span>Ver Resultados</span>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <div className="btn-content">
+              <span>Ver Resultados</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
           </Link>
         ) : (
           <button className="btn-view-results btn-view-results--disabled" disabled>
-            <span>Evaluación incompleta</span>
+            <div className="btn-content">
+              <span>Evaluación incompleta</span>
+            </div>
           </button>
         )}
       </div>
@@ -202,12 +214,25 @@ export function EvaluationCard({ evaluation }: EvaluationCardProps) {
           border-radius: 10px;
           font-weight: 600;
           font-size: 0.875rem;
+          line-height: 1;
           cursor: pointer;
           text-decoration: none;
           transition: all 0.25s ease;
           box-shadow: 0 2px 8px rgba(78, 94, 163, 0.2);
           position: relative;
           overflow: hidden;
+        }
+
+        .btn-content {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+
+        .btn-view-results svg {
+          flex-shrink: 0;
+          display: block;
         }
 
         .btn-view-results::before {

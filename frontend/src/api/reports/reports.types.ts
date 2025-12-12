@@ -84,3 +84,40 @@ export interface EvaluationStats {
     low: number;
   };
 }
+/**
+ * Project Report Types - For project-level results
+ */
+export interface ProjectEvaluationSummary {
+  evaluation_id: number;
+  standard_name: string;
+  created_at: string;
+  final_score: number;
+  meets_evaluation_threshold: boolean;
+}
+
+export interface ProjectReport {
+  project_id: number;
+  project_name: string;
+  project_description: string | null;
+  created_by_name: string;
+  created_at: string;
+  final_project_score: number;
+  minimum_threshold: number;
+  meets_threshold: boolean;
+  status: string;
+  evaluations: ProjectEvaluationSummary[];
+}
+
+export interface ProjectStats {
+  total_evaluations: number;
+  completed_evaluations: number;
+  average_evaluation_score: number;
+  highest_evaluation: {
+    standard_name: string;
+    score: number;
+  };
+  lowest_evaluation: {
+    standard_name: string;
+    score: number;
+  };
+}

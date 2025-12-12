@@ -3,7 +3,9 @@ import type {
   EvaluationListItem, 
   EvaluationReport,
   EvaluationStats,
-  ProjectSummary
+  ProjectSummary,
+  ProjectReport,
+  ProjectStats
 } from './reports.types';
 
 /**
@@ -57,4 +59,17 @@ export async function getEvaluationReport(evaluationId: number): Promise<Evaluat
  */
 export async function getEvaluationStats(evaluationId: number): Promise<EvaluationStats> {
   return await apiClient.get<EvaluationStats>(`/reports/evaluations/${evaluationId}/stats`);
+}
+/**
+ * Obtiene el reporte completo de un proyecto (con todas sus evaluaciones)
+ */
+export async function getProjectReport(projectId: number): Promise<ProjectReport> {
+  return await apiClient.get<ProjectReport>(`/reports/projects/${projectId}/report`);
+}
+
+/**
+ * Obtiene las estadísticas de un proyecto
+ */
+export async function getProjectStats(projectId: number): Promise<ProjectStats> {
+  return await apiClient.get<ProjectStats>(`/reports/projects/${projectId}/stats`);
 }

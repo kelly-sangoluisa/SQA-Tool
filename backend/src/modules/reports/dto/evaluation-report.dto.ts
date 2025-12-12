@@ -171,3 +171,87 @@ export class EvaluationStatsDto {
     low: number;
   };
 }
+
+/**
+ * DTO para el resumen de una evaluación dentro de un proyecto
+ */
+export class ProjectEvaluationSummaryDto {
+  @ApiProperty({ description: 'ID de la evaluación' })
+  evaluation_id: number;
+
+  @ApiProperty({ description: 'Nombre del estándar' })
+  standard_name: string;
+
+  @ApiProperty({ description: 'Fecha de creación' })
+  created_at: Date;
+
+  @ApiProperty({ description: 'Puntuación final de la evaluación' })
+  final_score: number;
+
+  @ApiProperty({ description: 'Estado de la evaluación' })
+  status: string;
+
+  @ApiProperty({ description: 'Indica si cumple con el umbral de la evaluación' })
+  meets_evaluation_threshold: boolean;
+}
+
+/**
+ * DTO para el reporte completo de un proyecto
+ */
+export class ProjectReportDto {
+  @ApiProperty({ description: 'ID del proyecto' })
+  project_id: number;
+
+  @ApiProperty({ description: 'Nombre del proyecto' })
+  project_name: string;
+
+  @ApiProperty({ description: 'Descripción del proyecto', required: false })
+  project_description: string | null;
+
+  @ApiProperty({ description: 'Nombre del creador' })
+  created_by_name: string;
+
+  @ApiProperty({ description: 'Fecha de creación' })
+  created_at: Date;
+
+  @ApiProperty({ description: 'Puntuación final del proyecto' })
+  final_project_score: number;
+
+  @ApiProperty({ description: 'Umbral mínimo del proyecto' })
+  minimum_threshold: number;
+
+  @ApiProperty({ description: 'Indica si cumple con el umbral del proyecto' })
+  meets_threshold: boolean;
+
+  @ApiProperty({ description: 'Estado del proyecto' })
+  status: string;
+
+  @ApiProperty({ description: 'Evaluaciones del proyecto', type: [ProjectEvaluationSummaryDto] })
+  evaluations: ProjectEvaluationSummaryDto[];
+}
+
+/**
+ * DTO para estadísticas de un proyecto
+ */
+export class ProjectStatsDto {
+  @ApiProperty({ description: 'Total de evaluaciones' })
+  total_evaluations: number;
+
+  @ApiProperty({ description: 'Evaluaciones completadas' })
+  completed_evaluations: number;
+
+  @ApiProperty({ description: 'Promedio de evaluaciones' })
+  average_evaluation_score: number;
+
+  @ApiProperty({ description: 'Evaluación con mayor puntuación' })
+  highest_evaluation: {
+    standard_name: string;
+    score: number;
+  };
+
+  @ApiProperty({ description: 'Evaluación con menor puntuación' })
+  lowest_evaluation: {
+    standard_name: string;
+    score: number;
+  };
+}

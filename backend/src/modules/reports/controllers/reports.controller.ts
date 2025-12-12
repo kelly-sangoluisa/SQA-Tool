@@ -5,7 +5,9 @@ import { ReportsService } from '../services/reports.service';
 import { 
   EvaluationReportDto, 
   EvaluationListItemDto,
-  EvaluationStatsDto
+  EvaluationStatsDto,
+  ProjectReportDto,
+  ProjectStatsDto
 } from '../dto/evaluation-report.dto';
 import { ProjectSummaryDto } from '../dto/project-summary.dto';
 
@@ -137,5 +139,41 @@ export class ReportsController {
     @Param('evaluationId', ParseIntPipe) evaluationId: number
   ): Promise<EvaluationStatsDto> {
     return await this.reportsService.getEvaluationStats(evaluationId);
+  }
+
+  @Get('projects/:projectId/report')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({
+    summary: 'Obtener reporte completo de proyecto',
+    description: 'Obtiene el reporte detallado de un proyecto incluyendo todas sus evaluaciones y puntuación final'
+  })
+  @ApiParam({ name: 'projectId', description: 'ID del proyecto' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Reporte de proyecto obtenido exitosamente',
+    type: ProjectReportDto
+  })
+  async getProjectReport(
+    @Param('projectId', ParseIntPipe) projectId: number
+  ): Promise<ProjectReportDto> {
+    return await this.reportsService.getProjectReport(projectId);
+  }
+
+  @Get('projects/:projectId/stats')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({
+    summary: 'Obtener estadísticas de proyecto',
+    description: 'Obtiene estadísticas analíticas de un proyecto (total evaluaciones, promedios, mejores/peores, etc.)'
+  })
+  @ApiParam({ name: 'projectId', description: 'ID del proyecto' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Estadísticas obtenidas exitosamente',
+    type: ProjectStatsDto
+  })
+  async getProjectStats(
+    @Param('projectId', ParseIntPipe) projectId: number
+  ): Promise<ProjectStatsDto> {
+    return await this.reportsService.getProjectStats(projectId);
   }
 }

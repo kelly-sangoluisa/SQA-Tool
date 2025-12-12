@@ -146,7 +146,7 @@ export default function EvaluationDetailPage() {
         <h2>Error al cargar</h2>
         <p>{error || 'No se encontraron los resultados'}</p>
         <button onClick={() => router.push('/results')} className="back-btn">
-          Volver a Resultados
+          Volver
         </button>
         <style jsx>{`
           .error-container {
@@ -203,28 +203,9 @@ export default function EvaluationDetailPage() {
         
         <div className="header-content">
           <div className="header-info">
-            <h1 className="page-title">{report.project_name}</h1>
-            <p className="page-subtitle">{report.standard_name}</p>
+            <h1 className="page-title">{report.standard_name}</h1>
+            <p className="page-subtitle">{report.project_name}</p>
             <p className="page-date">{formatDate(report.created_at)}</p>
-            
-            {/* Threshold Indicator */}
-            <div className={`threshold-badge ${report.meets_threshold ? 'threshold-badge--success' : 'threshold-badge--warning'}`}>
-              {report.meets_threshold ? (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                  </svg>
-                  Cumple con el umbral del proyecto ({report.project_threshold}%)
-                </>
-              ) : (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
-                  </svg>
-                  No cumple con el umbral del proyecto ({report.project_threshold}%)
-                </>
-              )}
-            </div>
           </div>
           
           <div className="header-actions">
@@ -251,18 +232,6 @@ export default function EvaluationDetailPage() {
                   </>
                 )}
               </button>
-              
-              {report.meets_threshold && (
-                <label className="certificate-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={includeCertificate}
-                    onChange={(e) => setIncludeCertificate(e.target.checked)}
-                    disabled={isExporting}
-                  />
-                  <span>Incluir Certificado de Cumplimiento</span>
-                </label>
-              )}
             </div>
             
             <div className="header-score">
@@ -411,16 +380,6 @@ export default function EvaluationDetailPage() {
                 <div className="detail-item">
                   <span className="detail-label">Puntuación Final:</span>
                   <span className="detail-value detail-value--score">{report.final_score.toFixed(2)}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Umbral del Proyecto:</span>
-                  <span className="detail-value">{report.project_threshold}%</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Estado:</span>
-                  <span className={`detail-value ${report.meets_threshold ? 'detail-value--success' : 'detail-value--warning'}`}>
-                    {report.meets_threshold ? 'Aprobado' : 'No Cumple'}
-                  </span>
                 </div>
               </div>
             </div>
