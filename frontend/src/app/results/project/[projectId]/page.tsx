@@ -3,11 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { EvaluationCard } from '@/components/reports/EvaluationCard';
-import { LoadMoreTrigger } from '@/components/shared/LoadMoreTrigger';
 import { getEvaluationsByProject } from '@/api/reports/reports.api';
 import type { EvaluationListItem } from '@/api/reports/reports.types';
-import { useInfiniteScroll } from '@/hooks/shared/useInfiniteScroll';
-import { PAGINATION } from '@/lib/shared/constants';
 
 export default function ProjectEvaluationsPage() {
   const params = useParams();
@@ -18,6 +15,10 @@ export default function ProjectEvaluationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
+
+  useEffect(() => {
+    loadEvaluations();
+  }, [projectId]);
 
   const loadEvaluations = async () => {
     try {
@@ -39,20 +40,6 @@ export default function ProjectEvaluationsPage() {
     if (filter === 'pending') return !evaluation.has_results;
     return true;
   });
-
-  const { displayedItems: displayedEvaluations, hasMore, observerTarget, reset } = useInfiniteScroll(
-    filteredEvaluations,
-    { itemsPerPage: PAGINATION.EVALUATIONS_PER_PAGE }
-  );
-
-  useEffect(() => {
-    loadEvaluations();
-  }, [projectId]);
-
-  useEffect(() => {
-    // Reset cuando cambia el filtro
-    reset();
-  }, [filter, reset]);
 
   const completedCount = (evaluations || []).filter(e => e.has_results).length;
   const pendingCount = (evaluations || []).filter(e => !e.has_results).length;
@@ -181,20 +168,11 @@ export default function ProjectEvaluationsPage() {
       )}
 
       {!loading && !error && filteredEvaluations.length > 0 && (
-        <>
-          <div className="evaluations-grid">
-            {displayedEvaluations.map((evaluation) => (
-              <EvaluationCard key={evaluation.evaluation_id} evaluation={evaluation} />
-            ))}
-          </div>
-          
-          {hasMore && (
-            <LoadMoreTrigger 
-              observerRef={observerTarget} 
-              message="Cargando más evaluaciones..." 
-            />
-          )}
-        </>
+        <div className="evaluations-grid">
+          {filteredEvaluations.map((evaluation) => (
+            <EvaluationCard key={evaluation.evaluation_id} evaluation={evaluation} />
+          ))}
+        </div>
       )}
 
       <style jsx>{`
