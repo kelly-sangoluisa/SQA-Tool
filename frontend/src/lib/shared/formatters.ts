@@ -18,18 +18,12 @@ import {
 export function formatDate(dateString: string, format: 'short' | 'long' = 'long'): string {
   const date = new Date(dateString);
   
-  if (format === 'short') {
-    return date.toLocaleDateString('es-ES', {
-      month: 'short',
-      day: 'numeric'
-    });
-  }
+  // Ensure consistent formatting between SSR and client by using UTC
+  const options: Intl.DateTimeFormatOptions = format === 'short'
+    ? { month: 'short', day: 'numeric', timeZone: 'UTC' }
+    : { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' };
   
-  return date.toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  return date.toLocaleDateString('es-ES', options);
 }
 
 /**

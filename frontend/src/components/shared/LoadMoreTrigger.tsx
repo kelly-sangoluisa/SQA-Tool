@@ -3,7 +3,7 @@
  */
 
 interface LoadMoreTriggerProps {
-  observerRef: React.RefObject<HTMLDivElement>;
+  observerRef: React.RefObject<HTMLDivElement | null>;
   message?: string;
 }
 
