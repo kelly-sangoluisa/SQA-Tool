@@ -3,8 +3,11 @@ import { Button } from '@/components/shared/Button';
 import styles from './MetricCard.module.css';
 
 interface Variable {
+  id?: number;
+  metric_id?: number;
   symbol: string;
   description: string;
+  state?: string;
 }
 
 interface MetricCardProps {
