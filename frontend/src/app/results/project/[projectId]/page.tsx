@@ -86,7 +86,7 @@ export default function ProjectEvaluationsPage() {
     <div className="evaluations-page">
       <div className="page-header">
         <button onClick={() => router.back()} className="back-button">
-          ← Volver a Proyectos
+          ← Volver
         </button>
         <div className="header-content">
           <h1 className="page-title">Evaluaciones: {projectName}</h1>
