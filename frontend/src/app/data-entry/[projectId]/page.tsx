@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/auth/useAuth';
 import '@/styles/data-entry/data-entry.css';
-import { EvaluationSidebar } from '@/components/data-entry/EvaluationSidebar';
-import { StandardSection } from '@/components/data-entry/StandardSection';
+import { DataEntryHierarchy } from '@/components/data-entry/DataEntryHierarchy';
 import { MetricCard } from '@/components/data-entry/MetricCard';
 
 // Interfaces de tipos
@@ -413,7 +412,7 @@ export default function DataEntryProjectPage() {
       <div className="mainContent">
         {/* Sidebar izquierdo con wrapper */}
         <div className="sidebarWrapper">
-          <EvaluationSidebar
+          <DataEntryHierarchy
             evaluations={evaluations}
             currentMetricIndex={currentMetricIndex}
             allMetrics={allMetrics}
