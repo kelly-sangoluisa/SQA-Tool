@@ -4,7 +4,7 @@ import { Repository, DataSource } from 'typeorm';
 
 // Entities
 import { Project, ProjectStatus } from '../entities/project.entity';
-import { Evaluation, EvaluationStatus } from '../entities/evaluation.entity';
+import { Evaluation } from '../entities/evaluation.entity';
 import { EvaluationCriterion } from '../entities/evaluation-criterion.entity';
 import { Standard } from '../../parameterization/entities/standard.entity';
 import { Criterion } from '../../parameterization/entities/criterion.entity';

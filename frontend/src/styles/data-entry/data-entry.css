@@ -202,7 +202,7 @@
   background: white;
   border-radius: 1rem;
   padding: 3rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgb(0, 0, 0, 0.1);
 }
 
 .empty-state h3 {
@@ -226,7 +226,7 @@
 .evaluation-sidebar {
   background: white;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgb(0, 0, 0, 0.1);
   overflow: hidden;
   height: fit-content;
   max-height: calc(100vh - 4rem);
@@ -507,7 +507,7 @@
 .metric-form {
   background: white;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgb(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -593,7 +593,7 @@
 .variable-input input:focus {
   outline: none;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgb(59, 130, 246, 0.1);
 }
 
 .variable-input input:invalid {

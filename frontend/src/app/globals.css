@@ -30,6 +30,7 @@
 }
 
   /* Moved from removed @theme rule for compatibility */
+
 /* Removed unsupported @theme at-rule; variables were moved into :root above for compatibility */
 
 * {

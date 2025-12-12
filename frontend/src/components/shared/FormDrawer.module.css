@@ -14,10 +14,7 @@
 /* Overlay and Drawer Structure */
 .overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0 0 0 0;
   background: rgb(0 0 0 / 0.6);
   z-index: 1000;
   opacity: 0;
@@ -338,7 +335,7 @@
   width: 16px;
   height: 16px;
   border: 2px solid transparent;
-  border-top: 2px solid currentColor;
+  border-top: 2px solid currentcolor;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -554,7 +551,7 @@
 }
 
 .symbolInput {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: Monaco, Menlo, 'Ubuntu Mono', monospace;
   font-weight: 600;
   background: linear-gradient(135deg, rgb(78 94 163 / 0.02) 0%, rgb(89 70 154 / 0.02) 100%);
 }
@@ -636,9 +633,9 @@
 }
 
 .chipSymbol {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: Monaco, Menlo, 'Ubuntu Mono', monospace;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgb(255, 255, 255, 0.2);
   padding: 0.125rem 0.375rem;
   border-radius: 4px;
 }
@@ -649,7 +646,7 @@
 
 /* Formula Field Enhancement */
 .formula {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+  font-family: Monaco, Menlo, 'Ubuntu Mono', monospace !important;
   font-size: 0.875rem !important;
   background: linear-gradient(135deg, rgb(78 94 163 / 0.02) 0%, rgb(89 70 154 / 0.02) 100%) !important;
   border: 1px solid rgb(78 94 163 / 0.15) !important;

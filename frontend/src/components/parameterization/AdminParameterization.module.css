@@ -214,7 +214,7 @@
   background: rgb(243 244 246 / 1);
   padding: 0.25rem 0.5rem;
   border-radius: 6px;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-family: 'SF Mono', Monaco, Inconsolata, monospace;
 }
 
 .cardFooter {
@@ -433,13 +433,13 @@
 
 .card:hover {
   border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgb(0, 0, 0, 0.1);
 }
 
 .card.selected {
   border-color: #3b82f6;
   background-color: #eff6ff;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 2px 8px rgb(59, 130, 246, 0.2);
 }
 
 .cardHeader h4 {
@@ -513,8 +513,8 @@
   justify-content: center;
   width: 26px;
   height: 26px;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: rgb(59, 130, 246, 0.1);
+  border: 1px solid rgb(59, 130, 246, 0.2);
   border-radius: 5px;
   color: #3b82f6;
   cursor: pointer;
@@ -523,15 +523,15 @@
 }
 
 .editButton:hover {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.3);
+  background: rgb(59, 130, 246, 0.15);
+  border-color: rgb(59, 130, 246, 0.3);
   color: #2563eb;
   transform: translateY(-1px);
 }
 
 .editButton:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 0 2px rgb(59, 130, 246, 0.3);
 }
 
 .toggleButton {
@@ -548,7 +548,7 @@
 }
 
 .toggleButton:focus {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 0 2px rgb(59, 130, 246, 0.3);
 }
 
 .toggleButton.active {
@@ -568,7 +568,7 @@
   background-color: white;
   border-radius: 50%;
   transition: transform 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgb(0, 0, 0, 0.1);
 }
 
 .toggleButton.active .toggleSlider {

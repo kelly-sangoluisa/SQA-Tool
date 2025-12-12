@@ -1,0 +1,14 @@
+.mainContent {
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+.mainContent.shifted {
+  margin-left: 0;
+}
+
+@media (min-width: 769px) {
+  .mainContent.shifted {
+    margin-left: 280px;
+  }
+}

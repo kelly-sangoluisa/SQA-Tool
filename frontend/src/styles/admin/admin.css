@@ -26,7 +26,7 @@
 .admin-section {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgb(0, 0, 0, 0.1);
   margin-bottom: 2rem;
   overflow: hidden;
 }
@@ -62,7 +62,7 @@
 .admin-btn-primary:hover {
   background-color: #2563eb;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 8px rgb(59, 130, 246, 0.3);
 }
 
 .admin-btn-secondary {

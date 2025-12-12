@@ -48,18 +48,7 @@ export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
         }
       ];
     } else {
-      return [
-        { 
-          label: 'Dashboard', 
-          href: '/dashboard',
-          description: 'Vista general de proyectos'
-        },
-        { 
-          label: 'Nueva Evaluación', 
-          href: '/configuration-evaluation',
-          description: 'Configurar nueva evaluación'
-        }
-      ];
+      return [];
     }
   };
 
