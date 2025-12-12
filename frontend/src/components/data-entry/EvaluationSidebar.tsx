@@ -1,4 +1,7 @@
-import { useState } from 'react';
+﻿'use client';
+
+import { useState, useEffect } from 'react';
+import styles from './EvaluationSidebar.module.css';
 
 // Interfaces para el sidebar
 interface Variable {
@@ -49,7 +52,17 @@ interface Evaluation {
       id: number;
       name: string;
       description?: string;
-      subcriteria?: Subcriterion[];
+      state?: 'active' | 'inactive';
+      subcriteria?: Array<{
+        id: number;
+        name: string;
+        description?: string;
+        criterion_id: number;
+        state: string;
+        metrics?: Metric[];
+        created_at: string;
+        updated_at: string;
+      }>;
     };
   }>;
 }
@@ -69,67 +82,9 @@ export function EvaluationSidebar({
   variableValues,
   onMetricSelect 
 }: EvaluationSidebarProps) {
-  // Expandir automáticamente la primera evaluación y su primer criterio
-  const [expandedEvaluations, setExpandedEvaluations] = useState<Set<number>>(() => {
-    const initial = new Set<number>();
-    if (evaluations.length > 0) {
-      initial.add(0); // Expandir la primera evaluación
-    }
-    return initial;
-  });
-
-  const [expandedCriteria, setExpandedCriteria] = useState<Set<string>>(() => {
-    const initial = new Set<string>();
-    if (evaluations.length > 0 && evaluations[0].evaluation_criteria.length > 0) {
-      initial.add(`0-${evaluations[0].evaluation_criteria[0].criterion.id}`); // Expandir el primer criterio
-    }
-    return initial;
-  });
-
-  const [expandedSubcriteria, setExpandedSubcriteria] = useState<Set<string>>(() => {
-    const initial = new Set<string>();
-    if (evaluations.length > 0 && 
-        evaluations[0].evaluation_criteria.length > 0 &&
-        evaluations[0].evaluation_criteria[0].criterion.subcriteria &&
-        evaluations[0].evaluation_criteria[0].criterion.subcriteria.length > 0) {
-      const firstCriterion = evaluations[0].evaluation_criteria[0].criterion;
-      const firstSubcriterio = firstCriterion.subcriteria![0]; // Usamos ! porque ya validamos que existe
-      initial.add(`0-${firstCriterion.id}-${firstSubcriterio.id}`); // Expandir el primer subcriterio
-    }
-    return initial;
-  });
-
-  const toggleEvaluation = (evaluationIndex: number) => {
-    const newExpanded = new Set(expandedEvaluations);
-    if (newExpanded.has(evaluationIndex)) {
-      newExpanded.delete(evaluationIndex);
-    } else {
-      newExpanded.add(evaluationIndex);
-    }
-    setExpandedEvaluations(newExpanded);
-  };
-
-  const toggleCriterion = (evaluationIndex: number, criterionId: number) => {
-    const key = `${evaluationIndex}-${criterionId}`;
-    const newExpanded = new Set(expandedCriteria);
-    if (newExpanded.has(key)) {
-      newExpanded.delete(key);
-    } else {
-      newExpanded.add(key);
-    }
-    setExpandedCriteria(newExpanded);
-  };
-
-  const toggleSubcriterion = (evaluationIndex: number, criterionId: number, subcriterionId: number) => {
-    const key = `${evaluationIndex}-${criterionId}-${subcriterionId}`;
-    const newExpanded = new Set(expandedSubcriteria);
-    if (newExpanded.has(key)) {
-      newExpanded.delete(key);
-    } else {
-      newExpanded.add(key);
-    }
-    setExpandedSubcriteria(newExpanded);
-  };
+  const [expandedEvaluations, setExpandedEvaluations] = useState<Set<number>>(new Set());
+  const [expandedCriteria, setExpandedCriteria] = useState<Set<number>>(new Set());
+  const [expandedSubcriteria, setExpandedSubcriteria] = useState<Set<number>>(new Set());
 
   const getMetricGlobalIndex = (metric: Metric): number => {
     return allMetrics.findIndex(m => m.id === metric.id);
@@ -145,153 +100,179 @@ export function EvaluationSidebar({
     });
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <span className="status-badge completed">✓ Completada</span>;
-      case 'in_progress':
-        return <span className="status-badge in-progress">🔄 En progreso</span>;
-      case 'cancelled':
-        return <span className="status-badge cancelled">❌ Cancelada</span>;
-      default:
-        return <span className="status-badge unknown">❓ Desconocido</span>;
-    }
+  const getCompletedMetricsInEvaluation = (evaluation: Evaluation): number => {
+    let completedCount = 0;
+    evaluation.evaluation_criteria.forEach(ec => {
+      ec.criterion.subcriteria?.forEach(sc => {
+        sc.metrics?.forEach(metric => {
+          if (isMetricCompleted(metric)) {
+            completedCount++;
+          }
+        });
+      });
+    });
+    return completedCount;
   };
 
-  // Debug: log de las evaluaciones para verificar los datos
-  console.log('🔍 [EvaluationSidebar] Evaluaciones recibidas:', evaluations);
-  console.log('🔍 [EvaluationSidebar] AllMetrics:', allMetrics);
+  const getTotalMetricsInEvaluation = (evaluation: Evaluation): number => {
+    let totalCount = 0;
+    evaluation.evaluation_criteria.forEach(ec => {
+      ec.criterion.subcriteria?.forEach(sc => {
+        totalCount += sc.metrics?.length || 0;
+      });
+    });
+    return totalCount;
+  };
+
+  const toggleEvaluation = (evaluationId: number) => {
+    const newExpanded = new Set(expandedEvaluations);
+    if (newExpanded.has(evaluationId)) {
+      newExpanded.delete(evaluationId);
+    } else {
+      newExpanded.add(evaluationId);
+    }
+    setExpandedEvaluations(newExpanded);
+  };
+
+  const toggleCriterion = (criterionId: number) => {
+    const newExpanded = new Set(expandedCriteria);
+    if (newExpanded.has(criterionId)) {
+      newExpanded.delete(criterionId);
+    } else {
+      newExpanded.add(criterionId);
+    }
+    setExpandedCriteria(newExpanded);
+  };
+
+  const toggleSubcriterion = (subcriterionId: number) => {
+    const newExpanded = new Set(expandedSubcriteria);
+    if (newExpanded.has(subcriterionId)) {
+      newExpanded.delete(subcriterionId);
+    } else {
+      newExpanded.add(subcriterionId);
+    }
+    setExpandedSubcriteria(newExpanded);
+  };
 
   if (!evaluations || evaluations.length === 0) {
     return (
-      <div className="evaluation-sidebar">
-        <div className="sidebar-header">
-          <h3>No hay evaluaciones</h3>
+      <div className={styles.sidebar}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Evaluaciones</h2>
+        </div>
+        <div className={styles.navigation}>
+          <div className={styles.emptyMetrics}>
+            No hay evaluaciones disponibles
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="evaluation-sidebar">
-      <div className="sidebar-header">
-        <h3>Evaluaciones del Proyecto</h3>
-        <p>{evaluations.length} evaluación{evaluations.length !== 1 ? 'es' : ''}</p>
+    <div className={styles.sidebar}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Evaluaciones</h2>
       </div>
 
-      <div className="sidebar-content">
-        {evaluations.map((evaluation, evaluationIndex) => {
-          const isEvaluationExpanded = expandedEvaluations.has(evaluationIndex);
-          
+      <div className={styles.navigation}>
+        {/* Mapear todas las evaluaciones */}
+        {evaluations.map((evaluation, evalIndex) => {
+          const isEvaluationExpanded = expandedEvaluations.has(evaluation.id);
+          const completedCount = getCompletedMetricsInEvaluation(evaluation);
+          const totalCount = getTotalMetricsInEvaluation(evaluation);
+
           return (
-            <div key={evaluation.id} className="evaluation-group">
+            <div key={evaluation.id} className={styles.evaluationGroup}>
               <button
-                className={`evaluation-button ${isEvaluationExpanded ? 'expanded' : ''}`}
-                onClick={() => toggleEvaluation(evaluationIndex)}
+                className={`${styles.evaluationButton} ${isEvaluationExpanded ? styles.activeEvaluation : ''}`}
+                onClick={() => toggleEvaluation(evaluation.id)}
               >
-                <span className="expand-icon">
+                <span className={styles.standardIcon}>
                   {isEvaluationExpanded ? '▼' : '▶'}
                 </span>
-                <div className="evaluation-info">
-                  <span className="evaluation-title">
-                    {evaluation.standard.name} v{evaluation.standard.version}
-                  </span>
-                  {getStatusBadge(evaluation.status)}
-                </div>
+                <span className={styles.evaluationName}>
+                  {evaluation.standard.name} v{evaluation.standard.version}
+                </span>
+                <span className={styles.progressIndicator}>
+                  ({completedCount}/{totalCount})
+                </span>
               </button>
 
               {isEvaluationExpanded && (
-                <div className="criteria-container">
+                <div className={styles.criteriaList}>
                   {evaluation.evaluation_criteria.map((evalCriterion) => {
                     const criterion = evalCriterion.criterion;
-                    const criterionKey = `${evaluationIndex}-${criterion.id}`;
-                    const isCriterionExpanded = expandedCriteria.has(criterionKey);
+                    const isCriterionExpanded = expandedCriteria.has(criterion.id);
 
                     return (
-                      <div key={evalCriterion.id} className="criterion-group">
+                      <div key={evalCriterion.id} className={styles.criterionGroup}>
                         <button
-                          className={`criterion-button ${isCriterionExpanded ? 'expanded' : ''}`}
-                          onClick={() => toggleCriterion(evaluationIndex, criterion.id)}
+                          className={`${styles.criterionButton} ${isCriterionExpanded ? styles.activeCriterion : ''}`}
+                          onClick={() => toggleCriterion(criterion.id)}
                         >
-                          <span className="expand-icon">
+                          <span className={styles.standardIcon}>
                             {isCriterionExpanded ? '▼' : '▶'}
                           </span>
-                          <div className="criterion-info">
-                            <span className="criterion-name">{criterion.name}</span>
-                            <span className="importance-percentage">
-                              {evalCriterion.importance_percentage}%
-                            </span>
-                          </div>
+                          <span className={styles.criterionName}>
+                            {criterion.name}
+                          </span>
                         </button>
 
                         {isCriterionExpanded && (
-                          <div className="subcriteria-container">
+                          <div className={styles.subcriteriaContainer}>
                             {criterion.subcriteria && criterion.subcriteria.length > 0 ? (
                               criterion.subcriteria.map((subcriterion) => {
-                              const subcriterionKey = `${evaluationIndex}-${criterion.id}-${subcriterion.id}`;
-                              const isSubcriterionExpanded = expandedSubcriteria.has(subcriterionKey);
+                                const isSubcriterionExpanded = expandedSubcriteria.has(subcriterion.id);
 
-                              const renderMetrics = () => {
-                                if (!subcriterion.metrics || subcriterion.metrics.length === 0) {
-                                  return (
-                                    <div style={{ padding: '0.5rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.75rem' }}>
-                                      No hay métricas configuradas
-                                    </div>
-                                  );
-                                }
-
-                                return subcriterion.metrics.map((metric) => {
-                                  const metricGlobalIndex = getMetricGlobalIndex(metric);
-                                  const isCompleted = isMetricCompleted(metric);
-                                  const isActive = metricGlobalIndex === currentMetricIndex;
-
-                                  return (
+                                return (
+                                  <div key={subcriterion.id} className={styles.subcriterionGroup}>
                                     <button
-                                      key={metric.id}
-                                      className={`metric-button ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
-                                      onClick={() => onMetricSelect(evaluationIndex, metricGlobalIndex)}
+                                      className={`${styles.subcriterionButton} ${isSubcriterionExpanded ? styles.activeSubcriterion : ''}`}
+                                      onClick={() => toggleSubcriterion(subcriterion.id)}
                                     >
-                                      <div className="metric-info">
-                                        <span className="metric-name">{metric.name}</span>
-                                        <span className="metric-status">
-                                          {isCompleted ? '✓' : '○'}
-                                        </span>
-                                      </div>
-                                    </button>
-                                  );
-                                });
-                              };
-
-                              return (
-                                <div key={subcriterion.id} className="subcriterion-group">
-                                  <button
-                                    className={`subcriterion-button ${isSubcriterionExpanded ? 'expanded' : ''}`}
-                                    onClick={() => toggleSubcriterion(evaluationIndex, criterion.id, subcriterion.id)}
-                                  >
-                                    <span className="expand-icon">
-                                      {isSubcriterionExpanded ? '▼' : '▶'}
-                                    </span>
-                                    <div className="subcriterion-info">
-                                      <span className="subcriterion-name">{subcriterion.name}</span>
-                                      <span className="metrics-count">
-                                        {(subcriterion.metrics?.length || 0)} métrica{(subcriterion.metrics?.length || 0) !== 1 ? 's' : ''}
+                                      <span className={styles.standardIcon}>
+                                        {isSubcriterionExpanded ? '▼' : '▶'}
                                       </span>
-                                    </div>
-                                  </button>
+                                      <span className={styles.subcriterionName}>
+                                        {subcriterion.name}
+                                      </span>
+                                    </button>
 
-                                  {isSubcriterionExpanded && (
-                                    <div className="metrics-container">
-                                      {renderMetrics()}
-                                    </div>
-                                  )}
-                                </div>
-                              );
+                                    {isSubcriterionExpanded && (
+                                      <div className={styles.metricsSubContainer}>
+                                        {subcriterion.metrics && subcriterion.metrics.length > 0 ? (
+                                          subcriterion.metrics.map((metric, metricLocalIndex) => {
+                                            const metricGlobalIndex = getMetricGlobalIndex(metric);
+                                            const isCompleted = isMetricCompleted(metric);
+                                            const isActive = metricGlobalIndex === currentMetricIndex;
+
+                                            return (
+                                              <button
+                                                key={metric.id}
+                                                className={`${styles.metricButton} ${isActive ? styles.activeMetric : ''} ${isCompleted ? styles.completedMetric : ''}`}
+                                                onClick={() => onMetricSelect(evalIndex, metricGlobalIndex)}
+                                              >
+                                                <span className={`${styles.metricNumber} ${isCompleted ? styles.completedNumber : ''}`}>
+                                                  {isCompleted ? '✓' : metricLocalIndex + 1}
+                                                </span>
+                                                <span className={styles.metricName}>{metric.name}</span>
+                                              </button>
+                                            );
+                                          })
+                                        ) : (
+                                          <div className={styles.emptyMetrics}>
+                                            No hay métricas configuradas
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
                               })
                             ) : (
-                              <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280', fontSize: '0.875rem' }}>
-                                Este criterio no tiene subcriteria configurados.
-                                <br />
-                                <small>Las métricas se configurarán directamente en el criterio.</small>
+                              <div className={styles.emptySubcriteria}>
+                                Este criterio no tiene subcriterios configurados
                               </div>
                             )}
                           </div>

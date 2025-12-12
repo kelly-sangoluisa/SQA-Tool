@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/auth/useAuth';
 import '@/styles/data-entry/data-entry.css';
 import { EvaluationSidebar } from '@/components/data-entry/EvaluationSidebar';
+import { StandardSection } from '@/components/data-entry/StandardSection';
+import { MetricCard } from '@/components/data-entry/MetricCard';
 
 // Interfaces de tipos
 interface Variable {
@@ -100,7 +102,6 @@ export default function DataEntryProjectPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Estados para navegación
-  const [currentEvaluationIndex, setCurrentEvaluationIndex] = useState(0);
   const [currentMetricIndex, setCurrentMetricIndex] = useState(0);
   const [allMetrics, setAllMetrics] = useState<Metric[]>([]);
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
@@ -352,7 +353,6 @@ export default function DataEntryProjectPage() {
 
   // Función para manejar selección de métrica desde el sidebar
   const handleMetricSelect = (evaluationIndex: number, metricGlobalIndex: number) => {
-    setCurrentEvaluationIndex(evaluationIndex);
     setCurrentMetricIndex(metricGlobalIndex);
   };
 
@@ -405,96 +405,58 @@ export default function DataEntryProjectPage() {
     );
   }
 
+  const currentMetric = allMetrics[currentMetricIndex];
+
   return (
-    <div className="data-entry">
-      <div className="content">
-        {/* Header con información del proyecto */}
-        <div className="header">
-          <div className="header-content">
-            <div className="project-info">
-              <h1>{project.name}</h1>
-              <p>{project.description || 'Proyecto de evaluación de calidad'}</p>
-            </div>
-          </div>
+    <div className="enterDataLayout">
+      {/* Contenido principal en grid */}
+      <div className="mainContent">
+        {/* Sidebar izquierdo con wrapper */}
+        <div className="sidebarWrapper">
+          <EvaluationSidebar
+            evaluations={evaluations}
+            currentMetricIndex={currentMetricIndex}
+            allMetrics={allMetrics}
+            variableValues={variableValues}
+            onMetricSelect={handleMetricSelect}
+          />
         </div>
 
-        {/* Progress Bar */}
-        {projectProgress && (
-          <div className="progress-section">
-            <div className="progress-info">
-              <h3>Progreso del Proyecto</h3>
-              <div className="progress-stats">
-                <div className="stat">
-                  <span className="stat-value">{projectProgress.completed_evaluations}</span>
-                  <span className="stat-label">de {projectProgress.total_evaluations} evaluaciones</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-value">{projectProgress.completed_metrics}</span>
-                  <span className="stat-label">de {projectProgress.total_metrics} métricas</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-value">{projectProgress.overall_progress_percentage}%</span>
-                  <span className="stat-label">completado</span>
-                </div>
-              </div>
-            </div>
-            <div className="progress-bar">
-              <div 
-                className="progress-fill"
-                style={{ 
-                  width: `${projectProgress.overall_progress_percentage}%` 
-                }}
-              ></div>
-            </div>
-          </div>
-        )}
-
-        {/* Contenido principal */}
-        <div className="main-content">
-          <div className="sidebar-section">
-            <EvaluationSidebar
-              evaluations={evaluations}
-              currentMetricIndex={currentMetricIndex}
-              allMetrics={allMetrics}
-              variableValues={variableValues}
-              onMetricSelect={handleMetricSelect}
-            />
-          </div>
-
-          <div className="form-section">
-            {allMetrics.length > 0 && currentMetricIndex < allMetrics.length ? (
-              <MetricForm
-                metric={allMetrics[currentMetricIndex]}
-                values={variableValues}
-                onVariableUpdate={handleVariableUpdate}
-                evaluationIndex={currentEvaluationIndex}
-                metricIndex={currentMetricIndex}
-                totalMetrics={allMetrics.length}
-                onNext={() => {
-                  if (currentMetricIndex < allMetrics.length - 1) {
-                    setCurrentMetricIndex(currentMetricIndex + 1);
-                  }
+        {/* Contenido central */}
+        <div className="content">          
+          <div className="metricContainer">
+            {currentMetric ? (
+              <MetricCard
+                number={currentMetricIndex + 1}
+                name={currentMetric.name}
+                description={currentMetric.description}
+                formula={currentMetric.formula}
+                variables={currentMetric.variables || []}
+                values={Object.fromEntries(
+                  Object.entries(variableValues)
+                    .filter(([key]) => key.startsWith(`metric-${currentMetric.id}-`))
+                    .map(([key, value]) => [key.split('-')[2], value])
+                )}
+                onValueChange={(symbol, value) => {
+                  handleVariableUpdate(currentMetric.id, symbol, value);
                 }}
                 onPrevious={() => {
                   if (currentMetricIndex > 0) {
                     setCurrentMetricIndex(currentMetricIndex - 1);
                   }
                 }}
-                isFirst={currentMetricIndex === 0}
-                isLast={currentMetricIndex === allMetrics.length - 1}
+                onNext={() => {
+                  if (currentMetricIndex < allMetrics.length - 1) {
+                    setCurrentMetricIndex(currentMetricIndex + 1);
+                  }
+                }}
+                isFirstMetric={currentMetricIndex === 0}
+                isLastMetric={currentMetricIndex === allMetrics.length - 1}
               />
             ) : (
-              <div className="empty-state">
+              <div className="emptyState">
                 <h3>No hay métricas disponibles</h3>
-                <p>
-                  {evaluations.length > 0 ? 
-                    "Las evaluaciones de este proyecto no tienen métricas configuradas. Es necesario configurar subcriteria y métricas en el módulo de parametrización." :
-                    "Este proyecto no tiene evaluaciones configuradas."
-                  }
-                </p>
-                <button onClick={() => router.push('/dashboard')}>
-                  Volver al Dashboard
-                </button>
+                <p>Selecciona una métrica del sidebar para comenzar</p>
               </div>
             )}
           </div>
@@ -504,94 +466,3 @@ export default function DataEntryProjectPage() {
   );
 }
 
-// Componente MetricForm simple
-interface MetricFormProps {
-  metric: Metric;
-  values: Record<string, string>;
-  onVariableUpdate: (metricId: number, variableSymbol: string, value: string) => void;
-  evaluationIndex: number;
-  metricIndex: number;
-  totalMetrics: number;
-  onNext: () => void;
-  onPrevious: () => void;
-  isFirst: boolean;
-  isLast: boolean;
-}
-
-function MetricForm({
-  metric,
-  values,
-  onVariableUpdate,
-  evaluationIndex: _evaluationIndex,
-  metricIndex,
-  totalMetrics,
-  onNext,
-  onPrevious,
-  isFirst,
-  isLast
-}: MetricFormProps) {
-  return (
-    <div className="metric-form">
-      <div className="metric-header">
-        <h2>Métrica {metricIndex + 1} de {totalMetrics}</h2>
-        <h3>{metric.name}</h3>
-        {metric.description && (
-          <p className="metric-description">{metric.description}</p>
-        )}
-        {metric.formula && (
-          <div className="metric-formula">
-            <strong>Fórmula:</strong> {metric.formula}
-          </div>
-        )}
-      </div>
-
-      <div className="variables-section">
-        <h4>Variables:</h4>
-        {metric.variables && metric.variables.length > 0 ? (
-          metric.variables.map((variable) => {
-            const key = `${metric.id}-${variable.symbol}`;
-            return (
-              <div key={variable.id} className="variable-input">
-                <label htmlFor={key}>
-                  <strong>{variable.symbol}:</strong> {variable.description}
-                </label>
-                <input
-                  id={key}
-                  type="number"
-                  step="0.01"
-                  value={values[key] || ''}
-                  onChange={(e) => onVariableUpdate(metric.id, variable.symbol, e.target.value)}
-                  placeholder={`Ingresa el valor para ${variable.symbol}`}
-                />
-              </div>
-            );
-          })
-        ) : (
-          <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280', fontSize: '0.875rem' }}>
-            Esta métrica no tiene variables configuradas.
-            <br />
-            <small>Puedes configurar las variables en el módulo de parametrización.</small>
-          </div>
-        )}
-      </div>
-
-      <div className="metric-navigation">
-        <button
-          onClick={onPrevious}
-          disabled={isFirst}
-          className="nav-button prev"
-        >
-          ← Anterior
-        </button>
-        
-        <button
-          onClick={onNext}
-          disabled={isLast}
-          className="nav-button next"
-        >
-          Siguiente →
-        </button>
-      </div>
-    </div>
-  );
-}
