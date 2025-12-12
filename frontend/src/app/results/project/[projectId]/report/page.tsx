@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ScoreGauge } from '@/components/reports/ScoreGauge';
 import { EvaluationCard } from '@/components/reports/EvaluationCard';
+import { AIAnalysisDisplay } from '@/components/reports/AIAnalysisDisplay';
 import { getProjectReport, getProjectStats } from '@/api/reports/reports.api';
 import type { ProjectReport, ProjectStats } from '@/api/reports/reports.types';
 import { generateProjectPDF } from '@/utils/projectPDFGenerator';
 import { formatDate } from '@/lib/shared/formatters';
+import { useAIAnalysis } from '@/hooks/shared/useAIAnalysis';
 
 export default function ProjectReportPage() {
   const params = useParams();
@@ -20,6 +22,9 @@ export default function ProjectReportPage() {
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [includeCertificate, setIncludeCertificate] = useState(true);
+
+  // AI Analysis
+  const { analysis, loading: aiLoading, error: aiError, analyzeProject, clearAnalysis } = useAIAnalysis();
 
   useEffect(() => {
     if (projectId) {
@@ -58,6 +63,17 @@ export default function ProjectReportPage() {
       alert('Error al generar el PDF. Por favor intente nuevamente.');
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleAIAnalysis = async () => {
+    if (!projectId) return;
+
+    try {
+      await analyzeProject(projectId);
+    } catch (error) {
+      // Error already handled in hook
+      console.error('AI Analysis error:', error);
     }
   };
 
@@ -214,6 +230,30 @@ export default function ProjectReportPage() {
                 )}
               </button>
               
+              <button 
+                className="ai-analysis-btn"
+                onClick={handleAIAnalysis}
+                disabled={aiLoading}
+                title="Generar análisis inteligente con IA"
+              >
+                {aiLoading ? (
+                  <>
+                    <svg className="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"/>
+                      <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"/>
+                    </svg>
+                    Analizando...
+                  </>
+                ) : (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Analizar con IA
+                  </>
+                )}
+              </button>
+              
               {report.meets_threshold && (
                 <label className="certificate-checkbox">
                   <input
@@ -342,6 +382,23 @@ export default function ProjectReportPage() {
           </>
         )}
       </div>
+
+      {/* AI Analysis Section */}
+      {aiError && (
+        <div className="ai-error-banner">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          </svg>
+          <span>{aiError}</span>
+          <button onClick={() => handleAIAnalysis()} className="retry-btn-inline">
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {analysis && (
+        <AIAnalysisDisplay analysis={analysis} onClose={clearAnalysis} />
+      )}
 
       {/* Evaluations List */}
       <div className="evaluations-section">
@@ -505,6 +562,75 @@ export default function ProjectReportPage() {
         .export-pdf-btn:disabled {
           opacity: 0.6;
           cursor: not-allowed;
+        }
+
+        .ai-analysis-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          padding: 0.875rem 2rem;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 0.9375rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgb(102 126 234 / 30%);
+          min-width: 180px;
+        }
+
+        .ai-analysis-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgb(102 126 234 / 40%);
+          background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .ai-analysis-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .ai-error-banner {
+          max-width: 1200px;
+          margin: 0 auto 2rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1rem 1.5rem;
+          background: #fef2f2;
+          border: 2px solid #ef4444;
+          border-radius: 12px;
+          color: #991b1b;
+          font-weight: 600;
+        }
+
+        .ai-error-banner svg {
+          flex-shrink: 0;
+          color: #ef4444;
+        }
+
+        .ai-error-banner span {
+          flex: 1;
+        }
+
+        .retry-btn-inline {
+          padding: 0.5rem 1rem;
+          background: #ef4444;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.875rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .retry-btn-inline:hover {
+          background: #dc2626;
+          transform: scale(1.05);
         }
 
         .spinner {
