@@ -11,10 +11,10 @@ export function GlobalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // Páginas donde NO se debe mostrar el sidebar
-  const excludePaths = ['/auth/login', '/auth/register', '/parameterization'];
+  const excludePaths = ['/', '/auth/login', '/auth/register', '/parameterization'];
   const shouldShowSidebar = !isLoading && 
                            user?.role?.name !== 'admin' && 
-                           !excludePaths.some(path => pathname?.startsWith(path));
+                           !excludePaths.some(path => pathname === path || pathname?.startsWith(path + '/'));
 
   return (
     <>
