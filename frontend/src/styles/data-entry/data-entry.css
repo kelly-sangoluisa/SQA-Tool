@@ -1,5 +1,321 @@
 /* ==========================================
-   ESTILOS PARA DATA ENTRY - PÁGINA DE PROYECTO
+   ESTILOS PARA DATA ENTRY - LAYOUT NUEVO
+   ========================================== */
+
+/* Layout principal con stepper arriba y contenido abajo */
+.enterDataLayout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #F1F1F1 0%, #e8e9f3 50%, #d8dae8 100%);
+}
+
+/* Stepper de evaluaciones en la parte superior */
+.evaluationStepper {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin: 1rem 1.5rem 0 1.5rem;
+  box-shadow: 0 2px 12px rgb(78 94 163 / 0.06);
+  animation: fade-in-down 0.5s ease-out;
+  flex-shrink: 0;
+}
+
+.stepperInner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.stepperFragment {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stepItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  transition: transform 0.3s ease;
+}
+
+.stepItem:hover {
+  transform: translateY(-2px);
+}
+
+.stepCircle {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.stepCircle.pending {
+  background: #e5e7eb;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
+
+.stepCircle.active {
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: #ffffff;
+  border-color: #4E5EA3;
+  box-shadow: 0 4px 12px rgb(78 94 163 / 0.3);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.stepCircle.completed {
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: #ffffff;
+  border-color: #4E5EA3;
+}
+
+.checkIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.stepContent {
+  text-align: center;
+}
+
+.stepLabel {
+  font-size: 0.875rem;
+  color: #4E5EA3;
+  margin: 0;
+  font-weight: 600;
+}
+
+.stepTitle {
+  font-size: 0.75rem;
+  color: #7462AA;
+  margin: 0.25rem 0 0 0;
+  font-weight: 500;
+}
+
+.stepProgress {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0.25rem 0 0 0;
+  font-weight: 600;
+}
+
+.stepDivider {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+  min-width: 2rem;
+  max-width: 4rem;
+}
+
+.stepDivider.completed {
+  background: linear-gradient(90deg, #4E5EA3 0%, #59469A 100%);
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgb(78 94 163 / 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgb(78 94 163 / 0.5);
+  }
+}
+
+/* Header superior con progreso */
+.topHeader {
+  background: white;
+  border-bottom: 2px solid rgb(78 94 163 / 0.15);
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 8px rgb(78 94 163 / 0.08);
+  flex-shrink: 0;
+}
+
+.projectHeader {
+  margin-bottom: 1rem;
+}
+
+.evaluationTitle {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.projectDescription {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Contenedor de progreso */
+.progressContainer {
+  max-width: 100%;
+}
+
+.progressStats {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.progressStat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4E5EA3;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: #7462AA;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.progressBarContainer {
+  height: 10px;
+  background: rgb(229 231 235);
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.1);
+}
+
+.progressBarFill {
+  height: 100%;
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  border-radius: 5px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgb(78 94 163 / 0.4);
+}
+
+/* Contenido principal - Grid con sidebar y contenido */
+.mainContent {
+  flex: 1;
+  height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  position: relative;
+  gap: 0;
+  margin: 1.5rem;
+}
+
+/* Sidebar wrapper - controla el ancho del sidebar */
+.sidebarWrapper {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  padding: 0px 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.currentStandardHeader {
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: white;
+  padding: 1rem 0;
+  box-shadow: 0 2px 8px rgb(78 94 163 / 0.15);
+  text-align: center;
+  animation: fade-in-up 0.3s ease;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+
+.metricContainer {
+  flex: 1;
+  animation: fade-in-up 0.4s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgb(78 94 163 / 0.08);
+}
+
+.emptyState h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #4E5EA3;
+  margin: 0 0 0.5rem 0;
+}
+
+.emptyState p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Animaciones */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ==========================================
+   ESTILOS LEGACY (para compatibilidad)
    ========================================== */
 
 .data-entry {
@@ -653,61 +969,12 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .main-content {
-    flex-direction: column;
-    padding: 1rem;
-    gap: 1rem;
-  }
 
-  .sidebar-section {
-    width: 100%;
-    order: -1;
-  }
-
-  .header {
-    padding: 1rem;
-  }
-
-  .header-content {
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: flex-start;
-  }
-
-  .progress-section {
-    padding: 1rem;
-  }
-
-  .progress-stats {
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .metric-header {
-    padding: 1.5rem 1rem 1rem;
-  }
-
-  .variables-section {
-    padding: 1.5rem 1rem;
-  }
-
-  .metric-navigation {
-    padding: 1rem;
-    flex-direction: column;
-  }
-
-  .nav-button {
-    width: 100%;
-  }
-}
 
 .mainContent {
-  flex: 1;
-  margin-left: 250px; /* Sidebar más pequeña */
+  flex: 1; /* Sidebar más pequeña */
   height: 100vh;
   display: flex;
-  flex-direction: column;
   overflow: hidden;
 }
 
@@ -776,51 +1043,6 @@
 }
 
 /* Responsive design */
-@media (max-width: 1024px) {
-  .mainContent {
-    margin-left: 220px; /* Sidebar más pequeña en tablet */
-  }
-}
-
-@media (max-width: 768px) {
-  .mainContent {
-    margin-left: 0;
-  }
-  
-  .header {
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: center;
-    padding: 1rem;
-  }
-  
-  .evaluationTitle {
-    order: -1;
-  }
-  
-  .navigation {
-    justify-content: center;
-  }
-  
-  .content {
-    padding: 1rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .header {
-    padding: 1rem;
-  }
-  
-  .navigation {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .evaluationTitle {
-    font-size: 1.25rem;
-  }
-}
 
 /* Animaciones */
 @keyframes fade-in-up {
@@ -988,19 +1210,4 @@
   font-size: 0.875rem;
 }
 
-/* Responsive legacy */
-@media (min-width: 768px) {
-  .enterDataContainer {
-    padding: 3rem 2rem;
-  }
-  
-  .metricsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
 
-@media (min-width: 1024px) {
-  .metricsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
