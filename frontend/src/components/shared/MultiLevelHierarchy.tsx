@@ -75,6 +75,9 @@ export interface MultiLevelHierarchyProps<
   /** Función para calcular progreso de un grupo */
   getGroupProgress?: (group: TGroup) => { completed: number; total: number };
   
+  /** Función para determinar si un grupo está completamente terminado */
+  isGroupCompleted?: (group: TGroup) => boolean;
+  
   /** Títulos personalizados */
   labels?: {
     header?: string;
@@ -109,6 +112,7 @@ export function MultiLevelHierarchy<
   activeLevel4ItemId,
   isItemCompleted,
   getGroupProgress,
+  isGroupCompleted,
   labels = {},
   showLevel4 = true
 }: MultiLevelHierarchyProps<TGroup, TLevel2, TLevel3, TLevel4>) {
@@ -183,12 +187,13 @@ export function MultiLevelHierarchy<
         {groups.map((group, groupIndex) => {
           const isGroupExpanded = expandedGroups.has(group.id);
           const progress = getGroupProgress?.(group);
+          const isCompleted = isGroupCompleted?.(group) || false;
           const level2Items = getLevel2Items(group);
 
           return (
             <div key={group.id} className={styles.level1Group}>
               <button
-                className={`${styles.level1Button} ${isGroupExpanded ? styles.level1Active : ''}`}
+                className={`${styles.level1Button} ${isGroupExpanded ? styles.level1Active : ''} ${isCompleted ? styles.level1Completed : ''}`}
                 onClick={() => toggleGroup(group.id)}
               >
                 <span className={styles.expandIcon}>

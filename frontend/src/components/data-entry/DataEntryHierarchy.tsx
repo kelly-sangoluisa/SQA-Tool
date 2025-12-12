@@ -113,6 +113,7 @@ interface DataEntryHierarchyProps {
   allMetrics: Metric[];
   variableValues: Record<string, string>;
   onMetricSelect: (evaluationIndex: number, metricGlobalIndex: number) => void;
+  finalizedEvaluations?: Set<number>;
 }
 
 /**
@@ -123,7 +124,8 @@ export function DataEntryHierarchy({
   currentMetricIndex,
   allMetrics,
   variableValues,
-  onMetricSelect
+  onMetricSelect,
+  finalizedEvaluations = new Set()
 }: DataEntryHierarchyProps) {
   
   // Convertir evaluations a grupos
@@ -239,6 +241,12 @@ export function DataEntryHierarchy({
     }
   };
 
+  // Verificar si un grupo (evaluación) está completamente llenado Y finalizado
+  const isGroupCompleted = (group: EvaluationGroup): boolean => {
+    // Debe estar finalizada en el backend (confirmado en modal)
+    return finalizedEvaluations.has(group.id);
+  };
+
   // Obtener el ID de la métrica activa actual
   const activeMetricId = allMetrics[currentMetricIndex]?.id;
 
@@ -252,6 +260,7 @@ export function DataEntryHierarchy({
       activeLevel4ItemId={activeMetricId}
       isItemCompleted={isMetricCompleted}
       getGroupProgress={getGroupProgress}
+      isGroupCompleted={isGroupCompleted}
       labels={{
         header: 'Evaluaciones',
         level1: 'Evaluación',

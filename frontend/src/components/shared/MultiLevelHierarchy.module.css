@@ -70,6 +70,28 @@
   box-shadow: 0 2px 8px rgb(94 53 177 / 0.2);
 }
 
+.level1Completed {
+  background: linear-gradient(90deg, #a5d6a7 0%, #c8e6c9 100%) !important;
+  border-left-color: #43a047 !important;
+  color: #1b5e20 !important;
+  box-shadow: 0 2px 8px rgb(67 160 71 / 0.2);
+  position: relative;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.level1Completed::after {
+  content: '✓';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1b5e20;
+}
+
 .level1Name {
   flex: 1;
   line-height: 1.3;
