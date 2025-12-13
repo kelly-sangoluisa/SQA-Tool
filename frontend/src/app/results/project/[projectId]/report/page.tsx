@@ -45,7 +45,9 @@ export default function ProjectReportPage() {
 
   useEffect(() => {
     if (projectId) {
-      loadData();
+      loadData().catch(err => {
+        console.error('Failed to load data:', err);
+      });
     }
   }, [projectId]);
 
@@ -94,9 +96,8 @@ export default function ProjectReportPage() {
 
     try {
       await analyzeProject(projectId);
-    } catch (error) {
+    } catch {
       // Error already handled in hook
-      console.error('AI Analysis error:', error);
     }
   };
 

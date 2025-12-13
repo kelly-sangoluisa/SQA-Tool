@@ -28,7 +28,9 @@ export default function EvaluationDetailPage() {
 
   useEffect(() => {
     if (evaluationId) {
-      loadData();
+      loadData().catch(err => {
+        console.error('Failed to load evaluation data:', err);
+      });
     }
   }, [evaluationId]);
 

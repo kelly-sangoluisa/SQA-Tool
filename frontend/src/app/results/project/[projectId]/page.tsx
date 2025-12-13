@@ -18,7 +18,9 @@ export default function ProjectEvaluationsPage() {
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
 
   useEffect(() => {
-    loadEvaluations();
+    loadEvaluations().catch(err => {
+      console.error('Failed to load evaluations:', err);
+    });
   }, [projectId]);
 
   const loadEvaluations = async () => {
