@@ -84,8 +84,9 @@ export class AIAnalysisService {
       return enrichedAnalysis;
 
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error(`Error generating AI analysis for project ${projectId}:`, error);
-      throw new Error(`Failed to generate AI analysis: ${error.message}`);
+      throw new Error(`Failed to generate AI analysis: ${errorMessage}`);
     }
   }
 

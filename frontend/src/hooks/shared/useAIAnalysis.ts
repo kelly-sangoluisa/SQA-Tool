@@ -23,7 +23,7 @@ export function useAIAnalysis() {
                           'Error al generar análisis con IA. Por favor intenta de nuevo.';
       setError(errorMessage);
       console.error('Error generating AI analysis:', err);
-      throw err;
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
