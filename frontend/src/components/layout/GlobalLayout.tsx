@@ -2,7 +2,6 @@
 import { useAuth } from '@/hooks/auth/useAuth';
 import { DashboardSidebar, useSidebar } from '@/components/dashboard/sidebar';
 import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
 import styles from './GlobalLayout.module.css';
 
 export function GlobalLayout({ children }: { children: React.ReactNode }) {

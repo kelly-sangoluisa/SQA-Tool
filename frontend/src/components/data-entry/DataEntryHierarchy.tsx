@@ -60,16 +60,7 @@ interface Metric {
   variables?: Variable[];
 }
 
-interface Subcriterion {
-  id: number;
-  name: string;
-  description?: string;
-  criterion_id: number;
-  state: string;
-  metrics?: Metric[];
-  created_at: string;
-  updated_at: string;
-}
+/* Unused interface removed - Subcriterion */
 
 interface Evaluation {
   id: number;

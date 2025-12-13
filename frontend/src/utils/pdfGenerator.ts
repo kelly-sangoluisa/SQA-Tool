@@ -27,7 +27,7 @@ export class PDFGenerator {
   }
 
   async generateReport(options: PDFGenerationOptions): Promise<void> {
-    const { report, stats, radarImageData, includeCertificate } = options;
+    const { report, stats, radarImageData } = options;
 
     // Página 1: Portada
     this.addCoverPage(report);

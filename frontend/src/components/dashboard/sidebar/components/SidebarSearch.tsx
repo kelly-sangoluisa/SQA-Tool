@@ -19,7 +19,7 @@ export function SidebarSearch({ onSearchChange, isSearching, onSearchToggle }: S
     return () => clearTimeout(debounceTimeout);
   }, [query, onSearchChange]);
 
-  const handleClose = () => {
+  const _handleClose = () => {
     setQuery('');
     onSearchChange('');
     onSearchToggle(false);
