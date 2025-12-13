@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ReportsService } from './reports.service';
 import type { AIAnalysisResponse, AIRecommendation } from '../dto/ai-analysis.dto';
 
+
 @Injectable()
 export class AIAnalysisService {
   private readonly logger = new Logger(AIAnalysisService.name);

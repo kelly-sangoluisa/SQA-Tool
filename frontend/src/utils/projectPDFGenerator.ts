@@ -1,10 +1,22 @@
 import jsPDF from 'jspdf';
 import type { ProjectReport, ProjectStats } from '@/api/reports/reports.types';
+import type { AIAnalysisResponse } from '@/api/reports/ai-analysis.types';
+
+interface SelectedAISections {
+  general: boolean;
+  strengths: boolean;
+  weaknesses: boolean;
+  recommendations: boolean;
+  risks: boolean;
+  nextSteps: boolean;
+}
 
 interface ProjectPDFOptions {
   report: ProjectReport;
   stats: ProjectStats;
   includeCertificate?: boolean;
+  aiAnalysis?: AIAnalysisResponse | null;
+  selectedAISections?: SelectedAISections;
 }
 
 export async function generateProjectPDF(options: ProjectPDFOptions): Promise<void> {
@@ -21,7 +33,7 @@ class ProjectPDFGenerator {
   private readonly lineHeight = 7;
 
   async generate(options: ProjectPDFOptions): Promise<void> {
-    const { report, stats, includeCertificate = false } = options;
+    const { report, stats, includeCertificate = false, aiAnalysis, selectedAISections } = options;
 
     this.pdf = new jsPDF({
       orientation: 'portrait',
@@ -34,7 +46,7 @@ class ProjectPDFGenerator {
 
     // Página 2: Índice
     this.addNewPage();
-    this.addTableOfContents();
+    this.addTableOfContents(aiAnalysis, selectedAISections);
 
     // Página 3: Resumen Ejecutivo
     this.addNewPage();
@@ -43,6 +55,15 @@ class ProjectPDFGenerator {
     // Página 4: Detalles de Evaluaciones
     this.addNewPage();
     this.addEvaluationsDetails(report);
+
+    // Análisis de IA (si está disponible y hay secciones seleccionadas)
+    if (aiAnalysis && selectedAISections) {
+      const hasSelectedSections = Object.values(selectedAISections).some(selected => selected);
+      if (hasSelectedSections) {
+        this.addNewPage();
+        this.addAIAnalysis(aiAnalysis, selectedAISections);
+      }
+    }
 
     // Certificado de Cumplimiento (solo si cumple umbral y está habilitado)
     const shouldIncludeCertificate = includeCertificate && report.meets_threshold;
@@ -172,7 +193,7 @@ class ProjectPDFGenerator {
     }
   }
 
-  private addTableOfContents(): void {
+  private addTableOfContents(aiAnalysis?: AIAnalysisResponse | null, selectedAISections?: SelectedAISections): void {
     this.addSectionTitle('Índice');
     
     this.pdf.setFont('helvetica', 'normal');
@@ -181,9 +202,21 @@ class ProjectPDFGenerator {
 
     const items = [
       '1. Resumen Ejecutivo',
-      '2. Detalles de las Evaluaciones',
-      '3. Certificado de Cumplimiento (si aplica)'
+      '2. Detalles de las Evaluaciones'
     ];
+
+    // Agregar sección de IA si está disponible
+    if (aiAnalysis && selectedAISections) {
+      const hasSelectedSections = Object.values(selectedAISections).some(selected => selected);
+      if (hasSelectedSections) {
+        items.push('3. Análisis de Calidad con IA');
+        items.push('4. Certificado de Cumplimiento (si aplica)');
+      } else {
+        items.push('3. Certificado de Cumplimiento (si aplica)');
+      }
+    } else {
+      items.push('3. Certificado de Cumplimiento (si aplica)');
+    }
 
     items.forEach(item => {
       this.pdf.text(item, this.margin, this.currentY);
@@ -451,6 +484,209 @@ class ProjectPDFGenerator {
     
     this.currentY += 8;
     this.pdf.text('por SQA Tool - Sistema de Evaluación de Calidad de Software', this.pageWidth / 2, this.currentY, { align: 'center' });
+  }
+
+  private addAIAnalysis(analysis: AIAnalysisResponse, selectedSections: SelectedAISections): void {
+    this.addSectionTitle('3. Análisis de Calidad con IA');
+
+    this.pdf.setFont('helvetica', 'italic');
+    this.pdf.setFontSize(9);
+    this.pdf.setTextColor(100, 100, 100);
+    this.pdf.text(`Generado el ${new Date(analysis.generatedAt).toLocaleDateString('es-ES')}`, this.margin, this.currentY);
+    this.currentY += 10;
+
+    // Análisis General
+    if (selectedSections.general && analysis.analisis_general) {
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setFontSize(12);
+      this.pdf.setTextColor(78, 94, 163);
+      this.pdf.text('Análisis General', this.margin, this.currentY);
+      this.currentY += 8;
+
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setFontSize(10);
+      this.pdf.setTextColor(0, 0, 0);
+      const generalLines = this.pdf.splitTextToSize(analysis.analisis_general, this.pageWidth - 2 * this.margin);
+      generalLines.forEach((line: string) => {
+        if (this.currentY > this.pageHeight - 30) {
+          this.addNewPage();
+        }
+        this.pdf.text(line, this.margin, this.currentY);
+        this.currentY += 6;
+      });
+      this.currentY += 5;
+    }
+
+    // Fortalezas
+    if (selectedSections.strengths && analysis.fortalezas && analysis.fortalezas.length > 0) {
+      if (this.currentY > this.pageHeight - 40) {
+        this.addNewPage();
+      }
+      
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setFontSize(12);
+      this.pdf.setTextColor(16, 185, 129); // verde
+      this.pdf.text('Fortalezas Identificadas', this.margin, this.currentY);
+      this.currentY += 8;
+
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setFontSize(10);
+      this.pdf.setTextColor(0, 0, 0);
+      
+      analysis.fortalezas.forEach((fortaleza, index) => {
+        if (this.currentY > this.pageHeight - 30) {
+          this.addNewPage();
+        }
+        const lines = this.pdf.splitTextToSize(`• ${fortaleza}`, this.pageWidth - 2 * this.margin - 5);
+        lines.forEach((line: string) => {
+          this.pdf.text(line, this.margin + 5, this.currentY);
+          this.currentY += 6;
+        });
+      });
+      this.currentY += 5;
+    }
+
+    // Debilidades/Áreas de Mejora
+    if (selectedSections.weaknesses && analysis.debilidades && analysis.debilidades.length > 0) {
+      if (this.currentY > this.pageHeight - 40) {
+        this.addNewPage();
+      }
+      
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setFontSize(12);
+      this.pdf.setTextColor(239, 68, 68); // rojo
+      this.pdf.text('Áreas de Mejora', this.margin, this.currentY);
+      this.currentY += 8;
+
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setFontSize(10);
+      this.pdf.setTextColor(0, 0, 0);
+      
+      analysis.debilidades.forEach((debilidad) => {
+        if (this.currentY > this.pageHeight - 30) {
+          this.addNewPage();
+        }
+        const lines = this.pdf.splitTextToSize(`• ${debilidad}`, this.pageWidth - 2 * this.margin - 5);
+        lines.forEach((line: string) => {
+          this.pdf.text(line, this.margin + 5, this.currentY);
+          this.currentY += 6;
+        });
+      });
+      this.currentY += 5;
+    }
+
+    // Recomendaciones
+    if (selectedSections.recommendations && analysis.recomendaciones && analysis.recomendaciones.length > 0) {
+      if (this.currentY > this.pageHeight - 40) {
+        this.addNewPage();
+      }
+      
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setFontSize(12);
+      this.pdf.setTextColor(102, 126, 234); // azul
+      this.pdf.text('Recomendaciones Priorizadas', this.margin, this.currentY);
+      this.currentY += 8;
+
+      analysis.recomendaciones.forEach((rec) => {
+        if (this.currentY > this.pageHeight - 50) {
+          this.addNewPage();
+        }
+
+        // Prioridad y título
+        this.pdf.setFont('helvetica', 'bold');
+        this.pdf.setFontSize(10);
+        const prioridadColor = rec.prioridad === 'Alta' ? [239, 68, 68] : 
+                               rec.prioridad === 'Media' ? [251, 146, 60] : [34, 197, 94];
+        this.pdf.setTextColor(prioridadColor[0], prioridadColor[1], prioridadColor[2]);
+        this.pdf.text(`[${rec.prioridad}]`, this.margin + 5, this.currentY);
+        
+        this.pdf.setTextColor(0, 0, 0);
+        this.pdf.text(rec.titulo, this.margin + 25, this.currentY);
+        this.currentY += 6;
+
+        // Descripción
+        this.pdf.setFont('helvetica', 'normal');
+        this.pdf.setFontSize(9);
+        const descLines = this.pdf.splitTextToSize(rec.descripcion, this.pageWidth - 2 * this.margin - 10);
+        descLines.forEach((line: string) => {
+          if (this.currentY > this.pageHeight - 30) {
+            this.addNewPage();
+          }
+          this.pdf.text(line, this.margin + 10, this.currentY);
+          this.currentY += 5;
+        });
+
+        // Impacto
+        this.pdf.setFont('helvetica', 'italic');
+        const impactLines = this.pdf.splitTextToSize(`Impacto: ${rec.impacto}`, this.pageWidth - 2 * this.margin - 10);
+        impactLines.forEach((line: string) => {
+          if (this.currentY > this.pageHeight - 30) {
+            this.addNewPage();
+          }
+          this.pdf.text(line, this.margin + 10, this.currentY);
+          this.currentY += 5;
+        });
+        this.currentY += 3;
+      });
+      this.currentY += 5;
+    }
+
+    // Riesgos
+    if (selectedSections.risks && analysis.riesgos && analysis.riesgos.length > 0) {
+      if (this.currentY > this.pageHeight - 40) {
+        this.addNewPage();
+      }
+      
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setFontSize(12);
+      this.pdf.setTextColor(239, 68, 68);
+      this.pdf.text('Riesgos Identificados', this.margin, this.currentY);
+      this.currentY += 8;
+
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setFontSize(10);
+      this.pdf.setTextColor(0, 0, 0);
+      
+      analysis.riesgos.forEach((riesgo) => {
+        if (this.currentY > this.pageHeight - 30) {
+          this.addNewPage();
+        }
+        const lines = this.pdf.splitTextToSize(`• ${riesgo}`, this.pageWidth - 2 * this.margin - 5);
+        lines.forEach((line: string) => {
+          this.pdf.text(line, this.margin + 5, this.currentY);
+          this.currentY += 6;
+        });
+      });
+      this.currentY += 5;
+    }
+
+    // Próximos Pasos
+    if (selectedSections.nextSteps && analysis.proximos_pasos && analysis.proximos_pasos.length > 0) {
+      if (this.currentY > this.pageHeight - 40) {
+        this.addNewPage();
+      }
+      
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setFontSize(12);
+      this.pdf.setTextColor(102, 126, 234);
+      this.pdf.text('Plan de Acción - Próximos Pasos', this.margin, this.currentY);
+      this.currentY += 8;
+
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setFontSize(10);
+      this.pdf.setTextColor(0, 0, 0);
+      
+      analysis.proximos_pasos.forEach((paso, index) => {
+        if (this.currentY > this.pageHeight - 30) {
+          this.addNewPage();
+        }
+        const lines = this.pdf.splitTextToSize(`${index + 1}. ${paso}`, this.pageWidth - 2 * this.margin - 5);
+        lines.forEach((line: string) => {
+          this.pdf.text(line, this.margin + 5, this.currentY);
+          this.currentY += 6;
+        });
+      });
+    }
   }
 
   private addSectionTitle(title: string): void {
