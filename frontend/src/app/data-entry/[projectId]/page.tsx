@@ -486,6 +486,9 @@ export default function DataEntryProjectPage() {
         .filter(([key]) => key.startsWith('metric-'))
         .map(([key, value]) => {
           const parts = key.split('-');
+          if (parts.length < 3) {
+            return null;
+          }
           const metricId = parseInt(parts[1]);
           const symbol = parts[2];
           
@@ -507,7 +510,8 @@ export default function DataEntryProjectPage() {
             symbol,
             value: value.toString()
           };
-        });
+        })
+        .filter((item): item is NonNullable<typeof item> => item !== null);
 
       // Primero enviar los datos
       await submitEvaluationData(currentEvaluationForModal.id, variablesToSubmit);
@@ -630,7 +634,11 @@ export default function DataEntryProjectPage() {
                 values={Object.fromEntries(
                   Object.entries(variableValues)
                     .filter(([key]) => key.startsWith(`metric-${currentMetric.id}-`))
-                    .map(([key, value]) => [key.split('-')[2], value])
+                    .map(([key, value]) => {
+                      const parts = key.split('-');
+                      return parts.length >= 3 ? [parts[2], value] : null;
+                    })
+                    .filter((entry): entry is [string, string] => entry !== null)
                 )}
                 onValueChange={(symbol, value) => {
                   handleVariableUpdate(currentMetric.id, symbol, value);

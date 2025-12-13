@@ -45,7 +45,8 @@ export function useInfiniteScroll<T>(
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && hasMore) {
+        const entry = entries[0];
+        if (entry && entry.isIntersecting && hasMore) {
           loadMore();
         }
       },

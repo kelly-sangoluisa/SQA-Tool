@@ -54,7 +54,7 @@ export default function ProjectEvaluationsPage() {
   const pendingCount = (evaluations || []).filter(e => !e.has_results).length;
 
   // Obtener nombre del proyecto de la primera evaluación
-  const projectName = evaluations[0]?.project_name || 'Proyecto';
+  const projectName = (evaluations && evaluations.length > 0 && evaluations[0]?.project_name) || 'Proyecto';
 
   if (loading) {
     return (
