@@ -110,8 +110,6 @@ export function DashboardSidebar() {
           <SidebarSection
             title="Evaluaciones Recientes"
             icon={HiChartBar}
-            viewAllLink="/results"
-            viewAllText="Ver todas las evaluaciones"
             loading={loadingEvaluations}
             isEmpty={filteredEvaluations.length === 0}
             emptyMessage={searchQuery.trim() ? "No se encontraron evaluaciones" : "No hay evaluaciones recientes"}

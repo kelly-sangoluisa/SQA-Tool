@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { EvaluationCard } from '@/components/reports/EvaluationCard';
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { getEvaluationsByProject, getProjectReport } from '@/api/reports/reports.api';
 import type { EvaluationListItem, ProjectReport } from '@/api/reports/reports.types';
 
@@ -147,8 +148,17 @@ export default function ProjectEvaluationsPage() {
         <button onClick={() => router.back()} className="back-button">
           ← Volver
         </button>
+        
+        <Breadcrumbs 
+          items={[
+            { label: 'Dashboard', onClick: () => router.push('/dashboard') },
+            { label: 'Proyectos', onClick: () => router.push('/results') },
+            { label: projectName, isActive: true }
+          ]}
+        />
+        
         <div className="header-content">
-          <h1 className="page-title">Evaluaciones: {projectName}</h1>
+          <h1 className="page-title">{projectName}</h1>
           <p className="page-subtitle">
             Visualiza y analiza los resultados de las evaluaciones de calidad
           </p>
@@ -405,7 +415,7 @@ export default function ProjectEvaluationsPage() {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          margin: 0 0 0.5rem 0;
+          margin: 0 0 1rem 0;
           animation: fadeInDown 0.6s ease;
         }
 

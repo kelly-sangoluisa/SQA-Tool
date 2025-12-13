@@ -26,7 +26,9 @@ export function useSidebarData(): UseSidebarDataReturn {
       const response = await fetch('/api/reports/my-projects');
       if (response.ok) {
         const data = await response.json();
+        // Filtrar solo proyectos completados (con resultados)
         const sorted = data
+          .filter((p: Project) => p.final_project_score !== null)
           .sort((a: Project, b: Project) => 
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
           )
@@ -52,7 +54,7 @@ export function useSidebarData(): UseSidebarDataReturn {
             const dateB = new Date(b.updated_at || b.created_at).getTime();
             return dateB - dateA;
           })
-          .slice(0, 6);
+          .slice(0, 3);
         setRecentEvaluations(sorted);
       }
     } catch (err) {
