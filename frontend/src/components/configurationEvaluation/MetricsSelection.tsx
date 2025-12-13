@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { configEvaluationApi, CriterionWithMetrics, Metric } from '@/api/config-evaluation/config-evaluation-api';
 import { Button } from '../shared';
+import AlertBanner from '../shared/AlertBanner';
 import styles from './MetricsSelection.module.css';
 
 interface EvaluationCriterionData {
@@ -26,6 +27,8 @@ export function MetricsSelection({
   const [selectedMetrics, setSelectedMetrics] = useState<Map<number, Set<number>>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [alertType, setAlertType] = useState<'error' | 'warning' | 'success'>('error');
 
   useEffect(() => {
     const loadMetrics = async () => {
@@ -112,6 +115,14 @@ export function MetricsSelection({
   };
 
   const handleNext = () => {
+    if (selectedMetrics.size === 0 || getSelectedCount() === 0) {
+      setAlertMessage('Debe seleccionar al menos una métrica para continuar.');
+      setAlertType('error');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    setAlertMessage(null);
     const metricsMap = new Map<number, number[]>();
     selectedMetrics.forEach((metricIds, evaluationCriterionId) => {
       metricsMap.set(evaluationCriterionId, Array.from(metricIds));
@@ -144,18 +155,31 @@ export function MetricsSelection({
   const hasSelection = totalSelected > 0;
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>Seleccione las Métricas</h2>
-        <p className={styles.subtitle}>
-          Para cada criterio seleccionado, elija las métricas que desea evaluar
-        </p>
-        {hasSelection && (
-          <div className={styles.selectionSummary}>
-            <span className={styles.badge}>{totalSelected} métricas seleccionadas</span>
-          </div>
-        )}
-      </div>
+    <div className={styles.pageWrapper}>
+      {/* Banner de alerta */}
+      {alertMessage && (
+        <div className={styles.alertContainer}>
+          <AlertBanner
+            type={alertType}
+            message={alertMessage}
+            onClose={() => setAlertMessage(null)}
+            visible={!!alertMessage}
+          />
+        </div>
+      )}
+
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Seleccione las Métricas</h2>
+          <p className={styles.subtitle}>
+            Para cada criterio seleccionado, elija las métricas que desea evaluar
+          </p>
+          {hasSelection && (
+            <div className={styles.selectionSummary}>
+              <span className={styles.badge}>{totalSelected} métricas seleccionadas</span>
+            </div>
+          )}
+        </div>
 
       <div className={styles.criteriaList}>
         {evaluationCriteria.map((evalCriterion) => {
@@ -229,13 +253,14 @@ export function MetricsSelection({
         })}
       </div>
 
-      <div className={styles.actions}>
-        <Button type="button" variant="outline" onClick={onBack}>
-          Atrás
-        </Button>
-        <Button type="button" variant="primary" onClick={handleNext} disabled={!hasSelection}>
-          Finalizar Configuración
-        </Button>
+        <div className={styles.actions}>
+          <Button type="button" variant="outline" onClick={onBack}>
+            Atrás
+          </Button>
+          <Button type="button" variant="primary" onClick={handleNext}>
+            Finalizar Configuración
+          </Button>
+        </div>
       </div>
     </div>
   );

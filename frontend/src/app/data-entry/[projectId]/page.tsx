@@ -23,6 +23,7 @@ interface Metric {
   name: string;
   description: string;
   formula: string;
+  code?: string;
   variables?: Variable[];
 }
 
@@ -35,6 +36,62 @@ interface Subcriterion {
   metrics?: Metric[];
   created_at: string;
   updated_at: string;
+}
+
+// API response types
+interface EvaluationMetricAPI {
+  metric?: {
+    id: number;
+    name: string;
+    description: string;
+    formula: string;
+    code?: string;
+    sub_criterion_id?: number;
+    variables?: Array<{
+      id: number;
+      symbol: string;
+      description: string;
+      state: string;
+    }>;
+  };
+}
+
+interface EvaluationCriterionAPI {
+  id: number;
+  evaluation_id: number;
+  criterion_id: number;
+  importance_level: string;
+  importance_percentage: number;
+  criterion?: {
+    id: number;
+    name: string;
+    description?: string;
+    sub_criteria?: Array<{
+      id: number;
+      name: string;
+      description?: string;
+      criterion_id: number;
+      state: string;
+      metrics?: Metric[];
+      created_at: string;
+      updated_at: string;
+    }>;
+  };
+  evaluation_metrics?: EvaluationMetricAPI[];
+}
+
+interface EvaluationDataAPI {
+  id: number;
+  project_id: number;
+  standard_id: number;
+  creation_date: string;
+  status: 'in_progress' | 'completed' | 'cancelled';
+  standard?: {
+    id: number;
+    name: string;
+    version: string;
+  };
+  evaluation_criteria?: EvaluationCriterionAPI[];
 }
 
 // Note: Criterion interface defined but not currently used in this file
@@ -68,7 +125,18 @@ interface Evaluation {
       name: string;
       description?: string;
       subcriteria?: Subcriterion[];
+      sub_criteria?: Array<{
+        id: number;
+        name: string;
+        description?: string;
+        criterion_id: number;
+        state: string;
+        metrics?: Metric[];
+        created_at: string;
+        updated_at: string;
+      }>;
     };
+    evaluation_metrics?: EvaluationMetricAPI[];
   }>;
 }
 
@@ -168,16 +236,17 @@ export default function DataEntryProjectPage() {
         }
 
         // Transformar datos: mapear evaluation_metrics a métricas en subcriteria
-        const evaluationsWithMetrics = (Array.isArray(evaluationsData) ? evaluationsData : []).map((evaluation: any) => {
+        const evaluationsWithMetrics = (Array.isArray(evaluationsData) ? evaluationsData : []).map((evaluation: EvaluationDataAPI) => {
           // Crear un mapa de métricas por sub_criterion_id desde evaluation_metrics
-          const metricsBySubcriterion = new Map<number, any[]>();
-          
+          const metricsBySubcriterion = new Map<number, Metric[]>();
+
           // Procesar evaluation_metrics para extraer métricas
-          (evaluation.evaluation_criteria || []).forEach((evalCriterion: any) => {
-            (evalCriterion.evaluation_metrics || []).forEach((evalMetric: any) => {
-              const metric = evalMetric.metric || {};
+          (evaluation.evaluation_criteria || []).forEach((evalCriterion: EvaluationCriterionAPI) => {
+            (evalCriterion.evaluation_metrics || []).forEach((evalMetric: EvaluationMetricAPI) => {
+              const metric = evalMetric.metric;
+              if (!metric) return;
+
               const subCriterionId = metric.sub_criterion_id;
-              
               if (subCriterionId) {
                 if (!metricsBySubcriterion.has(subCriterionId)) {
                   metricsBySubcriterion.set(subCriterionId, []);
@@ -194,7 +263,7 @@ export default function DataEntryProjectPage() {
                     description: metric.description,
                     formula: metric.formula,
                     code: metric.code,
-                    variables: (metric.variables || []).map((v: any) => ({
+                    variables: (metric.variables || []).map((v) => ({
                       id: v.id,
                       metric_id: metric.id,
                       symbol: v.symbol,
@@ -209,20 +278,23 @@ export default function DataEntryProjectPage() {
 
           return {
             ...evaluation,
-            evaluation_criteria: (evaluation.evaluation_criteria || []).map((evalCriterion: any) => ({
+            standard: evaluation.standard || { id: 0, name: 'Unknown', version: '0.0' },
+            evaluation_criteria: (evaluation.evaluation_criteria || []).map((evalCriterion: EvaluationCriterionAPI) => ({
               ...evalCriterion,
               criterion: {
-                ...evalCriterion.criterion,
-                subcriteria: (evalCriterion.criterion?.sub_criteria || []).map((subcriterion: any) => {
+                id: evalCriterion.criterion?.id || 0,
+                name: evalCriterion.criterion?.name || 'Unknown',
+                description: evalCriterion.criterion?.description,
+                subcriteria: (evalCriterion.criterion?.sub_criteria || []).map((subcriterion) => {
                   // Obtener métricas de evaluation_metrics o de sub_criteria.metrics si existen
                   const metricsFromEvalMetrics = metricsBySubcriterion.get(subcriterion.id) || [];
-                  const metricsFromSubcriterion = (subcriterion.metrics || []).map((m: any) => ({
+                  const metricsFromSubcriterion = (subcriterion.metrics || []).map((m) => ({
                     id: m.id,
                     name: m.name,
                     description: m.description,
                     formula: m.formula,
                     code: m.code,
-                    variables: (m.variables || []).map((v: any) => ({
+                    variables: (m.variables || []).map((v) => ({
                       id: v.id,
                       metric_id: m.id,
                       symbol: v.symbol,
@@ -250,8 +322,8 @@ export default function DataEntryProjectPage() {
           };
         });
 
-        setEvaluations(evaluationsWithMetrics);
-        
+        setEvaluations(evaluationsWithMetrics as Evaluation[]);
+
         // Cargar progreso del proyecto
         const progressResponse = await fetch(`/api/entry-data/projects/${projectId}/progress`);
         if (progressResponse.ok) {
@@ -355,8 +427,8 @@ export default function DataEntryProjectPage() {
     if (!currentMetric) return null;
     
     for (const evaluation of evaluations) {
-      for (const ec of evaluation.evaluation_criteria) {
-        if (ec.criterion.subcriteria) {
+      for (const ec of evaluation.evaluation_criteria || []) {
+        if (ec.criterion?.subcriteria) {
           for (const sc of ec.criterion.subcriteria) {
             if (sc.metrics?.some(m => m.id === currentMetric.id)) {
               return evaluation;
@@ -374,8 +446,8 @@ export default function DataEntryProjectPage() {
     if (!currentEval) return false;
 
     const evalMetrics = allMetrics.filter(metric => {
-      return currentEval.evaluation_criteria.some(ec =>
-        ec.criterion.subcriteria?.some(sc =>
+      return (currentEval.evaluation_criteria || []).some(ec =>
+        ec.criterion?.subcriteria?.some(sc =>
           sc.metrics?.some(m => m.id === metric.id)
         )
       );
@@ -478,9 +550,9 @@ export default function DataEntryProjectPage() {
         if (currentEvalIndex < evaluations.length - 1) {
           // Encontrar la primera métrica de la siguiente evaluación
           const nextEval = evaluations[currentEvalIndex + 1];
-          const nextMetricIndex = allMetrics.findIndex(metric => 
-            nextEval.evaluation_criteria.some(ec =>
-              ec.criterion.subcriteria?.some(sc =>
+          const nextMetricIndex = allMetrics.findIndex(metric =>
+            (nextEval.evaluation_criteria || []).some(ec =>
+              ec.criterion?.subcriteria?.some(sc =>
                 sc.metrics?.some(m => m.id === metric.id)
               )
             )

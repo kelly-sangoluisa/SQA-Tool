@@ -60,16 +60,22 @@
 
 .iconSuccess {
   color: #10b981;
+  background: linear-gradient(135deg, rgba(78, 94, 163, 0.1) 0%, rgba(89, 70, 154, 0.1) 100%);
+  border-radius: 50%;
+  padding: 0.5rem;
 }
 
 .iconInfo {
-  color: #3b82f6;
+  color: #4E5EA3;
+  background: linear-gradient(135deg, rgba(78, 94, 163, 0.1) 0%, rgba(89, 70, 154, 0.1) 100%);
+  border-radius: 50%;
+  padding: 0.5rem;
 }
 
 .title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #111827;
+  color: #4E5EA3;
   margin: 0 0 0.5rem 0;
 }
 
@@ -113,8 +119,9 @@
 
 .progressBarFill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
   transition: width 0.3s ease;
+  border-radius: 4px;
 }
 
 /* Content */
@@ -125,7 +132,7 @@
 .sectionTitle {
   font-size: 1rem;
   font-weight: 600;
-  color: #111827;
+  color: #4E5EA3;
   margin: 0 0 1rem 0;
 }
 
@@ -171,9 +178,10 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: #4E5EA3;
-  background: #e8eaf6;
+  background: linear-gradient(135deg, rgba(78, 94, 163, 0.1) 0%, rgba(89, 70, 154, 0.1) 100%);
   padding: 0.25rem 0.75rem;
   border-radius: 6px;
+  border: 1px solid rgba(78, 94, 163, 0.2);
 }
 
 .moreVariables {

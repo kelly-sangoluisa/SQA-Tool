@@ -132,10 +132,20 @@ export default function ConfigurationEvaluationPage() {
         throw new Error(`Usuario autenticado pero sin ID. Datos del usuario: ${JSON.stringify(user)}`);
       }
 
+      // Validar que hay criterios con importancia
+      if (!criteriaImportance || criteriaImportance.length === 0) {
+        throw new Error('No se han seleccionado criterios con importancia. Por favor, regrese al paso anterior y configure la importancia de los criterios.');
+      }
+
+      // Validar que el estándar está seleccionado
+      if (!selectedStandard || !selectedStandard.id) {
+        throw new Error('No se ha seleccionado un estándar. Por favor, regrese al paso de selección de estándar.');
+      }
+
       if (existingProjectId) {
         const result = await configEvaluationApi.createEvaluationForExistingProject({
           projectId: existingProjectId,
-          standardId: selectedStandard!.id,
+          standardId: selectedStandard.id,
           criteria: criteriaImportance.map((item) => ({
             criterionId: item.criterionId,
             importanceLevel: item.importanceLevel,
@@ -180,7 +190,20 @@ export default function ConfigurationEvaluationPage() {
       setCurrentStep(5);
     } catch (error) {
       console.error('Error al crear la evaluación:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al guardar la evaluación';
+      let errorMessage = 'Error desconocido al guardar la evaluación';
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+
+        // Si es un error interno del servidor, dar más contexto
+        if (errorMessage.includes('Internal server error')) {
+          errorMessage = 'Error interno del servidor al crear la evaluación. Por favor:\n' +
+            '1. Verifique que no existe ya una evaluación para este proyecto con el mismo estándar\n' +
+            '2. Verifique que todos los criterios seleccionados existen en el sistema\n' +
+            '3. Si el problema persiste, contacte al administrador del sistema';
+        }
+      }
+
       setSaveError(errorMessage);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {

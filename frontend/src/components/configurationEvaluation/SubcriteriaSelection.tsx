@@ -113,7 +113,9 @@ export function SubCriteriaSelection({
   };
 
   const handleNext = () => {
-    if (selectedSubCriteria.size === 0) {
+    const totalSelected = getSelectedCount();
+
+    if (selectedSubCriteria.size === 0 || totalSelected === 0) {
       setAlertMessage('Debe seleccionar al menos un subcriterio para continuar.');
       setAlertType('error');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -121,7 +123,7 @@ export function SubCriteriaSelection({
     }
 
     setAlertMessage(null);
-    
+
     const result: SelectedCriterion[] = [];
 
     selectedCriteria.forEach((item) => {
@@ -150,9 +152,14 @@ export function SubCriteriaSelection({
       }
     });
 
-    if (result.length > 0) {
-      onNext(result);
+    if (result.length === 0) {
+      setAlertMessage('Debe seleccionar al menos un subcriterio para continuar.');
+      setAlertType('error');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
+
+    onNext(result);
   };
 
   const totalSelected = getSelectedCount();
