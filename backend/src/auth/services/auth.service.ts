@@ -92,6 +92,7 @@ export class AuthService {
     if (!data.session) {
       throw new UnauthorizedException('No session created');
     }
+    await this.ensureUser(email);
     return {
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token,
