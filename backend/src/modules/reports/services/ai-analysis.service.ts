@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { ReportsService } from './reports.service';
 import type { AIAnalysisResponse, AIRecommendation } from '../dto/ai-analysis.dto';
 
@@ -9,7 +9,7 @@ import type { AIAnalysisResponse, AIRecommendation } from '../dto/ai-analysis.dt
 export class AIAnalysisService {
   private readonly logger = new Logger(AIAnalysisService.name);
   private genAI: GoogleGenerativeAI;
-  private model: any;
+  private model: GenerativeModel | null = null;
 
   constructor(
     private configService: ConfigService,
@@ -90,9 +90,30 @@ export class AIAnalysisService {
   }
 
   private buildAnalysisPrompt(report: any, stats: any): string {
-    const evaluationsDetails = report.evaluations
-      .map(e => `  - ${e.standard_name}: ${e.final_score.toFixed(1)}%`)
-      .join('\n');
+    // Validar que los datos existen antes de acceder
+    if (!report || !stats) {
+      throw new Error('Invalid report or stats data');
+    }
+
+    const evaluationsDetails = (report.evaluations && Array.isArray(report.evaluations))
+      ? report.evaluations
+          .map((e: any) => `  - ${e?.standard_name || 'Unknown'}: ${(e?.final_score || 0).toFixed(1)}%`)
+          .join('\n')
+      : 'No evaluations available';
+
+    const projectName = report.project_name || 'Unknown Project';
+    const projectDescription = report.project_description || '';
+    const finalScore = report.final_project_score || 0;
+    const minThreshold = report.minimum_threshold || 0;
+    const meetsThreshold = report.meets_threshold || false;
+    
+    const totalEvals = stats.total_evaluations || 0;
+    const completedEvals = stats.completed_evaluations || 0;
+    const avgScore = stats.average_evaluation_score || 0;
+    const highestEval = stats.highest_evaluation?.standard_name || 'N/A';
+    const highestScore = stats.highest_evaluation?.score || 0;
+    const lowestEval = stats.lowest_evaluation?.standard_name || 'N/A';
+    const lowestScore = stats.lowest_evaluation?.score || 0;
 
     return `
 Eres un experto senior en aseguramiento de calidad de software con más de 15 años de experiencia en normas ISO/IEC 25010, CMMI y mejores prácticas de ingeniería de software.
@@ -103,20 +124,20 @@ Analiza los siguientes resultados de evaluación de calidad de software y propor
 📊 DATOS DEL PROYECTO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**Proyecto:** ${report.project_name}
-${report.project_description ? `**Descripción:** ${report.project_description}` : ''}
+**Proyecto:** ${projectName}
+${projectDescription ? `**Descripción:** ${projectDescription}` : ''}
 
 **Resultados Principales:**
-- 🎯 Puntuación Final: ${report.final_project_score.toFixed(1)}%
-- 📏 Umbral Mínimo Requerido: ${report.minimum_threshold}%
-- ✅ Estado: ${report.meets_threshold ? '✅ APROBADO - Cumple con el estándar' : '❌ NO APROBADO - Por debajo del umbral'}
+- 🎯 Puntuación Final: ${finalScore.toFixed(1)}%
+- 📏 Umbral Mínimo Requerido: ${minThreshold}%
+- ✅ Estado: ${meetsThreshold ? '✅ APROBADO - Cumple con el estándar' : '❌ NO APROBADO - Por debajo del umbral'}
 
 **Estadísticas de Evaluaciones:**
-- Total de evaluaciones realizadas: ${stats.total_evaluations}
-- Evaluaciones completadas: ${stats.completed_evaluations}
-- Promedio general: ${stats.average_evaluation_score.toFixed(1)}%
-- 🏆 Mejor evaluación: ${stats.highest_evaluation.standard_name} (${stats.highest_evaluation.score.toFixed(1)}%)
-- ⚠️ Evaluación más baja: ${stats.lowest_evaluation.standard_name} (${stats.lowest_evaluation.score.toFixed(1)}%)
+- Total de evaluaciones realizadas: ${totalEvals}
+- Evaluaciones completadas: ${completedEvals}
+- Promedio general: ${avgScore.toFixed(1)}%
+- 🏆 Mejor evaluación: ${highestEval} (${highestScore.toFixed(1)}%)
+- ⚠️ Evaluación más baja: ${lowestEval} (${lowestScore.toFixed(1)}%)
 
 **Detalle de Evaluaciones por Estándar:**
 ${evaluationsDetails}
