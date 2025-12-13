@@ -363,7 +363,7 @@ export default function ProjectReportPage() {
           </div>
         </div>
 
-        {stats.completed_evaluations > 0 && stats.highest_evaluation.standard_name !== 'N/A' && (
+        {stats.completed_evaluations > 0 && stats.highest_evaluation && stats.highest_evaluation.standard_name !== 'N/A' && (
           <>
             {/* Si solo hay 1 evaluación, mostrar solo "Mejor" si aprobó o "Menor" si no aprobó */}
             {stats.completed_evaluations === 1 ? (
@@ -376,8 +376,8 @@ export default function ProjectReportPage() {
                       </svg>
                     </div>
                     <div>
-                      <div className="stat-value">{stats.highest_evaluation.score.toFixed(1)}</div>
-                      <div className="stat-label">Mejor: {stats.highest_evaluation.standard_name}</div>
+                      <div className="stat-value">{stats.highest_evaluation?.score?.toFixed(1) || '0.0'}</div>
+                      <div className="stat-label">Mejor: {stats.highest_evaluation?.standard_name || 'N/A'}</div>
                     </div>
                   </div>
                 ) : (
@@ -388,8 +388,8 @@ export default function ProjectReportPage() {
                       </svg>
                     </div>
                     <div>
-                      <div className="stat-value">{stats.lowest_evaluation.score.toFixed(1)}</div>
-                      <div className="stat-label">Menor: {stats.lowest_evaluation.standard_name}</div>
+                      <div className="stat-value">{stats.lowest_evaluation?.score?.toFixed(1) || '0.0'}</div>
+                      <div className="stat-label">Menor: {stats.lowest_evaluation?.standard_name || 'N/A'}</div>
                     </div>
                   </div>
                 )}
@@ -404,8 +404,8 @@ export default function ProjectReportPage() {
                     </svg>
                   </div>
                   <div>
-                    <div className="stat-value">{stats.highest_evaluation.score.toFixed(1)}</div>
-                    <div className="stat-label">Mejor: {stats.highest_evaluation.standard_name}</div>
+                    <div className="stat-value">{stats.highest_evaluation?.score?.toFixed(1) || '0.0'}</div>
+                    <div className="stat-label">Mejor: {stats.highest_evaluation?.standard_name || 'N/A'}</div>
                   </div>
                 </div>
 
@@ -416,8 +416,8 @@ export default function ProjectReportPage() {
                     </svg>
                   </div>
                   <div>
-                    <div className="stat-value">{stats.lowest_evaluation.score.toFixed(1)}</div>
-                    <div className="stat-label">Menor: {stats.lowest_evaluation.standard_name}</div>
+                    <div className="stat-value">{stats.lowest_evaluation?.score?.toFixed(1) || '0.0'}</div>
+                    <div className="stat-label">Menor: {stats.lowest_evaluation?.standard_name || 'N/A'}</div>
                   </div>
                 </div>
               </>

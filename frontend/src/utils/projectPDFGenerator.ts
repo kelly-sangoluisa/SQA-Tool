@@ -299,20 +299,20 @@ class ProjectPDFGenerator {
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.text('Promedio:', this.margin, this.currentY);
     this.pdf.setFont('helvetica', 'normal');
-    this.pdf.text(`${stats.average_evaluation_score.toFixed(1)}%`, this.margin + 50, this.currentY);
+    this.pdf.text(`${stats.average_evaluation_score?.toFixed(1) || '0.0'}%`, this.margin + 50, this.currentY);
 
-    if (stats.completed_evaluations > 1) {
+    if (stats.completed_evaluations > 1 && stats.highest_evaluation && stats.lowest_evaluation) {
       this.currentY += 10;
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Mejor Evaluación:', this.margin, this.currentY);
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.text(`${stats.highest_evaluation.standard_name} (${stats.highest_evaluation.score.toFixed(1)}%)`, this.margin + 42, this.currentY);
+      this.pdf.text(`${stats.highest_evaluation.standard_name || 'N/A'} (${stats.highest_evaluation.score?.toFixed(1) || '0.0'}%)`, this.margin + 42, this.currentY);
 
       this.currentY += 10;
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Evaluación Menor:', this.margin, this.currentY);
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.text(`${stats.lowest_evaluation.standard_name} (${stats.lowest_evaluation.score.toFixed(1)}%)`, this.margin + 42, this.currentY);
+      this.pdf.text(`${stats.lowest_evaluation.standard_name || 'N/A'} (${stats.lowest_evaluation.score?.toFixed(1) || '0.0'}%)`, this.margin + 42, this.currentY);
     }
 
     // Estado de cumplimiento
