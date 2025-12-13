@@ -8,6 +8,7 @@ import {
   StandardSelection,
   CriteriaOnlySelection,
   SubCriteriaSelection,
+  MetricsSelection,
   CriteriaWithImportance,
 } from '@/components/configurationEvaluation';
 import { Standard, Criterion } from '@/api/parameterization/parameterization-api';
@@ -45,6 +46,13 @@ export default function ConfigurationEvaluationPage() {
     importancePercentage: number;
   }
   const [criteriaImportance, setCriteriaImportance] = useState<CriteriaImportanceData[]>([]);
+
+  interface EvaluationCriterionData {
+    id: number;
+    criterionId: number;
+    criterionName: string;
+  }
+  const [createdEvaluationCriteria, setCreatedEvaluationCriteria] = useState<EvaluationCriterionData[]>([]);
 
   // Auth protection
   useEffect(() => {
@@ -116,7 +124,6 @@ export default function ConfigurationEvaluationPage() {
       setSaveError(null);
       setSelectedSubCriteria(subCriteria);
 
-      // Verificar que tenemos el usuario autenticado
       if (!user) {
         throw new Error('Usuario no encontrado. Por favor, recarga la página e inicia sesión nuevamente.');
       }
@@ -125,13 +132,7 @@ export default function ConfigurationEvaluationPage() {
         throw new Error(`Usuario autenticado pero sin ID. Datos del usuario: ${JSON.stringify(user)}`);
       }
 
-      let projectId: number;
-      let evaluationId: number;
-      let criteriaCount: number;
-
-      // Decidir si crear proyecto nuevo o usar existente
       if (existingProjectId) {
-        // Proyecto existente: solo crear evaluación y criterios
         const result = await configEvaluationApi.createEvaluationForExistingProject({
           projectId: existingProjectId,
           standardId: selectedStandard!.id,
@@ -142,11 +143,16 @@ export default function ConfigurationEvaluationPage() {
           })),
         });
 
-        projectId = existingProjectId;
-        evaluationId = result.evaluation.id;
-        criteriaCount = result.criteria.length;
+        const evaluationCriteria: EvaluationCriterionData[] = result.criteria.map((criterion) => {
+          const criterionInfo = selectedCriteriaFull.find(c => c.id === criterion.criterion_id);
+          return {
+            id: criterion.id,
+            criterionId: criterion.criterion_id,
+            criterionName: criterionInfo?.name || '',
+          };
+        });
+        setCreatedEvaluationCriteria(evaluationCriteria);
       } else {
-        // Proyecto nuevo: crear proyecto, evaluación y criterios
         const result = await configEvaluationApi.completeEvaluationConfiguration({
           projectName: evaluationInfo!.name,
           projectDescription: evaluationInfo!.description,
@@ -160,21 +166,50 @@ export default function ConfigurationEvaluationPage() {
           })),
         });
 
-        projectId = result.project.id;
-        evaluationId = result.evaluation.id;
-        criteriaCount = result.criteria.length;
+        const evaluationCriteria: EvaluationCriterionData[] = result.criteria.map((criterion) => {
+          const criterionInfo = selectedCriteriaFull.find(c => c.id === criterion.criterion_id);
+          return {
+            id: criterion.id,
+            criterionId: criterion.criterion_id,
+            criterionName: criterionInfo?.name || '',
+          };
+        });
+        setCreatedEvaluationCriteria(evaluationCriteria);
       }
 
-      // Mostrar mensaje de éxito y redirigir
-      // Mostrar modal en vez de alert de navegador
-      setSuccessMessage(`✅ ¡Evaluación creada exitosamente!\n\nSe ha configurado la evaluación con ${criteriaCount} ${criteriaCount === 1 ? 'criterio' : 'criterios'}.`);
-      setSuccessModalOpen(true);
+      setCurrentStep(5);
     } catch (error) {
-      console.error('❌ Error al crear la evaluación:', error);
+      console.error('Error al crear la evaluación:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido al guardar la evaluación';
       setSaveError(errorMessage);
-      
-      // Scroll hacia arriba para ver el error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleStep5Complete = async (selectedMetrics: Map<number, number[]>) => {
+    try {
+      setIsSaving(true);
+      setSaveError(null);
+
+      const metricsToCreate = Array.from(selectedMetrics.entries()).flatMap(([evaluationCriterionId, metricIds]) =>
+        metricIds.map(metricId => ({
+          eval_criterion_id: evaluationCriterionId,
+          metric_id: metricId,
+        }))
+      );
+
+      await configEvaluationApi.bulkCreateEvaluationMetrics({
+        metrics: metricsToCreate,
+      });
+
+      setSuccessMessage(`¡Evaluación creada exitosamente!\n\nSe ha configurado la evaluación con ${createdEvaluationCriteria.length} ${createdEvaluationCriteria.length === 1 ? 'criterio' : 'criterios'} y ${metricsToCreate.length} ${metricsToCreate.length === 1 ? 'métrica' : 'métricas'}.`);
+      setSuccessModalOpen(true);
+    } catch (error) {
+      console.error('Error al guardar las métricas:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al guardar las métricas';
+      setSaveError(errorMessage);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSaving(false);
@@ -255,6 +290,14 @@ export default function ConfigurationEvaluationPage() {
               initialSelected={selectedSubCriteria}
               onNext={handleStep4Complete}
               onBack={() => handleBack(3)}
+            />
+          )}
+
+          {currentStep === 5 && createdEvaluationCriteria.length > 0 && (
+            <MetricsSelection
+              evaluationCriteria={createdEvaluationCriteria}
+              onNext={handleStep5Complete}
+              onBack={() => handleBack(4)}
             />
           )}
         </div>

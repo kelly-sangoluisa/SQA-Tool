@@ -137,7 +137,7 @@ export class ParameterizationService {
     return this.criterionRepo.find({
       where,
       order: { name: 'ASC' },
-      relations: ['sub_criteria'],
+      relations: ['sub_criteria', 'sub_criteria.metrics', 'sub_criteria.metrics.variables'],
       skip: (page - 1) * limit,
       take: limit,
     });

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Criterion } from '@/api/parameterization/parameterization-api';
 import { SelectedCriterion, ImportanceLevel } from '@/types/configurationEvaluation.types';
 import { Button } from '../shared';
-import styles from './SubcriteriaSelection.module.css';
+import styles from './SubCriteriaSelection.module.css';
 import { CriteriaWithImportance } from './CriteriaOnlySelection';
 
 interface SubCriteriaSelectionProps {
@@ -224,7 +224,7 @@ export function SubCriteriaSelection({
           Atrás
         </Button>
         <Button type="button" variant="primary" onClick={handleNext} disabled={!hasSelection}>
-          Finalizar Configuración
+          Siguiente
         </Button>
       </div>
     </div>

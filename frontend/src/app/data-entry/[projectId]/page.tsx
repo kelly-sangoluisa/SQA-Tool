@@ -156,171 +156,103 @@ export default function DataEntryProjectPage() {
         }
         setProject(projectData);
 
-        // **DATOS MOCK TEMPORALES** - Reemplazar cuando backend esté listo
-        // Helper para crear estructura base de evaluación
-        const createMockEvaluation = (
-          id: number, 
-          standardId: number, 
-          standardName: string, 
-          standardVersion: string,
-          criteriaData: Array<{
-            id: number;
-            criterionId: number;
-            name: string;
-            description: string;
-            importance: string;
-            percentage: number;
-            subcriteriaData: Array<{
-              id: number;
-              name: string;
-              description: string;
-              metricsData: Array<{
-                id: number;
-                name: string;
-                description: string;
-                formula: string;
-                variables: Array<{ symbol: string; description: string; id: number }>;
-              }>;
-            }>;
-          }>
-        ) => ({
-          id,
-          project_id: 4,
-          standard_id: standardId,
-          creation_date: '2025-11-30T04:55:23.514Z',
-          status: 'in_progress' as const,
-          standard: { id: standardId, name: standardName, version: standardVersion },
-          evaluation_criteria: criteriaData.map(c => ({
-            id: c.id,
-            evaluation_id: id,
-            criterion_id: c.criterionId,
-            importance_level: c.importance,
-            importance_percentage: c.percentage,
-            criterion: {
-              id: c.criterionId,
-              name: c.name,
-              description: c.description,
-              subcriteria: c.subcriteriaData.map(sc => ({
-                id: sc.id,
-                name: sc.name,
-                description: sc.description,
-                criterion_id: c.criterionId,
-                state: 'active',
-                created_at: '2025-11-30T04:22:45.217Z',
-                updated_at: '2025-11-30T04:22:45.217Z',
-                metrics: sc.metricsData.map(m => ({
-                  id: m.id,
-                  name: m.name,
-                  description: m.description,
-                  formula: m.formula,
-                  variables: m.variables.map((v, idx) => ({
-                    id: v.id,
-                    metric_id: m.id,
-                    symbol: v.symbol,
-                    description: v.description,
-                    state: 'active'
-                  }))
-                }))
-              }))
-            }
-          }))
+        // Cargar evaluaciones del proyecto desde la API
+        const evaluationsResponse = await fetch(`/api/config-evaluation/projects/${projectId}/evaluations`);
+        if (!evaluationsResponse.ok) throw new Error('Error al cargar evaluaciones');
+        
+        let evaluationsData;
+        try {
+          evaluationsData = await evaluationsResponse.json();
+        } catch {
+          throw new Error('Respuesta inválida al cargar evaluaciones');
+        }
+
+        // Transformar datos: mapear evaluation_metrics a métricas en subcriteria
+        const evaluationsWithMetrics = (Array.isArray(evaluationsData) ? evaluationsData : []).map((evaluation: any) => {
+          // Crear un mapa de métricas por sub_criterion_id desde evaluation_metrics
+          const metricsBySubcriterion = new Map<number, any[]>();
+          
+          // Procesar evaluation_metrics para extraer métricas
+          (evaluation.evaluation_criteria || []).forEach((evalCriterion: any) => {
+            (evalCriterion.evaluation_metrics || []).forEach((evalMetric: any) => {
+              const metric = evalMetric.metric || {};
+              const subCriterionId = metric.sub_criterion_id;
+              
+              if (subCriterionId) {
+                if (!metricsBySubcriterion.has(subCriterionId)) {
+                  metricsBySubcriterion.set(subCriterionId, []);
+                }
+                
+                // Agregar métrica con sus variables
+                const existingMetrics = metricsBySubcriterion.get(subCriterionId) || [];
+                const metricExists = existingMetrics.some(m => m.id === metric.id);
+                
+                if (!metricExists) {
+                  metricsBySubcriterion.get(subCriterionId)!.push({
+                    id: metric.id,
+                    name: metric.name,
+                    description: metric.description,
+                    formula: metric.formula,
+                    code: metric.code,
+                    variables: (metric.variables || []).map((v: any) => ({
+                      id: v.id,
+                      metric_id: metric.id,
+                      symbol: v.symbol,
+                      description: v.description,
+                      state: v.state
+                    }))
+                  });
+                }
+              }
+            });
+          });
+
+          return {
+            ...evaluation,
+            evaluation_criteria: (evaluation.evaluation_criteria || []).map((evalCriterion: any) => ({
+              ...evalCriterion,
+              criterion: {
+                ...evalCriterion.criterion,
+                subcriteria: (evalCriterion.criterion?.sub_criteria || []).map((subcriterion: any) => {
+                  // Obtener métricas de evaluation_metrics o de sub_criteria.metrics si existen
+                  const metricsFromEvalMetrics = metricsBySubcriterion.get(subcriterion.id) || [];
+                  const metricsFromSubcriterion = (subcriterion.metrics || []).map((m: any) => ({
+                    id: m.id,
+                    name: m.name,
+                    description: m.description,
+                    formula: m.formula,
+                    code: m.code,
+                    variables: (m.variables || []).map((v: any) => ({
+                      id: v.id,
+                      metric_id: m.id,
+                      symbol: v.symbol,
+                      description: v.description,
+                      state: v.state
+                    }))
+                  }));
+                  
+                  // Combinar: si hay en evaluation_metrics usa esos, sino usa los del subcriterion
+                  const finalMetrics = metricsFromEvalMetrics.length > 0 ? metricsFromEvalMetrics : metricsFromSubcriterion;
+                  
+                  return {
+                    id: subcriterion.id,
+                    name: subcriterion.name,
+                    description: subcriterion.description,
+                    criterion_id: subcriterion.criterion_id,
+                    state: subcriterion.state,
+                    created_at: subcriterion.created_at,
+                    updated_at: subcriterion.updated_at,
+                    metrics: finalMetrics
+                  };
+                })
+              }
+            }))
+          };
         });
 
-        const mockEvaluationsWithMetrics = [
-          createMockEvaluation(6, 2, 'OWASP ASVS', '4.0.3', [
-            {
-              id: 8, criterionId: 4, name: 'V2: Autenticación',
-              description: 'Verificación de mecanismos de autenticación',
-              importance: 'A', percentage: 50.00,
-              subcriteriaData: [{
-                id: 10, name: 'Gestión de Contraseñas',
-                description: 'Políticas y gestión segura de contraseñas',
-                metricsData: [
-                  {
-                    id: 20, name: 'Complejidad de Contraseña',
-                    description: 'Evalúa el nivel de complejidad requerido',
-                    formula: '(U + L + N + S) / 4',
-                    variables: [
-                      { id: 40, symbol: 'U', description: 'Letras mayúsculas requeridas' },
-                      { id: 41, symbol: 'L', description: 'Letras minúsculas requeridas' },
-                      { id: 42, symbol: 'N', description: 'Números requeridos' },
-                      { id: 43, symbol: 'S', description: 'Símbolos especiales requeridos' }
-                    ]
-                  },
-                  {
-                    id: 21, name: 'Tiempo de Expiración',
-                    description: 'Tiempo máximo de validez de una contraseña',
-                    formula: 'T / D',
-                    variables: [
-                      { id: 44, symbol: 'T', description: 'Tiempo actual de la contraseña (días)' },
-                      { id: 45, symbol: 'D', description: 'Días máximos permitidos' }
-                    ]
-                  }
-                ]
-              }]
-            },
-            {
-              id: 9, criterionId: 5, name: 'V4: Control de Acceso',
-              description: 'Verificación de controles de acceso',
-              importance: 'A', percentage: 50.00,
-              subcriteriaData: [{
-                id: 11, name: 'Autorización de Recursos',
-                description: 'Control de acceso a recursos del sistema',
-                metricsData: [{
-                  id: 22, name: 'Porcentaje de Recursos Protegidos',
-                  description: 'Porcentaje de recursos que requieren autorización',
-                  formula: 'RP / TR * 100',
-                  variables: [
-                    { id: 46, symbol: 'RP', description: 'Recursos protegidos' },
-                    { id: 47, symbol: 'TR', description: 'Total de recursos' }
-                  ]
-                }]
-              }]
-            }
-          ]),
-          createMockEvaluation(5, 1, 'ISO/IEC 25010', '2023', [
-            {
-              id: 6, criterionId: 1, name: 'Adecuación funcional',
-              description: 'Capacidad del producto software para proporcionar funciones',
-              importance: 'A', percentage: 70.00,
-              subcriteriaData: [{
-                id: 12, name: 'Completitud Funcional',
-                description: 'Grado en que el conjunto de funciones cubre todas las tareas',
-                metricsData: [{
-                  id: 23, name: 'Cobertura de Requisitos',
-                  description: 'Porcentaje de requisitos funcionales implementados',
-                  formula: 'RF / TR * 100',
-                  variables: [
-                    { id: 48, symbol: 'RF', description: 'Requisitos funcionales implementados' },
-                    { id: 49, symbol: 'TR', description: 'Total de requisitos' }
-                  ]
-                }]
-              }]
-            },
-            {
-              id: 7, criterionId: 2, name: 'Usabilidad',
-              description: 'Capacidad del producto software para ser entendido',
-              importance: 'M', percentage: 30.00,
-              subcriteriaData: [{
-                id: 13, name: 'Aprendizaje',
-                description: 'Capacidad del usuario para aprender a usar el software',
-                metricsData: [{
-                  id: 24, name: 'Tiempo de Aprendizaje',
-                  description: 'Tiempo promedio que tarda un usuario en aprender',
-                  formula: 'T / N',
-                  variables: [
-                    { id: 50, symbol: 'T', description: 'Tiempo total de aprendizaje (minutos)' },
-                    { id: 51, symbol: 'N', description: 'Número de usuarios' }
-                  ]
-                }]
-              }]
-            }
-          ])
-        ];
-
-        setEvaluations(mockEvaluationsWithMetrics);
+        setEvaluations(evaluationsWithMetrics);
         
-        // Cargar progreso del proyecto (puede usar datos reales o mock)
+        // Cargar progreso del proyecto
         const progressResponse = await fetch(`/api/entry-data/projects/${projectId}/progress`);
         if (progressResponse.ok) {
           try {
@@ -337,19 +269,19 @@ export default function DataEntryProjectPage() {
           // Progreso mock si no existe el endpoint
           const mockProgress = {
             project_id: projectId,
-            total_evaluations: 2,
+            total_evaluations: evaluationsWithMetrics.length,
             completed_evaluations: 0,
-            in_progress_evaluations: 2,
-            total_metrics: 4,
+            in_progress_evaluations: evaluationsWithMetrics.length,
+            total_metrics: 0,
             completed_metrics: 0,
             overall_progress_percentage: 0
           };
           setProjectProgress(mockProgress);
         }
 
-        // Procesar métricas de todas las evaluaciones mock
+        // Procesar métricas de todas las evaluaciones
         const metrics: Metric[] = [];
-        for (const evaluation of mockEvaluationsWithMetrics) {
+        for (const evaluation of evaluationsWithMetrics) {
           for (const evalCriterion of evaluation.evaluation_criteria) {
             if (evalCriterion.criterion.subcriteria && evalCriterion.criterion.subcriteria.length > 0) {
               for (const subcriterion of evalCriterion.criterion.subcriteria) {

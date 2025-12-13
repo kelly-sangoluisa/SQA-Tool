@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { parameterizationApi, Criterion } from '@/api/parameterization/parameterization-api';
 import { Button, Loading } from '../shared';
+import ValidationModal from '../shared/ValidationModal';
 import { ImportanceLevel } from '@/types/configurationEvaluation.types';
 import styles from './CriteriaOnlySelection.module.css';
 
@@ -38,7 +39,8 @@ export function CriteriaOnlySelection({
   const [criteriaImportance, setCriteriaImportance] = useState<Map<number, CriteriaImportanceData>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [validationModalOpen, setValidationModalOpen] = useState(false);
+  const [validationModalMessage, setValidationModalMessage] = useState('');
 
   const loadCriteria = async () => {
     try {
@@ -80,7 +82,38 @@ export function CriteriaOnlySelection({
 
     setSelectedIds(newSelected);
     setCriteriaImportance(newImportance);
-    setValidationError(null);
+  };
+
+  // Validar si un criterio puede ser seleccionado
+  const canSelectCriterion = (criterion: Criterion): boolean => {
+    // El criterio debe tener subcriterios
+    if (!criterion.sub_criteria || criterion.sub_criteria.length === 0) {
+      return false;
+    }
+    
+    // Al menos un subcriterio debe tener métricas
+    const hasMetrics = criterion.sub_criteria.some(
+      sc => sc.metrics && sc.metrics.length > 0
+    );
+    
+    return hasMetrics;
+  };
+
+  // Obtener mensaje de por qué un criterio está deshabilitado
+  const getDisabledReason = (criterion: Criterion): string => {
+    if (!criterion.sub_criteria || criterion.sub_criteria.length === 0) {
+      return 'Sin subcriterios configurados';
+    }
+    
+    const hasMetrics = criterion.sub_criteria.some(
+      sc => sc.metrics && sc.metrics.length > 0
+    );
+    
+    if (!hasMetrics) {
+      return 'Sin métricas en los subcriterios';
+    }
+    
+    return '';
   };
 
   const handleImportanceLevelChange = (criterionId: number, level: ImportanceLevel) => {
@@ -95,7 +128,6 @@ export function CriteriaOnlySelection({
     const current = newImportance.get(criterionId) || { importanceLevel: 'M', importancePercentage: 0 };
     newImportance.set(criterionId, { ...current, importancePercentage: percentage });
     setCriteriaImportance(newImportance);
-    setValidationError(null);
   };
 
   const calculateTotalPercentage = (): number => {
@@ -107,19 +139,34 @@ export function CriteriaOnlySelection({
   };
 
   const validateAndProceed = (): boolean => {
-    // Verificar que todos los criterios seleccionados tengan datos de importancia
+    const criteriaWithoutPercentage: string[] = [];
+
     for (const id of selectedIds) {
       const importance = criteriaImportance.get(id);
+      const criterion = criteria.find(c => c.id === id);
+
       if (!importance || importance.importancePercentage <= 0) {
-        setValidationError('Todos los criterios deben tener un porcentaje de importancia mayor a 0');
-        return false;
+        const criterionName = criterion?.name || `Criterio ID ${id}`;
+        const subCriteriaInfo = criterion?.sub_criteria && criterion.sub_criteria.length > 0
+          ? ` (${criterion.sub_criteria.length} ${criterion.sub_criteria.length === 1 ? 'subcriterio' : 'subcriterios'})`
+          : '';
+        criteriaWithoutPercentage.push(`• ${criterionName}${subCriteriaInfo}`);
       }
     }
 
-    // Verificar que la suma sea 100%
+    if (criteriaWithoutPercentage.length > 0) {
+      const message = `Los siguientes criterios necesitan un porcentaje de importancia mayor a 0:\n\n${criteriaWithoutPercentage.join('\n')}\n\nPor favor, asigne un porcentaje a cada criterio.`;
+      setValidationModalMessage(message);
+      setValidationModalOpen(true);
+      return false;
+    }
+
     const total = calculateTotalPercentage();
     if (Math.abs(total - 100) > 0.01) {
-      setValidationError(`La suma de los porcentajes debe ser 100%. Suma actual: ${total.toFixed(2)}%`);
+      const difference = total - 100;
+      const message = `La suma de los porcentajes de importancia debe ser exactamente 100%.\n\nSuma actual: ${total.toFixed(2)}%\n${difference > 0 ? `Sobran: ${difference.toFixed(2)}%` : `Faltan: ${Math.abs(difference).toFixed(2)}%`}\n\nPor favor, ajuste los porcentajes para que sumen exactamente 100%.`;
+      setValidationModalMessage(message);
+      setValidationModalOpen(true);
       return false;
     }
 
@@ -204,38 +251,63 @@ export function CriteriaOnlySelection({
             </span>
           </div>
         )}
-        {validationError && (
-          <div className={styles.validationError}>
-            {validationError}
-          </div>
-        )}
       </div>
+
+      <ValidationModal
+        open={validationModalOpen}
+        title="Validación de Importancia"
+        message={validationModalMessage}
+        onClose={() => setValidationModalOpen(false)}
+      />
 
       <div className={styles.criteriaList}>
         {criteria.map((criterion) => {
           const isSelected = selectedIds.has(criterion.id);
           const importance = criteriaImportance.get(criterion.id);
+          const canSelect = canSelectCriterion(criterion);
+          const disabledReason = getDisabledReason(criterion);
 
           return (
             <div
               key={criterion.id}
-              className={`${styles.criterionCard} ${isSelected ? styles.selected : ''}`}
+              className={`${styles.criterionCard} ${isSelected ? styles.selected : ''} ${!canSelect ? styles.disabled : ''}`}
+              title={!canSelect ? disabledReason : undefined}
             >
               <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
                   className={styles.checkbox}
                   checked={isSelected}
-                  onChange={() => handleToggle(criterion.id)}
+                  onChange={() => canSelect && handleToggle(criterion.id)}
+                  disabled={!canSelect}
                 />
                 <div className={styles.criterionContent}>
                   <span className={styles.criterionName}>{criterion.name}</span>
                   {criterion.description && (
                     <p className={styles.criterionDescription}>{criterion.description}</p>
                   )}
-                  {criterion.sub_criteria && criterion.sub_criteria.length > 0 && (
-                    <span className={styles.subCriteriaCount}>
-                      {criterion.sub_criteria.length} subcriterios disponibles
+                  {criterion.sub_criteria && criterion.sub_criteria.length > 0 ? (
+                    <div className={styles.subCriteriaInfo}>
+                      <span className={styles.subCriteriaCount}>
+                        {criterion.sub_criteria.length} subcriterios
+                      </span>
+                      {criterion.sub_criteria.map(sc => {
+                        const metricsCount = sc.metrics ? sc.metrics.length : 0;
+                        const hasFormulas = sc.metrics && sc.metrics.some(m => m.formula);
+                        return (
+                          <div key={sc.id} className={styles.subcriterionDetail}>
+                            <span className={styles.subcriterionName}>{sc.name}</span>
+                            <span className={`${styles.metricsCount} ${metricsCount > 0 ? styles.hasMetrics : styles.noMetrics}`}>
+                              {metricsCount} métrica{metricsCount !== 1 ? 's' : ''}
+                              {hasFormulas && metricsCount > 0 && ' ✓'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className={`${styles.subCriteriaCount} ${styles.noSubcriteria}`}>
+                      ⚠️ Sin subcriterios configurados
                     </span>
                   )}
                 </div>

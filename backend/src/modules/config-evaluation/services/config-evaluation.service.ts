@@ -6,14 +6,17 @@ import { Repository, DataSource } from 'typeorm';
 import { Project, ProjectStatus } from '../entities/project.entity';
 import { Evaluation } from '../entities/evaluation.entity';
 import { EvaluationCriterion } from '../entities/evaluation-criterion.entity';
+import { EvaluationMetric } from '../entities/evaluation_metric.entity';
 import { Standard } from '../../parameterization/entities/standard.entity';
 import { Criterion } from '../../parameterization/entities/criterion.entity';
+import { Metric } from '../../parameterization/entities/metric.entity';
 import { User } from '../../../users/entities/user.entity';
 
 // DTOs
 import { CreateProjectDto } from '../dto/project.dto';
 import { CreateEvaluationDto } from '../dto/evaluation.dto';
 import { CreateEvaluationCriterionDto, BulkCreateEvaluationCriteriaDto } from '../dto/evaluation-criterion.dto';
+import { CreateEvaluationMetricDto, BulkCreateEvaluationMetricsDto } from '../dto/evaluation-metric.dto';
 
 @Injectable()
 export class ConfigEvaluationService {
@@ -26,10 +29,14 @@ export class ConfigEvaluationService {
     private readonly evaluationRepo: Repository<Evaluation>,
     @InjectRepository(EvaluationCriterion)
     private readonly evaluationCriterionRepo: Repository<EvaluationCriterion>,
+    @InjectRepository(EvaluationMetric)
+    private readonly evaluationMetricRepo: Repository<EvaluationMetric>,
     @InjectRepository(Standard)
     private readonly standardRepo: Repository<Standard>,
     @InjectRepository(Criterion)
     private readonly criterionRepo: Repository<Criterion>,
+    @InjectRepository(Metric)
+    private readonly metricRepo: Repository<Metric>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly dataSource: DataSource,
@@ -248,6 +255,7 @@ export class ConfigEvaluationService {
 
   /**
    * Obtiene una evaluación por ID con todas sus relaciones
+   * Incluye: proyecto, estándar, criterios con sus subcriterios, métricas seleccionadas
    */
   async findEvaluationById(id: number): Promise<Evaluation> {
     const evaluation = await this.evaluationRepo.findOne({
@@ -258,9 +266,21 @@ export class ConfigEvaluationService {
         'standard',
         'evaluation_criteria',
         'evaluation_criteria.criterion',
+        'evaluation_criteria.criterion.sub_criteria',
+        'evaluation_criteria.evaluation_metrics',
+        'evaluation_criteria.evaluation_metrics.metric',
+        'evaluation_criteria.evaluation_metrics.metric.sub_criterion',
         'evaluation_criteria.criteria_results',
         'evaluation_result',
       ],
+      order: {
+        evaluation_criteria: {
+          id: 'ASC',
+          evaluation_metrics: {
+            id: 'ASC',
+          },
+        },
+      },
     });
     if (!evaluation) {
       throw new NotFoundException(`Evaluation with ID ${id} not found`);
@@ -270,6 +290,7 @@ export class ConfigEvaluationService {
 
   /**
    * Obtiene evaluaciones por proyecto
+   * Incluye criterios, subcriterios, métricas y variables
    */
   async findEvaluationsByProjectId(projectId: number): Promise<Evaluation[]> {
     return this.evaluationRepo.find({
@@ -278,10 +299,22 @@ export class ConfigEvaluationService {
         'standard',
         'evaluation_criteria',
         'evaluation_criteria.criterion',
+        'evaluation_criteria.criterion.sub_criteria',
+        'evaluation_criteria.evaluation_metrics',
+        'evaluation_criteria.evaluation_metrics.metric',
+        'evaluation_criteria.evaluation_metrics.metric.variables',
         'evaluation_criteria.criteria_results',
         'evaluation_result',
       ],
-      order: { created_at: 'DESC' },
+      order: { 
+        created_at: 'DESC',
+        evaluation_criteria: {
+          id: 'ASC',
+          evaluation_metrics: {
+            id: 'ASC',
+          },
+        },
+      },
     });
   }
 
@@ -303,6 +336,80 @@ export class ConfigEvaluationService {
     return this.projectRepo.find({
       relations: ['creator', 'evaluations'],
       order: { created_at: 'DESC' },
+    });
+  }
+
+  /**
+   * Obtiene todas las métricas disponibles de un criterio (con sus subcriterios)
+   * Se usa para mostrar las métricas que se pueden seleccionar después de elegir criterios
+   */
+  async getMetricsByCriterionId(criterionId: number): Promise<Criterion> {
+    this.logger.debug(`Getting metrics for criterion ID: ${criterionId}`);
+    
+    const criterion = await this.criterionRepo.findOne({
+      where: { id: criterionId },
+      relations: ['sub_criteria', 'sub_criteria.metrics'],
+    });
+
+    if (!criterion) {
+      this.logger.error(`Criterion with ID ${criterionId} not found`);
+      throw new NotFoundException(`Criterion with ID ${criterionId} not found`);
+    }
+
+    this.logger.debug(`Found criterion: ${criterion.name}, sub_criteria count: ${criterion.sub_criteria?.length || 0}`);
+    return criterion;
+  }
+
+  /**
+   * Crea métricas de evaluación en bulk
+   * Se ejecuta después de seleccionar los criterios de evaluación
+   */
+  async bulkCreateEvaluationMetrics(
+    bulkDto: BulkCreateEvaluationMetricsDto
+  ): Promise<EvaluationMetric[]> {
+    return this.dataSource.transaction(async manager => {
+      // Verificar que todos los eval_criterion_id existen
+      const evalCriterionIds = [...new Set(bulkDto.metrics.map(m => m.eval_criterion_id))];
+      const evaluationCriteria = await this.evaluationCriterionRepo.find({
+        where: evalCriterionIds.map(id => ({ id })),
+      });
+
+      if (evaluationCriteria.length !== evalCriterionIds.length) {
+        throw new BadRequestException('One or more evaluation criterion IDs are invalid');
+      }
+
+      // Verificar que todas las métricas existen
+      const metricIds = bulkDto.metrics.map(m => m.metric_id);
+      const metrics = await this.metricRepo.find({
+        where: metricIds.map(id => ({ id })),
+      });
+
+      if (metrics.length !== metricIds.length) {
+        throw new BadRequestException('One or more metric IDs are invalid');
+      }
+
+      // Crear todas las métricas de evaluación
+      const evaluationMetrics: EvaluationMetric[] = [];
+
+      for (const metricDto of bulkDto.metrics) {
+        this.logger.log(`Creating evaluation metric: ${JSON.stringify(metricDto)}`);
+
+        const newMetric = manager.create(EvaluationMetric, {
+          eval_criterion_id: metricDto.eval_criterion_id,
+          metric_id: metricDto.metric_id,
+        });
+
+        const savedMetric = await manager.save(EvaluationMetric, newMetric);
+        evaluationMetrics.push(savedMetric);
+
+        this.logger.log(`Evaluation metric created with ID: ${savedMetric.id}`);
+      }
+
+      this.logger.log(
+        `Bulk created ${evaluationMetrics.length} evaluation metrics`
+      );
+
+      return evaluationMetrics;
     });
   }
 }

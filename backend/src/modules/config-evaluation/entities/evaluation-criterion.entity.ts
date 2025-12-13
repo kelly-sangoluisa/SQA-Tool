@@ -4,6 +4,7 @@ import { BaseTimestampEntity } from '../../../common/entities/base.entity';
 import { Evaluation } from './evaluation.entity';
 import { Criterion } from '../../parameterization/entities/criterion.entity';
 import { EvaluationCriteriaResult } from '../../entry-data/entities/evaluation_criteria_result.entity';
+import { EvaluationMetric } from './evaluation_metric.entity';
 
 export enum ImportanceLevel {
   HIGH = 'A',
@@ -75,4 +76,11 @@ export class EvaluationCriterion extends BaseTimestampEntity {
     nullable: true,
   })
   criteria_results?: EvaluationCriteriaResult[];
+
+  @ApiProperty({ description: 'Métricas seleccionadas para este criterio de evaluación', required: false })
+  @OneToMany(() => EvaluationMetric, metric => metric.evaluation_criterion, {
+    eager: false,
+    nullable: true,
+  })
+  evaluation_metrics?: EvaluationMetric[];
 }
