@@ -3,12 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { ReportsService } from './reports.service';
 import type { AIAnalysisResponse, AIRecommendation } from '../dto/ai-analysis.dto';
+import { ProjectReportDto, ProjectStatsDto } from '../dto/evaluation-report.dto';
 
 
 @Injectable()
 export class AIAnalysisService {
   private readonly logger = new Logger(AIAnalysisService.name);
-  private genAI: GoogleGenerativeAI;
+  private genAI?: GoogleGenerativeAI;
   private model: GenerativeModel | null = null;
 
   constructor(
@@ -90,7 +91,7 @@ export class AIAnalysisService {
     }
   }
 
-  private buildAnalysisPrompt(report: any, stats: any): string {
+  private buildAnalysisPrompt(report: ProjectReportDto, stats: ProjectStatsDto): string {
     // Validar que los datos existen antes de acceder
     if (!report || !stats) {
       throw new Error('Invalid report or stats data');
@@ -98,7 +99,7 @@ export class AIAnalysisService {
 
     const evaluationsDetails = (report.evaluations && Array.isArray(report.evaluations))
       ? report.evaluations
-          .map((e: any) => `  - ${e?.standard_name || 'Unknown'}: ${(e?.final_score || 0).toFixed(1)}%`)
+          .map(e => `  - ${e.standard_name || 'Unknown'}: ${(e.final_score || 0).toFixed(1)}%`)
           .join('\n')
       : 'No evaluations available';
 

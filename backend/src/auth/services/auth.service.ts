@@ -89,10 +89,12 @@ export class AuthService {
       }
       this.handleError(error, UnauthorizedException);
     }
-    await this.ensureUser(email);
+    if (!data.session) {
+      throw new UnauthorizedException('No session created');
+    }
     return {
-      access_token: data.session!.access_token,
-      refresh_token: data.session!.refresh_token!,
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
     };
   }
 
@@ -108,9 +110,14 @@ export class AuthService {
   async refresh(refresh_token: string): Promise<Tokens> {
     const { data, error } = await this.supabase.auth.refreshSession({ refresh_token });
     this.handleError(error, UnauthorizedException);
+    
+    if (!data.session) {
+      throw new UnauthorizedException('Failed to refresh session');
+    }
+
     return {
-      access_token: data.session!.access_token,
-      refresh_token: data.session!.refresh_token!,
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
     };
   }
 
