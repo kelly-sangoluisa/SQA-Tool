@@ -31,8 +31,13 @@ export async function submitEvaluationData(
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al guardar los datos';
+    let errorMessage = 'Error al guardar los datos';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
     throw new Error(errorMessage);
   }
 }
@@ -49,8 +54,13 @@ export async function finalizeEvaluation(evaluationId: number): Promise<void> {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al finalizar la evaluación';
+    let errorMessage = 'Error al finalizar la evaluación';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
     throw new Error(errorMessage);
   }
 }
@@ -67,8 +77,13 @@ export async function finalizeProject(projectId: number): Promise<void> {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al finalizar el proyecto';
+    let errorMessage = 'Error al finalizar el proyecto';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
     throw new Error(errorMessage);
   }
 }
@@ -80,8 +95,13 @@ export async function getEvaluationCompleteResults(evaluationId: number): Promis
   const response = await fetch(`/api/entry-data/evaluations/${evaluationId}/complete-results`);
 
   if (!response.ok) {
-    const error = await response.json();
-    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al obtener resultados de evaluación';
+    let errorMessage = 'Error al obtener resultados de evaluación';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
     throw new Error(errorMessage);
   }
 
@@ -99,8 +119,13 @@ export async function getProjectCompleteResults(projectId: number): Promise<Comp
   const response = await fetch(`/api/entry-data/projects/${projectId}/complete-results`);
 
   if (!response.ok) {
-    const error = await response.json();
-    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al obtener resultados del proyecto';
+    let errorMessage = 'Error al obtener resultados del proyecto';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
     throw new Error(errorMessage);
   }
 
@@ -124,8 +149,13 @@ export async function getProjectProgress(projectId: number): Promise<ProjectProg
   const response = await fetch(`/api/entry-data/projects/${projectId}/progress`);
 
   if (!response.ok) {
-    const error = await response.json();
-    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al obtener progreso del proyecto';
+    let errorMessage = 'Error al obtener progreso del proyecto';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
     throw new Error(errorMessage);
   }
 
@@ -149,8 +179,13 @@ export async function getEvaluationStatus(evaluationId: number): Promise<Evaluat
   const response = await fetch(`/api/entry-data/evaluations/${evaluationId}/status`);
 
   if (!response.ok) {
-    const error = await response.json();
-    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al obtener estado de evaluación';
+    let errorMessage = 'Error al obtener estado de evaluación';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
     throw new Error(errorMessage);
   }
 
