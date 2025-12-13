@@ -222,7 +222,7 @@ describe('ParameterizationService', () => {
       expect(criterionRepo.find).toHaveBeenCalledWith({
         where: expect.any(Object),
         order: { name: 'ASC' },
-        relations: ['sub_criteria'],
+        relations: ['sub_criteria', 'sub_criteria.metrics', 'sub_criteria.metrics.variables'],
         skip: 0,
         take: 10,
       });
