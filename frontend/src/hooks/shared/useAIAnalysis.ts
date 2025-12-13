@@ -17,12 +17,11 @@ export function useAIAnalysis() {
       
       return result;
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      const errorMessage = error.response?.data?.message || 
-                          error.message ||
+      const apiError = err as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = apiError.response?.data?.message || 
+                          apiError.message ||
                           'Error al generar análisis con IA. Por favor intenta de nuevo.';
       setError(errorMessage);
-      console.error('Error generating AI analysis:', err);
       throw new Error(errorMessage);
     } finally {
       setLoading(false);

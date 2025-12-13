@@ -207,7 +207,7 @@ export default function EvaluationDetailPage() {
             <div className="export-section">
               <button 
                 className="export-pdf-btn"
-                onClick={handleExportPDF}
+                onClick={() => { handleExportPDF().catch(() => {}); }}
                 disabled={isExporting}
               >
                 {isExporting ? (

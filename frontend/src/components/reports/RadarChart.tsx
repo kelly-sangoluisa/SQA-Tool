@@ -31,11 +31,13 @@ export function RadarChart({ report }: Props) {
     });
   };
 
-  // Datos para radar chart
-  const radarData = selectedCriteriaForRadar.map(idx => ({
-    name: report.criteria_results[idx].criterion_name,
-    score: report.criteria_results[idx].final_score
-  }));
+  // Datos para radar chart - filter out invalid indices
+  const radarData = selectedCriteriaForRadar
+    .filter(idx => idx >= 0 && idx < report.criteria_results.length)
+    .map(idx => ({
+      name: report.criteria_results[idx].criterion_name,
+      score: report.criteria_results[idx].final_score
+    }));
 
   // Calcular puntos del polígono para SVG
   const calculateRadarPoints = () => {
