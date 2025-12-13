@@ -1,7 +1,5 @@
 "use client";
 import { useAuth } from '../../hooks/auth/useAuth';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import styles from './DashboardLayout.module.css';
 
 interface DashboardLayoutProps {
@@ -9,22 +7,7 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
-  const { user, signOut } = useAuth();
-  const router = useRouter();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const handleSignOut = async () => {
-    try {
-      setIsLoggingOut(true);
-      await signOut();
-      router.push('/auth/login');
-    } catch (error) {
-      console.error('Error durante el logout:', error);
-      router.replace('/auth/login');
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
+  const { user } = useAuth();
 
   const getUserInitials = (name: string) => {
     if (!name) return 'U';
@@ -105,14 +88,6 @@ export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
                   </span>
                 </div>
               </div>
-
-              <button
-                onClick={handleSignOut}
-                disabled={isLoggingOut}
-                className={styles.logoutBtn}
-              >
-                {isLoggingOut ? 'Cerrando...' : 'Cerrar sesión'}
-              </button>
             </div>
           </div>
         </div>

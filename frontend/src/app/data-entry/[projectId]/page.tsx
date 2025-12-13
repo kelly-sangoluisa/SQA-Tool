@@ -532,8 +532,8 @@ export default function DataEntryProjectPage() {
         // Limpiar localStorage
         localStorage.removeItem(`data-entry-project-${projectId}`);
         
-        // Navegar a resultados
-        router.push(`/results/${projectId}`);
+        // Navegar a resultados del proyecto
+        router.push(`/results/project/${projectId}/report`);
       } else {
         // Solo finalizar evaluación
         await finalizeEvaluation(currentEvaluationForModal.id);
