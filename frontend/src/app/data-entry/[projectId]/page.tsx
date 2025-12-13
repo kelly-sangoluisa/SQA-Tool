@@ -94,6 +94,7 @@ export default function DataEntryProjectPage() {
   const router = useRouter();
   const { isLoading, isAuthenticated, user } = useAuth();
   const projectId = parseInt(params.projectId as string, 10);
+  const isValidProjectId = !isNaN(projectId) && projectId > 0;
 
   // Estados principales
   const [project, setProject] = useState<Project | null>(null);
@@ -130,7 +131,13 @@ export default function DataEntryProjectPage() {
 
   // Cargar datos del proyecto
   useEffect(() => {
-    if (!isAuthenticated || !projectId) return;
+    if (!isAuthenticated || !isValidProjectId) {
+      if (isAuthenticated && !isValidProjectId) {
+        setError('ID de proyecto inválido');
+        setLoading(false);
+      }
+      return;
+    }
 
     const loadProjectData = async () => {
       try {
@@ -144,8 +151,7 @@ export default function DataEntryProjectPage() {
         let projectData;
         try {
           projectData = await projectResponse.json();
-        } catch (e) {
-          console.error('Failed to parse project data:', e);
+        } catch {
           throw new Error('Respuesta inválida del servidor');
         }
         setProject(projectData);
@@ -320,8 +326,7 @@ export default function DataEntryProjectPage() {
           try {
             const progressData = await progressResponse.json();
             setProjectProgress(progressData);
-          } catch (e) {
-            console.error('Failed to parse progress data:', e);
+          } catch {
             // Continue without progress data or let it fail? 
             // If we don't throw, the page loads but progress is missing.
             // If we throw, the page shows error.
@@ -359,15 +364,16 @@ export default function DataEntryProjectPage() {
         setAllMetrics(metrics);
         
       } catch (error) {
-        console.error('Error al cargar datos del proyecto:', error);
         setError(error instanceof Error ? error.message : 'Error desconocido');
       } finally {
         setLoading(false);
       }
     };
 
-    loadProjectData().catch(err => console.error('Unexpected error in loadProjectData:', err));
-  }, [isAuthenticated, projectId]);
+    loadProjectData().catch(() => {
+      // Error handled in loadProjectData
+    });
+  }, [isAuthenticated, projectId, isValidProjectId]);
 
   // Función para manejar selección de métrica desde el sidebar
   const handleMetricSelect = (evaluationIndex: number, metricGlobalIndex: number) => {
@@ -395,8 +401,8 @@ export default function DataEntryProjectPage() {
     if (stored) {
       try {
         setVariableValues(JSON.parse(stored));
-      } catch (error) {
-        console.error('Error al cargar valores guardados:', error);
+      } catch {
+        // Error parsing stored values, start fresh
       }
     }
   }, [projectId]);
@@ -555,8 +561,7 @@ export default function DataEntryProjectPage() {
         
         setIsModalOpen(false);
       }
-    } catch (error) {
-      console.error('Error al finalizar:', error);
+    } catch {
       alert('Error al finalizar. Por favor intenta de nuevo.');
     } finally {
       setModalLoading(false);

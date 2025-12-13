@@ -10,6 +10,7 @@ export default function ProjectEvaluationsPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = Number(params.projectId);
+  const isValidProjectId = !isNaN(projectId) && projectId > 0;
 
   const [evaluations, setEvaluations] = useState<EvaluationListItem[]>([]);
   const [projectReport, setProjectReport] = useState<ProjectReport | null>(null);
@@ -18,10 +19,15 @@ export default function ProjectEvaluationsPage() {
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
 
   useEffect(() => {
-    loadEvaluations().catch(err => {
-      console.error('Failed to load evaluations:', err);
+    if (!isValidProjectId) {
+      setError('ID de proyecto inválido');
+      setLoading(false);
+      return;
+    }
+    loadEvaluations().catch(() => {
+      // Error handled in loadEvaluations
     });
-  }, [projectId]);
+  }, [projectId, isValidProjectId]);
 
   const loadEvaluations = async () => {
     try {
@@ -37,9 +43,8 @@ export default function ProjectEvaluationsPage() {
       } catch (reportErr) {
         // Proyecto aún no completado o sin resultados
       }
-    } catch (err) {
+    } catch {
       setError('Error al cargar las evaluaciones del proyecto.');
-      console.error('Error loading evaluations:', err);
     } finally {
       setLoading(false);
     }

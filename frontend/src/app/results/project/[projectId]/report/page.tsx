@@ -23,6 +23,7 @@ export default function ProjectReportPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = Number(params.projectId);
+  const isValidProjectId = !isNaN(projectId) && projectId > 0;
 
   const [report, setReport] = useState<ProjectReport | null>(null);
   const [stats, setStats] = useState<ProjectStats | null>(null);
@@ -44,12 +45,15 @@ export default function ProjectReportPage() {
   const { analysis, loading: aiLoading, error: aiError, analyzeProject, clearAnalysis } = useAIAnalysis();
 
   useEffect(() => {
-    if (projectId) {
-      loadData().catch(err => {
-        console.error('Failed to load data:', err);
-      });
+    if (!isValidProjectId) {
+      setError('ID de proyecto inválido');
+      setLoading(false);
+      return;
     }
-  }, [projectId]);
+    loadData().catch(() => {
+      // Error handled in loadData
+    });
+  }, [projectId, isValidProjectId]);
 
   const loadData = async () => {
     try {
@@ -65,7 +69,6 @@ export default function ProjectReportPage() {
       setStats(statsData);
     } catch (err) {
       setError('Error al cargar los resultados del proyecto. Por favor intenta de nuevo.');
-      console.error('Error loading data:', err);
     } finally {
       setLoading(false);
     }
@@ -83,8 +86,7 @@ export default function ProjectReportPage() {
         aiAnalysis: analysis,
         selectedAISections: selectedSections
       });
-    } catch (error) {
-      console.error('Error generando PDF:', error);
+    } catch {
       alert('Error al generar el PDF. Por favor intente nuevamente.');
     } finally {
       setIsExporting(false);
