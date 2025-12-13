@@ -145,19 +145,21 @@ export default function ProjectEvaluationsPage() {
       )}
 
       <div className="page-header">
-        <Breadcrumbs 
-          items={[
-            { label: 'Dashboard', onClick: () => router.push('/dashboard') },
-            { label: 'Proyectos', onClick: () => router.push('/results') },
-            { label: projectName, isActive: true }
-          ]}
-        />
-        
-        <div className="header-content">
-          <h1 className="page-title">{projectName}</h1>
-          <p className="page-subtitle">
-            Visualiza y analiza los resultados de las evaluaciones de calidad
-          </p>
+        <div className="header-left">
+          <Breadcrumbs 
+            items={[
+              { label: 'Dashboard', onClick: () => router.push('/dashboard') },
+              { label: 'Proyectos', onClick: () => router.push('/results') },
+              { label: projectName, isActive: true }
+            ]}
+          />
+          
+          <div className="header-content">
+            <h1 className="page-title">{projectName}</h1>
+            <p className="page-subtitle">
+              Visualiza y analiza los resultados de las evaluaciones de calidad
+            </p>
+          </div>
         </div>
 
         <div className="stats-summary">
@@ -250,8 +252,8 @@ export default function ProjectEvaluationsPage() {
 
         .project-results-widget {
           position: fixed;
-          top: 2rem;
-          right: 2rem;
+          top: 6rem;
+          right: 3rem;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -371,7 +373,16 @@ export default function ProjectEvaluationsPage() {
         .page-header {
           max-width: 1200px;
           margin: 0 auto 3rem;
-          padding-right: 200px;
+          padding-right: 180px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 3rem;
+        }
+
+        .header-left {
+          flex: 1;
+          min-width: 0;
         }
 
         .back-button {

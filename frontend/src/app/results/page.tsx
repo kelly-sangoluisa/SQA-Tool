@@ -146,18 +146,20 @@ export default function ResultsPage() {
   return (
     <div className="results-page">
       <div className="page-header">
-        <Breadcrumbs 
-          items={[
-            { label: 'Dashboard', onClick: () => router.push('/dashboard') },
-            { label: 'Proyectos', isActive: true }
-          ]}
-        />
+        <div className="header-left">
+          <Breadcrumbs 
+            items={[
+              { label: 'Dashboard', onClick: () => router.push('/dashboard') },
+              { label: 'Proyectos', isActive: true }
+            ]}
+          />
 
-        <div className="header-content">
-          <h1 className="page-title">Resultados de Proyectos</h1>
-          <p className="page-subtitle">
-            Visualiza y analiza los resultados de todos tus proyectos de calidad de software
-          </p>
+          <div className="header-content">
+            <h1 className="page-title">Resultados de Proyectos</h1>
+            <p className="page-subtitle">
+              Visualiza y analiza los resultados de todos tus proyectos de calidad de software
+            </p>
+          </div>
         </div>
 
         <div className="stats-summary">
@@ -258,6 +260,15 @@ export default function ResultsPage() {
         .page-header {
           max-width: 1200px;
           margin: 0 auto 3rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 4rem;
+        }
+
+        .header-left {
+          flex: 1;
+          min-width: 0;
         }
 
         .back-button {
