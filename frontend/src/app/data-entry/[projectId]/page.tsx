@@ -140,7 +140,14 @@ export default function DataEntryProjectPage() {
         // Cargar proyecto
         const projectResponse = await fetch(`/api/config-evaluation/projects/${projectId}`);
         if (!projectResponse.ok) throw new Error('Error al cargar proyecto');
-        const projectData = await projectResponse.json();
+        
+        let projectData;
+        try {
+          projectData = await projectResponse.json();
+        } catch (e) {
+          console.error('Failed to parse project data:', e);
+          throw new Error('Respuesta inválida del servidor');
+        }
         setProject(projectData);
 
         // **DATOS MOCK TEMPORALES** - Reemplazar cuando backend esté listo
@@ -307,14 +314,20 @@ export default function DataEntryProjectPage() {
 
         setEvaluations(mockEvaluationsWithMetrics);
         
-        // Debug: log de las evaluaciones mock
-        console.log('🔍 [DataEntry] Evaluaciones MOCK cargadas:', mockEvaluationsWithMetrics);
-
         // Cargar progreso del proyecto (puede usar datos reales o mock)
         const progressResponse = await fetch(`/api/entry-data/projects/${projectId}/progress`);
         if (progressResponse.ok) {
-          const progressData = await progressResponse.json();
-          setProjectProgress(progressData);
+          try {
+            const progressData = await progressResponse.json();
+            setProjectProgress(progressData);
+          } catch (e) {
+            console.error('Failed to parse progress data:', e);
+            // Continue without progress data or let it fail? 
+            // If we don't throw, the page loads but progress is missing.
+            // If we throw, the page shows error.
+            // Let's throw to be consistent with projectData.
+            throw new Error('Error al procesar datos de progreso');
+          }
         } else {
           // Progreso mock si no existe el endpoint
           const mockProgress = {
@@ -345,9 +358,6 @@ export default function DataEntryProjectPage() {
         
         setAllMetrics(metrics);
         
-        // Debug: log de métricas extraídas
-        console.log('🔍 [DataEntry] Métricas MOCK extraídas:', metrics);
-
       } catch (error) {
         console.error('Error al cargar datos del proyecto:', error);
         setError(error instanceof Error ? error.message : 'Error desconocido');
@@ -356,7 +366,7 @@ export default function DataEntryProjectPage() {
       }
     };
 
-    loadProjectData();
+    loadProjectData().catch(err => console.error('Unexpected error in loadProjectData:', err));
   }, [isAuthenticated, projectId]);
 
   // Función para manejar selección de métrica desde el sidebar

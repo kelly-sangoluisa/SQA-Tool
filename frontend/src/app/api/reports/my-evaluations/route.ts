@@ -25,7 +25,14 @@ export async function GET() {
       throw new Error(`Error del backend: ${response.status}`);
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      console.error('Failed to parse backend response', e);
+      throw new Error('Invalid JSON response from backend');
+    }
+
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching my evaluations:', error);

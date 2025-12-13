@@ -80,7 +80,7 @@ export function DashboardHome() {
         if (mounted) setLoading(false);
       }
     };
-    load();
+    load().catch(err => console.error('Failed to load dashboard data:', err));
     return () => {
       mounted = false;
     };

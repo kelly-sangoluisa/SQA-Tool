@@ -74,7 +74,7 @@ export class ApiClient {
         throw new Error(errorMessage);
       }
 
-      return response.json();
+      return await response.json();
     } catch (error) {
       // Filtrar errores de autenticación para no mostrarlos en consola
       const isAuthError = error instanceof Error && 
