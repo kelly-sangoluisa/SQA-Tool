@@ -145,10 +145,6 @@ export default function ProjectEvaluationsPage() {
       )}
 
       <div className="page-header">
-        <button onClick={() => router.back()} className="back-button">
-          ← Volver
-        </button>
-        
         <Breadcrumbs 
           items={[
             { label: 'Dashboard', onClick: () => router.push('/dashboard') },
@@ -375,11 +371,6 @@ export default function ProjectEvaluationsPage() {
         .page-header {
           max-width: 1200px;
           margin: 0 auto 3rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 2rem;
           padding-right: 200px;
         }
 
@@ -406,6 +397,7 @@ export default function ProjectEvaluationsPage() {
         .header-content {
           flex: 1;
           min-width: 300px;
+          margin-bottom: 2rem;
         }
 
         .page-title {

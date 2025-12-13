@@ -146,13 +146,6 @@ export default function ResultsPage() {
   return (
     <div className="results-page">
       <div className="page-header">
-        <button onClick={() => router.push('/dashboard')} className="back-button">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Volver al Dashboard
-        </button>
-
         <Breadcrumbs 
           items={[
             { label: 'Dashboard', onClick: () => router.push('/dashboard') },
@@ -165,20 +158,20 @@ export default function ResultsPage() {
           <p className="page-subtitle">
             Visualiza y analiza los resultados de todos tus proyectos de calidad de software
           </p>
+        </div>
 
-          <div className="stats-summary">
-            <div className="stat-chip stat-chip--total">
-              <span className="stat-number">{projects?.length || 0}</span>
-              <span className="stat-text">Total</span>
-            </div>
-            <div className="stat-chip stat-chip--approved">
-              <span className="stat-number">{approvedCount}</span>
-              <span className="stat-text">Aprobados</span>
-            </div>
-            <div className="stat-chip stat-chip--rejected">
-              <span className="stat-number">{rejectedCount}</span>
-              <span className="stat-text">No Aprobados</span>
-            </div>
+        <div className="stats-summary">
+          <div className="stat-chip stat-chip--total">
+            <span className="stat-number">{projects?.length || 0}</span>
+            <span className="stat-text">Total</span>
+          </div>
+          <div className="stat-chip stat-chip--approved">
+            <span className="stat-number">{approvedCount}</span>
+            <span className="stat-text">Aprobados</span>
+          </div>
+          <div className="stat-chip stat-chip--rejected">
+            <span className="stat-number">{rejectedCount}</span>
+            <span className="stat-text">No Aprobados</span>
           </div>
         </div>
       </div>
