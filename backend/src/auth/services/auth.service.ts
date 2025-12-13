@@ -32,7 +32,10 @@ export class AuthService {
   }
 
   private handleError(error: any, ExceptionType: any = BadRequestException) {
-    if (error) throw new ExceptionType(error.message);
+    if (error) {
+      const message = error?.message || String(error);
+      throw new ExceptionType(message);
+    }
   }
 
   constructor(
@@ -80,7 +83,7 @@ export class AuthService {
   async signIn(email: string, password: string): Promise<Tokens> {
     const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      const msg = (error.message || '').toLowerCase();
+      const msg = (error?.message || '').toLowerCase();
       if (msg.includes('email not confirmed')) {
         throw new UnauthorizedException('Email not confirmed');
       }
@@ -144,7 +147,8 @@ export class AuthService {
 
       if (error) {
         console.error('[Reset Password] Error en updateUserById:', error);
-        throw new BadRequestException(error.message || 'Failed to update password');
+        const errorMessage = error?.message || 'Failed to update password';
+        throw new BadRequestException(errorMessage);
       }
 
       console.log('[Reset Password] ✅ Contraseña actualizada exitosamente');

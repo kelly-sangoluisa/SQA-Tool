@@ -90,7 +90,7 @@ export class ApiClient {
         console.error('API Error:', error);
       }
       
-      throw error;
+      throw error instanceof Error ? error : new Error('API request failed');
     }
   }
 

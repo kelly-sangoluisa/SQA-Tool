@@ -21,8 +21,9 @@ export class FormulaEvaluationService {
       const expression = this.prepareExpression(formula, variables);
       return this.executeCalculation(expression);
     } catch (error) {
-      this.logger.error('Formula evaluation failed', { formula, variables, error: error.message });
-      throw new Error(`Formula evaluation failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error('Formula evaluation failed', { formula, variables, error: errorMessage });
+      throw new Error(`Formula evaluation failed: ${errorMessage}`);
     }
   }
 
@@ -112,7 +113,8 @@ export class FormulaEvaluationService {
 
       return Number(result.toFixed(4)); // Redondear a 4 decimales
     } catch (error) {
-      throw new Error(`Calculation error: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Calculation error: ${errorMessage}`);
     }
   }
 

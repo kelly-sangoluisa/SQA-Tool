@@ -81,7 +81,7 @@ export function CriteriaNavigation({
       await loadCriteria();
     } catch (error) {
       console.error('Error updating criterion state:', error);
-      throw error;
+      throw error instanceof Error ? error : new Error('Error updating criterion state');
     }
   };
 
