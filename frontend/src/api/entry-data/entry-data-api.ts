@@ -85,7 +85,11 @@ export async function getEvaluationCompleteResults(evaluationId: number): Promis
     throw new Error(errorMessage);
   }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch (err) {
+    throw new Error('Error al procesar respuesta del servidor');
+  }
 }
 
 /**
@@ -100,7 +104,11 @@ export async function getProjectCompleteResults(projectId: number): Promise<Comp
     throw new Error(errorMessage);
   }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch (err) {
+    throw new Error('Error al procesar respuesta del servidor');
+  }
 }
 
 interface ProjectProgress {
@@ -121,7 +129,11 @@ export async function getProjectProgress(projectId: number): Promise<ProjectProg
     throw new Error(errorMessage);
   }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch (err) {
+    throw new Error('Error al procesar respuesta del servidor');
+  }
 }
 
 interface EvaluationStatus {
@@ -142,5 +154,9 @@ export async function getEvaluationStatus(evaluationId: number): Promise<Evaluat
     throw new Error(errorMessage);
   }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch (err) {
+    throw new Error('Error al procesar respuesta del servidor');
+  }
 }
