@@ -88,7 +88,9 @@ export class ReportsController {
     this.logger.log('🎯 Controller: getAllEvaluations llamado');
     const result = await this.reportsService.getAllEvaluations();
     this.logger.log(`🎯 Controller: Devolviendo ${result.length} evaluaciones al cliente`);
-    this.logger.log(`🎯 Controller: Primer elemento: ${JSON.stringify(result[0])}`);
+    if (result.length > 0) {
+      this.logger.log(`🎯 Controller: Primer elemento: ${JSON.stringify(result[0])}`);
+    }
     return result;
   }
 

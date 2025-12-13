@@ -126,7 +126,7 @@ export class AuthService {
       const jwt = require('jsonwebtoken');
       const payload = jwt.verify(accessToken, secret, { algorithms: ['HS256'] }) as any;
       
-      console.log('[Reset Password] Token verificado, user_id:', payload.sub);
+      // Token verificado, user_id:
       
       // Verificar que sea un token de tipo recovery
       if (payload.aud !== 'authenticated') {
@@ -139,21 +139,15 @@ export class AuthService {
         { password: newPassword }
       );
 
-      console.log('[Reset Password] Resultado de updateUserById:', {
-        hasData: !!data,
-        hasError: !!error,
-        errorMessage: error?.message
-      });
-
       if (error) {
         console.error('[Reset Password] Error en updateUserById:', error);
         const errorMessage = error?.message || 'Failed to update password';
         throw new BadRequestException(errorMessage);
       }
 
-      console.log('[Reset Password] ✅ Contraseña actualizada exitosamente');
+      // Contraseña actualizada exitosamente
     } catch (err: any) {
-      if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      if (err && typeof err === 'object' && 'name' in err && (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError')) {
         throw new BadRequestException('Invalid or expired recovery token');
       }
       const errorMessage = err instanceof Error ? err.message : String(err);
