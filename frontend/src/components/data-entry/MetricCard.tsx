@@ -3,8 +3,11 @@ import { Button } from '@/components/shared/Button';
 import styles from './MetricCard.module.css';
 
 interface Variable {
+  id?: number;
+  metric_id?: number;
   symbol: string;
   description: string;
+  state?: string;
 }
 
 interface MetricCardProps {
@@ -17,8 +20,12 @@ interface MetricCardProps {
   onValueChange?: (variableSymbol: string, value: string) => void;
   onPrevious?: () => void;
   onNext?: () => void;
+  onFinishEvaluation?: () => void;
+  onFinishProject?: () => void;
   isFirstMetric?: boolean;
   isLastMetric?: boolean;
+  isLastEvaluation?: boolean;
+  allVariablesFilled?: boolean;
 }
 
 export function MetricCard({ 
@@ -31,12 +38,41 @@ export function MetricCard({
   onValueChange,
   onPrevious,
   onNext,
+  onFinishEvaluation,
+  onFinishProject,
   isFirstMetric = false,
-  isLastMetric = false
+  isLastMetric = false,
+  isLastEvaluation = false,
+  allVariablesFilled = false
 }: Readonly<MetricCardProps>) {
 
   const handleInputChange = (variableSymbol: string, value: string) => {
     onValueChange?.(variableSymbol, value);
+  };
+
+  // Determinar qué acción tomar con el botón principal
+  const handlePrimaryAction = () => {
+    if (isLastMetric && isLastEvaluation && allVariablesFilled) {
+      // Última métrica de la última evaluación → Terminar Proyecto
+      onFinishProject?.();
+    } else if (isLastMetric && allVariablesFilled) {
+      // Última métrica de una evaluación → Terminar Evaluación
+      onFinishEvaluation?.();
+    } else {
+      // Métrica normal → Siguiente
+      onNext?.();
+    }
+  };
+
+  // Determinar el texto del botón
+  const getPrimaryButtonText = () => {
+    if (isLastMetric && isLastEvaluation && allVariablesFilled) {
+      return 'TERMINAR PROYECTO';
+    } else if (isLastMetric && allVariablesFilled) {
+      return 'TERMINAR EVALUACIÓN';
+    } else {
+      return 'SIGUIENTE';
+    }
   };
 
   return (
@@ -107,9 +143,10 @@ export function MetricCard({
         <Button 
           variant="primary" 
           size="lg"
-          onClick={onNext}
+          onClick={handlePrimaryAction}
+          disabled={!allVariablesFilled && isLastMetric}
         >
-          {isLastMetric ? 'TERMINAR EVALUACIÓN' : 'SIGUIENTE'}
+          {getPrimaryButtonText()}
         </Button>
       </div>
     </div>

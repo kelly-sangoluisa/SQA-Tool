@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/auth/useAuth';
 import '@/styles/data-entry/data-entry.css';
-import { EvaluationSidebar } from '@/components/data-entry/EvaluationSidebar';
+import { DataEntryHierarchy } from '@/components/data-entry/DataEntryHierarchy';
+import { MetricCard } from '@/components/data-entry/MetricCard';
+import { EvaluationCompleteModal } from '@/components/data-entry/EvaluationCompleteModal';
+import { submitEvaluationData, finalizeEvaluation, finalizeProject } from '@/api/entry-data/entry-data-api';
 
 // Interfaces de tipos
 interface Variable {
@@ -100,10 +103,16 @@ export default function DataEntryProjectPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Estados para navegación
-  const [currentEvaluationIndex, setCurrentEvaluationIndex] = useState(0);
   const [currentMetricIndex, setCurrentMetricIndex] = useState(0);
   const [allMetrics, setAllMetrics] = useState<Metric[]>([]);
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+
+  // Estados para modal de finalización
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [currentEvaluationForModal, setCurrentEvaluationForModal] = useState<Evaluation | null>(null);
+  const [isFinalizingProject, setIsFinalizingProject] = useState(false);
+  const [finalizedEvaluations, setFinalizedEvaluations] = useState<Set<number>>(new Set());
 
   // Verificar autenticación y permisos
   useEffect(() => {
@@ -352,7 +361,6 @@ export default function DataEntryProjectPage() {
 
   // Función para manejar selección de métrica desde el sidebar
   const handleMetricSelect = (evaluationIndex: number, metricGlobalIndex: number) => {
-    setCurrentEvaluationIndex(evaluationIndex);
     setCurrentMetricIndex(metricGlobalIndex);
   };
 
@@ -363,6 +371,182 @@ export default function DataEntryProjectPage() {
       ...prev,
       [key]: value
     }));
+    
+    // Guardar en localStorage
+    const storageKey = `data-entry-project-${projectId}`;
+    const updatedValues = { ...variableValues, [key]: value };
+    localStorage.setItem(storageKey, JSON.stringify(updatedValues));
+  };
+
+  // Cargar valores desde localStorage
+  useEffect(() => {
+    const storageKey = `data-entry-project-${projectId}`;
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      try {
+        setVariableValues(JSON.parse(stored));
+      } catch (error) {
+        console.error('Error al cargar valores guardados:', error);
+      }
+    }
+  }, [projectId]);
+
+  // Función para verificar si todas las variables de la métrica actual están llenas
+  const areCurrentMetricVariablesFilled = (): boolean => {
+    if (!currentMetric || !currentMetric.variables) return false;
+    
+    return currentMetric.variables.every(variable => {
+      const key = `metric-${currentMetric.id}-${variable.symbol}`;
+      const value = variableValues[key];
+      return value !== undefined && value !== null && value !== '';
+    });
+  };
+
+  // Función para obtener la evaluación actual basada en la métrica actual
+  const getCurrentEvaluation = (): Evaluation | null => {
+    if (!currentMetric) return null;
+    
+    for (const evaluation of evaluations) {
+      for (const ec of evaluation.evaluation_criteria) {
+        if (ec.criterion.subcriteria) {
+          for (const sc of ec.criterion.subcriteria) {
+            if (sc.metrics?.some(m => m.id === currentMetric.id)) {
+              return evaluation;
+            }
+          }
+        }
+      }
+    }
+    return null;
+  };
+
+  // Función para verificar si es la última métrica de una evaluación
+  const isLastMetricOfEvaluation = (): boolean => {
+    const currentEval = getCurrentEvaluation();
+    if (!currentEval) return false;
+
+    const evalMetrics = allMetrics.filter(metric => {
+      return currentEval.evaluation_criteria.some(ec =>
+        ec.criterion.subcriteria?.some(sc =>
+          sc.metrics?.some(m => m.id === metric.id)
+        )
+      );
+    });
+
+    const lastMetricOfEval = evalMetrics[evalMetrics.length - 1];
+    return currentMetric?.id === lastMetricOfEval?.id;
+  };
+
+  // Función para verificar si es la última evaluación del proyecto
+  const isLastEvaluationOfProject = (): boolean => {
+    const currentEval = getCurrentEvaluation();
+    if (!currentEval) return false;
+    return currentEval.id === evaluations[evaluations.length - 1]?.id;
+  };
+
+  // Handler para terminar evaluación
+  const handleFinishEvaluation = () => {
+    const currentEval = getCurrentEvaluation();
+    if (!currentEval) return;
+
+    setCurrentEvaluationForModal(currentEval);
+    setIsFinalizingProject(false);
+    setIsModalOpen(true);
+  };
+
+  // Handler para terminar proyecto
+  const handleFinishProject = () => {
+    const currentEval = getCurrentEvaluation();
+    if (!currentEval) return;
+
+    setCurrentEvaluationForModal(currentEval);
+    setIsFinalizingProject(true);
+    setIsModalOpen(true);
+  };
+
+  // Handler para confirmar finalización desde el modal
+  const handleModalConfirm = async () => {
+    if (!currentEvaluationForModal) return;
+
+    try {
+      setModalLoading(true);
+
+      // Preparar datos de variables para enviar
+      const variablesToSubmit = Object.entries(variableValues)
+        .filter(([key]) => key.startsWith('metric-'))
+        .map(([key, value]) => {
+          const parts = key.split('-');
+          const metricId = parseInt(parts[1]);
+          const symbol = parts[2];
+          
+          // Buscar la variable para obtener su ID
+          let variableId = 0;
+          for (const metric of allMetrics) {
+            if (metric.id === metricId && metric.variables) {
+              const variable = metric.variables.find(v => v.symbol === symbol);
+              if (variable) {
+                variableId = variable.id;
+                break;
+              }
+            }
+          }
+          
+          return {
+            metric_id: metricId,
+            variable_id: variableId,
+            symbol,
+            value: value.toString()
+          };
+        });
+
+      // Primero enviar los datos
+      await submitEvaluationData(currentEvaluationForModal.id, variablesToSubmit);
+
+      if (isFinalizingProject) {
+        // Finalizar proyecto completo
+        await finalizeProject(projectId);
+        
+        // Marcar evaluación actual como finalizada
+        setFinalizedEvaluations(prev => new Set([...prev, currentEvaluationForModal.id]));
+        
+        // Limpiar localStorage
+        localStorage.removeItem(`data-entry-project-${projectId}`);
+        
+        // Navegar a resultados
+        router.push(`/results/${projectId}`);
+      } else {
+        // Solo finalizar evaluación
+        await finalizeEvaluation(currentEvaluationForModal.id);
+        
+        // Marcar evaluación como finalizada DESPUÉS de confirmar en backend
+        setFinalizedEvaluations(prev => new Set([...prev, currentEvaluationForModal.id]));
+        
+        // Avanzar a la siguiente evaluación si existe
+        const currentEvalIndex = evaluations.findIndex(e => e.id === currentEvaluationForModal.id);
+        if (currentEvalIndex < evaluations.length - 1) {
+          // Encontrar la primera métrica de la siguiente evaluación
+          const nextEval = evaluations[currentEvalIndex + 1];
+          const nextMetricIndex = allMetrics.findIndex(metric => 
+            nextEval.evaluation_criteria.some(ec =>
+              ec.criterion.subcriteria?.some(sc =>
+                sc.metrics?.some(m => m.id === metric.id)
+              )
+            )
+          );
+          
+          if (nextMetricIndex !== -1) {
+            setCurrentMetricIndex(nextMetricIndex);
+          }
+        }
+        
+        setIsModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Error al finalizar:', error);
+      alert('Error al finalizar. Por favor intenta de nuevo.');
+    } finally {
+      setModalLoading(false);
+    }
   };
 
   // Estados de carga y error
@@ -405,193 +589,92 @@ export default function DataEntryProjectPage() {
     );
   }
 
+  const currentMetric = allMetrics[currentMetricIndex];
+
   return (
-    <div className="data-entry">
-      <div className="content">
-        {/* Header con información del proyecto */}
-        <div className="header">
-          <div className="header-content">
-            <div className="project-info">
-              <h1>{project.name}</h1>
-              <p>{project.description || 'Proyecto de evaluación de calidad'}</p>
-            </div>
-          </div>
+    <div className="enterDataLayout">
+      {/* Contenido principal en grid */}
+      <div className="mainContent">
+        {/* Sidebar izquierdo con wrapper */}
+        <div className="sidebarWrapper">
+          <DataEntryHierarchy
+            evaluations={evaluations}
+            currentMetricIndex={currentMetricIndex}
+            allMetrics={allMetrics}
+            variableValues={variableValues}
+            onMetricSelect={handleMetricSelect}
+            finalizedEvaluations={finalizedEvaluations}
+          />
         </div>
 
-        {/* Progress Bar */}
-        {projectProgress && (
-          <div className="progress-section">
-            <div className="progress-info">
-              <h3>Progreso del Proyecto</h3>
-              <div className="progress-stats">
-                <div className="stat">
-                  <span className="stat-value">{projectProgress.completed_evaluations}</span>
-                  <span className="stat-label">de {projectProgress.total_evaluations} evaluaciones</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-value">{projectProgress.completed_metrics}</span>
-                  <span className="stat-label">de {projectProgress.total_metrics} métricas</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-value">{projectProgress.overall_progress_percentage}%</span>
-                  <span className="stat-label">completado</span>
-                </div>
-              </div>
-            </div>
-            <div className="progress-bar">
-              <div 
-                className="progress-fill"
-                style={{ 
-                  width: `${projectProgress.overall_progress_percentage}%` 
-                }}
-              ></div>
-            </div>
-          </div>
-        )}
-
-        {/* Contenido principal */}
-        <div className="main-content">
-          <div className="sidebar-section">
-            <EvaluationSidebar
-              evaluations={evaluations}
-              currentMetricIndex={currentMetricIndex}
-              allMetrics={allMetrics}
-              variableValues={variableValues}
-              onMetricSelect={handleMetricSelect}
-            />
-          </div>
-
-          <div className="form-section">
-            {allMetrics.length > 0 && currentMetricIndex < allMetrics.length ? (
-              <MetricForm
-                metric={allMetrics[currentMetricIndex]}
-                values={variableValues}
-                onVariableUpdate={handleVariableUpdate}
-                evaluationIndex={currentEvaluationIndex}
-                metricIndex={currentMetricIndex}
-                totalMetrics={allMetrics.length}
-                onNext={() => {
-                  if (currentMetricIndex < allMetrics.length - 1) {
-                    setCurrentMetricIndex(currentMetricIndex + 1);
-                  }
+        {/* Contenido central */}
+        <div className="content">          
+          <div className="metricContainer">
+            {currentMetric ? (
+              <MetricCard
+                number={currentMetricIndex + 1}
+                name={currentMetric.name}
+                description={currentMetric.description}
+                formula={currentMetric.formula}
+                variables={currentMetric.variables || []}
+                values={Object.fromEntries(
+                  Object.entries(variableValues)
+                    .filter(([key]) => key.startsWith(`metric-${currentMetric.id}-`))
+                    .map(([key, value]) => [key.split('-')[2], value])
+                )}
+                onValueChange={(symbol, value) => {
+                  handleVariableUpdate(currentMetric.id, symbol, value);
                 }}
                 onPrevious={() => {
                   if (currentMetricIndex > 0) {
                     setCurrentMetricIndex(currentMetricIndex - 1);
                   }
                 }}
-                isFirst={currentMetricIndex === 0}
-                isLast={currentMetricIndex === allMetrics.length - 1}
+                onNext={() => {
+                  if (currentMetricIndex < allMetrics.length - 1) {
+                    setCurrentMetricIndex(currentMetricIndex + 1);
+                  }
+                }}
+                onFinishEvaluation={handleFinishEvaluation}
+                onFinishProject={handleFinishProject}
+                isFirstMetric={currentMetricIndex === 0}
+                isLastMetric={isLastMetricOfEvaluation()}
+                isLastEvaluation={isLastEvaluationOfProject()}
+                allVariablesFilled={areCurrentMetricVariablesFilled()}
               />
             ) : (
-              <div className="empty-state">
+              <div className="emptyState">
                 <h3>No hay métricas disponibles</h3>
-                <p>
-                  {evaluations.length > 0 ? 
-                    "Las evaluaciones de este proyecto no tienen métricas configuradas. Es necesario configurar subcriteria y métricas en el módulo de parametrización." :
-                    "Este proyecto no tiene evaluaciones configuradas."
-                  }
-                </p>
-                <button onClick={() => router.push('/dashboard')}>
-                  Volver al Dashboard
-                </button>
+                <p>Selecciona una métrica del sidebar para comenzar</p>
               </div>
             )}
           </div>
         </div>
       </div>
-    </div>
-  );
-}
 
-// Componente MetricForm simple
-interface MetricFormProps {
-  metric: Metric;
-  values: Record<string, string>;
-  onVariableUpdate: (metricId: number, variableSymbol: string, value: string) => void;
-  evaluationIndex: number;
-  metricIndex: number;
-  totalMetrics: number;
-  onNext: () => void;
-  onPrevious: () => void;
-  isFirst: boolean;
-  isLast: boolean;
-}
-
-function MetricForm({
-  metric,
-  values,
-  onVariableUpdate,
-  evaluationIndex: _evaluationIndex,
-  metricIndex,
-  totalMetrics,
-  onNext,
-  onPrevious,
-  isFirst,
-  isLast
-}: MetricFormProps) {
-  return (
-    <div className="metric-form">
-      <div className="metric-header">
-        <h2>Métrica {metricIndex + 1} de {totalMetrics}</h2>
-        <h3>{metric.name}</h3>
-        {metric.description && (
-          <p className="metric-description">{metric.description}</p>
-        )}
-        {metric.formula && (
-          <div className="metric-formula">
-            <strong>Fórmula:</strong> {metric.formula}
-          </div>
-        )}
-      </div>
-
-      <div className="variables-section">
-        <h4>Variables:</h4>
-        {metric.variables && metric.variables.length > 0 ? (
-          metric.variables.map((variable) => {
-            const key = `${metric.id}-${variable.symbol}`;
-            return (
-              <div key={variable.id} className="variable-input">
-                <label htmlFor={key}>
-                  <strong>{variable.symbol}:</strong> {variable.description}
-                </label>
-                <input
-                  id={key}
-                  type="number"
-                  step="0.01"
-                  value={values[key] || ''}
-                  onChange={(e) => onVariableUpdate(metric.id, variable.symbol, e.target.value)}
-                  placeholder={`Ingresa el valor para ${variable.symbol}`}
-                />
-              </div>
-            );
-          })
-        ) : (
-          <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280', fontSize: '0.875rem' }}>
-            Esta métrica no tiene variables configuradas.
-            <br />
-            <small>Puedes configurar las variables en el módulo de parametrización.</small>
-          </div>
-        )}
-      </div>
-
-      <div className="metric-navigation">
-        <button
-          onClick={onPrevious}
-          disabled={isFirst}
-          className="nav-button prev"
-        >
-          ← Anterior
-        </button>
-        
-        <button
-          onClick={onNext}
-          disabled={isLast}
-          className="nav-button next"
-        >
-          Siguiente →
-        </button>
-      </div>
+      {/* Modal de confirmación */}
+      {currentEvaluationForModal && (
+        <EvaluationCompleteModal
+          isOpen={isModalOpen}
+          evaluationName={currentEvaluationForModal.standard.name}
+          isLastEvaluation={isFinalizingProject}
+          completedMetrics={Object.keys(variableValues).filter(key => variableValues[key]).length}
+          totalMetrics={allMetrics.length}
+          variables={allMetrics.flatMap(metric => 
+            (metric.variables || []).map(v => {
+              const key = `metric-${metric.id}-${v.symbol}`;
+              return {
+                metric_name: metric.name,
+                variable_symbol: v.symbol,
+                variable_value: variableValues[key] || ''
+              };
+            }).filter(v => v.variable_value)
+          )}
+          onConfirm={handleModalConfirm}
+          onCancel={() => setIsModalOpen(false)}
+          loading={modalLoading}
+        />
+      )}
     </div>
   );
 }
