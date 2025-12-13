@@ -27,8 +27,8 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
       // Load all criteria including inactive ones
       const data = await parameterizationApi.getCriteriaByStandard(standard.id, { state: 'all' });
       setCriteria(data);
-    } catch (error) {
-      console.error('Error loading criteria:', error);
+    } catch {
+      // Error loading criteria - silently fail
     } finally {
       setLoading(false);
     }
@@ -41,13 +41,14 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
   //     const subCriteriaData = await parameterizationApi.getSubCriteriaByCriterion(criterionId, { state: 'all' });
   //     return subCriteriaData || [];
   //   } catch (error) {
-  //     console.error('Error loading subcriteria:', error);
   //     return [];
   //   }
   // };
 
   useEffect(() => {
-    loadCriteria();
+    loadCriteria().catch(() => {
+      // Error already handled in loadCriteria
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [standard.id]);
 
@@ -56,8 +57,7 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
     try {
       const data = await parameterizationApi.getMetricsBySubCriterion(subCriterionId, { state: 'all' });
       setMetrics(data);
-    } catch (error) {
-      console.error('Error loading metrics:', error);
+    } catch {
       setMetrics([]);
     } finally {
       setLoading(false);
@@ -140,20 +140,20 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
     );
   };
 
-  const handleCriterionEdit = (criterion: Criterion) => {
-    console.log('Editando criterio:', criterion.name);
+  const handleCriterionEdit = (_criterion: Criterion) => {
+    // Edit criterion - TODO: implement
   };
 
   const handleCriterionCreate = () => {
-    console.log('Creando nuevo criterio');
+    // Create new criterion - TODO: implement
   };
 
   const handleSubCriterionEdit = (criterion: Criterion, subCriterion: SubCriterion) => {
-    console.log('Editando subcriterio:', subCriterion.name, 'del criterio:', criterion.name);
+    // Edit subcriterion
   };
 
-  const handleSubCriterionCreate = (criterion: Criterion) => {
-    console.log('Creando nuevo subcriterio para criterio:', criterion.name);
+  const handleSubCriterionCreate = (_criterion: Criterion) => {
+    // Create new subcriterion - TODO: implement
   };
 
   const breadcrumbItems: BreadcrumbItem[] = [

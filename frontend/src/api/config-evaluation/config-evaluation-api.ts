@@ -169,7 +169,7 @@ export const configEvaluationApi = {
 
       return { project, evaluation, criteria };
     } catch (error) {
-      throw error;
+      throw error instanceof Error ? error : new Error('Error creating evaluation configuration');
     }
   },
 
@@ -208,7 +208,7 @@ export const configEvaluationApi = {
 
       return { evaluation, criteria };
     } catch (error) {
-      throw error;
+      throw error instanceof Error ? error : new Error('Error updating evaluation configuration');
     }
   },
 };

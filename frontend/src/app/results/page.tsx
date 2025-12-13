@@ -22,9 +22,8 @@ export default function ResultsPage() {
       setError(null);
       const data = await getMyProjects();
       setProjects(data);
-    } catch (err) {
+    } catch {
       setError('Error al cargar los proyectos. Por favor intenta de nuevo.');
-      console.error('Error loading projects:', err);
     } finally {
       setLoading(false);
     }
@@ -44,7 +43,9 @@ export default function ResultsPage() {
   );
 
   useEffect(() => {
-    loadProjects();
+    loadProjects().catch(() => {
+      // Error already handled in loadProjects
+    });
   }, []);
 
   useEffect(() => {

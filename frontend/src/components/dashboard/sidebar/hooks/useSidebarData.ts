@@ -17,8 +17,8 @@ export function useSidebarData(): UseSidebarDataReturn {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadRecentProjects();
-    loadRecentEvaluations();
+    loadRecentProjects().catch(err => console.error('Failed to load projects:', err));
+    loadRecentEvaluations().catch(err => console.error('Failed to load evaluations:', err));
   }, []);
 
   const loadRecentProjects = async () => {

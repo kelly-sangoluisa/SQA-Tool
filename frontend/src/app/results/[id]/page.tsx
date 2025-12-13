@@ -16,6 +16,7 @@ export default function EvaluationDetailPage() {
   const params = useParams();
   const router = useRouter();
   const evaluationId = Number(params.id);
+  const isValidEvaluationId = !Number.isNaN(evaluationId) && evaluationId > 0;
 
   const [report, setReport] = useState<EvaluationReport | null>(null);
   const [stats, setStats] = useState<EvaluationStats | null>(null);
@@ -27,10 +28,15 @@ export default function EvaluationDetailPage() {
   const [includeCertificate, setIncludeCertificate] = useState(true);
 
   useEffect(() => {
-    if (evaluationId) {
-      loadData();
+    if (!isValidEvaluationId) {
+      setError('ID de evaluación inválido');
+      setLoading(false);
+      return;
     }
-  }, [evaluationId]);
+    loadData().catch(() => {
+      // Error handled in loadData
+    });
+  }, [evaluationId, isValidEvaluationId]);
 
   const loadData = async () => {
     try {
@@ -44,9 +50,8 @@ export default function EvaluationDetailPage() {
       
       setReport(reportData);
       setStats(statsData);
-    } catch (err) {
+    } catch {
       setError('Error al cargar los resultados. Por favor intenta de nuevo.');
-      console.error('Error loading data:', err);
     } finally {
       setLoading(false);
     }
@@ -85,8 +90,7 @@ export default function EvaluationDetailPage() {
       }
       
       await generateEvaluationPDF({ report, stats, radarImageData, includeCertificate });
-    } catch (error) {
-      console.error('Error generando PDF:', error);
+    } catch {
       alert('Error al generar el PDF. Por favor intente nuevamente.');
     } finally {
       setIsExporting(false);
@@ -203,7 +207,7 @@ export default function EvaluationDetailPage() {
             <div className="export-section">
               <button 
                 className="export-pdf-btn"
-                onClick={handleExportPDF}
+                onClick={() => { handleExportPDF().catch(() => {}); }}
                 disabled={isExporting}
               >
                 {isExporting ? (

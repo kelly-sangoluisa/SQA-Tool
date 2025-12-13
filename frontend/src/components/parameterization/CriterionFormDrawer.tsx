@@ -63,8 +63,6 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
           description: formData.description.trim() || undefined,
           standard_id: standardId
         };
-        console.log('Creating criterion with data:', createData);
-        console.log('StandardId provided:', standardId);
         savedCriterion = await parameterizationApi.createCriterion(createData);
       }
       

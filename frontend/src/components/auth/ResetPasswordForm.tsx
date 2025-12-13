@@ -26,10 +26,8 @@ export function ResetPasswordForm() {
     
     if (token) {
       setAccessToken(token);
-      console.log('Token encontrado:', token.substring(0, 20) + '...');
     } else {
       setLocalError('Token de recuperación no válido o expirado');
-      console.error('No se encontró access_token en URL');
     }
   }, []);
 

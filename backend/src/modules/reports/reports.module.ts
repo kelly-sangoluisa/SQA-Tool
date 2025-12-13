@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ReportsController } from './controllers/reports.controller';
 import { ReportsService } from './services/reports.service';
+import { AIAnalysisService } from './services/ai-analysis.service';
 
 // Entities - importamos las entidades existentes
 import { Evaluation } from '../config-evaluation/entities/evaluation.entity';
@@ -39,7 +40,7 @@ import { User } from '../../users/entities/user.entity';
     ]),
   ],
   controllers: [ReportsController],
-  providers: [ReportsService],
-  exports: [ReportsService],
+  providers: [ReportsService, AIAnalysisService],
+  exports: [ReportsService, AIAnalysisService],
 })
 export class ReportsModule {}

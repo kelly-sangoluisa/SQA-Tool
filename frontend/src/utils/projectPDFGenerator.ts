@@ -1,10 +1,22 @@
 import jsPDF from 'jspdf';
 import type { ProjectReport, ProjectStats } from '@/api/reports/reports.types';
+import type { AIAnalysisResponse } from '@/api/reports/ai-analysis.types';
+
+interface SelectedAISections {
+  general: boolean;
+  strengths: boolean;
+  weaknesses: boolean;
+  recommendations: boolean;
+  risks: boolean;
+  nextSteps: boolean;
+}
 
 interface ProjectPDFOptions {
   report: ProjectReport;
   stats: ProjectStats;
   includeCertificate?: boolean;
+  aiAnalysis?: AIAnalysisResponse | null;
+  selectedAISections?: SelectedAISections;
 }
 
 export async function generateProjectPDF(options: ProjectPDFOptions): Promise<void> {
@@ -21,7 +33,7 @@ class ProjectPDFGenerator {
   private readonly lineHeight = 7;
 
   async generate(options: ProjectPDFOptions): Promise<void> {
-    const { report, stats, includeCertificate = false } = options;
+    const { report, stats, includeCertificate = false, aiAnalysis, selectedAISections } = options;
 
     this.pdf = new jsPDF({
       orientation: 'portrait',
@@ -34,7 +46,7 @@ class ProjectPDFGenerator {
 
     // Página 2: Índice
     this.addNewPage();
-    this.addTableOfContents();
+    this.addTableOfContents(aiAnalysis, selectedAISections);
 
     // Página 3: Resumen Ejecutivo
     this.addNewPage();
@@ -43,6 +55,15 @@ class ProjectPDFGenerator {
     // Página 4: Detalles de Evaluaciones
     this.addNewPage();
     this.addEvaluationsDetails(report);
+
+    // Análisis de IA (si está disponible y hay secciones seleccionadas)
+    if (aiAnalysis && selectedAISections) {
+      const hasSelectedSections = Object.values(selectedAISections).some(selected => selected);
+      if (hasSelectedSections) {
+        this.addNewPage();
+        this.addAIAnalysis(aiAnalysis, selectedAISections);
+      }
+    }
 
     // Certificado de Cumplimiento (solo si cumple umbral y está habilitado)
     const shouldIncludeCertificate = includeCertificate && report.meets_threshold;
@@ -172,7 +193,7 @@ class ProjectPDFGenerator {
     }
   }
 
-  private addTableOfContents(): void {
+  private addTableOfContents(aiAnalysis?: AIAnalysisResponse | null, selectedAISections?: SelectedAISections): void {
     this.addSectionTitle('Índice');
     
     this.pdf.setFont('helvetica', 'normal');
@@ -181,9 +202,21 @@ class ProjectPDFGenerator {
 
     const items = [
       '1. Resumen Ejecutivo',
-      '2. Detalles de las Evaluaciones',
-      '3. Certificado de Cumplimiento (si aplica)'
+      '2. Detalles de las Evaluaciones'
     ];
+
+    // Agregar sección de IA si está disponible
+    if (aiAnalysis && selectedAISections) {
+      const hasSelectedSections = Object.values(selectedAISections).some(selected => selected);
+      if (hasSelectedSections) {
+        items.push('3. Análisis de Calidad con IA');
+        items.push('4. Certificado de Cumplimiento (si aplica)');
+      } else {
+        items.push('3. Certificado de Cumplimiento (si aplica)');
+      }
+    } else {
+      items.push('3. Certificado de Cumplimiento (si aplica)');
+    }
 
     items.forEach(item => {
       this.pdf.text(item, this.margin, this.currentY);
@@ -266,20 +299,20 @@ class ProjectPDFGenerator {
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.text('Promedio:', this.margin, this.currentY);
     this.pdf.setFont('helvetica', 'normal');
-    this.pdf.text(`${stats.average_evaluation_score.toFixed(1)}%`, this.margin + 50, this.currentY);
+    this.pdf.text(`${stats.average_evaluation_score?.toFixed(1) || '0.0'}%`, this.margin + 50, this.currentY);
 
-    if (stats.completed_evaluations > 1) {
+    if (stats.completed_evaluations > 1 && stats.highest_evaluation && stats.lowest_evaluation) {
       this.currentY += 10;
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Mejor Evaluación:', this.margin, this.currentY);
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.text(`${stats.highest_evaluation.standard_name} (${stats.highest_evaluation.score.toFixed(1)}%)`, this.margin + 42, this.currentY);
+      this.pdf.text(`${stats.highest_evaluation.standard_name || 'N/A'} (${stats.highest_evaluation.score?.toFixed(1) || '0.0'}%)`, this.margin + 42, this.currentY);
 
       this.currentY += 10;
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Evaluación Menor:', this.margin, this.currentY);
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.text(`${stats.lowest_evaluation.standard_name} (${stats.lowest_evaluation.score.toFixed(1)}%)`, this.margin + 42, this.currentY);
+      this.pdf.text(`${stats.lowest_evaluation.standard_name || 'N/A'} (${stats.lowest_evaluation.score?.toFixed(1) || '0.0'}%)`, this.margin + 42, this.currentY);
     }
 
     // Estado de cumplimiento
@@ -451,6 +484,168 @@ class ProjectPDFGenerator {
     
     this.currentY += 8;
     this.pdf.text('por SQA Tool - Sistema de Evaluación de Calidad de Software', this.pageWidth / 2, this.currentY, { align: 'center' });
+  }
+
+  private addAIAnalysis(analysis: AIAnalysisResponse, selectedSections: SelectedAISections): void {
+    this.addSectionTitle('3. Análisis de Calidad con IA');
+
+    this.pdf.setFont('helvetica', 'italic');
+    this.pdf.setFontSize(9);
+    this.pdf.setTextColor(100, 100, 100);
+    this.pdf.text(`Generado el ${new Date(analysis.generatedAt).toLocaleDateString('es-ES')}`, this.margin, this.currentY);
+    this.currentY += 10;
+
+    if (selectedSections.general && analysis.analisis_general) {
+      this.addGeneralAnalysis(analysis.analisis_general);
+    }
+
+    if (selectedSections.strengths && analysis.fortalezas?.length) {
+      this.addBulletList('Fortalezas Identificadas', analysis.fortalezas, 16, 185, 129);
+    }
+
+    if (selectedSections.weaknesses && analysis.debilidades?.length) {
+      this.addBulletList('Áreas de Mejora', analysis.debilidades, 239, 68, 68);
+    }
+
+    if (selectedSections.recommendations && analysis.recomendaciones?.length) {
+      this.addRecommendations(analysis.recomendaciones);
+    }
+
+    if (selectedSections.risks && analysis.riesgos?.length) {
+      this.addBulletList('Riesgos Identificados', analysis.riesgos, 239, 68, 68);
+    }
+
+    if (selectedSections.nextSteps && analysis.proximos_pasos?.length) {
+      this.addNextSteps(analysis.proximos_pasos);
+    }
+  }
+
+  private addGeneralAnalysis(text: string): void {
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setFontSize(12);
+    this.pdf.setTextColor(78, 94, 163);
+    this.pdf.text('Análisis General', this.margin, this.currentY);
+    this.currentY += 8;
+
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setFontSize(10);
+    this.pdf.setTextColor(0, 0, 0);
+    const lines = this.pdf.splitTextToSize(text, this.pageWidth - 2 * this.margin);
+    lines.forEach((line: string) => {
+      if (this.currentY > this.pageHeight - 30) {
+        this.addNewPage();
+      }
+      this.pdf.text(line, this.margin, this.currentY);
+      this.currentY += 6;
+    });
+    this.currentY += 5;
+  }
+
+  private addBulletList(title: string, items: string[], r: number, g: number, b: number): void {
+    if (this.currentY > this.pageHeight - 40) {
+      this.addNewPage();
+    }
+    
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setFontSize(12);
+    this.pdf.setTextColor(r, g, b);
+    this.pdf.text(title, this.margin, this.currentY);
+    this.currentY += 8;
+
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setFontSize(10);
+    this.pdf.setTextColor(0, 0, 0);
+    
+    items.forEach((item) => {
+      if (this.currentY > this.pageHeight - 30) {
+        this.addNewPage();
+      }
+      const lines = this.pdf.splitTextToSize(`• ${item}`, this.pageWidth - 2 * this.margin - 5);
+      lines.forEach((line: string) => {
+        this.pdf.text(line, this.margin + 5, this.currentY);
+        this.currentY += 6;
+      });
+    });
+    this.currentY += 5;
+  }
+
+  private addRecommendations(recommendations: Array<{prioridad: 'Alta' | 'Media' | 'Baja'; titulo: string; descripcion: string; impacto: string}>): void {
+    if (this.currentY > this.pageHeight - 40) {
+      this.addNewPage();
+    }
+    
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setFontSize(12);
+    this.pdf.setTextColor(102, 126, 234);
+    this.pdf.text('Recomendaciones Priorizadas', this.margin, this.currentY);
+    this.currentY += 8;
+
+    recommendations.forEach((rec) => {
+      if (this.currentY > this.pageHeight - 50) {
+        this.addNewPage();
+      }
+
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setFontSize(10);
+      const prioridadColor = rec.prioridad === 'Alta' ? [239, 68, 68] : 
+                             rec.prioridad === 'Media' ? [251, 146, 60] : [34, 197, 94];
+      this.pdf.setTextColor(prioridadColor[0], prioridadColor[1], prioridadColor[2]);
+      this.pdf.text(`[${rec.prioridad}]`, this.margin + 5, this.currentY);
+      
+      this.pdf.setTextColor(0, 0, 0);
+      this.pdf.text(rec.titulo, this.margin + 25, this.currentY);
+      this.currentY += 6;
+
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setFontSize(9);
+      const descLines = this.pdf.splitTextToSize(rec.descripcion, this.pageWidth - 2 * this.margin - 10);
+      descLines.forEach((line: string) => {
+        if (this.currentY > this.pageHeight - 30) {
+          this.addNewPage();
+        }
+        this.pdf.text(line, this.margin + 10, this.currentY);
+        this.currentY += 5;
+      });
+
+      this.pdf.setFont('helvetica', 'italic');
+      const impactLines = this.pdf.splitTextToSize(`Impacto: ${rec.impacto}`, this.pageWidth - 2 * this.margin - 10);
+      impactLines.forEach((line: string) => {
+        if (this.currentY > this.pageHeight - 30) {
+          this.addNewPage();
+        }
+        this.pdf.text(line, this.margin + 10, this.currentY);
+        this.currentY += 5;
+      });
+      this.currentY += 3;
+    });
+    this.currentY += 5;
+  }
+
+  private addNextSteps(steps: string[]): void {
+    if (this.currentY > this.pageHeight - 40) {
+      this.addNewPage();
+    }
+    
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setFontSize(12);
+    this.pdf.setTextColor(102, 126, 234);
+    this.pdf.text('Plan de Acción - Próximos Pasos', this.margin, this.currentY);
+    this.currentY += 8;
+
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setFontSize(10);
+    this.pdf.setTextColor(0, 0, 0);
+    
+    steps.forEach((paso, index) => {
+      if (this.currentY > this.pageHeight - 30) {
+        this.addNewPage();
+      }
+      const lines = this.pdf.splitTextToSize(`${index + 1}. ${paso}`, this.pageWidth - 2 * this.margin - 5);
+      lines.forEach((line: string) => {
+        this.pdf.text(line, this.margin + 5, this.currentY);
+        this.currentY += 6;
+      });
+    });
   }
 
   private addSectionTitle(title: string): void {

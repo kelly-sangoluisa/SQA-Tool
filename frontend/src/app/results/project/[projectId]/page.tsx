@@ -3,21 +3,31 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { EvaluationCard } from '@/components/reports/EvaluationCard';
-import { LoadMoreTrigger } from '@/components/shared/LoadMoreTrigger';
-import { getEvaluationsByProject } from '@/api/reports/reports.api';
-import type { EvaluationListItem } from '@/api/reports/reports.types';
-import { useInfiniteScroll } from '@/hooks/shared/useInfiniteScroll';
-import { PAGINATION } from '@/lib/shared/constants';
+import { getEvaluationsByProject, getProjectReport } from '@/api/reports/reports.api';
+import type { EvaluationListItem, ProjectReport } from '@/api/reports/reports.types';
 
 export default function ProjectEvaluationsPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = Number(params.projectId);
+  const isValidProjectId = !Number.isNaN(projectId) && projectId > 0;
 
   const [evaluations, setEvaluations] = useState<EvaluationListItem[]>([]);
+  const [projectReport, setProjectReport] = useState<ProjectReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
+
+  useEffect(() => {
+    if (!isValidProjectId) {
+      setError('ID de proyecto inválido');
+      setLoading(false);
+      return;
+    }
+    loadEvaluations().catch(() => {
+      // Error handled in loadEvaluations
+    });
+  }, [projectId, isValidProjectId]);
 
   const loadEvaluations = async () => {
     try {
@@ -25,9 +35,16 @@ export default function ProjectEvaluationsPage() {
       setError(null);
       const data = await getEvaluationsByProject(projectId);
       setEvaluations(data);
-    } catch (err) {
+      
+      // Cargar reporte del proyecto para verificar si está completado
+      try {
+        const report = await getProjectReport(projectId);
+        setProjectReport(report);
+      } catch (reportErr) {
+        // Proyecto aún no completado o sin resultados
+      }
+    } catch {
       setError('Error al cargar las evaluaciones del proyecto.');
-      console.error('Error loading evaluations:', err);
     } finally {
       setLoading(false);
     }
@@ -40,25 +57,11 @@ export default function ProjectEvaluationsPage() {
     return true;
   });
 
-  const { displayedItems: displayedEvaluations, hasMore, observerTarget, reset } = useInfiniteScroll(
-    filteredEvaluations,
-    { itemsPerPage: PAGINATION.EVALUATIONS_PER_PAGE }
-  );
-
-  useEffect(() => {
-    loadEvaluations();
-  }, [projectId]);
-
-  useEffect(() => {
-    // Reset cuando cambia el filtro
-    reset();
-  }, [filter, reset]);
-
   const completedCount = (evaluations || []).filter(e => e.has_results).length;
   const pendingCount = (evaluations || []).filter(e => !e.has_results).length;
 
   // Obtener nombre del proyecto de la primera evaluación
-  const projectName = evaluations[0]?.project_name || 'Proyecto';
+  const projectName = (evaluations && evaluations.length > 0 && evaluations[0]?.project_name) || 'Proyecto';
 
   if (loading) {
     return (
@@ -97,6 +100,49 @@ export default function ProjectEvaluationsPage() {
 
   return (
     <div className="evaluations-page">
+      {/* Widget flotante arriba a la derecha cuando proyecto completado */}
+      {projectReport && projectReport.status === 'completed' && (
+        <div className="project-results-widget">
+          <div className="score-circle">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle
+                cx="60"
+                cy="60"
+                r="50"
+                fill="none"
+                stroke="#e5e7eb"
+                strokeWidth="8"
+              />
+              <circle
+                cx="60"
+                cy="60"
+                r="50"
+                fill="none"
+                stroke={projectReport.meets_threshold ? '#10b981' : '#ef4444'}
+                strokeWidth="8"
+                strokeDasharray={`${2 * Math.PI * 50}`}
+                strokeDashoffset={`${2 * Math.PI * 50 * (1 - projectReport.final_project_score / 100)}`}
+                strokeLinecap="round"
+                transform="rotate(-90 60 60)"
+              />
+            </svg>
+            <div className="score-content">
+              <div className="score-value">{projectReport.final_project_score.toFixed(1)}</div>
+              <div className="score-label">{projectReport.meets_threshold ? 'Excelente' : 'Necesita Mejora'}</div>
+            </div>
+          </div>
+          <button
+            className="widget-results-btn"
+            onClick={() => router.push(`/results/project/${projectId}/report`)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Ver Resultados
+          </button>
+        </div>
+      )}
+
       <div className="page-header">
         <button onClick={() => router.back()} className="back-button">
           ← Volver
@@ -158,7 +204,7 @@ export default function ProjectEvaluationsPage() {
             <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <p>{error}</p>
-          <button className="retry-btn" onClick={loadEvaluations}>
+          <button className="retry-btn" onClick={() => { loadEvaluations().catch(() => {}); }}>
             Reintentar
           </button>
         </div>
@@ -181,20 +227,11 @@ export default function ProjectEvaluationsPage() {
       )}
 
       {!loading && !error && filteredEvaluations.length > 0 && (
-        <>
-          <div className="evaluations-grid">
-            {displayedEvaluations.map((evaluation) => (
-              <EvaluationCard key={evaluation.evaluation_id} evaluation={evaluation} />
-            ))}
-          </div>
-          
-          {hasMore && (
-            <LoadMoreTrigger 
-              observerRef={observerTarget} 
-              message="Cargando más evaluaciones..." 
-            />
-          )}
-        </>
+        <div className="evaluations-grid">
+          {filteredEvaluations.map((evaluation) => (
+            <EvaluationCard key={evaluation.evaluation_id} evaluation={evaluation} />
+          ))}
+        </div>
       )}
 
       <style jsx>{`
@@ -202,6 +239,127 @@ export default function ProjectEvaluationsPage() {
           min-height: 100vh;
           background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
           padding: 2rem;
+          position: relative;
+        }
+
+        .project-results-widget {
+          position: fixed;
+          top: 2rem;
+          right: 2rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+          z-index: 100;
+          animation: slideInRight 0.5s ease;
+        }
+
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(50px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .score-circle {
+          position: relative;
+          width: 120px;
+          height: 120px;
+          background: white;
+          border-radius: 50%;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .score-content {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          text-align: center;
+        }
+
+        .score-value {
+          font-size: 1.75rem;
+          font-weight: 800;
+          color: #111827;
+          line-height: 1;
+        }
+
+        .score-label {
+          font-size: 0.75rem;
+          color: #6b7280;
+          font-weight: 600;
+          margin-top: 0.25rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .widget-results-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          padding: 0.875rem 1.5rem;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 0.875rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+          white-space: nowrap;
+        }
+
+        .widget-results-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .widget-results-btn svg {
+          flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+          .project-results-widget {
+            top: auto;
+            bottom: 1rem;
+            right: 1rem;
+            left: 1rem;
+            flex-direction: row;
+            justify-content: center;
+          }
+
+          .score-circle {
+            width: 80px;
+            height: 80px;
+          }
+
+          .score-circle svg {
+            width: 80px;
+            height: 80px;
+          }
+
+          .score-value {
+            font-size: 1.25rem;
+          }
+
+          .score-label {
+            font-size: 0.625rem;
+          }
+
+          .widget-results-btn {
+            padding: 0.75rem 1.25rem;
+            font-size: 0.8125rem;
+          }
         }
 
         .page-header {
@@ -212,6 +370,7 @@ export default function ProjectEvaluationsPage() {
           align-items: center;
           flex-wrap: wrap;
           gap: 2rem;
+          padding-right: 200px;
         }
 
         .back-button {

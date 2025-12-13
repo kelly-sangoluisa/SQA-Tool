@@ -93,7 +93,8 @@ export default function DataEntryProjectPage() {
   const params = useParams();
   const router = useRouter();
   const { isLoading, isAuthenticated, user } = useAuth();
-  const projectId = parseInt(params.projectId as string);
+  const projectId = Number.parseInt(params.projectId as string, 10);
+  const isValidProjectId = !Number.isNaN(projectId) && projectId > 0;
 
   // Estados principales
   const [project, setProject] = useState<Project | null>(null);
@@ -130,7 +131,13 @@ export default function DataEntryProjectPage() {
 
   // Cargar datos del proyecto
   useEffect(() => {
-    if (!isAuthenticated || !projectId) return;
+    if (!isAuthenticated || !isValidProjectId) {
+      if (isAuthenticated && !isValidProjectId) {
+        setError('ID de proyecto inválido');
+        setLoading(false);
+      }
+      return;
+    }
 
     const loadProjectData = async () => {
       try {
@@ -140,7 +147,13 @@ export default function DataEntryProjectPage() {
         // Cargar proyecto
         const projectResponse = await fetch(`/api/config-evaluation/projects/${projectId}`);
         if (!projectResponse.ok) throw new Error('Error al cargar proyecto');
-        const projectData = await projectResponse.json();
+        
+        let projectData;
+        try {
+          projectData = await projectResponse.json();
+        } catch {
+          throw new Error('Respuesta inválida del servidor');
+        }
         setProject(projectData);
 
         // **DATOS MOCK TEMPORALES** - Reemplazar cuando backend esté listo
@@ -307,14 +320,19 @@ export default function DataEntryProjectPage() {
 
         setEvaluations(mockEvaluationsWithMetrics);
         
-        // Debug: log de las evaluaciones mock
-        console.log('🔍 [DataEntry] Evaluaciones MOCK cargadas:', mockEvaluationsWithMetrics);
-
         // Cargar progreso del proyecto (puede usar datos reales o mock)
         const progressResponse = await fetch(`/api/entry-data/projects/${projectId}/progress`);
         if (progressResponse.ok) {
-          const progressData = await progressResponse.json();
-          setProjectProgress(progressData);
+          try {
+            const progressData = await progressResponse.json();
+            setProjectProgress(progressData);
+          } catch {
+            // Continue without progress data or let it fail? 
+            // If we don't throw, the page loads but progress is missing.
+            // If we throw, the page shows error.
+            // Let's throw to be consistent with projectData.
+            throw new Error('Error al procesar datos de progreso');
+          }
         } else {
           // Progreso mock si no existe el endpoint
           const mockProgress = {
@@ -345,19 +363,17 @@ export default function DataEntryProjectPage() {
         
         setAllMetrics(metrics);
         
-        // Debug: log de métricas extraídas
-        console.log('🔍 [DataEntry] Métricas MOCK extraídas:', metrics);
-
       } catch (error) {
-        console.error('Error al cargar datos del proyecto:', error);
         setError(error instanceof Error ? error.message : 'Error desconocido');
       } finally {
         setLoading(false);
       }
     };
 
-    loadProjectData();
-  }, [isAuthenticated, projectId]);
+    loadProjectData().catch(() => {
+      // Error handled in loadProjectData
+    });
+  }, [isAuthenticated, projectId, isValidProjectId]);
 
   // Función para manejar selección de métrica desde el sidebar
   const handleMetricSelect = (evaluationIndex: number, metricGlobalIndex: number) => {
@@ -385,8 +401,8 @@ export default function DataEntryProjectPage() {
     if (stored) {
       try {
         setVariableValues(JSON.parse(stored));
-      } catch (error) {
-        console.error('Error al cargar valores guardados:', error);
+      } catch {
+        // Error parsing stored values, start fresh
       }
     }
   }, [projectId]);
@@ -476,6 +492,9 @@ export default function DataEntryProjectPage() {
         .filter(([key]) => key.startsWith('metric-'))
         .map(([key, value]) => {
           const parts = key.split('-');
+          if (parts.length < 3) {
+            return null;
+          }
           const metricId = parseInt(parts[1]);
           const symbol = parts[2];
           
@@ -497,7 +516,8 @@ export default function DataEntryProjectPage() {
             symbol,
             value: value.toString()
           };
-        });
+        })
+        .filter((item): item is NonNullable<typeof item> => item !== null);
 
       // Primero enviar los datos
       await submitEvaluationData(currentEvaluationForModal.id, variablesToSubmit);
@@ -541,8 +561,7 @@ export default function DataEntryProjectPage() {
         
         setIsModalOpen(false);
       }
-    } catch (error) {
-      console.error('Error al finalizar:', error);
+    } catch {
       alert('Error al finalizar. Por favor intenta de nuevo.');
     } finally {
       setModalLoading(false);
@@ -620,7 +639,11 @@ export default function DataEntryProjectPage() {
                 values={Object.fromEntries(
                   Object.entries(variableValues)
                     .filter(([key]) => key.startsWith(`metric-${currentMetric.id}-`))
-                    .map(([key, value]) => [key.split('-')[2], value])
+                    .map(([key, value]) => {
+                      const parts = key.split('-');
+                      return parts.length >= 3 ? [parts[2], value] : null;
+                    })
+                    .filter((entry): entry is [string, string] => entry !== null)
                 )}
                 onValueChange={(symbol, value) => {
                   handleVariableUpdate(currentMetric.id, symbol, value);

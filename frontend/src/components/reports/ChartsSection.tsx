@@ -135,7 +135,7 @@ export function ChartsSection({ report }: Props) {
                   }));
 
                 // Caso especial: solo un nivel de importancia (100%)
-                if (filteredWeights.length === 1) {
+                if (filteredWeights.length === 1 && filteredWeights[0]) {
                   const item = filteredWeights[0];
                   return (
                     <g>

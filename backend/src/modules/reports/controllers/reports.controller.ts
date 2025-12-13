@@ -1,7 +1,8 @@
-import { Controller, Get, Param, ParseIntPipe, HttpStatus, Logger, Request } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, HttpStatus, Logger, Request, Post } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { ROLES } from '../../../common/decorators/roles.decorator';
 import { ReportsService } from '../services/reports.service';
+import { AIAnalysisService } from '../services/ai-analysis.service';
 import { 
   EvaluationReportDto, 
   EvaluationListItemDto,
@@ -10,6 +11,7 @@ import {
   ProjectStatsDto
 } from '../dto/evaluation-report.dto';
 import { ProjectSummaryDto } from '../dto/project-summary.dto';
+import { AIAnalysisResponse } from '../dto/ai-analysis.dto';
 
 @ApiTags('Reports - Visualización de Resultados')
 @Controller('reports')
@@ -17,7 +19,10 @@ import { ProjectSummaryDto } from '../dto/project-summary.dto';
 export class ReportsController {
   private readonly logger = new Logger(ReportsController.name);
   
-  constructor(private readonly reportsService: ReportsService) {}
+  constructor(
+    private readonly reportsService: ReportsService,
+    private readonly aiAnalysisService: AIAnalysisService,
+  ) {}
 
   @Get('my-projects')
   @ROLES('admin', 'evaluator')
@@ -83,7 +88,9 @@ export class ReportsController {
     this.logger.log('🎯 Controller: getAllEvaluations llamado');
     const result = await this.reportsService.getAllEvaluations();
     this.logger.log(`🎯 Controller: Devolviendo ${result.length} evaluaciones al cliente`);
-    this.logger.log(`🎯 Controller: Primer elemento: ${JSON.stringify(result[0])}`);
+    if (result.length > 0) {
+      this.logger.log(`🎯 Controller: Primer elemento: ${JSON.stringify(result[0])}`);
+    }
     return result;
   }
 
@@ -175,5 +182,32 @@ export class ReportsController {
     @Param('projectId', ParseIntPipe) projectId: number
   ): Promise<ProjectStatsDto> {
     return await this.reportsService.getProjectStats(projectId);
+  }
+
+  @Post('projects/:projectId/ai-analysis')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({
+    summary: 'Generar análisis de IA',
+    description: 'Genera un análisis detallado de calidad del proyecto usando IA (Gemini). Incluye fortalezas, debilidades, recomendaciones priorizadas y plan de acción.'
+  })
+  @ApiParam({
+    name: 'projectId',
+    description: 'ID del proyecto a analizar',
+    type: Number
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Análisis de IA generado exitosamente',
+    type: Object
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Error al generar el análisis'
+  })
+  async generateAIAnalysis(
+    @Param('projectId', ParseIntPipe) projectId: number
+  ): Promise<AIAnalysisResponse> {
+    this.logger.log(`Generating AI analysis for project ${projectId}`);
+    return await this.aiAnalysisService.analyzeProjectQuality(projectId);
   }
 }

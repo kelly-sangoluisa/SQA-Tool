@@ -177,7 +177,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         error: error instanceof Error ? error.message : 'Error al iniciar sesión',
         isLoading: false
       }));
-      throw error;
+      throw error instanceof Error ? error : new Error('Error al iniciar sesión');
     }
   }, []);
 
@@ -218,7 +218,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         error: error instanceof Error ? error.message : 'Error al registrarse',
         isLoading: false
       }));
-      throw error;
+      throw error instanceof Error ? error : new Error('Error al registrarse');
     }
   }, []);
 
@@ -234,7 +234,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         error: error instanceof Error ? error.message : 'Error al enviar email',
         isLoading: false
       }));
-      throw error;
+      throw error instanceof Error ? error : new Error('Error al enviar email');
     }
   }, []);
 
@@ -250,7 +250,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         error: error instanceof Error ? error.message : 'Error al resetear contraseña',
         isLoading: false
       }));
-      throw error;
+      throw error instanceof Error ? error : new Error('Error al resetear contraseña');
     }
   }, []);
 

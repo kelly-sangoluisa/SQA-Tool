@@ -10,7 +10,7 @@ export interface BaseGroup {
   id: number;
   name: string;
   version?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**

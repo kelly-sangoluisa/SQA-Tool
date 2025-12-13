@@ -62,7 +62,7 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
           description: formData.description.trim() || undefined,
           version: formData.version.trim() || undefined
         };
-        console.log('Creating standard with data:', createData);
+        // Creating standard...
         savedStandard = await parameterizationApi.createStandard(createData);
       }
       

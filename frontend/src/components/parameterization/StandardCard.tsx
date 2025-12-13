@@ -11,7 +11,7 @@ interface StandardCardProps {
 }
 
 export function StandardCard({ standard, onSelect, onEdit, onToggleState }: StandardCardProps) {
-  const handleToggleClick = (e: React.MouseEvent) => {
+  const _handleToggleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onToggleState(standard);
   };

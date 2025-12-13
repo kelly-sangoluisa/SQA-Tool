@@ -2,15 +2,6 @@
  * API para el módulo de Entry Data
  */
 
-interface SubmitDataPayload {
-  variables: Array<{
-    metric_id: number;
-    variable_id: number;
-    symbol: string;
-    value: string;
-  }>;
-}
-
 interface CompleteResults {
   evaluation_id: number;
   project_id: number;
@@ -40,8 +31,14 @@ export async function submitEvaluationData(
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Error al guardar los datos');
+    let errorMessage = 'Error al guardar los datos';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
+    throw new Error(errorMessage);
   }
 }
 
@@ -57,8 +54,14 @@ export async function finalizeEvaluation(evaluationId: number): Promise<void> {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Error al finalizar la evaluación');
+    let errorMessage = 'Error al finalizar la evaluación';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
+    throw new Error(errorMessage);
   }
 }
 
@@ -74,8 +77,14 @@ export async function finalizeProject(projectId: number): Promise<void> {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Error al finalizar el proyecto');
+    let errorMessage = 'Error al finalizar el proyecto';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
+    throw new Error(errorMessage);
   }
 }
 
@@ -86,51 +95,103 @@ export async function getEvaluationCompleteResults(evaluationId: number): Promis
   const response = await fetch(`/api/entry-data/evaluations/${evaluationId}/complete-results`);
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Error al obtener resultados de evaluación');
+    let errorMessage = 'Error al obtener resultados de evaluación';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
+    throw new Error(errorMessage);
   }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch (err) {
+    throw new Error('Error al procesar respuesta del servidor');
+  }
 }
 
 /**
  * Obtener resultados completos del proyecto
  */
-export async function getProjectCompleteResults(projectId: number): Promise<any> {
+export async function getProjectCompleteResults(projectId: number): Promise<CompleteResults> {
   const response = await fetch(`/api/entry-data/projects/${projectId}/complete-results`);
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Error al obtener resultados del proyecto');
+    let errorMessage = 'Error al obtener resultados del proyecto';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
+    throw new Error(errorMessage);
   }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch (err) {
+    throw new Error('Error al procesar respuesta del servidor');
+  }
+}
+
+interface ProjectProgress {
+  total_metrics: number;
+  completed_metrics: number;
+  percentage: number;
 }
 
 /**
  * Obtener progreso del proyecto
  */
-export async function getProjectProgress(projectId: number): Promise<any> {
+export async function getProjectProgress(projectId: number): Promise<ProjectProgress> {
   const response = await fetch(`/api/entry-data/projects/${projectId}/progress`);
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Error al obtener progreso del proyecto');
+    let errorMessage = 'Error al obtener progreso del proyecto';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
+    throw new Error(errorMessage);
   }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch (err) {
+    throw new Error('Error al procesar respuesta del servidor');
+  }
+}
+
+interface EvaluationStatus {
+  status: string;
+  completed: boolean;
+  metrics_evaluated: number;
 }
 
 /**
  * Obtener estado de la evaluación
  */
-export async function getEvaluationStatus(evaluationId: number): Promise<any> {
+export async function getEvaluationStatus(evaluationId: number): Promise<EvaluationStatus> {
   const response = await fetch(`/api/entry-data/evaluations/${evaluationId}/status`);
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Error al obtener estado de evaluación');
+    let errorMessage = 'Error al obtener estado de evaluación';
+    try {
+      const error = await response.json();
+      errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
+    } catch {
+      // Server didn't return JSON
+    }
+    throw new Error(errorMessage);
   }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch (err) {
+    throw new Error('Error al procesar respuesta del servidor');
+  }
 }

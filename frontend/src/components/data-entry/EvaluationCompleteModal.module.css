@@ -9,10 +9,10 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeIn 0.2s ease;
+  animation: fade-in 0.2s ease;
 }
 
-@keyframes fadeIn {
+@keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
@@ -25,10 +25,10 @@
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
-  animation: slideUp 0.3s ease;
+  animation: slide-up 0.3s ease;
 }
 
-@keyframes slideUp {
+@keyframes slide-up {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -240,6 +240,11 @@
   border: 1px solid #d1d5db;
 }
 
+.cancelButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .cancelButton:hover:not(:disabled) {
   background: #f9fafb;
 }
@@ -249,16 +254,15 @@
   color: white;
 }
 
+.confirmButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .confirmButton:hover:not(:disabled) {
   background: linear-gradient(135deg, #3f4d8a 0%, #48377d 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(78, 94, 163, 0.3);
-}
-
-.cancelButton:disabled,
-.confirmButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .spinner {

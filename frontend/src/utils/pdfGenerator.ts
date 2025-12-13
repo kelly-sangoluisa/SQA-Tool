@@ -27,7 +27,7 @@ export class PDFGenerator {
   }
 
   async generateReport(options: PDFGenerationOptions): Promise<void> {
-    const { report, stats, radarImageData, includeCertificate } = options;
+    const { report, stats, radarImageData } = options;
 
     // Página 1: Portada
     this.addCoverPage(report);
@@ -254,24 +254,24 @@ export class PDFGenerator {
     this.pdf.setTextColor(0, 0, 0);
     this.pdf.setFontSize(12);
     
-    if (stats.best_criterion.name !== stats.worst_criterion.name) {
+    if (stats.best_criterion?.name && stats.worst_criterion?.name && stats.best_criterion.name !== stats.worst_criterion.name) {
       // Hay múltiples criterios - mostrar mejor y peor
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Mejor Criterio:', this.margin, this.currentY);
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.text(`${stats.best_criterion.name} (${stats.best_criterion.score.toFixed(1)}%)`, this.margin + 35, this.currentY);
+      this.pdf.text(`${stats.best_criterion.name} (${stats.best_criterion.score?.toFixed(1) || '0.0'}%)`, this.margin + 35, this.currentY);
 
       this.currentY += 10;
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Criterio a Mejorar:', this.margin, this.currentY);
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.text(`${stats.worst_criterion.name} (${stats.worst_criterion.score.toFixed(1)}%)`, this.margin + 42, this.currentY);
-    } else {
+      this.pdf.text(`${stats.worst_criterion.name} (${stats.worst_criterion.score?.toFixed(1) || '0.0'}%)`, this.margin + 42, this.currentY);
+    } else if (stats.best_criterion?.name) {
       // Solo un criterio - mostrar una vez
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Criterio Evaluado:', this.margin, this.currentY);
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.text(`${stats.best_criterion.name} (${stats.best_criterion.score.toFixed(1)}%)`, this.margin + 40, this.currentY);
+      this.pdf.text(`${stats.best_criterion.name} (${stats.best_criterion.score?.toFixed(1) || '0.0'}%)`, this.margin + 40, this.currentY);
     }
 
     this.currentY += 15;

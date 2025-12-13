@@ -10,7 +10,9 @@ export function useStandardsManagement() {
 
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
-      loadStandards();
+      loadStandards().catch(() => {
+        // Error already handled in loadStandards
+      });
     }
   }, [isAuthenticated, authLoading]);
 
@@ -20,8 +22,7 @@ export function useStandardsManagement() {
     try {
       const data = await parameterizationApi.getStandards({ state: 'all' });
       setStandards(data);
-    } catch (error) {
-      console.error('Error loading standards:', error);
+    } catch {
       setError('Error al cargar los estándares');
     } finally {
       setLoading(false);
@@ -43,8 +44,7 @@ export function useStandardsManagement() {
     try {
       // Hacer la petición al servidor
       await parameterizationApi.updateStandardState(standard.id, { state: newState });
-    } catch (error) {
-      console.error('Error updating standard state:', error);
+    } catch {
       setError('Error al actualizar el estado del estándar');
       
       // Revertir el cambio si falla la petición

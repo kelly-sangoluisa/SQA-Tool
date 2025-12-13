@@ -17,20 +17,14 @@ import type {
  * Obtiene todos los proyectos del usuario actual
  */
 export async function getMyProjects(): Promise<ProjectSummary[]> {
-  console.log('🌐 API: Llamando a /reports/my-projects');
-  const result = await apiClient.get<ProjectSummary[]>('/reports/my-projects');
-  console.log('🌐 API: Respuesta recibida:', result);
-  return result;
+  return await apiClient.get<ProjectSummary[]>('/reports/my-projects');
 }
 
 /**
  * Obtiene las evaluaciones de los proyectos del usuario actual
  */
 export async function getMyEvaluations(): Promise<EvaluationListItem[]> {
-  console.log('🌐 API: Llamando a /reports/my-evaluations');
-  const result = await apiClient.get<EvaluationListItem[]>('/reports/my-evaluations');
-  console.log('🌐 API: Respuesta recibida:', result);
-  return result;
+  return await apiClient.get<EvaluationListItem[]>('/reports/my-evaluations');
 }
 
 /**
