@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Criterion } from '@/api/parameterization/parameterization-api';
 import { SelectedCriterion, ImportanceLevel } from '@/types/configurationEvaluation.types';
 import { Button } from '../shared';
+import AlertBanner from '../shared/AlertBanner';
 import styles from './SubCriteriaSelection.module.css';
 import { CriteriaWithImportance } from './CriteriaOnlySelection';
 
@@ -23,6 +24,8 @@ export function SubCriteriaSelection({
   const [selectedSubCriteria, setSelectedSubCriteria] = useState<Map<number, Set<number>>>(
     new Map()
   );
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [alertType, setAlertType] = useState<'error' | 'warning' | 'success'>('error');
 
   useEffect(() => {
     // Initialize with previous selections if any
@@ -110,6 +113,15 @@ export function SubCriteriaSelection({
   };
 
   const handleNext = () => {
+    if (selectedSubCriteria.size === 0) {
+      setAlertMessage('Debe seleccionar al menos un subcriterio para continuar.');
+      setAlertType('error');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    setAlertMessage(null);
+    
     const result: SelectedCriterion[] = [];
 
     selectedCriteria.forEach((item) => {
@@ -147,7 +159,20 @@ export function SubCriteriaSelection({
   const hasSelection = totalSelected > 0;
 
   return (
-    <div className={styles.container}>
+    <div className={styles.pageWrapper}>
+      {/* Banner de alerta - Pegado arriba */}
+      {alertMessage && (
+        <div className={styles.alertContainer}>
+          <AlertBanner
+            type={alertType}
+            message={alertMessage}
+            onClose={() => setAlertMessage(null)}
+            visible={!!alertMessage}
+          />
+        </div>
+      )}
+
+      <div className={styles.container}>
       <div className={styles.header}>
         <h2 className={styles.title}>Seleccione los Subcriterios</h2>
         <p className={styles.subtitle}>
@@ -226,6 +251,7 @@ export function SubCriteriaSelection({
         <Button type="button" variant="primary" onClick={handleNext} disabled={!hasSelection}>
           Siguiente
         </Button>
+      </div>
       </div>
     </div>
   );
