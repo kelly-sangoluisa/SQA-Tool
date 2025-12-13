@@ -119,10 +119,10 @@
 .searchSection {
   padding: 16px;
   padding-bottom: 12px;
-  animation: slideDown 0.2s ease;
+  animation: slide-down 0.2s ease;
 }
 
-@keyframes slideDown {
+@keyframes slide-down {
   from {
     opacity: 0;
     transform: translateY(-10px);
@@ -214,6 +214,7 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
+/* Duplicate .searchInfo removed - already defined at line 186 */
 .searchInfo {
   padding: 10px 16px;
   background: #f0f9ff;

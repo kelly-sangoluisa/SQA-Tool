@@ -324,11 +324,7 @@
   background-color: #f8fafc;
 }
 
-.content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
+/* Duplicate .content removed - already defined at line 249 */
 
 .header {
   background: white;
@@ -970,13 +966,7 @@
 
 /* Responsive Design */
 
-
-.mainContent {
-  flex: 1; /* Sidebar más pequeña */
-  height: 100vh;
-  display: flex;
-  overflow: hidden;
-}
+/* Duplicate .mainContent removed - already defined at line 229 */
 
 .backButton {
   display: inline-flex;
@@ -996,35 +986,14 @@
   background: rgb(78 94 163 / 0.08);
 }
 
-.evaluationTitle {
-  font-size: clamp(1.25rem, 3vw, 1.75rem); /* Título más pequeño */
-  font-weight: 800;
-  color: #1a1a2e;
-  text-align: center;
-  margin: 0;
-  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+/* Duplicate .evaluationTitle removed - already defined at line 163 */
 
 .navigation {
   display: flex;
   gap: 1rem;
 }
 
-
-.currentStandardHeader {
-  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
-  color: white;
-  padding: 8px 0;
-  border-radius: 16px 16px 0 0;
-  box-shadow: 0 4px 20px rgb(78 94 163 / 0.25);
-  text-align: center;
-  animation: fade-in-up 0.3s ease;
-  flex-shrink: 0; /* No se encoge */
-  width: 30%;
-  
-}
+/* Duplicate .currentStandardHeader removed - already defined at line 258 */
 
 .standardTitle {
   font-size: 1.15rem; /* Tamaño más pequeño */
@@ -1034,13 +1003,7 @@
   letter-spacing: 0.5px;
 }
 
-.metricContainer {
-  flex: 1;
-  animation: fade-in-up 0.4s ease;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
+/* Duplicate .metricContainer removed - already defined at line 270 */
 
 /* Responsive design */
 
