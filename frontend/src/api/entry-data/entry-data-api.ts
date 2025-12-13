@@ -2,15 +2,6 @@
  * API para el módulo de Entry Data
  */
 
-interface SubmitDataPayload {
-  variables: Array<{
-    metric_id: number;
-    variable_id: number;
-    symbol: string;
-    value: string;
-  }>;
-}
-
 interface CompleteResults {
   evaluation_id: number;
   project_id: number;
@@ -96,7 +87,7 @@ export async function getEvaluationCompleteResults(evaluationId: number): Promis
 /**
  * Obtener resultados completos del proyecto
  */
-export async function getProjectCompleteResults(projectId: number): Promise<any> {
+export async function getProjectCompleteResults(projectId: number): Promise<CompleteResults> {
   const response = await fetch(`/api/entry-data/projects/${projectId}/complete-results`);
 
   if (!response.ok) {
@@ -107,10 +98,16 @@ export async function getProjectCompleteResults(projectId: number): Promise<any>
   return response.json();
 }
 
+interface ProjectProgress {
+  total_metrics: number;
+  completed_metrics: number;
+  percentage: number;
+}
+
 /**
  * Obtener progreso del proyecto
  */
-export async function getProjectProgress(projectId: number): Promise<any> {
+export async function getProjectProgress(projectId: number): Promise<ProjectProgress> {
   const response = await fetch(`/api/entry-data/projects/${projectId}/progress`);
 
   if (!response.ok) {
@@ -121,10 +118,16 @@ export async function getProjectProgress(projectId: number): Promise<any> {
   return response.json();
 }
 
+interface EvaluationStatus {
+  status: string;
+  completed: boolean;
+  metrics_evaluated: number;
+}
+
 /**
  * Obtener estado de la evaluación
  */
-export async function getEvaluationStatus(evaluationId: number): Promise<any> {
+export async function getEvaluationStatus(evaluationId: number): Promise<EvaluationStatus> {
   const response = await fetch(`/api/entry-data/evaluations/${evaluationId}/status`);
 
   if (!response.ok) {

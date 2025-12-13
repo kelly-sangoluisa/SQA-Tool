@@ -177,14 +177,21 @@ IMPORTANTE:
     try {
       // Intentar extraer JSON de la respuesta
       // Gemini a veces envuelve el JSON en ```json ... ```
-      const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || 
-                       text.match(/\{[\s\S]*\}/);
+      const codeBlockStart = text.indexOf('```json');
+      const codeBlockEnd = text.indexOf('```', codeBlockStart + 7);
       
-      if (!jsonMatch) {
-        throw new Error('No JSON found in Gemini response');
+      let jsonText: string;
+      if (codeBlockStart !== -1 && codeBlockEnd !== -1) {
+        jsonText = text.substring(codeBlockStart + 7, codeBlockEnd).trim();
+      } else {
+        const firstBrace = text.indexOf('{');
+        const lastBrace = text.lastIndexOf('}');
+        if (firstBrace === -1 || lastBrace === -1) {
+          throw new Error('No JSON found in Gemini response');
+        }
+        jsonText = text.substring(firstBrace, lastBrace + 1);
       }
 
-      const jsonText = jsonMatch[1] || jsonMatch[0];
       const parsed = JSON.parse(jsonText);
 
       // Validar estructura básica
