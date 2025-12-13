@@ -107,13 +107,6 @@ export default function ProjectReportPage() {
     }));
   };
 
-  const handleAddToPDF = () => {
-    // Aquí iría la lógica para generar el PDF con las secciones seleccionadas
-    console.log('Generating PDF with sections:', selectedSections);
-    setShowPDFModal(false);
-    // TODO: Implementar generación de PDF con análisis IA
-  };
-
   if (loading) {
     return (
       <div className="loading-container">

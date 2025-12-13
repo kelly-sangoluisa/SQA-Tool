@@ -495,198 +495,157 @@ class ProjectPDFGenerator {
     this.pdf.text(`Generado el ${new Date(analysis.generatedAt).toLocaleDateString('es-ES')}`, this.margin, this.currentY);
     this.currentY += 10;
 
-    // Análisis General
     if (selectedSections.general && analysis.analisis_general) {
-      this.pdf.setFont('helvetica', 'bold');
-      this.pdf.setFontSize(12);
-      this.pdf.setTextColor(78, 94, 163);
-      this.pdf.text('Análisis General', this.margin, this.currentY);
-      this.currentY += 8;
+      this.addGeneralAnalysis(analysis.analisis_general);
+    }
 
-      this.pdf.setFont('helvetica', 'normal');
-      this.pdf.setFontSize(10);
-      this.pdf.setTextColor(0, 0, 0);
-      const generalLines = this.pdf.splitTextToSize(analysis.analisis_general, this.pageWidth - 2 * this.margin);
-      generalLines.forEach((line: string) => {
-        if (this.currentY > this.pageHeight - 30) {
-          this.addNewPage();
-        }
-        this.pdf.text(line, this.margin, this.currentY);
+    if (selectedSections.strengths && analysis.fortalezas?.length) {
+      this.addBulletList('Fortalezas Identificadas', analysis.fortalezas, 16, 185, 129);
+    }
+
+    if (selectedSections.weaknesses && analysis.debilidades?.length) {
+      this.addBulletList('Áreas de Mejora', analysis.debilidades, 239, 68, 68);
+    }
+
+    if (selectedSections.recommendations && analysis.recomendaciones?.length) {
+      this.addRecommendations(analysis.recomendaciones);
+    }
+
+    if (selectedSections.risks && analysis.riesgos?.length) {
+      this.addBulletList('Riesgos Identificados', analysis.riesgos, 239, 68, 68);
+    }
+
+    if (selectedSections.nextSteps && analysis.proximos_pasos?.length) {
+      this.addNextSteps(analysis.proximos_pasos);
+    }
+  }
+
+  private addGeneralAnalysis(text: string): void {
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setFontSize(12);
+    this.pdf.setTextColor(78, 94, 163);
+    this.pdf.text('Análisis General', this.margin, this.currentY);
+    this.currentY += 8;
+
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setFontSize(10);
+    this.pdf.setTextColor(0, 0, 0);
+    const lines = this.pdf.splitTextToSize(text, this.pageWidth - 2 * this.margin);
+    lines.forEach((line: string) => {
+      if (this.currentY > this.pageHeight - 30) {
+        this.addNewPage();
+      }
+      this.pdf.text(line, this.margin, this.currentY);
+      this.currentY += 6;
+    });
+    this.currentY += 5;
+  }
+
+  private addBulletList(title: string, items: string[], r: number, g: number, b: number): void {
+    if (this.currentY > this.pageHeight - 40) {
+      this.addNewPage();
+    }
+    
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setFontSize(12);
+    this.pdf.setTextColor(r, g, b);
+    this.pdf.text(title, this.margin, this.currentY);
+    this.currentY += 8;
+
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setFontSize(10);
+    this.pdf.setTextColor(0, 0, 0);
+    
+    items.forEach((item) => {
+      if (this.currentY > this.pageHeight - 30) {
+        this.addNewPage();
+      }
+      const lines = this.pdf.splitTextToSize(`• ${item}`, this.pageWidth - 2 * this.margin - 5);
+      lines.forEach((line: string) => {
+        this.pdf.text(line, this.margin + 5, this.currentY);
         this.currentY += 6;
       });
-      this.currentY += 5;
-    }
+    });
+    this.currentY += 5;
+  }
 
-    // Fortalezas
-    if (selectedSections.strengths && analysis.fortalezas && analysis.fortalezas.length > 0) {
-      if (this.currentY > this.pageHeight - 40) {
+  private addRecommendations(recommendations: Array<{prioridad: 'Alta' | 'Media' | 'Baja'; titulo: string; descripcion: string; impacto: string}>): void {
+    if (this.currentY > this.pageHeight - 40) {
+      this.addNewPage();
+    }
+    
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setFontSize(12);
+    this.pdf.setTextColor(102, 126, 234);
+    this.pdf.text('Recomendaciones Priorizadas', this.margin, this.currentY);
+    this.currentY += 8;
+
+    recommendations.forEach((rec) => {
+      if (this.currentY > this.pageHeight - 50) {
         this.addNewPage();
       }
-      
+
       this.pdf.setFont('helvetica', 'bold');
-      this.pdf.setFontSize(12);
-      this.pdf.setTextColor(16, 185, 129); // verde
-      this.pdf.text('Fortalezas Identificadas', this.margin, this.currentY);
-      this.currentY += 8;
+      this.pdf.setFontSize(10);
+      const prioridadColor = rec.prioridad === 'Alta' ? [239, 68, 68] : 
+                             rec.prioridad === 'Media' ? [251, 146, 60] : [34, 197, 94];
+      this.pdf.setTextColor(prioridadColor[0], prioridadColor[1], prioridadColor[2]);
+      this.pdf.text(`[${rec.prioridad}]`, this.margin + 5, this.currentY);
+      
+      this.pdf.setTextColor(0, 0, 0);
+      this.pdf.text(rec.titulo, this.margin + 25, this.currentY);
+      this.currentY += 6;
 
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.setFontSize(10);
-      this.pdf.setTextColor(0, 0, 0);
-      
-      analysis.fortalezas.forEach((fortaleza, index) => {
+      this.pdf.setFontSize(9);
+      const descLines = this.pdf.splitTextToSize(rec.descripcion, this.pageWidth - 2 * this.margin - 10);
+      descLines.forEach((line: string) => {
         if (this.currentY > this.pageHeight - 30) {
           this.addNewPage();
         }
-        const lines = this.pdf.splitTextToSize(`• ${fortaleza}`, this.pageWidth - 2 * this.margin - 5);
-        lines.forEach((line: string) => {
-          this.pdf.text(line, this.margin + 5, this.currentY);
-          this.currentY += 6;
-        });
+        this.pdf.text(line, this.margin + 10, this.currentY);
+        this.currentY += 5;
       });
-      this.currentY += 5;
-    }
 
-    // Debilidades/Áreas de Mejora
-    if (selectedSections.weaknesses && analysis.debilidades && analysis.debilidades.length > 0) {
-      if (this.currentY > this.pageHeight - 40) {
-        this.addNewPage();
-      }
-      
-      this.pdf.setFont('helvetica', 'bold');
-      this.pdf.setFontSize(12);
-      this.pdf.setTextColor(239, 68, 68); // rojo
-      this.pdf.text('Áreas de Mejora', this.margin, this.currentY);
-      this.currentY += 8;
-
-      this.pdf.setFont('helvetica', 'normal');
-      this.pdf.setFontSize(10);
-      this.pdf.setTextColor(0, 0, 0);
-      
-      analysis.debilidades.forEach((debilidad) => {
+      this.pdf.setFont('helvetica', 'italic');
+      const impactLines = this.pdf.splitTextToSize(`Impacto: ${rec.impacto}`, this.pageWidth - 2 * this.margin - 10);
+      impactLines.forEach((line: string) => {
         if (this.currentY > this.pageHeight - 30) {
           this.addNewPage();
         }
-        const lines = this.pdf.splitTextToSize(`• ${debilidad}`, this.pageWidth - 2 * this.margin - 5);
-        lines.forEach((line: string) => {
-          this.pdf.text(line, this.margin + 5, this.currentY);
-          this.currentY += 6;
-        });
+        this.pdf.text(line, this.margin + 10, this.currentY);
+        this.currentY += 5;
       });
-      this.currentY += 5;
-    }
+      this.currentY += 3;
+    });
+    this.currentY += 5;
+  }
 
-    // Recomendaciones
-    if (selectedSections.recommendations && analysis.recomendaciones && analysis.recomendaciones.length > 0) {
-      if (this.currentY > this.pageHeight - 40) {
+  private addNextSteps(steps: string[]): void {
+    if (this.currentY > this.pageHeight - 40) {
+      this.addNewPage();
+    }
+    
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setFontSize(12);
+    this.pdf.setTextColor(102, 126, 234);
+    this.pdf.text('Plan de Acción - Próximos Pasos', this.margin, this.currentY);
+    this.currentY += 8;
+
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setFontSize(10);
+    this.pdf.setTextColor(0, 0, 0);
+    
+    steps.forEach((paso, index) => {
+      if (this.currentY > this.pageHeight - 30) {
         this.addNewPage();
       }
-      
-      this.pdf.setFont('helvetica', 'bold');
-      this.pdf.setFontSize(12);
-      this.pdf.setTextColor(102, 126, 234); // azul
-      this.pdf.text('Recomendaciones Priorizadas', this.margin, this.currentY);
-      this.currentY += 8;
-
-      analysis.recomendaciones.forEach((rec) => {
-        if (this.currentY > this.pageHeight - 50) {
-          this.addNewPage();
-        }
-
-        // Prioridad y título
-        this.pdf.setFont('helvetica', 'bold');
-        this.pdf.setFontSize(10);
-        const prioridadColor = rec.prioridad === 'Alta' ? [239, 68, 68] : 
-                               rec.prioridad === 'Media' ? [251, 146, 60] : [34, 197, 94];
-        this.pdf.setTextColor(prioridadColor[0], prioridadColor[1], prioridadColor[2]);
-        this.pdf.text(`[${rec.prioridad}]`, this.margin + 5, this.currentY);
-        
-        this.pdf.setTextColor(0, 0, 0);
-        this.pdf.text(rec.titulo, this.margin + 25, this.currentY);
+      const lines = this.pdf.splitTextToSize(`${index + 1}. ${paso}`, this.pageWidth - 2 * this.margin - 5);
+      lines.forEach((line: string) => {
+        this.pdf.text(line, this.margin + 5, this.currentY);
         this.currentY += 6;
-
-        // Descripción
-        this.pdf.setFont('helvetica', 'normal');
-        this.pdf.setFontSize(9);
-        const descLines = this.pdf.splitTextToSize(rec.descripcion, this.pageWidth - 2 * this.margin - 10);
-        descLines.forEach((line: string) => {
-          if (this.currentY > this.pageHeight - 30) {
-            this.addNewPage();
-          }
-          this.pdf.text(line, this.margin + 10, this.currentY);
-          this.currentY += 5;
-        });
-
-        // Impacto
-        this.pdf.setFont('helvetica', 'italic');
-        const impactLines = this.pdf.splitTextToSize(`Impacto: ${rec.impacto}`, this.pageWidth - 2 * this.margin - 10);
-        impactLines.forEach((line: string) => {
-          if (this.currentY > this.pageHeight - 30) {
-            this.addNewPage();
-          }
-          this.pdf.text(line, this.margin + 10, this.currentY);
-          this.currentY += 5;
-        });
-        this.currentY += 3;
       });
-      this.currentY += 5;
-    }
-
-    // Riesgos
-    if (selectedSections.risks && analysis.riesgos && analysis.riesgos.length > 0) {
-      if (this.currentY > this.pageHeight - 40) {
-        this.addNewPage();
-      }
-      
-      this.pdf.setFont('helvetica', 'bold');
-      this.pdf.setFontSize(12);
-      this.pdf.setTextColor(239, 68, 68);
-      this.pdf.text('Riesgos Identificados', this.margin, this.currentY);
-      this.currentY += 8;
-
-      this.pdf.setFont('helvetica', 'normal');
-      this.pdf.setFontSize(10);
-      this.pdf.setTextColor(0, 0, 0);
-      
-      analysis.riesgos.forEach((riesgo) => {
-        if (this.currentY > this.pageHeight - 30) {
-          this.addNewPage();
-        }
-        const lines = this.pdf.splitTextToSize(`• ${riesgo}`, this.pageWidth - 2 * this.margin - 5);
-        lines.forEach((line: string) => {
-          this.pdf.text(line, this.margin + 5, this.currentY);
-          this.currentY += 6;
-        });
-      });
-      this.currentY += 5;
-    }
-
-    // Próximos Pasos
-    if (selectedSections.nextSteps && analysis.proximos_pasos && analysis.proximos_pasos.length > 0) {
-      if (this.currentY > this.pageHeight - 40) {
-        this.addNewPage();
-      }
-      
-      this.pdf.setFont('helvetica', 'bold');
-      this.pdf.setFontSize(12);
-      this.pdf.setTextColor(102, 126, 234);
-      this.pdf.text('Plan de Acción - Próximos Pasos', this.margin, this.currentY);
-      this.currentY += 8;
-
-      this.pdf.setFont('helvetica', 'normal');
-      this.pdf.setFontSize(10);
-      this.pdf.setTextColor(0, 0, 0);
-      
-      analysis.proximos_pasos.forEach((paso, index) => {
-        if (this.currentY > this.pageHeight - 30) {
-          this.addNewPage();
-        }
-        const lines = this.pdf.splitTextToSize(`${index + 1}. ${paso}`, this.pageWidth - 2 * this.margin - 5);
-        lines.forEach((line: string) => {
-          this.pdf.text(line, this.margin + 5, this.currentY);
-          this.currentY += 6;
-        });
-      });
-    }
+    });
   }
 
   private addSectionTitle(title: string): void {

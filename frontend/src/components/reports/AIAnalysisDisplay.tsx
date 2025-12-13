@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { HiCheckCircle, HiExclamationCircle } from 'react-icons/hi';
-import type { AIAnalysisResponse, AIRecommendation } from '@/api/reports/ai-analysis.types';
+import type { AIAnalysisResponse } from '@/api/reports/ai-analysis.types';
 
 interface AIAnalysisDisplayProps {
   analysis: AIAnalysisResponse;
