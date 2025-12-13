@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProjectCard } from '@/components/reports/ProjectCard';
 import { LoadMoreTrigger } from '@/components/shared/LoadMoreTrigger';
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { getMyProjects } from '@/api/reports/reports.api';
 import type { ProjectSummary } from '@/api/reports/reports.types';
 import { useInfiniteScroll } from '@/hooks/shared/useInfiniteScroll';
@@ -14,14 +15,16 @@ export default function ResultsPage() {
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'approved' | 'rejected' | 'no-score'>('all');
+  const [filter, setFilter] = useState<'all' | 'approved' | 'rejected'>('all');
 
   const loadProjects = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await getMyProjects();
-      setProjects(data);
+      // Filtrar solo proyectos completados (con resultados)
+      const completedProjects = data.filter(p => p.final_project_score !== null);
+      setProjects(completedProjects);
     } catch {
       setError('Error al cargar los proyectos. Por favor intenta de nuevo.');
     } finally {
@@ -31,9 +34,8 @@ export default function ResultsPage() {
 
   const filteredProjects = (projects || []).filter(project => {
     if (filter === 'all') return true;
-    if (filter === 'approved') return project.final_project_score !== null && project.meets_threshold;
-    if (filter === 'rejected') return project.final_project_score !== null && !project.meets_threshold;
-    if (filter === 'no-score') return project.final_project_score === null;
+    if (filter === 'approved') return project.meets_threshold;
+    if (filter === 'rejected') return !project.meets_threshold;
     return true;
   });
 
@@ -53,9 +55,8 @@ export default function ResultsPage() {
     reset();
   }, [filter, reset]);
 
-  const approvedCount = (projects || []).filter(p => p.final_project_score !== null && p.meets_threshold).length;
-  const rejectedCount = (projects || []).filter(p => p.final_project_score !== null && !p.meets_threshold).length;
-  const noScoreCount = (projects || []).filter(p => p.final_project_score === null).length;
+  const approvedCount = (projects || []).filter(p => p.meets_threshold).length;
+  const rejectedCount = (projects || []).filter(p => !p.meets_threshold).length;
 
   // Mostrar loading inicial sin contenido para evitar FOUC
   if (loading && projects.length === 0) {
@@ -145,36 +146,34 @@ export default function ResultsPage() {
   return (
     <div className="results-page">
       <div className="page-header">
-        <button onClick={() => router.push('/dashboard')} className="back-button">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Volver al Dashboard
-        </button>
+        <div className="header-left">
+          <Breadcrumbs 
+            items={[
+              { label: 'Dashboard', onClick: () => router.push('/dashboard') },
+              { label: 'Proyectos', isActive: true }
+            ]}
+          />
 
-        <div className="header-content">
-          <h1 className="page-title">Resultados de Proyectos</h1>
-          <p className="page-subtitle">
-            Visualiza y analiza los resultados de todos tus proyectos de calidad de software
-          </p>
+          <div className="header-content">
+            <h1 className="page-title">Resultados de Proyectos</h1>
+            <p className="page-subtitle">
+              Visualiza y analiza los resultados de todos tus proyectos de calidad de software
+            </p>
+          </div>
+        </div>
 
-          <div className="stats-summary">
-            <div className="stat-chip stat-chip--total">
-              <span className="stat-number">{projects?.length || 0}</span>
-              <span className="stat-text">Total</span>
-            </div>
-            <div className="stat-chip stat-chip--approved">
-              <span className="stat-number">{approvedCount}</span>
-              <span className="stat-text">Aprobados</span>
-            </div>
-            <div className="stat-chip stat-chip--rejected">
-              <span className="stat-number">{rejectedCount}</span>
-              <span className="stat-text">No Aprobados</span>
-            </div>
-            <div className="stat-chip stat-chip--pending">
-              <span className="stat-number">{noScoreCount}</span>
-              <span className="stat-text">Sin Resultados</span>
-            </div>
+        <div className="stats-summary">
+          <div className="stat-chip stat-chip--total">
+            <span className="stat-number">{projects?.length || 0}</span>
+            <span className="stat-text">Total</span>
+          </div>
+          <div className="stat-chip stat-chip--approved">
+            <span className="stat-number">{approvedCount}</span>
+            <span className="stat-text">Aprobados</span>
+          </div>
+          <div className="stat-chip stat-chip--rejected">
+            <span className="stat-number">{rejectedCount}</span>
+            <span className="stat-text">No Aprobados</span>
           </div>
         </div>
       </div>
@@ -197,12 +196,6 @@ export default function ResultsPage() {
           onClick={() => setFilter('rejected')}
         >
           No Aprobados ({rejectedCount})
-        </button>
-        <button
-          className={`filter-btn ${filter === 'no-score' ? 'filter-btn--active' : ''}`}
-          onClick={() => setFilter('no-score')}
-        >
-          Sin Resultados ({noScoreCount})
         </button>
       </div>
 
@@ -236,9 +229,7 @@ export default function ResultsPage() {
               ? 'No hay proyectos aprobados disponibles. Una vez que completes las evaluaciones, los proyectos aprobados aparecerán aquí.'
               : filter === 'rejected'
               ? 'No hay proyectos no aprobados. Los proyectos que no cumplan el umbral aparecerán aquí.'
-              : filter === 'no-score'
-              ? 'No hay proyectos sin resultados. Los proyectos sin evaluaciones completadas aparecerán aquí.'
-              : 'No se encontraron proyectos. Comienza creando un nuevo proyecto para ver los resultados.'}
+              : 'No se encontraron proyectos completados. Los proyectos con evaluaciones finalizadas aparecerán aquí.'}
           </p>
         </div>
       )}
@@ -269,6 +260,15 @@ export default function ResultsPage() {
         .page-header {
           max-width: 1200px;
           margin: 0 auto 3rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 4rem;
+        }
+
+        .header-left {
+          flex: 1;
+          min-width: 0;
         }
 
         .back-button {

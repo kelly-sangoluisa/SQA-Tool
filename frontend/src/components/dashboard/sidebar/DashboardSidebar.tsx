@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useMemo } from 'react';
-import { HiFolder, HiChartBar, HiSearch } from 'react-icons/hi';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/auth/useAuth';
+import { HiFolder, HiChartBar, HiSearch, HiLogout } from 'react-icons/hi';
 import { SidebarToggle } from './components/SidebarToggle';
 import { NewEvaluationButton } from './components/NewEvaluationButton';
 import { BackToHomeButton } from './components/BackToHomeButton';
@@ -14,8 +16,24 @@ import styles from './DashboardSidebar.module.css';
 
 export function DashboardSidebar() {
   const { isOpen, toggleSidebar, closeSidebar } = useSidebar();
+  const { signOut } = useAuth();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Error durante el logout:', error);
+      router.replace('/auth/login');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
   
   const {
     recentProjects,
@@ -110,8 +128,6 @@ export function DashboardSidebar() {
           <SidebarSection
             title="Evaluaciones Recientes"
             icon={HiChartBar}
-            viewAllLink="/results"
-            viewAllText="Ver todas las evaluaciones"
             loading={loadingEvaluations}
             isEmpty={filteredEvaluations.length === 0}
             emptyMessage={searchQuery.trim() ? "No se encontraron evaluaciones" : "No hay evaluaciones recientes"}
@@ -120,6 +136,17 @@ export function DashboardSidebar() {
               <EvaluationListItem key={evaluation.evaluation_id} evaluation={evaluation} />
             ))}
           </SidebarSection>
+
+          {/* Botón Cerrar Sesión */}
+          <button
+            onClick={handleSignOut}
+            disabled={isLoggingOut}
+            className={styles.logoutButton}
+            aria-label="Cerrar sesión"
+          >
+            <HiLogout size={20} />
+            <span>Cerrar Sesión</span>
+          </button>
         </div>
       </aside>
 

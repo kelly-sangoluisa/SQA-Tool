@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { ScoreGauge } from '@/components/reports/ScoreGauge';
 import { CriterionCard } from '@/components/reports/CriterionCard';
 import { CriterionAccordion } from '@/components/reports/CriterionAccordion';
@@ -189,12 +190,14 @@ export default function EvaluationDetailPage() {
     <div className="detail-page">
       {/* Header */}
       <div className="page-header">
-        <button onClick={() => router.back()} className="back-button">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Volver
-        </button>
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', onClick: () => router.push('/dashboard') },
+            { label: 'Proyectos', onClick: () => router.push('/results') },
+            { label: report.project_name, onClick: () => router.push(`/results/project/${report.project_id}`) },
+            { label: report.standard_name, isActive: true }
+          ]}
+        />
         
         <div className="header-content">
           <div className="header-info">
@@ -408,26 +411,6 @@ export default function EvaluationDetailPage() {
         .page-header {
           max-width: 1200px;
           margin: 0 auto 2rem;
-        }
-
-        .back-button {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          background: white;
-          border: 2px solid #e5e7eb;
-          border-radius: 12px;
-          color: var(--color-primary);
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          margin-bottom: 1.5rem;
-        }
-
-        .back-button:hover {
-          border-color: var(--color-primary);
-          box-shadow: 0 4px 12px rgba(78, 94, 163, 0.15);
         }
 
         .header-content {
