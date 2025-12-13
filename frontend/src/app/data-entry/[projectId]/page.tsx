@@ -93,7 +93,7 @@ export default function DataEntryProjectPage() {
   const params = useParams();
   const router = useRouter();
   const { isLoading, isAuthenticated, user } = useAuth();
-  const projectId = parseInt(params.projectId as string);
+  const projectId = parseInt(params.projectId as string, 10);
 
   // Estados principales
   const [project, setProject] = useState<Project | null>(null);
