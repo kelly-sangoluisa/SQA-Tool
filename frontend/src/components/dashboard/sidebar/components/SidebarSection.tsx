@@ -6,8 +6,8 @@ import styles from '../DashboardSidebar.module.css';
 interface SidebarSectionProps {
   title: string;
   icon: IconType;
-  viewAllLink: string;
-  viewAllText: string;
+  viewAllLink?: string;
+  viewAllText?: string;
   loading?: boolean;
   isEmpty?: boolean;
   emptyMessage?: string;
@@ -40,9 +40,11 @@ export function SidebarSection({
           <ul className={styles.itemList}>
             {children}
           </ul>
-          <Link href={viewAllLink} className={styles.viewAllLink}>
-            {viewAllText}
-          </Link>
+          {viewAllLink && viewAllText && (
+            <Link href={viewAllLink} className={styles.viewAllLink}>
+              {viewAllText}
+            </Link>
+          )}
         </>
       )}
     </section>
