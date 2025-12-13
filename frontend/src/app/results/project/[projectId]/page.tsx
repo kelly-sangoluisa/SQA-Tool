@@ -33,7 +33,7 @@ export default function ProjectEvaluationsPage() {
         const report = await getProjectReport(projectId);
         setProjectReport(report);
       } catch (reportErr) {
-        console.log('Proyecto aún no completado o sin resultados');
+        // Proyecto aún no completado o sin resultados
       }
     } catch (err) {
       setError('Error al cargar las evaluaciones del proyecto.');

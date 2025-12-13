@@ -152,7 +152,8 @@ export class AuthService {
       if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
         throw new BadRequestException('Invalid or expired recovery token');
       }
-      throw err;
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      throw new Error(errorMessage);
     }
   }
 

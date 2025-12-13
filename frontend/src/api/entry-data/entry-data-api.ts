@@ -32,7 +32,8 @@ export async function submitEvaluationData(
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Error al guardar los datos');
+    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al guardar los datos';
+    throw new Error(errorMessage);
   }
 }
 
@@ -49,7 +50,8 @@ export async function finalizeEvaluation(evaluationId: number): Promise<void> {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Error al finalizar la evaluación');
+    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al finalizar la evaluación';
+    throw new Error(errorMessage);
   }
 }
 
@@ -66,7 +68,8 @@ export async function finalizeProject(projectId: number): Promise<void> {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Error al finalizar el proyecto');
+    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al finalizar el proyecto';
+    throw new Error(errorMessage);
   }
 }
 
@@ -78,7 +81,8 @@ export async function getEvaluationCompleteResults(evaluationId: number): Promis
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Error al obtener resultados de evaluación');
+    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al obtener resultados de evaluación';
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -92,7 +96,8 @@ export async function getProjectCompleteResults(projectId: number): Promise<Comp
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Error al obtener resultados del proyecto');
+    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al obtener resultados del proyecto';
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -112,7 +117,8 @@ export async function getProjectProgress(projectId: number): Promise<ProjectProg
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Error al obtener progreso del proyecto');
+    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al obtener progreso del proyecto';
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -132,7 +138,8 @@ export async function getEvaluationStatus(evaluationId: number): Promise<Evaluat
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Error al obtener estado de evaluación');
+    const errorMessage = error && typeof error.message === 'string' ? error.message : 'Error al obtener estado de evaluación';
+    throw new Error(errorMessage);
   }
 
   return response.json();
