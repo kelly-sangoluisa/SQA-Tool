@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { HiCheckCircle, HiExclamationCircle } from 'react-icons/hi';
 import type { AIAnalysisResponse } from '@/api/reports/ai-analysis.types';

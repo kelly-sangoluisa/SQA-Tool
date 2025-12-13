@@ -16,7 +16,7 @@ export default function EvaluationDetailPage() {
   const params = useParams();
   const router = useRouter();
   const evaluationId = Number(params.id);
-  const isValidEvaluationId = !isNaN(evaluationId) && evaluationId > 0;
+  const isValidEvaluationId = !Number.isNaN(evaluationId) && evaluationId > 0;
 
   const [report, setReport] = useState<EvaluationReport | null>(null);
   const [stats, setStats] = useState<EvaluationStats | null>(null);

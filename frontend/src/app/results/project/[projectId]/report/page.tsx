@@ -23,7 +23,7 @@ export default function ProjectReportPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = Number(params.projectId);
-  const isValidProjectId = !isNaN(projectId) && projectId > 0;
+  const isValidProjectId = !Number.isNaN(projectId) && projectId > 0;
 
   const [report, setReport] = useState<ProjectReport | null>(null);
   const [stats, setStats] = useState<ProjectStats | null>(null);
@@ -448,10 +448,22 @@ export default function ProjectReportPage() {
 
       {/* Modal para seleccionar secciones del análisis IA */}
       {showPDFModal && (
-        <div className="modal-overlay" onClick={() => setShowPDFModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="modal-overlay" 
+          onClick={() => setShowPDFModal(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowPDFModal(false); }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          <div 
+            className="modal-content" 
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="document"
+          >
             <div className="modal-header">
-              <h3>Seleccionar Secciones del Análisis IA para PDF</h3>
+              <h3 id="modal-title">Seleccionar Secciones del Análisis IA para PDF</h3>
               <button className="modal-close-btn" onClick={() => setShowPDFModal(false)}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -465,11 +477,13 @@ export default function ProjectReportPage() {
               </p>
               
               <div className="checkbox-list">
-                <label className="checkbox-item">
+                <label className="checkbox-item" htmlFor="section-general">
                   <input
+                    id="section-general"
                     type="checkbox"
                     checked={selectedSections.general}
                     onChange={() => toggleSection('general')}
+                    aria-label="Análisis General"
                   />
                   <div className="checkbox-content">
                     <span className="checkbox-icon"><HiOutlineDocumentText size={24} /></span>
@@ -480,11 +494,13 @@ export default function ProjectReportPage() {
                   </div>
                 </label>
 
-                <label className="checkbox-item">
+                <label className="checkbox-item" htmlFor="section-strengths">
                   <input
+                    id="section-strengths"
                     type="checkbox"
                     checked={selectedSections.strengths}
                     onChange={() => toggleSection('strengths')}
+                    aria-label="Fortalezas"
                   />
                   <div className="checkbox-content">
                     <span className="checkbox-icon"><HiOutlineCheckCircle size={24} /></span>
@@ -495,11 +511,13 @@ export default function ProjectReportPage() {
                   </div>
                 </label>
 
-                <label className="checkbox-item">
+                <label className="checkbox-item" htmlFor="section-weaknesses">
                   <input
+                    id="section-weaknesses"
                     type="checkbox"
                     checked={selectedSections.weaknesses}
                     onChange={() => toggleSection('weaknesses')}
+                    aria-label="Áreas de Mejora"
                   />
                   <div className="checkbox-content">
                     <span className="checkbox-icon"><HiOutlineExclamationCircle size={24} /></span>
@@ -510,11 +528,13 @@ export default function ProjectReportPage() {
                   </div>
                 </label>
 
-                <label className="checkbox-item">
+                <label className="checkbox-item" htmlFor="section-recommendations">
                   <input
+                    id="section-recommendations"
                     type="checkbox"
                     checked={selectedSections.recommendations}
                     onChange={() => toggleSection('recommendations')}
+                    aria-label="Recomendaciones"
                   />
                   <div className="checkbox-content">
                     <span className="checkbox-icon"><HiOutlineLightBulb size={24} /></span>
@@ -525,11 +545,13 @@ export default function ProjectReportPage() {
                   </div>
                 </label>
 
-                <label className="checkbox-item">
+                <label className="checkbox-item" htmlFor="section-risks">
                   <input
+                    id="section-risks"
                     type="checkbox"
                     checked={selectedSections.risks}
                     onChange={() => toggleSection('risks')}
+                    aria-label="Riesgos"
                   />
                   <div className="checkbox-content">
                     <span className="checkbox-icon"><HiExclamation size={24} /></span>
@@ -540,11 +562,13 @@ export default function ProjectReportPage() {
                   </div>
                 </label>
 
-                <label className="checkbox-item">
+                <label className="checkbox-item" htmlFor="section-nextSteps">
                   <input
+                    id="section-nextSteps"
                     type="checkbox"
                     checked={selectedSections.nextSteps}
                     onChange={() => toggleSection('nextSteps')}
+                    aria-label="Plan de Acción"
                   />
                   <div className="checkbox-content">
                     <span className="checkbox-icon"><HiOutlineCalendar size={24} /></span>

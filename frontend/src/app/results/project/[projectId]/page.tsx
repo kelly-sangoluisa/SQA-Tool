@@ -10,7 +10,7 @@ export default function ProjectEvaluationsPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = Number(params.projectId);
-  const isValidProjectId = !isNaN(projectId) && projectId > 0;
+  const isValidProjectId = !Number.isNaN(projectId) && projectId > 0;
 
   const [evaluations, setEvaluations] = useState<EvaluationListItem[]>([]);
   const [projectReport, setProjectReport] = useState<ProjectReport | null>(null);

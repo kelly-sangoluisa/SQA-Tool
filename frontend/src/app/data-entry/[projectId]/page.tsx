@@ -93,8 +93,8 @@ export default function DataEntryProjectPage() {
   const params = useParams();
   const router = useRouter();
   const { isLoading, isAuthenticated, user } = useAuth();
-  const projectId = parseInt(params.projectId as string, 10);
-  const isValidProjectId = !isNaN(projectId) && projectId > 0;
+  const projectId = Number.parseInt(params.projectId as string, 10);
+  const isValidProjectId = !Number.isNaN(projectId) && projectId > 0;
 
   // Estados principales
   const [project, setProject] = useState<Project | null>(null);
