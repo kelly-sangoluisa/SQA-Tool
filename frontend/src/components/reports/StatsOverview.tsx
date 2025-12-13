@@ -53,8 +53,8 @@ export function StatsOverview({ stats, report }: StatsOverviewProps) {
               <FaStar size={20} />
               <h4>Mejor Criterio</h4>
             </div>
-            <p className="comparison-name">{stats.best_criterion.name}</p>
-            <div className="comparison-score">{stats.best_criterion.score.toFixed(1)}</div>
+            <p className="comparison-name">{stats.best_criterion?.name || 'N/A'}</p>
+            <div className="comparison-score">{stats.best_criterion?.score?.toFixed(1) || '0.0'}</div>
           </div>
 
           <div className="comparison-card comparison-card--worst">
@@ -62,8 +62,8 @@ export function StatsOverview({ stats, report }: StatsOverviewProps) {
               <FaExclamationTriangle size={20} />
               <h4>Área de Mejora</h4>
             </div>
-            <p className="comparison-name">{stats.worst_criterion.name}</p>
-            <div className="comparison-score">{stats.worst_criterion.score.toFixed(1)}</div>
+            <p className="comparison-name">{stats.worst_criterion?.name || 'N/A'}</p>
+            <div className="comparison-score">{stats.worst_criterion?.score?.toFixed(1) || '0.0'}</div>
           </div>
         </div>
       ) : (
@@ -73,8 +73,8 @@ export function StatsOverview({ stats, report }: StatsOverviewProps) {
               <FaStar size={20} />
               <h4>Criterio Evaluado</h4>
             </div>
-            <p className="comparison-name">{stats.best_criterion.name}</p>
-            <div className="comparison-score">{stats.best_criterion.score.toFixed(1)}</div>
+            <p className="comparison-name">{stats.best_criterion?.name || 'N/A'}</p>
+            <div className="comparison-score">{stats.best_criterion?.score?.toFixed(1) || '0.0'}</div>
           </div>
         </div>
       )}
@@ -83,46 +83,46 @@ export function StatsOverview({ stats, report }: StatsOverviewProps) {
       <div className="importance-section">
         <h4 className="importance-title">Puntuación por Nivel de Importancia</h4>
         <div className="importance-bars">
-          {stats.score_by_importance.high > 0 && (
+          {(stats.score_by_importance?.high || 0) > 0 && (
             <div className="importance-bar">
               <div className="bar-header">
                 <span className="bar-label">Alta Importancia</span>
-                <span className="bar-value">{stats.score_by_importance.high.toFixed(1)}</span>
+                <span className="bar-value">{stats.score_by_importance?.high?.toFixed(1) || '0.0'}</span>
               </div>
               <div className="bar-container">
                 <div 
                   className="bar-fill bar-fill--high"
-                  style={{ width: `${stats.score_by_importance.high}%` }}
+                  style={{ width: `${stats.score_by_importance?.high || 0}%` }}
                 />
               </div>
             </div>
           )}
 
-          {stats.score_by_importance.medium > 0 && (
+          {(stats.score_by_importance?.medium || 0) > 0 && (
             <div className="importance-bar">
               <div className="bar-header">
                 <span className="bar-label">Importancia Media</span>
-                <span className="bar-value">{stats.score_by_importance.medium.toFixed(1)}</span>
+                <span className="bar-value">{stats.score_by_importance?.medium?.toFixed(1) || '0.0'}</span>
               </div>
               <div className="bar-container">
                 <div 
                   className="bar-fill bar-fill--medium"
-                  style={{ width: `${stats.score_by_importance.medium}%` }}
+                  style={{ width: `${stats.score_by_importance?.medium || 0}%` }}
                 />
               </div>
             </div>
           )}
 
-          {stats.score_by_importance.low > 0 && (
+          {(stats.score_by_importance?.low || 0) > 0 && (
             <div className="importance-bar">
               <div className="bar-header">
                 <span className="bar-label">Baja Importancia</span>
-                <span className="bar-value">{stats.score_by_importance.low.toFixed(1)}</span>
+                <span className="bar-value">{stats.score_by_importance?.low?.toFixed(1) || '0.0'}</span>
               </div>
               <div className="bar-container">
                 <div 
                   className="bar-fill bar-fill--low"
-                  style={{ width: `${stats.score_by_importance.low}%` }}
+                  style={{ width: `${stats.score_by_importance?.low || 0}%` }}
                 />
               </div>
             </div>
