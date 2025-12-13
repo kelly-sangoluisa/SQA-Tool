@@ -86,7 +86,7 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
         {analysis.metadata && (
           <div className={`metadata-badge ${analysis.metadata.meetsThreshold ? 'approved' : 'rejected'}`}>
             <div className="metadata-score">
-              <span className="score-value">{analysis.metadata.score.toFixed(1)}%</span>
+              <span className="score-value">{analysis.metadata.score?.toFixed(1) || '0.0'}%</span>
               <span className="score-label">Puntuación</span>
             </div>
             <div className="metadata-divider" />
@@ -149,7 +149,7 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
               <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              Fortalezas ({analysis.fortalezas.length})
+              Fortalezas ({analysis.fortalezas?.length || 0})
             </h3>
             <svg 
               className={`chevron ${expandedSections.strengths ? 'expanded' : ''}`}
@@ -164,7 +164,7 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
           {expandedSections.strengths && (
             <div className="section-content">
               <ul className="list-items strengths-list">
-                {analysis.fortalezas.map((fortaleza, index) => (
+                {(analysis.fortalezas || []).map((fortaleza, index) => (
                   <li key={index}>{fortaleza}</li>
                 ))}
               </ul>
@@ -183,7 +183,7 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
               <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
-              Áreas de Mejora ({analysis.debilidades.length})
+              Áreas de Mejora ({analysis.debilidades?.length || 0})
             </h3>
             <svg 
               className={`chevron ${expandedSections.weaknesses ? 'expanded' : ''}`}
@@ -198,7 +198,7 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
           {expandedSections.weaknesses && (
             <div className="section-content">
               <ul className="list-items weaknesses-list">
-                {analysis.debilidades.map((debilidad, index) => (
+                {(analysis.debilidades || []).map((debilidad, index) => (
                   <li key={index}>{debilidad}</li>
                 ))}
               </ul>
@@ -217,7 +217,7 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
               <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
               </svg>
-              Recomendaciones Priorizadas ({analysis.recomendaciones.length})
+              Recomendaciones Priorizadas ({analysis.recomendaciones?.length || 0})
             </h3>
             <svg 
               className={`chevron ${expandedSections.recommendations ? 'expanded' : ''}`}
@@ -232,7 +232,7 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
           {expandedSections.recommendations && (
             <div className="section-content">
               <div className="recommendations-grid">
-                {analysis.recomendaciones.map((rec, index) => (
+                {(analysis.recomendaciones || []).map((rec, index) => (
                   <div key={index} className="recommendation-card">
                     <div className="recommendation-header">
                       <span 
@@ -272,7 +272,7 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
               <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
-              Riesgos Identificados ({analysis.riesgos.length})
+              Riesgos Identificados ({analysis.riesgos?.length || 0})
             </h3>
             <svg 
               className={`chevron ${expandedSections.risks ? 'expanded' : ''}`}
@@ -287,7 +287,7 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
           {expandedSections.risks && (
             <div className="section-content">
               <ul className="list-items risks-list">
-                {analysis.riesgos.map((riesgo, index) => (
+                {(analysis.riesgos || []).map((riesgo, index) => (
                   <li key={index}>{riesgo}</li>
                 ))}
               </ul>
@@ -306,7 +306,7 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
               <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
               </svg>
-              Plan de Acción ({analysis.proximos_pasos.length} pasos)
+              Plan de Acción ({analysis.proximos_pasos?.length || 0} pasos)
             </h3>
             <svg 
               className={`chevron ${expandedSections.nextSteps ? 'expanded' : ''}`}
