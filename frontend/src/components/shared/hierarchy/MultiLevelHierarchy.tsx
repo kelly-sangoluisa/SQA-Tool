@@ -198,6 +198,8 @@ export function MultiLevelHierarchy<
               <button
                 className={`${styles.level1Button} ${isGroupExpanded ? styles.level1Active : ''} ${isCompleted ? styles.level1Completed : ''}`}
                 onClick={() => toggleGroup(group.id)}
+                disabled={isCompleted}
+                title={isCompleted ? 'Esta evaluación ya ha sido finalizada' : ''}
               >
                 <span className={styles.expandIcon}>
                   {isGroupExpanded ? '▼' : '▶'}
@@ -212,7 +214,7 @@ export function MultiLevelHierarchy<
                 )}
               </button>
 
-              {isGroupExpanded && (
+              {isGroupExpanded && !isCompleted && (
                 <div className={styles.level2Container}>
                   {level2Items.length === 0 ? (
                     <div className={styles.emptyMessage}>
