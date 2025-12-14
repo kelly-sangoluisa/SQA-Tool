@@ -33,9 +33,13 @@ export class EvaluationMetricResult extends BaseTimestampEntity {
   })
   @Column({
     name: 'calculated_value',
-    type: 'numeric',
+    type: 'decimal',
     precision: 10,
-    scale: 2
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value)
+    }
   })
   calculated_value: number;
 
@@ -45,9 +49,13 @@ export class EvaluationMetricResult extends BaseTimestampEntity {
   })
   @Column({
     name: 'weighted_value',
-    type: 'numeric',
+    type: 'decimal',
     precision: 10,
-    scale: 2
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value)
+    }
   })
   weighted_value: number;
 }
