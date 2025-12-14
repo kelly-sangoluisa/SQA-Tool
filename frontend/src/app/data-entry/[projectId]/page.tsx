@@ -40,6 +40,7 @@ interface Subcriterion {
 
 // API response types
 interface EvaluationMetricAPI {
+  id?: number;
   metric?: {
     id: number;
     name: string;
@@ -257,15 +258,16 @@ export default function DataEntryProjectPage() {
                 const metricExists = existingMetrics.some(m => m.id === evalMetric.id);
                 
                 if (!metricExists) {
+                  const metricId = evalMetric.id || metric.id || 0;
                   metricsBySubcriterion.get(subCriterionId)!.push({
-                    id: evalMetric.id, // CRÍTICO: usar evalMetric.id (evaluation_metrics.id) NO metric.id
+                    id: metricId, // CRÍTICO: usar evalMetric.id (evaluation_metrics.id) NO metric.id
                     name: metric.name,
                     description: metric.description,
                     formula: metric.formula,
                     code: metric.code,
                     variables: (metric.variables || []).map((v) => ({
                       id: v.id,
-                      metric_id: evalMetric.id, // CRÍTICO: usar evalMetric.id
+                      metric_id: metricId, // CRÍTICO: usar evalMetric.id
                       symbol: v.symbol,
                       description: v.description,
                       state: v.state
