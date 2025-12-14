@@ -20,25 +20,45 @@ interface CompleteResults {
  */
 export async function submitEvaluationData(
   evaluationId: number,
-  variables: Array<{ metric_id: number; variable_id: number; symbol: string; value: string }>
+  variables: Array<{ eval_metric_id?: number; metric_id?: number; variable_id: number; symbol: string; value: number | string }>
 ): Promise<void> {
+  console.log('📤 Enviando datos:', {
+    evaluationId,
+    variables: variables.map(v => ({
+      eval_metric_id: v.eval_metric_id || v.metric_id,
+      variable_id: v.variable_id,
+      symbol: v.symbol,
+      value: v.value // Mostrar el valor directamente (número o string)
+    }))
+  });
+
   const response = await fetch(`/api/entry-data/evaluations/${evaluationId}/submit-data`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ variables }),
+    body: JSON.stringify({ 
+      evaluation_variables: variables 
+    }),
   });
 
   if (!response.ok) {
     let errorMessage = 'Error al guardar los datos';
     try {
       const error = await response.json();
+      console.error('❌ Error del servidor:', error);
       errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
     } catch {
       // Server didn't return JSON
     }
     throw new Error(errorMessage);
+  }
+
+  try {
+    const result = await response.json();
+    console.log('✅ Datos guardados:', result);
+  } catch {
+    // Response might not have body
   }
 }
 
@@ -63,6 +83,16 @@ export async function finalizeEvaluation(evaluationId: number): Promise<void> {
     }
     throw new Error(errorMessage);
   }
+
+  try {
+    const result = await response.json();
+    console.log('✅ Evaluación finalizada:', result);
+    console.log('📊 Resultados de métricas:', result.metric_results);
+    console.log('📈 Resultados de criterios:', result.criteria_results);
+    console.log('🎯 Puntaje final:', result.final_score);
+  } catch {
+    // Response might not have body
+  }
 }
 
 /**
@@ -85,6 +115,15 @@ export async function finalizeProject(projectId: number): Promise<void> {
       // Server didn't return JSON
     }
     throw new Error(errorMessage);
+  }
+
+  try {
+    const result = await response.json();
+    console.log('✅ Proyecto finalizado:', result);
+    console.log('🎯 Puntaje final del proyecto:', result.final_score);
+    console.log('📅 Finalizado en:', result.finalized_at);
+  } catch {
+    // Response might not have body
   }
 }
 

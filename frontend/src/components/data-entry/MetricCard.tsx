@@ -149,7 +149,7 @@ export function MetricCard({
           variant="primary" 
           size="lg"
           onClick={handlePrimaryAction}
-          disabled={!allVariablesFilled && isLastMetric}
+          disabled={!allVariablesFilled}
         >
           {getPrimaryButtonText()}
         </Button>

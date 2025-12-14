@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/auth/useAuth';
 import '@/styles/data-entry/data-entry.css';
@@ -254,18 +254,18 @@ export default function DataEntryProjectPage() {
                 
                 // Agregar métrica con sus variables
                 const existingMetrics = metricsBySubcriterion.get(subCriterionId) || [];
-                const metricExists = existingMetrics.some(m => m.id === metric.id);
+                const metricExists = existingMetrics.some(m => m.id === evalMetric.id);
                 
                 if (!metricExists) {
                   metricsBySubcriterion.get(subCriterionId)!.push({
-                    id: metric.id,
+                    id: evalMetric.id, // CRÍTICO: usar evalMetric.id (evaluation_metrics.id) NO metric.id
                     name: metric.name,
                     description: metric.description,
                     formula: metric.formula,
                     code: metric.code,
                     variables: (metric.variables || []).map((v) => ({
                       id: v.id,
-                      metric_id: metric.id,
+                      metric_id: evalMetric.id, // CRÍTICO: usar evalMetric.id
                       symbol: v.symbol,
                       description: v.description,
                       state: v.state
@@ -324,6 +324,23 @@ export default function DataEntryProjectPage() {
 
         setEvaluations(evaluationsWithMetrics as Evaluation[]);
 
+        // Cargar estado de cada evaluación para determinar cuáles están finalizadas
+        const completedEvals = new Set<number>();
+        for (const evaluation of evaluationsWithMetrics) {
+          try {
+            const statusResponse = await fetch(`/api/entry-data/evaluations/${evaluation.id}/status`);
+            if (statusResponse.ok) {
+              const statusData = await statusResponse.json();
+              if (statusData.status === 'completed') {
+                completedEvals.add(evaluation.id);
+              }
+            }
+          } catch (error) {
+            console.warn(`No se pudo verificar estado de evaluación ${evaluation.id}`);
+          }
+        }
+        setFinalizedEvaluations(completedEvals);
+
         // Cargar progreso del proyecto
         const progressResponse = await fetch(`/api/entry-data/projects/${projectId}/progress`);
         if (progressResponse.ok) {
@@ -331,10 +348,6 @@ export default function DataEntryProjectPage() {
             const progressData = await progressResponse.json();
             setProjectProgress(progressData);
           } catch {
-            // Continue without progress data or let it fail? 
-            // If we don't throw, the page loads but progress is missing.
-            // If we throw, the page shows error.
-            // Let's throw to be consistent with projectData.
             throw new Error('Error al procesar datos de progreso');
           }
         } else {
@@ -342,7 +355,7 @@ export default function DataEntryProjectPage() {
           const mockProgress = {
             project_id: projectId,
             total_evaluations: evaluationsWithMetrics.length,
-            completed_evaluations: 0,
+            completed_evaluations: completedEvals.size,
             in_progress_evaluations: evaluationsWithMetrics.length,
             total_metrics: 0,
             completed_metrics: 0,
@@ -379,8 +392,74 @@ export default function DataEntryProjectPage() {
     });
   }, [isAuthenticated, projectId, isValidProjectId]);
 
+  // Función para guardar datos en el backend
+  const saveCurrentMetricData = async () => {
+    const metric = allMetrics[currentMetricIndex];
+    if (!metric) {
+      console.log('⚠️ No hay métrica actual para guardar');
+      return;
+    }
+    
+    console.log('🔍 DEBUG - Métrica a guardar:', {
+      metricId: metric.id,
+      metricName: metric.name,
+      currentMetricIndex,
+      allMetricsLength: allMetrics.length
+    });
+    
+    const currentEval = getCurrentEvaluation();
+    if (!currentEval) {
+      console.log('⚠️ No se encontró la evaluación actual');
+      return;
+    }
+
+    // Preparar variables de la métrica actual
+    const variablesToSubmit = (metric.variables || [])
+      .map(variable => {
+        const key = `metric-${metric.id}-${variable.symbol}`;
+        const value = variableValues[key];
+        
+        if (!value || value.trim() === '') return null;
+        
+        const varData = {
+          eval_metric_id: metric.id, // CRÍTICO: usar eval_metric_id para el backend
+          variable_id: variable.id,
+          symbol: variable.symbol,
+          value: parseFloat(value) || 0 // Enviar como número
+        };
+        
+        console.log('🔍 DEBUG - Variable mapeada:', varData);
+        
+        return varData;
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    if (variablesToSubmit.length > 0) {
+      try {
+        console.log(`💾 Guardando ${variablesToSubmit.length} variables de la métrica "${metric.name}"...`);
+        await submitEvaluationData(currentEval.id, variablesToSubmit);
+        console.log('✅ Datos guardados correctamente');
+      } catch (error) {
+        console.error('❌ Error al guardar datos:', error);
+        // No mostramos alert para no interrumpir el flujo
+      }
+    } else {
+      console.log('ℹ️ No hay datos nuevos para guardar en esta métrica');
+    }
+  };
+
   // Función para manejar selección de métrica desde el sidebar
-  const handleMetricSelect = (evaluationIndex: number, metricGlobalIndex: number) => {
+  const handleMetricSelect = async (evaluationIndex: number, metricGlobalIndex: number) => {
+    // Verificar si la evaluación está finalizada
+    const targetEvaluation = evaluations[evaluationIndex];
+    if (targetEvaluation && finalizedEvaluations.has(targetEvaluation.id)) {
+      alert('Esta evaluación ya ha sido finalizada y no se puede editar.');
+      return;
+    }
+    
+    // Guardar datos de la métrica actual antes de cambiar
+    await saveCurrentMetricData();
+    
     setCurrentMetricIndex(metricGlobalIndex);
   };
 
@@ -398,18 +477,37 @@ export default function DataEntryProjectPage() {
     localStorage.setItem(storageKey, JSON.stringify(updatedValues));
   };
 
+  // Crear conjunto de IDs válidos de métricas
+  const validMetricIds = useMemo(() => new Set(allMetrics.map(m => m.id)), [allMetrics]);
+
   // Cargar valores desde localStorage
   useEffect(() => {
     const storageKey = `data-entry-project-${projectId}`;
     const stored = localStorage.getItem(storageKey);
     if (stored) {
       try {
-        setVariableValues(JSON.parse(stored));
+        const parsedValues = JSON.parse(stored);
+        
+        // Verificar si hay IDs inválidos (de versiones anteriores del código)
+        const hasInvalidIds = Object.keys(parsedValues).some(key => {
+          if (!key.startsWith('metric-')) return false;
+          const metricId = parseInt(key.split('-')[1]);
+          return !validMetricIds.has(metricId);
+        });
+        
+        if (hasInvalidIds && allMetrics.length > 0) {
+          console.warn('⚠️ Detectados IDs inválidos en localStorage. Limpiando datos antiguos...');
+          localStorage.removeItem(storageKey);
+          setVariableValues({});
+        } else {
+          setVariableValues(parsedValues);
+        }
       } catch {
         // Error parsing stored values, start fresh
+        localStorage.removeItem(storageKey);
       }
     }
-  }, [projectId]);
+  }, [projectId, validMetricIds, allMetrics.length]);
 
   // Función para verificar si todas las variables de la métrica actual están llenas
   const areCurrentMetricVariablesFilled = (): boolean => {
@@ -424,13 +522,14 @@ export default function DataEntryProjectPage() {
 
   // Función para obtener la evaluación actual basada en la métrica actual
   const getCurrentEvaluation = (): Evaluation | null => {
-    if (!currentMetric) return null;
+    const metric = allMetrics[currentMetricIndex];
+    if (!metric) return null;
     
     for (const evaluation of evaluations) {
       for (const ec of evaluation.evaluation_criteria || []) {
         if (ec.criterion?.subcriteria) {
           for (const sc of ec.criterion.subcriteria) {
-            if (sc.metrics?.some(m => m.id === currentMetric.id)) {
+            if (sc.metrics?.some(m => m.id === metric.id)) {
               return evaluation;
             }
           }
@@ -465,9 +564,18 @@ export default function DataEntryProjectPage() {
   };
 
   // Handler para terminar evaluación
-  const handleFinishEvaluation = () => {
+  const handleFinishEvaluation = async () => {
     const currentEval = getCurrentEvaluation();
     if (!currentEval) return;
+
+    // Verificar si ya está finalizada
+    if (finalizedEvaluations.has(currentEval.id)) {
+      alert('Esta evaluación ya ha sido finalizada.');
+      return;
+    }
+
+    // Guardar datos de la métrica actual antes de finalizar
+    await saveCurrentMetricData();
 
     setCurrentEvaluationForModal(currentEval);
     setIsFinalizingProject(false);
@@ -475,9 +583,12 @@ export default function DataEntryProjectPage() {
   };
 
   // Handler para terminar proyecto
-  const handleFinishProject = () => {
+  const handleFinishProject = async () => {
     const currentEval = getCurrentEvaluation();
     if (!currentEval) return;
+
+    // Guardar datos de la métrica actual antes de finalizar
+    await saveCurrentMetricData();
 
     setCurrentEvaluationForModal(currentEval);
     setIsFinalizingProject(true);
@@ -492,6 +603,9 @@ export default function DataEntryProjectPage() {
       setModalLoading(true);
 
       // Preparar datos de variables para enviar
+      console.log('🔍 DEBUG: allMetrics IDs:', allMetrics.map(m => ({ id: m.id, name: m.name })));
+      console.log('🔍 DEBUG: variableValues keys:', Object.keys(variableValues));
+      
       const variablesToSubmit = Object.entries(variableValues)
         .filter(([key]) => key.startsWith('metric-'))
         .map(([key, value]) => {
@@ -502,6 +616,8 @@ export default function DataEntryProjectPage() {
           const metricId = parseInt(parts[1]);
           const symbol = parts[2];
           
+          console.log(`🔍 DEBUG: Processing key=${key}, metricId=${metricId}, symbol=${symbol}`);
+          
           // Buscar la variable para obtener su ID
           let variableId = 0;
           for (const metric of allMetrics) {
@@ -509,29 +625,47 @@ export default function DataEntryProjectPage() {
               const variable = metric.variables.find(v => v.symbol === symbol);
               if (variable) {
                 variableId = variable.id;
+                console.log(`✅ Found variable: metricId=${metricId}, variableId=${variableId}, symbol=${symbol}`);
                 break;
               }
             }
           }
           
+          if (variableId === 0) {
+            console.warn(`⚠️ Ignorando variable inválida: metricId=${metricId}, symbol=${symbol} (ID no existe en allMetrics)`);
+            return null; // Filtrar esta variable inválida
+          }
+          
           return {
-            metric_id: metricId,
+            eval_metric_id: metricId, // CRÍTICO: usar eval_metric_id
             variable_id: variableId,
             symbol,
-            value: value.toString()
+            value: parseFloat(value.toString()) || 0 // Enviar como número
           };
         })
-        .filter((item): item is NonNullable<typeof item> => item !== null);
+        .filter((item): item is NonNullable<typeof item> => item !== null && item.variable_id > 0);
 
-      // Primero enviar los datos
+      // Paso 1: Enviar los datos
+      console.log('📤 Enviando datos al backend...', {
+        evaluationId: currentEvaluationForModal.id,
+        variablesCount: variablesToSubmit.length
+      });
       await submitEvaluationData(currentEvaluationForModal.id, variablesToSubmit);
 
+      // Paso 2: SIEMPRE finalizar la evaluación individual primero
+      console.log('🎯 Finalizando evaluación individual...');
+      await finalizeEvaluation(currentEvaluationForModal.id);
+      console.log('✅ Evaluación finalizada exitosamente');
+      
+      // Marcar evaluación como finalizada
+      setFinalizedEvaluations(prev => new Set([...prev, currentEvaluationForModal.id]));
+
+      // Paso 3: Si es la última evaluación, finalizar proyecto completo
       if (isFinalizingProject) {
-        // Finalizar proyecto completo
+        console.log('🏁 Finalizando proyecto completo (última evaluación)...');
         await finalizeProject(projectId);
         
-        // Marcar evaluación actual como finalizada
-        setFinalizedEvaluations(prev => new Set([...prev, currentEvaluationForModal.id]));
+        console.log('✅ Proyecto finalizado. Redirigiendo a resultados...');
         
         // Limpiar localStorage
         localStorage.removeItem(`data-entry-project-${projectId}`);
@@ -539,15 +673,10 @@ export default function DataEntryProjectPage() {
         // Navegar a resultados del proyecto
         router.push(`/results/project/${projectId}/report`);
       } else {
-        // Solo finalizar evaluación
-        await finalizeEvaluation(currentEvaluationForModal.id);
-        
-        // Marcar evaluación como finalizada DESPUÉS de confirmar en backend
-        setFinalizedEvaluations(prev => new Set([...prev, currentEvaluationForModal.id]));
-        
         // Avanzar a la siguiente evaluación si existe
         const currentEvalIndex = evaluations.findIndex(e => e.id === currentEvaluationForModal.id);
         if (currentEvalIndex < evaluations.length - 1) {
+          console.log('➡️ Avanzando a la siguiente evaluación...');
           // Encontrar la primera métrica de la siguiente evaluación
           const nextEval = evaluations[currentEvalIndex + 1];
           const nextMetricIndex = allMetrics.findIndex(metric =>
@@ -565,7 +694,8 @@ export default function DataEntryProjectPage() {
         
         setIsModalOpen(false);
       }
-    } catch {
+    } catch (error) {
+      console.error('❌ Error durante la finalización:', error);
       alert('Error al finalizar. Por favor intenta de nuevo.');
     } finally {
       setModalLoading(false);
@@ -652,13 +782,15 @@ export default function DataEntryProjectPage() {
                 onValueChange={(symbol, value) => {
                   handleVariableUpdate(currentMetric.id, symbol, value);
                 }}
-                onPrevious={() => {
+                onPrevious={async () => {
                   if (currentMetricIndex > 0) {
+                    await saveCurrentMetricData();
                     setCurrentMetricIndex(currentMetricIndex - 1);
                   }
                 }}
-                onNext={() => {
+                onNext={async () => {
                   if (currentMetricIndex < allMetrics.length - 1) {
+                    await saveCurrentMetricData();
                     setCurrentMetricIndex(currentMetricIndex + 1);
                   }
                 }}
@@ -680,28 +812,50 @@ export default function DataEntryProjectPage() {
       </div>
 
       {/* Modal de confirmación */}
-      {currentEvaluationForModal && (
-        <EvaluationCompleteModal
-          isOpen={isModalOpen}
-          evaluationName={currentEvaluationForModal.standard.name}
-          isLastEvaluation={isFinalizingProject}
-          completedMetrics={Object.keys(variableValues).filter(key => variableValues[key]).length}
-          totalMetrics={allMetrics.length}
-          variables={allMetrics.flatMap(metric => 
-            (metric.variables || []).map(v => {
-              const key = `metric-${metric.id}-${v.symbol}`;
-              return {
-                metric_name: metric.name,
-                variable_symbol: v.symbol,
-                variable_value: variableValues[key] || ''
-              };
-            }).filter(v => v.variable_value)
-          )}
-          onConfirm={handleModalConfirm}
-          onCancel={() => setIsModalOpen(false)}
-          loading={modalLoading}
-        />
-      )}
+      {currentEvaluationForModal && (() => {
+        // Obtener solo las métricas de la evaluación actual
+        const currentEvalMetrics: Metric[] = [];
+        for (const evalCriterion of currentEvaluationForModal.evaluation_criteria || []) {
+          if (evalCriterion.criterion?.subcriteria) {
+            for (const subcriterion of evalCriterion.criterion.subcriteria) {
+              if (subcriterion.metrics) {
+                currentEvalMetrics.push(...subcriterion.metrics);
+              }
+            }
+          }
+        }
+
+        return (
+          <EvaluationCompleteModal
+            isOpen={isModalOpen}
+            evaluationName={currentEvaluationForModal.standard.name}
+            isLastEvaluation={isFinalizingProject}
+            completedMetrics={currentEvalMetrics.filter(metric => {
+              const metricVariables = metric.variables || [];
+              if (metricVariables.length === 0) return true;
+              return metricVariables.every(v => {
+                const key = `metric-${metric.id}-${v.symbol}`;
+                const value = variableValues[key];
+                return value !== undefined && value !== null && value !== '';
+              });
+            }).length}
+            totalMetrics={currentEvalMetrics.length}
+            variables={currentEvalMetrics.flatMap(metric => 
+              (metric.variables || []).map(v => {
+                const key = `metric-${metric.id}-${v.symbol}`;
+                return {
+                  metric_name: metric.name,
+                  variable_symbol: v.symbol,
+                  variable_value: variableValues[key] || ''
+                };
+              }).filter(v => v.variable_value)
+            )}
+            onConfirm={handleModalConfirm}
+            onCancel={() => setIsModalOpen(false)}
+            loading={modalLoading}
+          />
+        );
+      })()}
     </div>
   );
 }
