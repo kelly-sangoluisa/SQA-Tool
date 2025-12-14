@@ -1,5 +1,6 @@
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
+import { sortVariablesByFormulaOrder } from '@/utils/formulaUtils';
 import styles from './MetricCard.module.css';
 
 interface Variable {
@@ -8,6 +9,7 @@ interface Variable {
   symbol: string;
   description: string;
   state?: string;
+  [key: string]: any;
 }
 
 interface MetricCardProps {
@@ -45,6 +47,9 @@ export function MetricCard({
   isLastEvaluation = false,
   allVariablesFilled = false
 }: Readonly<MetricCardProps>) {
+
+  // Ordenar variables según aparición en la fórmula
+  const sortedVariables = sortVariablesByFormulaOrder(formula, variables);
 
   const handleInputChange = (variableSymbol: string, value: string) => {
     onValueChange?.(variableSymbol, value);
@@ -95,11 +100,11 @@ export function MetricCard({
             {variables.length > 0 && (
               <div className={styles.variablesInfo}>
                 <div className={styles.variablesTitle}>Donde:</div>
-                {variables.map((variable) => (
+                {sortedVariables.map((variable) => (
                   <div key={variable.symbol} className={styles.variableDefinition}>
                     <span className={styles.variableSymbol}>{variable.symbol}</span>
                     <span className={styles.equals}>=</span>
-                    <span className={styles.variableDescription}>{variable.description}</span>
+                    <span className={styles.variableDescription}>{String(variable.description)}</span>
                   </div>
                 ))}
               </div>
@@ -111,7 +116,7 @@ export function MetricCard({
         <div className={styles.rightColumn}>
           {variables.length > 0 && (
             <div className={styles.inputsSection}>
-              {variables.map((variable) => (
+              {sortedVariables.map((variable) => (
                 <div key={variable.symbol} className={styles.inputGroup}>
                   <label className={styles.inputLabel}>
                     {variable.symbol} =
