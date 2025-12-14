@@ -290,7 +290,8 @@ export class ConfigEvaluationService {
 
   /**
    * Obtiene evaluaciones por proyecto
-   * Incluye criterios, subcriterios, métricas y variables
+   * Incluye SOLO la estructura de configuración (criterios, subcriterios, métricas y variables)
+   * NO incluye resultados - esto es para cargar el formulario de entrada de datos
    */
   async findEvaluationsByProjectId(projectId: number): Promise<Evaluation[]> {
     return this.evaluationRepo.find({
@@ -303,8 +304,6 @@ export class ConfigEvaluationService {
         'evaluation_criteria.evaluation_metrics',
         'evaluation_criteria.evaluation_metrics.metric',
         'evaluation_criteria.evaluation_metrics.metric.variables',
-        'evaluation_criteria.criteria_results',
-        'evaluation_result',
       ],
       order: { 
         created_at: 'DESC',
@@ -312,6 +311,11 @@ export class ConfigEvaluationService {
           id: 'ASC',
           evaluation_metrics: {
             id: 'ASC',
+            metric: {
+              variables: {
+                id: 'ASC', // Variables ordenadas por ID (orden de creación)
+              },
+            },
           },
         },
       },
