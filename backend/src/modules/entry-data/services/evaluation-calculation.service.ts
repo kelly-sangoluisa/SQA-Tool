@@ -8,8 +8,8 @@ import { EvaluationCriteriaResult } from '../entities/evaluation_criteria_result
 import { EvaluationResult } from '../entities/evaluation_result.entity';
 import { ProjectResult } from '../entities/project_result.entity';
 import { EvaluationMetric } from '../../config-evaluation/entities/evaluation_metric.entity';
-import { Evaluation } from '../../config-evaluation/entities/evaluation.entity';
-import { Project } from '../../config-evaluation/entities/project.entity';
+import { Evaluation, EvaluationStatus } from '../../config-evaluation/entities/evaluation.entity';
+import { Project, ProjectStatus } from '../../config-evaluation/entities/project.entity';
 
 // Services
 import { FormulaEvaluationService } from './formula-evaluation.service';
@@ -89,6 +89,8 @@ export class EvaluationCalculationService {
     const evaluationMetric = await this.getEvaluationMetricWithDetails(evalMetricId);
     const variables = await this.evaluationVariableService.findByEvaluationMetric(evalMetricId);
 
+    this.logger.debug(`🔍 Variables retrieved: ${JSON.stringify(variables.map(v => ({ symbol: v.variable.symbol, value: v.value, valueType: typeof v.value })))}`);
+
     if (variables.length === 0) {
       throw new BadRequestException(`No variables found for evaluation metric ${evalMetricId}`);
     }
@@ -96,11 +98,16 @@ export class EvaluationCalculationService {
     const formula = evaluationMetric.metric.formula;
     const variableValues = variables.map(v => ({
       symbol: v.variable.symbol,
-      value: v.value
+      value: Number(v.value) // FORZAR conversión a número por si viene como string de PostgreSQL
     }));
 
+    this.logger.debug(`📐 Formula: ${formula}, Variables: ${JSON.stringify(variableValues)}`);
+
     const calculatedValue = this.formulaEvaluationService.evaluateFormula(formula, variableValues);
+    this.logger.debug(`✅ Calculated value: ${calculatedValue}, type: ${typeof calculatedValue}`);
+    
     const weightedValue = this.calculateWeightedValue(calculatedValue, evaluationMetric);
+    this.logger.debug(`⚖️ Weighted value: ${weightedValue}`);
 
     return this.saveMetricResult(evalMetricId, calculatedValue, weightedValue);
   }
@@ -160,9 +167,13 @@ export class EvaluationCalculationService {
       throw new BadRequestException(`No criteria results found for evaluation ${evaluationId}`);
     }
 
+    this.logger.debug(`📊 Criteria results scores: ${JSON.stringify(criteriaResults.map(cr => ({ id: cr.id, final_score: cr.final_score, type: typeof cr.final_score })))}`);
+
     const finalScore = this.calculateSimpleAverage(
       criteriaResults.map(cr => cr.final_score)
     );
+
+    this.logger.debug(`🎯 Final evaluation score: ${finalScore}`);
 
     return this.saveEvaluationResult(evaluationId, finalScore);
   }
@@ -320,5 +331,21 @@ export class EvaluationCalculationService {
     const saved = await this.projectResultRepo.save(projectResult);
     this.logger.log(`Saved project result ${saved.id} with final project score ${finalProjectScore}`);
     return saved;
+  }
+
+  /**
+   * Actualiza el estado de una evaluación
+   */
+  async updateEvaluationStatus(evaluationId: number, status: EvaluationStatus): Promise<void> {
+    await this.evaluationRepo.update(evaluationId, { status });
+    this.logger.log(`Updated evaluation ${evaluationId} status to ${status}`);
+  }
+
+  /**
+   * Actualiza el estado de un proyecto
+   */
+  async updateProjectStatus(projectId: number, status: ProjectStatus): Promise<void> {
+    await this.projectRepo.update(projectId, { status });
+    this.logger.log(`Updated project ${projectId} status to ${status}`);
   }
 }
