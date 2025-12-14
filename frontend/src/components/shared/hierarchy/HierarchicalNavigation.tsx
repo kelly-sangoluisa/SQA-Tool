@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Switch } from './Switch';
+import { Switch } from '../Switch';
 import styles from './HierarchicalNavigation.module.css';
 
 /**

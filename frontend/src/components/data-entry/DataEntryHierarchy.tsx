@@ -1,6 +1,6 @@
 'use client';
 
-import { MultiLevelHierarchy, BaseGroup, BaseLevel2Item, BaseLevel3Item, BaseLevel4Item } from '../shared';
+import { MultiLevelHierarchy, BaseGroup, BaseLevel2Item, BaseLevel3Item, BaseLevel4Item } from '../shared/hierarchy/MultiLevelHierarchy';
 
 // Interfaces específicas que extienden las interfaces base
 interface EvaluationGroup extends BaseGroup {

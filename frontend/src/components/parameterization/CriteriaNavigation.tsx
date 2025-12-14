@@ -9,7 +9,7 @@ import { CriterionFormDrawer } from './CriterionFormDrawer';
 import { SubCriterionFormDrawer } from './SubCriterionFormDrawer';
 import { 
   HierarchicalNavigation
-} from '../shared';
+} from '../shared/hierarchy/HierarchicalNavigation';
 
 interface CriteriaNavigationProps {
   readonly onRefresh?: () => void;
