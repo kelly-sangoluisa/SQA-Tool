@@ -6,6 +6,7 @@ import { Button, Input } from '../shared';
 import Link from 'next/link';
 import styles from './LoginForm.module.css';
 import buttonStyles from '../shared/Button.module.css';
+import Image from 'next/image';
 
 export function LoginForm() {
   const router = useRouter();
@@ -48,6 +49,7 @@ export function LoginForm() {
     <div className={styles.root}>
       <div className={styles.card}>
         <div className={styles.header}>
+          <Image src="/logo-SQATool.png" alt="SQA Tool" width={75} height={75} />
           <h2>Inicia sesión en tu cuenta</h2>
           <p className={styles.subtitle}>
             ¿No tienes una cuenta?{' '}
