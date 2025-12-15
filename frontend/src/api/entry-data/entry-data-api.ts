@@ -146,7 +146,7 @@ export async function getEvaluationCompleteResults(evaluationId: number): Promis
 
   try {
     return await response.json();
-  } catch (err) {
+  } catch {
     throw new Error('Error al procesar respuesta del servidor');
   }
 }
@@ -170,7 +170,7 @@ export async function getProjectCompleteResults(projectId: number): Promise<Comp
 
   try {
     return await response.json();
-  } catch (err) {
+  } catch {
     throw new Error('Error al procesar respuesta del servidor');
   }
 }
@@ -200,7 +200,7 @@ export async function getProjectProgress(projectId: number): Promise<ProjectProg
 
   try {
     return await response.json();
-  } catch (err) {
+  } catch {
     throw new Error('Error al procesar respuesta del servidor');
   }
 }
@@ -230,7 +230,7 @@ export async function getEvaluationStatus(evaluationId: number): Promise<Evaluat
 
   try {
     return await response.json();
-  } catch (err) {
+  } catch {
     throw new Error('Error al procesar respuesta del servidor');
   }
 }

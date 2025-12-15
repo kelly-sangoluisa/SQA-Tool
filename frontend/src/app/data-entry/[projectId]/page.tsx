@@ -16,6 +16,7 @@ interface Variable {
   symbol: string;
   description: string;
   state: string;
+  [key: string]: unknown;
 }
 
 interface Metric {
@@ -95,15 +96,6 @@ interface EvaluationDataAPI {
   evaluation_criteria?: EvaluationCriterionAPI[];
 }
 
-// Note: Criterion interface defined but not currently used in this file
-// Kept for potential future use
-// interface Criterion {
-//   id: number;
-//   name: string;
-//   description?: string;
-//   subcriteria?: Subcriterion[];
-// }
-
 interface Evaluation {
   id: number;
   project_id: number;
@@ -148,16 +140,6 @@ interface Project {
   status: 'in_progress' | 'completed' | 'cancelled';
 }
 
-interface ProjectProgress {
-  project_id: number;
-  total_evaluations: number;
-  completed_evaluations: number;
-  in_progress_evaluations: number;
-  total_metrics: number;
-  completed_metrics: number;
-  overall_progress_percentage: number;
-}
-
 export default function DataEntryProjectPage() {
   const params = useParams();
   const router = useRouter();
@@ -168,7 +150,6 @@ export default function DataEntryProjectPage() {
   // Estados principales
   const [project, setProject] = useState<Project | null>(null);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
-  const [projectProgress, setProjectProgress] = useState<ProjectProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -337,35 +318,13 @@ export default function DataEntryProjectPage() {
                 completedEvals.add(evaluation.id);
               }
             }
-          } catch (error) {
+          } catch {
             console.warn(`No se pudo verificar estado de evaluación ${evaluation.id}`);
           }
         }
         setFinalizedEvaluations(completedEvals);
 
-        // Cargar progreso del proyecto
-        const progressResponse = await fetch(`/api/entry-data/projects/${projectId}/progress`);
-        if (progressResponse.ok) {
-          try {
-            const progressData = await progressResponse.json();
-            setProjectProgress(progressData);
-          } catch {
-            throw new Error('Error al procesar datos de progreso');
-          }
-        } else {
-          // Progreso mock si no existe el endpoint
-          const mockProgress = {
-            project_id: projectId,
-            total_evaluations: evaluationsWithMetrics.length,
-            completed_evaluations: completedEvals.size,
-            in_progress_evaluations: evaluationsWithMetrics.length,
-            total_metrics: 0,
-            completed_metrics: 0,
-            overall_progress_percentage: 0
-          };
-          setProjectProgress(mockProgress);
-        }
-
+        // Construir lista plana de métricas
         // Procesar métricas de todas las evaluaciones
         const metrics: Metric[] = [];
         for (const evaluation of evaluationsWithMetrics) {

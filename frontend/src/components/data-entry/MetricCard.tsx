@@ -9,7 +9,7 @@ interface Variable {
   symbol: string;
   description: string;
   state?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface MetricCardProps {
