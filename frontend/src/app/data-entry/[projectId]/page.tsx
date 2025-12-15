@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/auth/useAuth';
+import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 import '@/styles/data-entry/data-entry.css';
 import { DataEntryHierarchy } from '@/components/data-entry/DataEntryHierarchy';
 import { MetricCard } from '@/components/data-entry/MetricCard';
@@ -143,10 +144,10 @@ interface Project {
   status: 'in_progress' | 'completed' | 'cancelled';
 }
 
-export default function DataEntryProjectPage() {
+function DataEntryContent() {
   const params = useParams();
   const router = useRouter();
-  const { isLoading, isAuthenticated, user } = useAuth();
+  const { user } = useAuth();
   const projectId = Number.parseInt(params.projectId as string, 10);
   const isValidProjectId = !Number.isNaN(projectId) && projectId > 0;
 
@@ -173,27 +174,18 @@ export default function DataEntryProjectPage() {
   const [showNextEvaluationModal, setShowNextEvaluationModal] = useState(false);
   const [nextEvaluationInfo, setNextEvaluationInfo] = useState<{ current: string; next: string } | null>(null);
 
-  // Verificar autenticación y permisos
+  // Redireccionar a admins (solo verificación de rol)
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
-      return;
-    }
-    
-    // Solo evaluadores pueden acceder a entrada de datos
-    if (!isLoading && user && user.role?.name === 'admin') {
+    if (user && user.role?.name === 'admin') {
       router.push('/parameterization');
-      return;
     }
-  }, [isLoading, isAuthenticated, user, router]);
+  }, [user, router]);
 
   // Cargar datos del proyecto
   useEffect(() => {
-    if (!isAuthenticated || !isValidProjectId) {
-      if (isAuthenticated && !isValidProjectId) {
-        setError('ID de proyecto inválido');
-        setLoading(false);
-      }
+    if (!isValidProjectId) {
+      setError('ID de proyecto inválido');
+      setLoading(false);
       return;
     }
 
@@ -938,5 +930,13 @@ export default function DataEntryProjectPage() {
         );
       })()}
     </div>
+  );
+}
+
+export default function DataEntryProjectPage() {
+  return (
+    <ProtectedRoute requiredRole="evaluator">
+      <DataEntryContent />
+    </ProtectedRoute>
   );
 }
