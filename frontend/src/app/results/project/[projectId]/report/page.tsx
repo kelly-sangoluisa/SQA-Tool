@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { ScoreGauge } from '@/components/reports/ScoreGauge';
 import { EvaluationCard } from '@/components/reports/EvaluationCard';
@@ -20,7 +21,7 @@ import {
   HiOutlineCalendar
 } from 'react-icons/hi';
 
-export default function ProjectReportPage() {
+function ProjectReportPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = Number(params.projectId);
@@ -1244,3 +1245,13 @@ export default function ProjectReportPage() {
     </div>
   );
 }
+
+function ProjectReportPageWrapper() {
+  return (
+    <ProtectedRoute requiredRole="any">
+      <ProjectReportPage />
+    </ProtectedRoute>
+  );
+}
+
+export default ProjectReportPageWrapper;

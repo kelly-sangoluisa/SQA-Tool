@@ -15,7 +15,7 @@ export default function Stepper({ currentStep }: Props) {
   return (
     <div className={styles.stepper}>
       <div className={styles.stepperInner}>
-        {[1, 2, 3, 4].map((step) => (
+        {[1, 2, 3, 4, 5].map((step) => (
           <React.Fragment key={step}>
             <div className={styles.stepItem}>
               <div className={`${styles.stepCircle} ${styles[getStepStatus(step)]}`}>
@@ -43,11 +43,12 @@ export default function Stepper({ currentStep }: Props) {
                   {step === 2 && 'Estándar'}
                   {step === 3 && 'Criterios'}
                   {step === 4 && 'Subcriterios'}
+                  {step === 5 && 'Métricas'}
                 </p>
               </div>
             </div>
 
-            {step < 4 && (
+            {step < 5 && (
               <div className={`${styles.stepDivider} ${currentStep > step ? styles.completed : ''}`} />
             )}
           </React.Fragment>

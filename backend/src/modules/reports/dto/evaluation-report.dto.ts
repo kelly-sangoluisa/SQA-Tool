@@ -137,6 +137,9 @@ export class EvaluationListItemDto {
 
   @ApiProperty({ description: 'Estado de la evaluación' })
   has_results: boolean;
+
+  @ApiProperty({ description: 'Estado del proceso de evaluación' })
+  status: string;
 }
 
 /**

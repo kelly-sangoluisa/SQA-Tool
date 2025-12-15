@@ -8,6 +8,8 @@ import { EvaluationMetricResult } from '../entities/evaluation_metric_result.ent
 import { EvaluationCriteriaResult } from '../entities/evaluation_criteria_result.entity';
 import { EvaluationResult } from '../entities/evaluation_result.entity';
 import { ProjectResult } from '../entities/project_result.entity';
+import { EvaluationStatus } from '../../config-evaluation/entities/evaluation.entity';
+import { ProjectStatus } from '../../config-evaluation/entities/project.entity';
 
 // Services
 import { EvaluationCalculationService } from './evaluation-calculation.service';
@@ -75,6 +77,9 @@ export class EntryDataService {
     // 4. Calcular resultado final
     const evaluationResult = await this.evaluationCalculationService.calculateEvaluationResult(evaluationId);
 
+    // 5. Actualizar estado de la evaluación a completed
+    await this.evaluationCalculationService.updateEvaluationStatus(evaluationId, EvaluationStatus.COMPLETED);
+
     return {
       message: 'Evaluation finalized successfully',
       evaluation_id: evaluationId,
@@ -92,6 +97,9 @@ export class EntryDataService {
     this.logger.log(`Finalizing project ${projectId}`);
 
     const projectResult = await this.evaluationCalculationService.calculateProjectResult(projectId);
+
+    // Actualizar estado del proyecto a completed
+    await this.evaluationCalculationService.updateProjectStatus(projectId, ProjectStatus.COMPLETED);
 
     return {
       message: 'Project finalized successfully',

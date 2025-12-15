@@ -1,37 +1,25 @@
+/* Importar estilos compartidos */
+@import url('./hierarchy-common.module.css');
+
 /* Contenedor principal */
 .sidebar {
-  height: 100%;
-  background: #FFFFFF;
+  composes: hierarchycontainer from './hierarchy-common.module.css';
   border-right: 1px solid rgb(78 94 163 / 0.15);
-  display: flex;
-  flex-direction: column;
   box-shadow: 4px 0 20px rgb(78 94 163 / 0.08);
-  overflow: hidden;
 }
 
 /* Header */
 .header {
-  padding: 1.25rem 1rem;
-  border-bottom: 2px solid rgb(78 94 163 / 0.2);
-  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
-  flex-shrink: 0;
+  composes: hierarchyheader from './hierarchy-common.module.css';
 }
 
 .title {
-  color: #FFFFFF;
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin: 0;
-  text-align: center;
-  letter-spacing: 0.5px;
-  line-height: 1.3;
+  composes: hierarchytitle from './hierarchy-common.module.css';
 }
 
 /* Navegación */
 .navigation {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0.5rem 0;
+  composes: hierarchycontent from './hierarchy-common.module.css';
 }
 
 /* Nivel 1: Grupos/Evaluaciones (Morado) */
@@ -45,12 +33,12 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.85rem 1rem;
-  background: linear-gradient(90deg, #d1c4e9 0%, #e1e0f0 100%);
+  background: var(--hierarchy-level1-bg);
   border: none;
-  border-left: 4px solid #7e57c2;
+  border-left: 4px solid var(--hierarchy-level1-border);
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #5e35b1;
+  color: var(--hierarchy-level1-text);
   font-weight: 700;
   font-size: 0.875rem;
   text-align: left;
@@ -58,22 +46,22 @@
 }
 
 .level1Button:hover {
-  background: linear-gradient(90deg, #b39ddb 0%, #d1c4e9 100%);
+  background: var(--hierarchy-level1-bg-hover);
   border-left-color: #673ab7;
   transform: translateX(2px);
 }
 
 .level1Active {
-  background: linear-gradient(90deg, #9575cd 0%, #b39ddb 100%) !important;
-  border-left-color: #5e35b1 !important;
-  color: #4527a0 !important;
+  background: var(--hierarchy-level1-bg-active) !important;
+  border-left-color: var(--hierarchy-level1-border-active) !important;
+  color: var(--hierarchy-level1-text-active) !important;
   box-shadow: 0 2px 8px rgb(94 53 177 / 0.2);
 }
 
 .level1Completed {
-  background: linear-gradient(90deg, #a5d6a7 0%, #c8e6c9 100%) !important;
-  border-left-color: #43a047 !important;
-  color: #1b5e20 !important;
+  background: var(--hierarchy-completed-bg) !important;
+  border-left-color: var(--hierarchy-completed-border) !important;
+  color: var(--hierarchy-completed-text) !important;
   box-shadow: 0 2px 8px rgb(67 160 71 / 0.2);
   position: relative;
   text-decoration: underline;
@@ -89,7 +77,7 @@
   transform: translateY(-50%);
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1b5e20;
+  color: var(--hierarchy-completed-text);
 }
 
 .level1Name {
@@ -113,12 +101,12 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: linear-gradient(90deg, #e8eaf6 0%, #f3f4f9 100%);
+  background: var(--hierarchy-level2-bg);
   border: none;
-  border-left: 3px solid #7986cb;
+  border-left: 3px solid var(--hierarchy-level2-border);
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #3f51b5;
+  color: var(--hierarchy-level2-text);
   font-weight: 600;
   font-size: 0.8125rem;
   text-align: left;
@@ -126,15 +114,15 @@
 }
 
 .level2Button:hover {
-  background: linear-gradient(90deg, #dce0f5 0%, #e8eaf6 100%);
+  background: var(--hierarchy-level2-bg-hover);
   border-left-color: #5c6bc0;
   transform: translateX(2px);
 }
 
 .level2Active {
-  background: linear-gradient(90deg, #c5cae9 0%, #dce0f5 100%) !important;
-  border-left-color: #3f51b5 !important;
-  color: #283593 !important;
+  background: var(--hierarchy-level2-bg-active) !important;
+  border-left-color: var(--hierarchy-level2-border-active) !important;
+  color: var(--hierarchy-level2-text-active) !important;
   box-shadow: 0 2px 6px rgb(63 81 181 / 0.15);
 }
 
@@ -269,7 +257,7 @@
 /* Iconos de expansión */
 .expandIcon {
   font-size: 0.75rem;
-  color: currentColor;
+  color: currentcolor;
   transition: transform 0.3s ease;
   width: 12px;
   text-align: center;
@@ -279,7 +267,7 @@
 /* Badge de progreso */
 .progressBadge {
   font-size: 0.75rem;
-  color: currentColor;
+  color: currentcolor;
   margin-left: 0.5rem;
   font-weight: 500;
   opacity: 0.85;

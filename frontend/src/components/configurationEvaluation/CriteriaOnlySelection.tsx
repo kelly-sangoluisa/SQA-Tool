@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { parameterizationApi, Criterion } from '@/api/parameterization/parameterization-api';
 import { Button, Loading } from '../shared';
+import AlertBanner from '../shared/AlertBanner';
 import { ImportanceLevel } from '@/types/configurationEvaluation.types';
 import styles from './CriteriaOnlySelection.module.css';
 
@@ -38,7 +39,15 @@ export function CriteriaOnlySelection({
   const [criteriaImportance, setCriteriaImportance] = useState<Map<number, CriteriaImportanceData>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [alertType, setAlertType] = useState<'error' | 'warning' | 'success'>('error');
+
+  useEffect(() => {
+    // Scroll al AlertBanner cuando aparezca
+    if (alertMessage) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [alertMessage]);
 
   const loadCriteria = async () => {
     try {
@@ -80,7 +89,38 @@ export function CriteriaOnlySelection({
 
     setSelectedIds(newSelected);
     setCriteriaImportance(newImportance);
-    setValidationError(null);
+  };
+
+  // Validar si un criterio puede ser seleccionado
+  const canSelectCriterion = (criterion: Criterion): boolean => {
+    // El criterio debe tener subcriterios
+    if (!criterion.sub_criteria || criterion.sub_criteria.length === 0) {
+      return false;
+    }
+    
+    // Al menos un subcriterio debe tener métricas
+    const hasMetrics = criterion.sub_criteria.some(
+      sc => sc.metrics && sc.metrics.length > 0
+    );
+    
+    return hasMetrics;
+  };
+
+  // Obtener mensaje de por qué un criterio está deshabilitado
+  const getDisabledReason = (criterion: Criterion): string => {
+    if (!criterion.sub_criteria || criterion.sub_criteria.length === 0) {
+      return 'Sin subcriterios configurados';
+    }
+    
+    const hasMetrics = criterion.sub_criteria.some(
+      sc => sc.metrics && sc.metrics.length > 0
+    );
+    
+    if (!hasMetrics) {
+      return 'Sin métricas en los subcriterios';
+    }
+    
+    return '';
   };
 
   const handleImportanceLevelChange = (criterionId: number, level: ImportanceLevel) => {
@@ -95,7 +135,6 @@ export function CriteriaOnlySelection({
     const current = newImportance.get(criterionId) || { importanceLevel: 'M', importancePercentage: 0 };
     newImportance.set(criterionId, { ...current, importancePercentage: percentage });
     setCriteriaImportance(newImportance);
-    setValidationError(null);
   };
 
   const calculateTotalPercentage = (): number => {
@@ -107,43 +146,84 @@ export function CriteriaOnlySelection({
   };
 
   const validateAndProceed = (): boolean => {
-    // Verificar que todos los criterios seleccionados tengan datos de importancia
-    for (const id of selectedIds) {
-      const importance = criteriaImportance.get(id);
-      if (!importance || importance.importancePercentage <= 0) {
-        setValidationError('Todos los criterios deben tener un porcentaje de importancia mayor a 0');
-        return false;
-      }
-    }
-
-    // Verificar que la suma sea 100%
-    const total = calculateTotalPercentage();
-    if (Math.abs(total - 100) > 0.01) {
-      setValidationError(`La suma de los porcentajes debe ser 100%. Suma actual: ${total.toFixed(2)}%`);
+    // Validar que hay criterios seleccionados
+    if (selectedIds.size === 0) {
+      const msg = 'Debe seleccionar al menos un criterio para continuar.';
+      setAlertMessage(msg);
+      setAlertType('error');
       return false;
     }
 
+    const criteriaWithoutPercentage: string[] = [];
+
+    // Validar que cada criterio seleccionado tenga un porcentaje asignado
+    for (const id of selectedIds) {
+      const importance = criteriaImportance.get(id);
+      const criterion = criteria.find(c => c.id === id);
+
+      if (!importance || importance.importancePercentage <= 0) {
+        const criterionName = criterion?.name || `Criterio ID ${id}`;
+        criteriaWithoutPercentage.push(criterionName);
+      }
+    }
+
+    if (criteriaWithoutPercentage.length > 0) {
+      const message = `Los siguientes criterios necesitan un porcentaje mayor a 0: ${criteriaWithoutPercentage.join(', ')}.`;
+      setAlertMessage(message);
+      setAlertType('error');
+      return false;
+    }
+
+    // Validar que la suma sea exactamente 100%
+    const total = calculateTotalPercentage();
+    if (Math.abs(total - 100) > 0.01) {
+      const difference = total - 100;
+      const message = difference > 0 
+        ? `La suma de los porcentajes es ${total.toFixed(2)}%. Sobran ${difference.toFixed(2)}%.`
+        : `La suma de los porcentajes es ${total.toFixed(2)}%. Faltan ${Math.abs(difference).toFixed(2)}%.`;
+      setAlertMessage(message);
+      setAlertType('error');
+      return false;
+    }
+
+    // Limpiar alerta si pasó todas las validaciones
+    setAlertMessage(null);
     return true;
   };
 
   const handleNext = () => {
-    if (selectedIds.size > 0 && validateAndProceed()) {
-      const criteriaWithImportance: CriteriaWithImportance[] = Array.from(selectedIds).map((id) => {
-        const criterion = criteria.find((c) => c.id === id)!;
-        const importance = criteriaImportance.get(id)!;
-        return {
-          criterionId: id,
-          criterion,
-          importanceLevel: importance.importanceLevel,
-          importancePercentage: importance.importancePercentage,
-        };
-      });
-      onNext(criteriaWithImportance);
+    // Siempre validar antes de continuar, sin importar si el botón está habilitado
+    if (!validateAndProceed()) {
+      return; // La validación ya configuró el mensaje de alerta
     }
+
+    // Si pasó la validación, continuar
+    const criteriaWithImportance: CriteriaWithImportance[] = Array.from(selectedIds).map((id) => {
+      const criterion = criteria.find((c) => c.id === id)!;
+      const importance = criteriaImportance.get(id)!;
+      return {
+        criterionId: id,
+        criterion,
+        importanceLevel: importance.importanceLevel,
+        importancePercentage: importance.importancePercentage,
+      };
+    });
+    onNext(criteriaWithImportance);
   };
 
   const isNextButtonEnabled = (): boolean => {
+    
     if (selectedIds.size === 0) return false;
+
+    // Verificar que todos los criterios seleccionados tienen porcentaje > 0
+    for (const id of selectedIds) {
+      const importance = criteriaImportance.get(id);
+      if (!importance || importance.importancePercentage <= 0) {
+        return false;
+      }
+    }
+
+    // Verificar que el total es 100%
     const total = calculateTotalPercentage();
     return Math.abs(total - 100) < 0.01;
   };
@@ -190,58 +270,90 @@ export function CriteriaOnlySelection({
   const totalPercentage = calculateTotalPercentage();
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>Seleccione los Criterios</h2>
-        <p className={styles.subtitle}>
-          Marque los criterios que desea incluir en la evaluación y configure su importancia
-        </p>
-        {selectedIds.size > 0 && (
-          <div className={styles.selectionSummary}>
-            <span className={styles.badge}>{selectedIds.size} criterios seleccionados</span>
-            <span className={`${styles.percentageBadge} ${Math.abs(totalPercentage - 100) < 0.01 ? styles.valid : styles.invalid}`}>
-              Total: {totalPercentage.toFixed(2)}%
-            </span>
-          </div>
-        )}
-        {validationError && (
-          <div className={styles.validationError}>
-            {validationError}
-          </div>
-        )}
-      </div>
+    <div className={styles.pageWrapper}>
+      {/* Banner de alerta - Pegado arriba */}
+      {alertMessage && (
+        <div className={styles.alertContainer}>
+          <AlertBanner
+            type={alertType}
+            message={alertMessage}
+            onClose={() => setAlertMessage(null)}
+            visible={!!alertMessage}
+          />
+        </div>
+      )}
 
-      <div className={styles.criteriaList}>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Seleccione los Criterios</h2>
+          <p className={styles.subtitle}>
+            Marque los criterios que desea incluir en la evaluación y configure su importancia
+          </p>
+        
+          {selectedIds.size > 0 && (
+            <div className={styles.selectionSummary}>
+              <span className={styles.badge}>{selectedIds.size} criterios seleccionados</span>
+              <span className={`${styles.percentageBadge} ${Math.abs(calculateTotalPercentage() - 100) < 0.01 ? styles.valid : styles.invalid}`}>
+                Total: {calculateTotalPercentage().toFixed(2)}%
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className={styles.criteriaList}>
         {criteria.map((criterion) => {
           const isSelected = selectedIds.has(criterion.id);
           const importance = criteriaImportance.get(criterion.id);
+          const canSelect = canSelectCriterion(criterion);
+          const disabledReason = getDisabledReason(criterion);
 
           return (
             <div
               key={criterion.id}
-              className={`${styles.criterionCard} ${isSelected ? styles.selected : ''}`}
+              className={`${styles.criterionCard} ${isSelected ? styles.selected : ''} ${!canSelect ? styles.disabled : ''}`}
+              title={!canSelect ? disabledReason : undefined}
             >
               <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
                   className={styles.checkbox}
                   checked={isSelected}
-                  onChange={() => handleToggle(criterion.id)}
+                  onChange={() => canSelect && handleToggle(criterion.id)}
+                  disabled={!canSelect}
                 />
                 <div className={styles.criterionContent}>
                   <span className={styles.criterionName}>{criterion.name}</span>
                   {criterion.description && (
                     <p className={styles.criterionDescription}>{criterion.description}</p>
                   )}
-                  {criterion.sub_criteria && criterion.sub_criteria.length > 0 && (
-                    <span className={styles.subCriteriaCount}>
-                      {criterion.sub_criteria.length} subcriterios disponibles
+                  {criterion.sub_criteria && criterion.sub_criteria.length > 0 ? (
+                    <div className={styles.subCriteriaInfo}>
+                      <span className={styles.subCriteriaCount}>
+                        {criterion.sub_criteria.length} subcriterios
+                      </span>
+                      {criterion.sub_criteria.map(sc => {
+                        const metricsCount = sc.metrics ? sc.metrics.length : 0;
+                        const hasFormulas = sc.metrics && sc.metrics.some(m => m.formula);
+                        return (
+                          <div key={sc.id} className={styles.subcriterionDetail}>
+                            <span className={styles.subcriterionName}>{sc.name}</span>
+                            <span className={`${styles.metricsCount} ${metricsCount > 0 ? styles.hasMetrics : styles.noMetrics}`}>
+                              {metricsCount} métrica{metricsCount !== 1 ? 's' : ''}
+                              {hasFormulas && metricsCount > 0 && ' ✓'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className={`${styles.subCriteriaCount} ${styles.noSubcriteria}`}>
+                      ⚠️ Sin subcriterios configurados
                     </span>
                   )}
                 </div>
               </label>
 
-              {isSelected && importance && (
+              {isSelected && (
                 <div className={styles.importanceSection}>
                   <div className={styles.importanceField}>
                     <label className={styles.importanceLabel}>
@@ -249,7 +361,7 @@ export function CriteriaOnlySelection({
                     </label>
                     <select
                       className={styles.importanceSelect}
-                      value={importance.importanceLevel}
+                      value={importance?.importanceLevel || 'M'}
                       onChange={(e) => handleImportanceLevelChange(criterion.id, e.target.value as ImportanceLevel)}
                     >
                       <option value="A">Alta (A)</option>
@@ -269,7 +381,7 @@ export function CriteriaOnlySelection({
                       max="100"
                       step="0.01"
                       placeholder="0.00"
-                      value={importance.importancePercentage || ''}
+                      value={importance?.importancePercentage || ''}
                       onChange={(e) => handleImportancePercentageChange(criterion.id, Number(e.target.value))}
                     />
                   </div>
@@ -278,9 +390,9 @@ export function CriteriaOnlySelection({
             </div>
           );
         })}
-      </div>
+        </div>
 
-      <div className={styles.actions}>
+        <div className={styles.actions}>
         <Button type="button" variant="outline" onClick={onBack}>
           Atrás
         </Button>
@@ -288,10 +400,11 @@ export function CriteriaOnlySelection({
           type="button"
           variant="primary"
           onClick={handleNext}
-          disabled={!isNextButtonEnabled()}
+          disabled={selectedIds.size === 0}
         >
           Continuar
         </Button>
+        </div>
       </div>
     </div>
   );

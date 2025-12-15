@@ -33,6 +33,27 @@ export interface EvaluationCriterion {
   updated_at: string;
 }
 
+export interface Metric {
+  id: number;
+  name: string;
+  formula?: string;
+  sub_criterion_id: number;
+}
+
+export interface SubCriterion {
+  id: number;
+  name: string;
+  description?: string;
+  metrics?: Metric[];
+}
+
+export interface CriterionWithMetrics {
+  id: number;
+  name: string;
+  description?: string;
+  sub_criteria: SubCriterion[];
+}
+
 // DTOs
 export interface CreateProjectDto {
   name: string;
@@ -55,6 +76,15 @@ export interface CreateEvaluationCriterionDto {
 
 export interface BulkCreateEvaluationCriteriaDto {
   criteria: CreateEvaluationCriterionDto[];
+}
+
+export interface CreateEvaluationMetricDto {
+  eval_criterion_id: number;
+  metric_id: number;
+}
+
+export interface BulkCreateEvaluationMetricsDto {
+  metrics: CreateEvaluationMetricDto[];
 }
 
 /**
@@ -210,5 +240,13 @@ export const configEvaluationApi = {
     } catch (error) {
       throw error instanceof Error ? error : new Error('Error updating evaluation configuration');
     }
+  },
+
+  async getMetricsByCriterionId(criterionId: number): Promise<CriterionWithMetrics> {
+    return apiClient.get(`/config-evaluation/criteria/${criterionId}/metrics`);
+  },
+
+  async bulkCreateEvaluationMetrics(data: BulkCreateEvaluationMetricsDto): Promise<void> {
+    return apiClient.post('/config-evaluation/evaluation-metrics/bulk', data);
   },
 };

@@ -1,5 +1,7 @@
 "use client";
 import { useAuth } from '../../hooks/auth/useAuth';
+import { DashboardSidebar } from './sidebar/DashboardSidebar';
+import { useSidebar } from './sidebar/context/SidebarContext';
 import styles from './DashboardLayout.module.css';
 
 interface DashboardLayoutProps {
@@ -8,6 +10,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
   const { user } = useAuth();
+  const { toggleSidebar, isOpen } = useSidebar();
 
   const getUserInitials = (name: string) => {
     if (!name) return 'U';
@@ -17,22 +20,6 @@ export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
       .join('')
       .toUpperCase()
       .slice(0, 2);
-  };
-
-  const getNavigationOptions = () => {
-    if (!user?.role) return [];
-
-    if (user.role.name === 'admin') {
-      return [
-        { 
-          label: 'Parametrización', 
-          href: '/parameterization',
-          description: 'Gestionar estándares y criterios'
-        }
-      ];
-    } else {
-      return [];
-    }
   };
 
   const getDashboardTitle = () => {
@@ -45,37 +32,20 @@ export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
     }
   };
 
-  const navigationOptions = getNavigationOptions();
-
   return (
-    <div className={styles.root}>
+    <div className={`${styles.root} ${isOpen ? styles.sidebarOpen : ''}`}>
+      {/* Sidebar */}
+      <DashboardSidebar />
+      
       {/* Header */}
       <header className={styles.header}>
         <div className={styles.container}>
           <div className={styles.headerInner}>
             <div className={styles.brand}>
               <h1 className={styles.title}>{getDashboardTitle()}</h1>
-              {user?.role?.name === 'admin' && (
-                <p className={styles.subtitle}>Gestiona la configuración del sistema</p>
-              )}
             </div>
 
-            {/* Navigation Menu for larger screens */}
-            {navigationOptions.length > 0 && (
-              <nav className={styles.navigation}>
-                {navigationOptions.map((option) => (
-                  <a
-                    key={option.href}
-                    href={option.href}
-                    className={styles.navLink}
-                    title={option.description}
-                  >
-                    {option.label}
-                  </a>
-                ))}
-              </nav>
-            )}
-
+            {/* User Section */}
             <div className={styles.userSection}>
               <div className={styles.userInfo}>
                 <div className={styles.avatar}>
@@ -92,22 +62,6 @@ export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
           </div>
         </div>
       </header>
-
-      {/* Mobile Navigation */}
-      {navigationOptions.length > 0 && (
-        <nav className={styles.mobileNavigation}>
-          {navigationOptions.map((option) => (
-            <a
-              key={option.href}
-              href={option.href}
-              className={styles.mobileNavLink}
-            >
-              <span className={styles.mobileNavLabel}>{option.label}</span>
-              <span className={styles.mobileNavDesc}>{option.description}</span>
-            </a>
-          ))}
-        </nav>
-      )}
 
       <main className={styles.main}>{children}</main>
     </div>

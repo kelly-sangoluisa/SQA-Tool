@@ -1,4 +1,6 @@
+'use client';
 import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Standard, Criterion, SubCriterion, Metric, parameterizationApi } from '../../api/parameterization/parameterization-api';
 import { Breadcrumbs, BreadcrumbItem } from '../shared/Breadcrumbs';
 
@@ -13,11 +15,16 @@ interface StandardDetailViewProps {
 }
 
 export function StandardDetailView({ standard, onBack }: StandardDetailViewProps) {
-  const [, setCriteria] = useState<Criterion[]>([]);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [selectedCriterion, setSelectedCriterion] = useState<Criterion | null>(null);
   const [selectedSubCriterion, setSelectedSubCriterion] = useState<SubCriterion | null>(null);
   const [metrics, setMetrics] = useState<Metric[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingMetric, setEditingMetric] = useState<Metric | null>(null);
 
@@ -29,8 +36,10 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
       setCriteria(data);
     } catch {
       // Error loading criteria - silently fail
+      setCriteria([]);
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -98,9 +107,16 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
   };
 
   const handleSubCriterionSelect = (criterion: Criterion, subCriterion: SubCriterion) => {
+    // Actualizar el estado local inmediatamente
     setSelectedCriterion(criterion);
     setSelectedSubCriterion(subCriterion);
     loadMetrics(subCriterion.id);
+    
+    // Actualizar la URL sin esperar
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('criterion', criterion.id.toString());
+    params.set('subcriterion', subCriterion.id.toString());
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const handleEditMetric = (metric: Metric) => {
@@ -156,10 +172,42 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
     // Create new subcriterion - TODO: implement
   };
 
+  const handleBreadcrumbToStandard = () => {
+    // Limpiar la selección primero
+    setSelectedCriterion(null);
+    setSelectedSubCriterion(null);
+    setMetrics([]);
+    
+    // Volver al estándar sin criterio ni subcriterio
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('criterion');
+    params.delete('subcriterion');
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const handleBreadcrumbToCriterion = () => {
+    // Limpiar el subcriterio primero
+    setSelectedSubCriterion(null);
+    setMetrics([]);
+    
+    // Volver al criterio (quitar solo el subcriterio)
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('subcriterion');
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
   const breadcrumbItems: BreadcrumbItem[] = [
     { label: 'Parámetros', onClick: onBack },
-    { label: standard.name, isActive: !selectedCriterion },
-    ...(selectedCriterion ? [{ label: selectedCriterion.name, isActive: !selectedSubCriterion }] : []),
+    { 
+      label: standard.name, 
+      isActive: !selectedCriterion,
+      onClick: selectedCriterion ? handleBreadcrumbToStandard : undefined
+    },
+    ...(selectedCriterion ? [{ 
+      label: selectedCriterion.name, 
+      isActive: !selectedSubCriterion,
+      onClick: selectedSubCriterion ? handleBreadcrumbToCriterion : undefined
+    }] : []),
     ...(selectedSubCriterion ? [{ label: selectedSubCriterion.name, isActive: true }] : [])
   ];
 
@@ -172,40 +220,49 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
         <p className={styles.description}>{standard.description}</p>
       </div>
 
-      <div className={styles.content}>
-        <div className={styles.sidebar}>
-          <CriteriaNavigation
-            standardId={standard.id}
-            onSubCriterionSelect={handleSubCriterionSelect}
-            onCriterionEdit={handleCriterionEdit}
-            onCriterionCreate={handleCriterionCreate}
-            onSubCriterionEdit={handleSubCriterionEdit}
-            onSubCriterionCreate={handleSubCriterionCreate}
-            onSubCriterionStateChange={handleSubCriterionStateChange}
-            onCriterionStateChange={handleCriterionStateChange}
-            onRefresh={loadCriteria}
-          />
+      {initialLoading ? (
+        <div className={styles.content}>
+          <div className={styles.loadingContainer}>
+            <div className={styles.spinner}></div>
+            <p>Cargando criterios...</p>
+          </div>
         </div>
-
-        <div className={styles.mainContent}>
-          {selectedSubCriterion ? (
-            <MetricsView
-              subCriterion={selectedSubCriterion}
-              metrics={metrics}
-              loading={loading}
-              onEditMetric={handleEditMetric}
-              onCreateMetric={handleCreateMetric}
-              onMetricStateChange={handleMetricStateChange}
+      ) : (
+        <div className={styles.content}>
+          <div className={styles.sidebar}>
+            <CriteriaNavigation
+              standardId={standard.id}
+              onSubCriterionSelect={handleSubCriterionSelect}
+              onCriterionEdit={handleCriterionEdit}
+              onCriterionCreate={handleCriterionCreate}
+              onSubCriterionEdit={handleSubCriterionEdit}
+              onSubCriterionCreate={handleSubCriterionCreate}
+              onSubCriterionStateChange={handleSubCriterionStateChange}
+              onCriterionStateChange={handleCriterionStateChange}
+              onRefresh={loadCriteria}
             />
-          ) : (
-            <div className={styles.emptyState}>
-              <div className={styles.emptyIcon}>📊</div>
-              <h3>Selecciona un Sub-criterio</h3>
-              <p>Elige un sub-criterio del panel izquierdo para ver y gestionar sus métricas.</p>
-            </div>
-          )}
+          </div>
+
+          <div className={styles.mainContent}>
+            {selectedSubCriterion ? (
+              <MetricsView
+                subCriterion={selectedSubCriterion}
+                metrics={metrics}
+                loading={loading}
+                onEditMetric={handleEditMetric}
+                onCreateMetric={handleCreateMetric}
+                onMetricStateChange={handleMetricStateChange}
+              />
+            ) : (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>📊</div>
+                <h3>Selecciona un Sub-criterio</h3>
+                <p>Elige un sub-criterio del panel izquierdo para ver y gestionar sus métricas.</p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {isDrawerOpen && (
         <MetricFormDrawer

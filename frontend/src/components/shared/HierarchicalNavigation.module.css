@@ -1,25 +1,24 @@
+/* Importar estilos compartidos */
+@import url('./hierarchy-common.module.css');
+
 .container {
-  height: 100%;
-  max-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  composes: hierarchycontainer from './hierarchy-common.module.css';
 }
 
 .header {
+  composes: hierarchyheader from './hierarchy-common.module.css';
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 1.5rem 1rem 1.5rem;
-  border-bottom: 1px solid rgb(229 231 235 / 1);
-  flex-shrink: 0;
+  padding: 1.25rem 1.5rem;
 }
 
 .header h3 {
   margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-primary);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.5px;
 }
 
 .createButton {
@@ -27,9 +26,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: var(--color-primary);
+  background: rgb(255, 255, 255, 0.2);
   color: white;
-  border: none;
+  border: 1px solid rgb(255, 255, 255, 0.3);
   border-radius: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -38,7 +37,8 @@
 }
 
 .createButton:hover {
-  background: var(--color-primary-dark);
+  background: rgb(255, 255, 255, 0.3);
+  border-color: rgb(255, 255, 255, 0.5);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgb(0, 0, 0, 0.12);
 }
@@ -48,64 +48,31 @@
 }
 
 .content {
-  flex: 1;
-  overflow: hidden auto;
+  composes: hierarchycontent from './hierarchy-common.module.css';
   padding: 1rem;
-  min-height: 0;
-  scrollbar-width: thin;
-  scrollbar-color: rgb(203 213 225) transparent;
-}
-
-.content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.content::-webkit-scrollbar-thumb {
-  background: rgb(203 213 225);
-  border-radius: 4px;
-}
-
-.content::-webkit-scrollbar-thumb:hover {
-  background: rgb(148 163 184);
 }
 
 .loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  text-align: center;
+  composes: hierarchyloading from './hierarchy-common.module.css';
 }
 
 .loadingSpinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgb(229 231 235 / 1);
-  border-top: 3px solid var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
+  composes: hierarchyloadingspinner from './hierarchy-common.module.css';
 }
 
 .loading p {
   margin: 0;
-  color: rgb(107 114 128 / 1);
+  color: var(--hierarchy-gray-600);
   font-size: 0.875rem;
 }
 
 .empty {
-  padding: 2rem;
-  text-align: center;
+  composes: hierarchyempty from './hierarchy-common.module.css';
 }
 
 .empty p {
   margin: 0;
-  color: rgb(107 114 128 / 1);
+  color: var(--hierarchy-gray-600);
   font-size: 0.875rem;
 }
 
@@ -118,8 +85,8 @@
 .criterionItem {
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid rgb(229 231 235 / 1);
-  background: var(--color-white);
+  border: 1px solid var(--hierarchy-gray-300);
+  background: var(--hierarchy-white);
 }
 
 .criterionHeader {
@@ -127,14 +94,14 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem;
-  background: var(--color-white);
+  background: var(--hierarchy-white);
   border-radius: 8px;
   transition: all 0.2s ease;
   min-height: 52px;
 }
 
 .criterionHeader:hover {
-  background: rgb(249 250 251 / 1);
+  background: var(--hierarchy-gray-50);
 }
 
 .expandButton {
@@ -144,15 +111,17 @@
   width: 32px;
   height: 32px;
   border: none;
-  background: rgb(249 250 251 / 1);
+  background: var(--hierarchy-level1-bg);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  color: var(--hierarchy-level1-text);
+  font-weight: 600;
 }
 
 .expandButton:hover {
-  background: rgb(229 231 235 / 1);
+  background: var(--hierarchy-level1-bg-hover);
 }
 
 .criterionClickArea {
@@ -166,13 +135,13 @@
 }
 
 .criterionClickArea:hover {
-  background: rgb(243 244 246 / 1);
+  background: var(--hierarchy-gray-100);
 }
 
 .criterionName {
   font-weight: 600;
-  color: var(--color-primary);
-  font-size: 0.875rem;
+  color: var(--hierarchy-level1-text);
+  font-size: 0.9rem;
   line-height: 1.5;
   white-space: nowrap;
   overflow: hidden;
@@ -189,25 +158,16 @@
   transform: rotate(90deg);
 }
 
-/* Toggle Switch Styles */
 .toggleButton {
-  position: relative;
-  width: 44px;
-  height: 24px;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  outline: none;
+  composes: hierarchytoggle from './hierarchy-common.module.css';
 }
 
 .toggleButton.active {
-  background: #10b981;
+  background: var(--hierarchy-active-state);
 }
 
 .toggleButton.inactive {
-  background: #ef4444;
+  background: var(--hierarchy-inactive-state);
 }
 
 .toggleButton:disabled {
@@ -216,15 +176,7 @@
 }
 
 .toggleSlider {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 20px;
-  height: 20px;
-  background: white;
-  border-radius: 50%;
-  transition: transform 0.2s ease;
-  box-shadow: 0 1px 3px rgb(0, 0, 0, 0.1);
+  composes: hierarchytoggleslider from './hierarchy-common.module.css';
 }
 
 .toggleButton.active .toggleSlider {
@@ -236,28 +188,17 @@
 }
 
 .editButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: transparent;
-  color: rgb(107 114 128 / 1);
-  cursor: pointer;
-  border-radius: 0.25rem;
-  transition: all 0.2s ease;
-  margin-right: 0.5rem;
-  flex-shrink: 0;
+  composes: hierarchyactionbutton from './hierarchy-common.module.css';
 }
 
 .editButton:hover {
-  background: rgb(243 244 246 / 1);
-  color: var(--color-primary);
+  background: var(--hierarchy-gray-100);
+  border-color: var(--hierarchy-primary);
+  color: var(--hierarchy-primary);
 }
 
 .editButton:active {
-  background: rgb(229 231 235 / 1);
+  background: var(--hierarchy-gray-200);
 }
 
 .createSubButton {
@@ -265,7 +206,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: var(--color-primary);
+  background: var(--hierarchy-primary);
   color: white;
   border: none;
   border-radius: 0.25rem;
@@ -277,7 +218,7 @@
 }
 
 .createSubButton:hover {
-  background: var(--color-primary-dark);
+  background: var(--hierarchy-primary-dark);
 }
 
 .subCriteriaListContainer {
@@ -295,7 +236,7 @@
 .subCriteriaTitle {
   font-size: 0.75rem;
   font-weight: 500;
-  color: rgb(107 114 128 / 1);
+  color: var(--hierarchy-gray-600);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -308,15 +249,15 @@
   height: 20px;
   border: none;
   background: transparent;
-  color: rgb(107 114 128 / 1);
+  color: var(--hierarchy-gray-600);
   cursor: pointer;
   border-radius: 0.25rem;
   transition: all 0.2s ease;
 }
 
 .createSubButtonSmall:hover {
-  background: rgb(243 244 246 / 1);
-  color: var(--color-primary);
+  background: var(--hierarchy-gray-100);
+  color: var(--hierarchy-primary);
 }
 
 .editSubButton {
@@ -327,7 +268,7 @@
   height: 24px;
   border: none;
   background: transparent;
-  color: rgb(107 114 128 / 1);
+  color: var(--hierarchy-gray-600);
   cursor: pointer;
   border-radius: 0.25rem;
   transition: all 0.2s ease;
@@ -336,31 +277,31 @@
 }
 
 .editSubButton:hover {
-  background: rgb(243 244 246 / 1);
-  color: var(--color-primary);
+  background: var(--hierarchy-gray-100);
+  color: var(--hierarchy-primary);
 }
 
 .editSubButton:active {
-  background: rgb(229 231 235 / 1);
+  background: var(--hierarchy-gray-200);
 }
 
 .subCriteriaContainer {
-  border-top: 1px solid rgb(229 231 235 / 1);
-  background: rgb(249 250 251 / 1);
+  border-top: 1px solid var(--hierarchy-gray-300);
+  background: var(--hierarchy-gray-50);
 }
 
 .emptySubCriteria {
   padding: 2rem 1.5rem;
   text-align: center;
-  background: rgb(249 250 251 / 0.8);
+  background: rgb(249, 250, 251, 0.8);
   border-radius: 8px;
   margin: 0.5rem;
-  border: 1px dashed rgb(209 213 219 / 0.6);
+  border: 1px dashed rgb(209, 213, 219, 0.6);
 }
 
 .emptySubCriteria p {
   margin: 0 0 1rem 0;
-  color: rgb(107 114 128 / 1);
+  color: var(--hierarchy-gray-600);
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.5;
@@ -383,12 +324,12 @@
 }
 
 .subCriterionButton:hover {
-  background: rgb(243 244 246 / 1);
+  background: var(--hierarchy-gray-100);
 }
 
 .subCriterionButton.selectedSub {
-  background: rgb(78 94 163 / 0.1);
-  border-left-color: var(--color-primary);
+  background: rgb(78, 94, 163, 0.1);
+  border-left-color: var(--hierarchy-primary);
 }
 
 .subCriterionContent {
@@ -404,7 +345,7 @@
 
 .subCriterionName {
   font-weight: 500;
-  color: var(--color-secondary);
+  color: var(--hierarchy-level2-text);
   font-size: 0.75rem;
   line-height: 1.5;
   white-space: nowrap;
@@ -416,7 +357,7 @@
 .subCriterionDescription {
   margin: 0.25rem 0 0 0;
   font-size: 0.6875rem;
-  color: rgb(107 114 128 / 1);
+  color: var(--hierarchy-gray-600);
   line-height: 1.3;
 }
 
@@ -437,13 +378,13 @@
 }
 
 .status.active {
-  background: rgb(220 252 231 / 1);
-  color: rgb(21 128 61 / 1);
+  background: rgb(220 252 231);
+  color: rgb(21 128 61);
 }
 
 .status.inactive {
-  background: rgb(254 242 242 / 1);
-  color: rgb(185 28 28 / 1);
+  background: rgb(254 242 242);
+  color: rgb(185 28 28);
 }
 
 .loadingSubcriteria {
@@ -455,7 +396,7 @@
 }
 
 .loadingSubcriteria span {
-  color: rgb(107 114 128 / 1);
+  color: var(--hierarchy-gray-600);
   font-size: 0.875rem;
 }
 
@@ -465,7 +406,6 @@
   }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .header {
     padding: 1rem;
@@ -489,7 +429,6 @@
   }
 }
 
-/* Toggle Switch Styles */
 .criterionActions, .subCriterionActions {
   display: flex;
   align-items: center;
@@ -504,20 +443,19 @@
   background-color: #d1d5db !important;
 }
 
-/* Subcriterion Styles */
 .subCriterionItem {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
-  background: rgb(249 250 251 / 0.5);
+  background: rgb(249, 250, 251, 0.5);
   transition: all 0.2s ease;
-  border-top: 1px solid rgb(229 231 235 / 0.3);
+  border-top: 1px solid rgb(229, 231, 235, 0.3);
   min-height: 44px;
 }
 
 .subCriterionItem:hover {
-  background: rgb(243 244 246 / 1);
+  background: var(--hierarchy-gray-100);
 }
 
 .subCriterionIcon {
@@ -533,7 +471,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgb(156 163 175 / 1);
+  background: var(--hierarchy-gray-500);
 }
 
 .subCriterionClickArea {
@@ -546,5 +484,5 @@
 }
 
 .subCriterionClickArea:hover {
-  background: rgb(229 231 235 / 0.4);
+  background: rgb(229, 231, 235, 0.4);
 }

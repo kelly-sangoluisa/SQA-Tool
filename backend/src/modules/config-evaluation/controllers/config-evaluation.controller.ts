@@ -16,6 +16,7 @@ import { ConfigEvaluationService } from '../services/config-evaluation.service';
 import { CreateProjectDto } from '../dto/project.dto';
 import { CreateEvaluationDto } from '../dto/evaluation.dto';
 import { CreateEvaluationCriterionDto, BulkCreateEvaluationCriteriaDto } from '../dto/evaluation-criterion.dto';
+import { BulkCreateEvaluationMetricsDto } from '../dto/evaluation-metric.dto';
 
 @ApiTags('Config Evaluation')
 @ApiBearerAuth('bearer')
@@ -169,5 +170,45 @@ export class ConfigEvaluationController {
   @ApiResponse({ status: 200, description: 'Lista de evaluaciones del estándar.' })
   findEvaluationsByStandard(@Param('standardId', ParseIntPipe) standardId: number) {
     return this.service.findEvaluationsByStandardId(standardId);
+  }
+
+  /**
+   * GET /config-evaluation/criteria/:criterionId/metrics
+   * Obtiene todas las métricas disponibles de un criterio (con sus subcriterios)
+   * Se usa para mostrar las métricas que se pueden seleccionar
+   */
+  @Get('criteria/:criterionId/metrics')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({
+    summary: 'Obtener métricas disponibles de un criterio',
+    description: 'Obtiene el criterio con todos sus subcriterios y métricas disponibles para seleccionar'
+  })
+  @ApiResponse({ status: 200, description: 'Criterio con sus subcriterios y métricas.' })
+  @ApiResponse({ status: 404, description: 'Criterio no encontrado.' })
+  getMetricsByCriterion(@Param('criterionId', ParseIntPipe) criterionId: number) {
+    return this.service.getMetricsByCriterionId(criterionId);
+  }
+
+  /**
+   * POST /config-evaluation/evaluation-metrics/bulk
+   * Crea múltiples métricas de evaluación
+   * Se ejecuta después de seleccionar los criterios
+   */
+  @Post('evaluation-metrics/bulk')
+  @ROLES('admin', 'evaluator')
+  @ApiOperation({
+    summary: 'Crear múltiples métricas de evaluación',
+    description: 'Guarda las métricas seleccionadas para los criterios de evaluación.'
+  })
+  @ApiResponse({ status: 201, description: 'Métricas de evaluación creadas exitosamente.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Datos inválidos.'
+  })
+  @ApiResponse({ status: 404, description: 'Criterio de evaluación o métrica no encontrada.' })
+  bulkCreateEvaluationMetrics(
+    @Body() bulkDto: BulkCreateEvaluationMetricsDto,
+  ) {
+    return this.service.bulkCreateEvaluationMetrics(bulkDto);
   }
 }

@@ -1,0 +1,351 @@
+/* Importar estilos compartidos */
+@import url('./hierarchy-common.module.css');
+
+/* Contenedor principal */
+.sidebar {
+  composes: hierarchycontainer from './hierarchy-common.module.css';
+  border-right: 1px solid rgb(78 94 163 / 0.15);
+  box-shadow: 4px 0 20px rgb(78 94 163 / 0.08);
+}
+
+/* Header */
+.header {
+  composes: hierarchyheader from './hierarchy-common.module.css';
+}
+
+.title {
+  composes: hierarchytitle from './hierarchy-common.module.css';
+}
+
+/* Navegación */
+.navigation {
+  composes: hierarchycontent from './hierarchy-common.module.css';
+}
+
+/* Nivel 1: Grupos/Evaluaciones (Morado) */
+.level1Group {
+  margin-bottom: 0.5rem;
+}
+
+.level1Button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: var(--hierarchy-level1-bg);
+  border: none;
+  border-left: 4px solid var(--hierarchy-level1-border);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--hierarchy-level1-text);
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-align: left;
+  margin-bottom: 0.25rem;
+}
+
+.level1Button:hover {
+  background: var(--hierarchy-level1-bg-hover);
+  border-left-color: #673ab7;
+  transform: translateX(2px);
+}
+
+.level1Button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.level1Button:disabled:hover {
+  background: var(--hierarchy-level1-bg);
+  transform: none;
+}
+
+.level1Active {
+  background: var(--hierarchy-level1-bg-active) !important;
+  border-left-color: var(--hierarchy-level1-border-active) !important;
+  color: var(--hierarchy-level1-text-active) !important;
+  box-shadow: 0 2px 8px rgb(94 53 177 / 0.2);
+}
+
+.level1Completed {
+  background: var(--hierarchy-completed-bg) !important;
+  border-left-color: var(--hierarchy-completed-border) !important;
+  color: var(--hierarchy-completed-text) !important;
+  box-shadow: 0 2px 8px rgb(67 160 71 / 0.2);
+  position: relative;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.level1Completed::after {
+  content: '✓';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--hierarchy-completed-text);
+}
+
+.level1Name {
+  flex: 1;
+  line-height: 1.3;
+}
+
+/* Nivel 2: Criterios (Azul) */
+.level2Container {
+  padding: 0.25rem 0;
+  margin-left: 1rem;
+}
+
+.level2Group {
+  margin-bottom: 0.25rem;
+}
+
+.level2Button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--hierarchy-level2-bg);
+  border: none;
+  border-left: 3px solid var(--hierarchy-level2-border);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--hierarchy-level2-text);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-align: left;
+  margin-bottom: 0.25rem;
+}
+
+.level2Button:hover {
+  background: var(--hierarchy-level2-bg-hover);
+  border-left-color: #5c6bc0;
+  transform: translateX(2px);
+}
+
+.level2Active {
+  background: var(--hierarchy-level2-bg-active) !important;
+  border-left-color: var(--hierarchy-level2-border-active) !important;
+  color: var(--hierarchy-level2-text-active) !important;
+  box-shadow: 0 2px 6px rgb(63 81 181 / 0.15);
+}
+
+.level2Name {
+  flex: 1;
+  line-height: 1.3;
+}
+
+/* Nivel 3: Subcriterios (Verde) */
+.level3Container {
+  background: #f1f8f4;
+  border-left: 3px solid #81c784;
+  margin-left: 1.25rem;
+  padding: 0.25rem 0;
+}
+
+.level3Group {
+  margin-bottom: 0.25rem;
+}
+
+.level3Button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  background: linear-gradient(90deg, #e8f5e9 0%, #f1f8f4 100%);
+  border: none;
+  border-left: 3px solid #a5d6a7;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #2e7d32;
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-align: left;
+  margin-bottom: 0.25rem;
+}
+
+.level3Button:hover {
+  background: linear-gradient(90deg, #dcedc8 0%, #e8f5e9 100%);
+  border-left-color: #81c784;
+  transform: translateX(2px);
+}
+
+.level3Active {
+  background: linear-gradient(90deg, #c5e1a5 0%, #dcedc8 100%) !important;
+  border-left-color: #66bb6a !important;
+  color: #1b5e20 !important;
+  box-shadow: 0 2px 6px rgb(46 125 50 / 0.15);
+}
+
+.level3Name {
+  flex: 1;
+  line-height: 1.3;
+}
+
+/* Nivel 4: Métricas/Items finales (Ámbar) */
+.level4Container {
+  background: #fffbf0;
+  border-left: 3px solid #ffb74d;
+  margin-left: 1.25rem;
+  padding: 0.25rem 0;
+}
+
+.level4Button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  background: linear-gradient(90deg, #fff8e1 0%, #fffbf0 100%);
+  border: none;
+  border-left: 3px solid #ffcc80;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #f57c00;
+  font-size: 0.8rem;
+  text-align: left;
+  margin-bottom: 0.25rem;
+}
+
+.level4Button:hover {
+  background: linear-gradient(90deg, #ffe082 0%, #fff8e1 100%);
+  border-left-color: #ffb74d;
+  transform: translateX(2px);
+}
+
+.level4Active {
+  background: linear-gradient(90deg, #ffd54f 0%, #ffe082 100%) !important;
+  color: #e65100 !important;
+  border-left-color: #ff9800 !important;
+  box-shadow: 0 2px 8px rgb(255 152 0 / 0.2);
+}
+
+.level4Completed {
+  background: linear-gradient(90deg, #c8e6c9 0%, #e8f5e9 100%) !important;
+  border-left-color: #66bb6a !important;
+  color: #2e7d32 !important;
+}
+
+.level4Number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgb(245 124 0 / 0.2);
+}
+
+.level4Active .level4Number {
+  background: linear-gradient(135deg, #e65100 0%, #bf360c 100%);
+  box-shadow: 0 3px 6px rgb(230 81 0 / 0.3);
+}
+
+.completedNumber {
+  background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%) !important;
+  color: white !important;
+}
+
+.level4Name {
+  flex: 1;
+  text-align: left;
+  line-height: 1.3;
+}
+
+/* Iconos de expansión */
+.expandIcon {
+  font-size: 0.75rem;
+  color: currentcolor;
+  transition: transform 0.3s ease;
+  width: 12px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* Badge de progreso */
+.progressBadge {
+  font-size: 0.75rem;
+  color: currentcolor;
+  margin-left: 0.5rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+/* Mensajes vacíos */
+.emptyMessage {
+  padding: 1rem;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* Animación de deslizamiento */
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+  }
+}
+
+.level2Container,
+.level3Container,
+.level4Container {
+  animation: slide-down 0.3s ease;
+}
+
+/* Scrollbar personalizado */
+.navigation::-webkit-scrollbar {
+  width: 6px;
+}
+
+.navigation::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.navigation::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #4E5EA3, #7462AA);
+  border-radius: 3px;
+}
+
+.navigation::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #59469A, #7462AA);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem 0.75rem;
+  }
+  
+  .title {
+    font-size: 0.875rem;
+  }
+  
+  .navigation {
+    padding: 0.5rem 0;
+  }
+  
+  .level1Button,
+  .level2Button,
+  .level3Button,
+  .level4Button {
+    font-size: 0.8125rem;
+  }
+}

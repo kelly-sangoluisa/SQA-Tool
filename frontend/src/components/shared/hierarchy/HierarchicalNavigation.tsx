@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Switch } from './Switch';
+import { Switch } from '../Switch';
+import { HierarchyLoadingState } from '../HierarchyLoadingState';
 import styles from './HierarchicalNavigation.module.css';
 
 /**
@@ -145,6 +146,11 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
   }, [parentId]);
   
   const loadSubCriteriaForCriterion = useCallback(async (criterionId: number, forceRefresh: boolean = false) => {
+    // Si ya tenemos datos en caché y no es un force refresh, no hacer nada
+    if (subCriteria[criterionId] && !forceRefresh) {
+      return;
+    }
+    
     setLoadingSubCriteria(prev => {
       // Solo proceder si no está cargando ya o es un force refresh
       if (prev.has(criterionId) && !forceRefresh) return prev;
@@ -166,7 +172,7 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
         return newSet;
       });
     }
-  }, [loadSubCriteria]);
+  }, [loadSubCriteria, subCriteria]);
   
   // Expose refresh function to parent
   useEffect(() => {
@@ -183,11 +189,16 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
       newExpanded.delete(criterion.id);
     } else {
       newExpanded.add(criterion.id);
-      await loadSubCriteriaForCriterion(criterion.id);
     }
 
+    // Actualizar el estado de expansión inmediatamente para respuesta rápida
     setExpandedCriteria(newExpanded);
     onCriterionSelect?.(criterion);
+    
+    // Cargar subcriterios en paralelo si se está expandiendo
+    if (!isExpanded) {
+      loadSubCriteriaForCriterion(criterion.id);
+    }
   };
 
   const toggleCriterionState = async (criterion: C, e: React.MouseEvent) => {
@@ -327,10 +338,7 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loading}>
-          <div className={styles.loadingSpinner}></div>
-          <p>Cargando criterios...</p>
-        </div>
+        <HierarchyLoadingState message="Cargando criterios" size="medium" />
       </div>
     );
   }
@@ -374,7 +382,16 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
               const isToggling = toggleLoading.has(toggleKey);
 
               return (
-                <div key={criterion.id} className={styles.criterionItem}>
+                <div 
+                  key={criterion.id} 
+                  className={styles.criterionItem}
+                  onMouseEnter={() => {
+                    // Precargar subcriterios al hacer hover si aún no están cargados
+                    if (!subCriteria[criterion.id] && !loadingSubCriteria.has(criterion.id)) {
+                      loadSubCriteriaForCriterion(criterion.id);
+                    }
+                  }}
+                >
                   {/* Criterion Header */}
                   <div className={`${styles.criterionHeader} ${styles[criterion.state]}`}>
                     {/* Expand/Collapse Icon */}
@@ -464,10 +481,10 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
                   {isExpanded && (
                     <div className={styles.subCriteriaContainer}>
                       {isLoadingSubCriteria ? (
-                        <div className={styles.loadingSubcriteria}>
-                          <div className={styles.loadingSpinner}></div>
-                          <span>Cargando subcriterios...</span>
-                        </div>
+                        <HierarchyLoadingState 
+                          message="Cargando subcriterios" 
+                          size="small" 
+                        />
                       ) : (
                         criterionSubCriteria.length === 0 ? (
                           <div className={styles.emptySubCriteria}>
@@ -532,12 +549,16 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
                                     {/* Subcriteria name - clickable */}
                                     <div
                                       className={styles.subCriterionClickArea}
-                                      onClick={() => handleSubCriterionClick(criterion, subCriterion)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleSubCriterionClick(criterion, subCriterion);
+                                      }}
                                       role="button"
                                       tabIndex={0}
                                       onKeyDown={(e) => {
                                         if (e.key === 'Enter' || e.key === ' ') {
                                           e.preventDefault();
+                                          e.stopPropagation();
                                           handleSubCriterionClick(criterion, subCriterion);
                                         }
                                       }}

@@ -1,36 +1,31 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
+import { ProjectStatus } from '../../config-evaluation/entities/project.entity';
 
-// Entities
-import { Evaluation } from '../../config-evaluation/entities/evaluation.entity';
+// ENTITIES
+import { Evaluation, EvaluationStatus } from '../../config-evaluation/entities/evaluation.entity';
 import { Project } from '../../config-evaluation/entities/project.entity';
 import { EvaluationResult } from '../../entry-data/entities/evaluation_result.entity';
 import { ProjectResult } from '../../entry-data/entities/project_result.entity';
-import { ImportanceLevel } from '../../config-evaluation/entities/evaluation-criterion.entity';
 import { EvaluationCriteriaResult } from '../../entry-data/entities/evaluation_criteria_result.entity';
 import { EvaluationMetricResult } from '../../entry-data/entities/evaluation_metric_result.entity';
-import { EvaluationCriterion } from '../../config-evaluation/entities/evaluation-criterion.entity';
+import { EvaluationCriterion, ImportanceLevel } from '../../config-evaluation/entities/evaluation-criterion.entity';
 import { EvaluationMetric } from '../../config-evaluation/entities/evaluation_metric.entity';
-import { Criterion } from '../../parameterization/entities/criterion.entity';
-import { Metric } from '../../parameterization/entities/metric.entity';
-import { Standard } from '../../parameterization/entities/standard.entity';
 import { EvaluationVariable } from '../../entry-data/entities/evaluation_variable.entity';
-import { FormulaVariable } from '../../parameterization/entities/formula-variable.entity';
+import { Standard } from '../../parameterization/entities/standard.entity';
 import { User } from '../../../users/entities/user.entity';
 
 // DTOs
-import { 
-  EvaluationReportDto, 
-  CriterionResultDto, 
+import {
+  EvaluationReportDto,
+  CriterionResultDto,
   MetricResultDto,
-  VariableResultDto,
   EvaluationListItemDto,
   EvaluationStatsDto,
-  ProjectReportDto,
   ProjectStatsDto,
-  ProjectEvaluationSummaryDto
 } from '../dto/evaluation-report.dto';
+
 import { ProjectSummaryDto } from '../dto/project-summary.dto';
 
 @Injectable()
@@ -40,608 +35,422 @@ export class ReportsService {
   constructor(
     @InjectRepository(Evaluation)
     private readonly evaluationRepo: Repository<Evaluation>,
+
     @InjectRepository(Project)
     private readonly projectRepo: Repository<Project>,
+
     @InjectRepository(EvaluationResult)
     private readonly evaluationResultRepo: Repository<EvaluationResult>,
+
     @InjectRepository(ProjectResult)
     private readonly projectResultRepo: Repository<ProjectResult>,
+
     @InjectRepository(EvaluationCriteriaResult)
     private readonly criteriaResultRepo: Repository<EvaluationCriteriaResult>,
+
     @InjectRepository(EvaluationMetricResult)
     private readonly metricResultRepo: Repository<EvaluationMetricResult>,
+
     @InjectRepository(EvaluationCriterion)
     private readonly evaluationCriterionRepo: Repository<EvaluationCriterion>,
+
     @InjectRepository(EvaluationMetric)
     private readonly evaluationMetricRepo: Repository<EvaluationMetric>,
-    @InjectRepository(Criterion)
-    private readonly criterionRepo: Repository<Criterion>,
-    @InjectRepository(Metric)
-    private readonly metricRepo: Repository<Metric>,
-    @InjectRepository(Standard)
-    private readonly standardRepo: Repository<Standard>,
+
     @InjectRepository(EvaluationVariable)
     private readonly evaluationVariableRepo: Repository<EvaluationVariable>,
-    @InjectRepository(FormulaVariable)
-    private readonly formulaVariableRepo: Repository<FormulaVariable>,
+
+    @InjectRepository(Standard)
+    private readonly standardRepo: Repository<Standard>,
+
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
   ) {}
 
-  /**
-   * Obtiene el reporte completo de una evaluación con todos sus resultados
-   * Solo CONSULTA datos, no calcula nada
-   */
-  async getEvaluationReport(evaluationId: number): Promise<EvaluationReportDto> {
-    this.logger.log(`Obteniendo reporte para evaluación ${evaluationId}`);
+  // =========================================================
+  // LISTA DE EVALUACIONES ACTIVAS POR USUARIO (DASHBOARD)
+  // =========================================================
+  async getEvaluationsByUserId(userId: number): Promise<EvaluationListItemDto[]> {
+    const projects = await this.projectRepo.find({
+      where: { creator_user_id: userId },
+    });
 
-    // Verificar que la evaluación existe
+    if (!projects.length) return [];
+
+    const projectIds = projects.map(p => p.id);
+
+    const evaluations = await this.evaluationRepo.find({
+      where: {
+        project_id: In(projectIds),
+        status: EvaluationStatus.IN_PROGRESS, // 🔥 FILTRO CLAVE
+      },
+      relations: ['project', 'standard'],
+      order: { created_at: 'DESC' },
+    });
+
+    return Promise.all(
+      evaluations.map(async evaluation => {
+        const result = await this.evaluationResultRepo.findOne({
+          where: { evaluation_id: evaluation.id },
+        });
+
+        return {
+          evaluation_id: evaluation.id,
+          project_id: evaluation.project_id,
+          project_name: evaluation.project.name,
+          standard_name: evaluation.standard.name,
+          created_at: evaluation.created_at,
+          final_score: result ? Number(result.evaluation_score) : null,
+          has_results: !!result,
+          status: evaluation.status ?? EvaluationStatus.IN_PROGRESS, // ✅ FIX DTO
+        };
+      }),
+    );
+  }
+
+  // =========================================================
+  // PROYECTOS ACTIVOS DEL USUARIO (DASHBOARD)
+  // =========================================================
+ async getProjectsByUserId(userId: number): Promise<ProjectSummaryDto[]> {
+  this.logger.log(`🔍 Service: Buscando proyectos para usuario ${userId} con status IN_PROGRESS`);
+
+  const projects = await this.projectRepo.find({
+    where: {
+      creator_user_id: userId,
+      status: ProjectStatus.IN_PROGRESS
+    },
+    relations: ['evaluations'],
+    order: { created_at: 'DESC' },
+  });
+
+  this.logger.log(`📦 Service: Encontrados ${projects.length} proyectos filtrados para usuario ${userId}`);
+  this.logger.log(`📋 Service: IDs de proyectos: ${projects.map(p => p.id).join(', ')}`);
+
+  return projects.map(project => ({
+    project_id: project.id,
+    project_name: project.name,
+    project_description: project.description,
+    minimum_threshold: project.minimum_threshold ?? null,
+    final_project_score: null,
+    meets_threshold: false,
+    status: project.status,
+    evaluation_count: project.evaluations.length,
+    created_at: project.created_at,
+    updated_at: project.updated_at,
+  }));
+}
+
+
+  // =========================================================
+  // ESTADÍSTICAS DE UNA EVALUACIÓN
+  // =========================================================
+  async getEvaluationStats(evaluationId: number): Promise<EvaluationStatsDto> {
+    const criteria = await this.evaluationCriterionRepo.find({
+      where: { evaluation_id: evaluationId },
+    });
+
+    const scores: number[] = [];
+    const byImportance: Record<'high' | 'medium' | 'low', number[]> = {
+      high: [],
+      medium: [],
+      low: [],
+    };
+
+    for (const c of criteria) {
+      const result = await this.criteriaResultRepo.findOne({
+        where: { eval_criterion_id: c.id },
+      });
+
+      if (!result) continue;
+
+      const score = Number(result.final_score);
+      scores.push(score);
+
+      if (c.importance_level === ImportanceLevel.HIGH)
+        byImportance.high.push(score);
+      else if (c.importance_level === ImportanceLevel.MEDIUM)
+        byImportance.medium.push(score);
+      else
+        byImportance.low.push(score);
+    }
+
+    return {
+      total_criteria: scores.length,
+      total_metrics: 0,
+      average_criteria_score:
+        scores.reduce((a, b) => a + b, 0) / (scores.length || 1),
+      best_criterion: { name: 'N/A', score: Math.max(...scores, 0) },
+      worst_criterion: { name: 'N/A', score: Math.min(...scores, 0) },
+      score_by_importance: {
+        high: byImportance.high.length
+          ? byImportance.high.reduce((a, b) => a + b, 0) / byImportance.high.length
+          : 0,
+        medium: byImportance.medium.length
+          ? byImportance.medium.reduce((a, b) => a + b, 0) / byImportance.medium.length
+          : 0,
+        low: byImportance.low.length
+          ? byImportance.low.reduce((a, b) => a + b, 0) / byImportance.low.length
+          : 0,
+      },
+    };
+  }
+
+  // =========================================================
+  // TODAS LAS EVALUACIONES (SIN FILTRO DE USUARIO)
+  // =========================================================
+  async getAllEvaluations(): Promise<EvaluationListItemDto[]> {
+    const evaluations = await this.evaluationRepo.find({
+      relations: ['project', 'standard'],
+      order: { created_at: 'DESC' },
+    });
+
+    return Promise.all(
+      evaluations.map(async evaluation => {
+        const result = await this.evaluationResultRepo.findOne({
+          where: { evaluation_id: evaluation.id },
+        });
+
+        return {
+          evaluation_id: evaluation.id,
+          project_id: evaluation.project_id,
+          project_name: evaluation.project.name,
+          standard_name: evaluation.standard.name,
+          created_at: evaluation.created_at,
+          final_score: result ? Number(result.evaluation_score) : null,
+          has_results: !!result,
+          status: evaluation.status ?? EvaluationStatus.IN_PROGRESS,
+        };
+      }),
+    );
+  }
+
+  // =========================================================
+  // EVALUACIONES DE UN PROYECTO
+  // =========================================================
+  async getEvaluationsByProject(projectId: number): Promise<EvaluationListItemDto[]> {
+    const evaluations = await this.evaluationRepo.find({
+      where: { project_id: projectId },
+      relations: ['project', 'standard'],
+      order: { created_at: 'DESC' },
+    });
+
+    return Promise.all(
+      evaluations.map(async evaluation => {
+        const result = await this.evaluationResultRepo.findOne({
+          where: { evaluation_id: evaluation.id },
+        });
+
+        return {
+          evaluation_id: evaluation.id,
+          project_id: evaluation.project_id,
+          project_name: evaluation.project.name,
+          standard_name: evaluation.standard.name,
+          created_at: evaluation.created_at,
+          final_score: result ? Number(result.evaluation_score) : null,
+          has_results: !!result,
+          status: evaluation.status ?? EvaluationStatus.IN_PROGRESS,
+        };
+      }),
+    );
+  }
+
+  // =========================================================
+  // REPORTE COMPLETO DE UNA EVALUACIÓN
+  // =========================================================
+  async getEvaluationReport(evaluationId: number) {
     const evaluation = await this.evaluationRepo.findOne({
       where: { id: evaluationId },
-      relations: ['project', 'standard'],
+      relations: ['project', 'standard', 'project.creator'],
     });
 
     if (!evaluation) {
       throw new NotFoundException(`Evaluation with ID ${evaluationId} not found`);
     }
 
-    // Obtener el resultado final de la evaluación
-    const evaluationResult = await this.evaluationResultRepo.findOne({
+    const result = await this.evaluationResultRepo.findOne({
       where: { evaluation_id: evaluationId },
     });
 
-    if (!evaluationResult) {
-      throw new NotFoundException(
-        `No results found for evaluation ${evaluationId}. Please finalize the evaluation first.`
-      );
-    }
-
-    // Obtener criterios de evaluación con sus resultados
-    const evaluationCriteria = await this.evaluationCriterionRepo.find({
+    const criteria = await this.evaluationCriterionRepo.find({
       where: { evaluation_id: evaluationId },
       relations: ['criterion'],
     });
 
-    const criteriaResults: CriterionResultDto[] = [];
-
-    for (const evalCriterion of evaluationCriteria) {
-      // Obtener resultado del criterio
-      const criteriaResult = await this.criteriaResultRepo.findOne({
-        where: { eval_criterion_id: evalCriterion.id },
-      });
-
-      if (!criteriaResult) continue;
-
-      // Obtener métricas del criterio
-      const evaluationMetrics = await this.evaluationMetricRepo.find({
-        where: { eval_criterion_id: evalCriterion.id },
-        relations: ['metric'],
-      });
-
-      const metricsResults: MetricResultDto[] = [];
-
-      for (const evalMetric of evaluationMetrics) {
-        const metricResult = await this.metricResultRepo.findOne({
-          where: { eval_metric_id: evalMetric.id },
+    const criteriaResults = await Promise.all(
+      criteria.map(async (criterion) => {
+        const criterionResult = await this.criteriaResultRepo.findOne({
+          where: { eval_criterion_id: criterion.id },
         });
 
-        if (metricResult && evalMetric.metric) {
-          // Obtener las variables de evaluación para esta métrica
-          const evaluationVariables = await this.evaluationVariableRepo.find({
-            where: { eval_metric_id: evalMetric.id },
-            relations: ['variable'],
-          });
+        const metrics = await this.evaluationMetricRepo.find({
+          where: { eval_criterion_id: criterion.id },
+          relations: ['metric'],
+        });
 
-          const variables: VariableResultDto[] = evaluationVariables.map(evalVar => ({
-            symbol: evalVar.variable?.symbol || '',
-            description: evalVar.variable?.description || '',
-            value: Number(evalVar.value),
-          }));
+        const metricsResults = await Promise.all(
+          metrics.map(async (metric) => {
+            const metricResult = await this.metricResultRepo.findOne({
+              where: { eval_metric_id: metric.id },
+            });
 
-          const calculatedValue = Number(metricResult.calculated_value);
-          const desiredThreshold = Number(evalMetric.metric.desired_threshold || 0);
+            const variables = await this.evaluationVariableRepo.find({
+              where: { eval_metric_id: metric.id },
+              relations: ['variable'],
+            });
 
-          metricsResults.push({
-            metric_name: evalMetric.metric.name,
-            metric_code: evalMetric.metric.code || '',
-            metric_description: evalMetric.metric.description || '',
-            formula: evalMetric.metric.formula || '',
-            calculated_value: calculatedValue,
-            weighted_value: Number(metricResult.weighted_value),
-            desired_threshold: desiredThreshold,
-            meets_threshold: calculatedValue >= desiredThreshold,
-            variables,
-          });
-        }
-      }
+            return {
+              metric_code: metric.metric.code,
+              metric_name: metric.metric.name,
+              metric_description: metric.metric.description,
+              formula: metric.metric.formula,
+              desired_threshold: null, // No existe en la entidad
+              calculated_value: metricResult ? Number(metricResult.calculated_value) : 0,
+              weighted_value: metricResult ? Number(metricResult.weighted_value) : 0,
+              meets_threshold: false, // Se calcularía comparando con threshold si existiera
+              variables: variables.map(v => ({
+                symbol: v.variable.symbol,
+                description: v.variable.description,
+                value: Number(v.value),
+              })),
+            };
+          }),
+        );
 
-      criteriaResults.push({
-        criterion_name: evalCriterion.criterion?.name || 'Unknown',
-        criterion_description: evalCriterion.criterion?.description || '',
-        importance_level: evalCriterion.importance_level,
-        importance_percentage: Number(evalCriterion.importance_percentage || 0),
-        final_score: Number(criteriaResult.final_score),
-        metrics: metricsResults,
-      });
-    }
+        return {
+          criterion_name: criterion.criterion.name,
+          criterion_description: criterion.criterion.description,
+          importance_level: criterion.importance_level,
+          importance_percentage: Number(criterion.importance_percentage),
+          final_score: criterionResult ? Number(criterionResult.final_score) : 0,
+          metrics: metricsResults,
+        };
+      }),
+    );
 
-    const finalScore = Number(evaluationResult.evaluation_score);
-    const projectThreshold = Number(evaluation.project?.minimum_threshold || 0);
-
-    // Obtener el nombre del usuario creador del proyecto
-    let createdByName = 'Usuario Desconocido';
-    if (evaluation.project?.creator_user_id) {
-      const creator = await this.userRepo.findOne({
-        where: { id: evaluation.project.creator_user_id },
-      });
-      if (creator) {
-        createdByName = creator.name;
-      }
-    }
+    const finalScore = result ? Number(result.evaluation_score) : 0;
+    const projectThreshold = evaluation.project.minimum_threshold ? Number(evaluation.project.minimum_threshold) : 0;
 
     return {
       evaluation_id: evaluation.id,
       project_id: evaluation.project_id,
-      project_name: evaluation.project?.name || 'Unknown',
-      created_by_name: createdByName,
-      standard_name: evaluation.standard?.name || 'Unknown',
+      project_name: evaluation.project.name,
+      created_by_name: evaluation.project.creator.name,
+      project_threshold: evaluation.project.minimum_threshold,
+      standard_name: evaluation.standard.name,
       created_at: evaluation.created_at,
       final_score: finalScore,
-      project_threshold: projectThreshold,
       meets_threshold: finalScore >= projectThreshold,
-      conclusion: evaluationResult.conclusion || '',
+      conclusion: result?.conclusion ?? '',
       criteria_results: criteriaResults,
     };
   }
 
-  /**
-   * Obtiene las evaluaciones de los proyectos creados por un usuario específico
-   */
-  async getEvaluationsByUserId(userId: number): Promise<EvaluationListItemDto[]> {
-    this.logger.log(`Obteniendo evaluaciones del usuario ${userId}`);
-
-    // Buscar proyectos del usuario
-    const userProjects = await this.projectRepo.find({
-      where: { creator_user_id: userId },
-    });
-
-    this.logger.log(`📦 Proyectos encontrados: ${JSON.stringify(userProjects.map(p => ({ id: p.id, name: p.name, creator: p.creator_user_id })))}`);
-
-    if (userProjects.length === 0) {
-      this.logger.log(`❌ Usuario ${userId} no tiene proyectos`);
-      return [];
-    }
-
-    const projectIds = userProjects.map(p => p.id);
-    this.logger.log(`✅ Usuario ${userId} tiene ${projectIds.length} proyectos: ${projectIds.join(', ')}`);
-
-    // Buscar evaluaciones de esos proyectos
-    const evaluations = await this.evaluationRepo
-      .createQueryBuilder('evaluation')
-      .leftJoinAndSelect('evaluation.project', 'project')
-      .leftJoinAndSelect('evaluation.standard', 'standard')
-      .where('evaluation.project_id IN (:...projectIds)', { projectIds })
-      .orderBy('evaluation.created_at', 'DESC')
-      .getMany();
-
-    this.logger.log(`📊 Se encontraron ${evaluations.length} evaluaciones para los proyectos ${projectIds.join(', ')}`);
-    this.logger.log(`📊 IDs de evaluaciones: ${evaluations.map(e => e.id).join(', ')}`);
-
-    const evaluationsList: EvaluationListItemDto[] = [];
-
-    for (const evaluation of evaluations) {
-      const result = await this.evaluationResultRepo.findOne({
-        where: { evaluation_id: evaluation.id },
-      });
-
-      evaluationsList.push({
-        evaluation_id: evaluation.id,
-        project_id: evaluation.project_id,
-        project_name: evaluation.project?.name || 'Unknown',
-        standard_name: evaluation.standard?.name || 'Unknown',
-        created_at: evaluation.created_at,
-        final_score: result ? Number(result.evaluation_score) : null,
-        has_results: !!result,
-      });
-    }
-
-    this.logger.log(`✅ Retornando ${evaluationsList.length} evaluaciones del usuario`);
-    return evaluationsList;
-  }
-
-  /**
-   * Obtiene la lista de todas las evaluaciones con información básica
-   */
-  async getAllEvaluations(): Promise<EvaluationListItemDto[]> {
-    this.logger.log('Obteniendo lista de todas las evaluaciones');
-
-    const evaluations = await this.evaluationRepo.find({
-      relations: ['project', 'standard'],
-      order: { created_at: 'DESC' },
-    });
-
-    this.logger.log(`📊 Se encontraron ${evaluations.length} evaluaciones`);
-    
-    const evaluationsList: EvaluationListItemDto[] = [];
-
-    for (const evaluation of evaluations) {
-      this.logger.log(`🔍 Procesando evaluación ID: ${evaluation.id}`);
-      
-      const result = await this.evaluationResultRepo.findOne({
-        where: { evaluation_id: evaluation.id },
-      });
-
-      this.logger.log(`📈 Resultado encontrado para eval ${evaluation.id}: ${!!result}`);
-
-      evaluationsList.push({
-        evaluation_id: evaluation.id,
-        project_id: evaluation.project_id,
-        project_name: evaluation.project?.name || 'Unknown',
-        standard_name: evaluation.standard?.name || 'Unknown',
-        created_at: evaluation.created_at,
-        final_score: result ? Number(result.evaluation_score) : null,
-        has_results: !!result,
-      });
-    }
-
-    this.logger.log(`✅ Retornando ${evaluationsList.length} evaluaciones`);
-    return evaluationsList;
-  }
-
-  /**
-   * Obtiene evaluaciones filtradas por proyecto
-   */
-  async getEvaluationsByProject(projectId: number): Promise<EvaluationListItemDto[]> {
-    this.logger.log(`Obteniendo evaluaciones del proyecto ${projectId}`);
-
-    const evaluations = await this.evaluationRepo.find({
-      where: { project_id: projectId },
-      relations: ['project', 'standard'],
-      order: { created_at: 'DESC' },
-    });
-
-    const evaluationsList: EvaluationListItemDto[] = [];
-
-    for (const evaluation of evaluations) {
-      const result = await this.evaluationResultRepo.findOne({
-        where: { evaluation_id: evaluation.id },
-      });
-
-      evaluationsList.push({
-        evaluation_id: evaluation.id,
-        project_id: evaluation.project_id,
-        project_name: evaluation.project?.name || 'Unknown',
-        standard_name: evaluation.standard?.name || 'Unknown',
-        created_at: evaluation.created_at,
-        final_score: result ? Number(result.evaluation_score) : null,
-        has_results: !!result,
-      });
-    }
-
-    return evaluationsList;
-  }
-
-  /**
-   * Obtiene estadísticas analíticas de una evaluación
-   */
-  async getEvaluationStats(evaluationId: number): Promise<EvaluationStatsDto> {
-    this.logger.log(`Calculando estadísticas para evaluación ${evaluationId}`);
-
-    const evaluation = await this.evaluationRepo.findOne({
-      where: { id: evaluationId },
-    });
-
-    if (!evaluation) {
-      throw new NotFoundException(`Evaluation with ID ${evaluationId} not found`);
-    }
-
-    // Obtener todos los criterios con resultados
-    const evaluationCriteria = await this.evaluationCriterionRepo.find({
-      where: { evaluation_id: evaluationId },
-      relations: ['criterion'],
-    });
-
-    const criteriaWithResults: Array<{ name: string; score: number; importance: ImportanceLevel }> = [];
-    let totalMetrics = 0;
-    const scoresByImportance: { high: number[]; medium: number[]; low: number[] } = { 
-      high: [], 
-      medium: [], 
-      low: [] 
-    };
-
-    for (const evalCriterion of evaluationCriteria) {
-      const result = await this.criteriaResultRepo.findOne({
-        where: { eval_criterion_id: evalCriterion.id },
-      });
-
-      if (result) {
-        const score = Number(result.final_score);
-        criteriaWithResults.push({
-          name: evalCriterion.criterion?.name || 'Unknown',
-          score: score,
-          importance: evalCriterion.importance_level,
-        });
-
-        // Agrupar por importancia usando los valores del enum
-        if (evalCriterion.importance_level === ImportanceLevel.HIGH) {
-          scoresByImportance.high.push(score);
-        } else if (evalCriterion.importance_level === ImportanceLevel.MEDIUM) {
-          scoresByImportance.medium.push(score);
-        } else {
-          scoresByImportance.low.push(score);
-        }
-      }
-
-      // Contar métricas
-      const metrics = await this.evaluationMetricRepo.count({
-        where: { eval_criterion_id: evalCriterion.id },
-      });
-      totalMetrics += metrics;
-    }
-
-    // Calcular promedios
-    const avgScore =
-      criteriaWithResults.length > 0
-        ? criteriaWithResults.reduce((sum, c) => sum + c.score, 0) / criteriaWithResults.length
-        : 0;
-
-    // Encontrar mejor y peor criterio
-    const sortedCriteria = [...criteriaWithResults].sort((a, b) => b.score - a.score);
-    const best = sortedCriteria[0] || { name: 'N/A', score: 0 };
-    const worst = sortedCriteria[sortedCriteria.length - 1] || { name: 'N/A', score: 0 };
-
-    // Calcular promedios por importancia
-    const avgByImportance = {
-      high: scoresByImportance.high.length > 0
-        ? scoresByImportance.high.reduce((a, b) => a + b, 0) / scoresByImportance.high.length
-        : 0,
-      medium: scoresByImportance.medium.length > 0
-        ? scoresByImportance.medium.reduce((a, b) => a + b, 0) / scoresByImportance.medium.length
-        : 0,
-      low: scoresByImportance.low.length > 0
-        ? scoresByImportance.low.reduce((a, b) => a + b, 0) / scoresByImportance.low.length
-        : 0,
-    };
-
-    return {
-      total_criteria: criteriaWithResults.length,
-      total_metrics: totalMetrics,
-      average_criteria_score: Number(avgScore.toFixed(2)),
-      best_criterion: {
-        name: best.name,
-        score: best.score,
-      },
-      worst_criterion: {
-        name: worst.name,
-        score: worst.score,
-      },
-      score_by_importance: avgByImportance,
-    };
-  }
-
-  /**
-   * Obtiene todos los proyectos de un usuario con su estado de aprobación
-   */
-  async getProjectsByUserId(userId: number): Promise<ProjectSummaryDto[]> {
-    this.logger.log(`🔍 Obteniendo proyectos para usuario ${userId}`);
-
-    // Obtener proyectos del usuario con sus evaluaciones
-    const projects = await this.projectRepo.find({
-      where: { creator_user_id: userId },
-      order: { created_at: 'DESC' },
-    });
-
-    this.logger.log(`📁 Proyectos encontrados: ${projects.length}`);
-
-    const projectSummaries: ProjectSummaryDto[] = [];
-
-    for (const project of projects) {
-      // Contar evaluaciones del proyecto
-      const evaluationCount = await this.evaluationRepo.count({
-        where: { project_id: project.id },
-      });
-
-      // Obtener resultado del proyecto (si existe)
-      const projectResult = await this.projectResultRepo.findOne({
-        where: { project_id: project.id },
-      });
-
-      const finalScore = projectResult ? Number(projectResult.final_project_score) : null;
-      const threshold = project.minimum_threshold ? Number(project.minimum_threshold) : null;
-      const meetsThreshold = finalScore !== null && threshold !== null ? finalScore >= threshold : false;
-
-      projectSummaries.push({
-        project_id: project.id,
-        project_name: project.name,
-        project_description: project.description,
-        minimum_threshold: threshold,
-        final_project_score: finalScore,
-        meets_threshold: meetsThreshold,
-        status: project.status,
-        evaluation_count: evaluationCount,
-        created_at: project.created_at,
-        updated_at: project.updated_at,
-      });
-    }
-
-    this.logger.log(`✅ Devolviendo ${projectSummaries.length} proyectos`);
-    return projectSummaries;
-  }
-
-  async getProjectReport(projectId: number): Promise<ProjectReportDto> {
-    this.logger.log(`📊 Obteniendo reporte del proyecto ${projectId}`);
-
-    // Obtener proyecto básico
+  // =========================================================
+  // REPORTE COMPLETO DE UN PROYECTO
+  // =========================================================
+  async getProjectReport(projectId: number) {
     const project = await this.projectRepo.findOne({
       where: { id: projectId },
+      relations: ['creator', 'evaluations', 'evaluations.standard'],
     });
 
     if (!project) {
-      throw new NotFoundException(`Proyecto con ID ${projectId} no encontrado`);
+      throw new NotFoundException(`Project with ID ${projectId} not found`);
     }
 
-    this.logger.log(`📦 Proyecto encontrado: ${project.name}`);
-
-    // Obtener creador
-    const creator = await this.userRepo.findOne({
-      where: { id: project.creator_user_id },
-    });
-
-    // Obtener evaluaciones del proyecto
-    const evaluations = await this.evaluationRepo.find({
-      where: { project_id: projectId },
-    });
-
-    this.logger.log(`📋 Evaluaciones encontradas: ${evaluations.length}`);
-
-    // Obtener el resultado del proyecto
     const projectResult = await this.projectResultRepo.findOne({
       where: { project_id: projectId },
     });
 
-    this.logger.log(`📊 Resultado del proyecto: ${projectResult ? projectResult.final_project_score : 'Sin resultado'}`);
-
-    // Mapear evaluaciones con sus datos completos
-    const evaluationSummaries: ProjectEvaluationSummaryDto[] = [];
-    
-    for (const evaluation of evaluations) {
-      // Obtener estándar
-      const standard = await this.standardRepo.findOne({
-        where: { id: evaluation.standard_id },
-      });
-
-      // Obtener resultado de la evaluación
-      const evalResult = await this.evaluationResultRepo.findOne({
-        where: { evaluation_id: evaluation.id },
-      });
-
-      const score = evalResult?.evaluation_score;
-      const scoreNumber = score != null ? Number(score) : 0;
-      this.logger.log(`  📝 Evaluación ${evaluation.id}: ${standard?.name} - Score: ${scoreNumber}`);
-
-      evaluationSummaries.push({
-        evaluation_id: evaluation.id,
-        standard_name: standard?.name || 'Sin estándar',
-        final_score: scoreNumber,
-        status: evaluation.status || 'in_progress',
-        created_at: evaluation.created_at,
-        meets_evaluation_threshold: scoreNumber >= (project.minimum_threshold || 0),
-      });
-    }
-
-    // Calcular si cumple el umbral del proyecto
-    const finalScore = projectResult ? Number(projectResult.final_project_score) : 0;
-    const threshold = project.minimum_threshold ? Number(project.minimum_threshold) : 0;
-    const meetsThreshold = projectResult && threshold > 0 ? finalScore >= threshold : false;
-
-    this.logger.log(`🎯 Score final: ${finalScore}, Umbral: ${threshold}, Cumple: ${meetsThreshold}`);
-
-    // Construir DTO del reporte del proyecto
-    const projectReport: ProjectReportDto = {
-      project_id: project.id,
-      project_name: project.name,
-      project_description: project.description || null,
-      created_by_name: creator?.name || 'Desconocido',
-      created_at: project.created_at,
-      final_project_score: finalScore,
-      minimum_threshold: threshold,
-      meets_threshold: meetsThreshold,
-      status: project.status,
-      evaluations: evaluationSummaries,
-    };
-
-    this.logger.log(`✅ Reporte del proyecto ${projectId} generado exitosamente`);
-    return projectReport;
-  }
-
-  async getProjectStats(projectId: number): Promise<ProjectStatsDto> {
-    this.logger.log(`📈 Calculando estadísticas del proyecto ${projectId}`);
-
-    // Verificar que el proyecto existe
-    const project = await this.projectRepo.findOne({
-      where: { id: projectId },
-    });
-
-    if (!project) {
-      throw new NotFoundException(`Proyecto con ID ${projectId} no encontrado`);
-    }
-
-    // Obtener todas las evaluaciones del proyecto
-    const evaluations = await this.evaluationRepo.find({
-      where: { project_id: projectId },
-    });
-
-    this.logger.log(`📋 Evaluaciones encontradas: ${evaluations.length}`);
-
-    const totalEvaluations = evaluations.length;
-    const completedEvaluations = evaluations.filter(e => e.status === 'completed').length;
-
-    this.logger.log(`✅ Completadas: ${completedEvaluations}/${totalEvaluations}`);
-
-    // Calcular estadísticas de puntajes - obtener resultados de evaluaciones
-    const evaluationsWithScores: Array<{ score: number; standardName: string }> = [];
-    
-    for (const evaluation of evaluations) {
-      if (evaluation.status === 'completed') {
-        const evalResult = await this.evaluationResultRepo.findOne({
+    const evaluationsWithResults = await Promise.all(
+      project.evaluations.map(async (evaluation) => {
+        const result = await this.evaluationResultRepo.findOne({
           where: { evaluation_id: evaluation.id },
         });
 
-        if (evalResult?.evaluation_score != null) {
-          const standard = await this.standardRepo.findOne({
-            where: { id: evaluation.standard_id },
-          });
+        const evalScore = result ? Number(result.evaluation_score) : 0;
+        const threshold = project.minimum_threshold ? Number(project.minimum_threshold) : 0;
 
-          evaluationsWithScores.push({
-            score: evalResult.evaluation_score,
-            standardName: standard?.name || 'Sin estándar',
-          });
-        }
-      }
-    }
-
-    let averageScore = 0;
-    let highestEvaluation: { standard_name: string; score: number } | null = null;
-    let lowestEvaluation: { standard_name: string; score: number } | null = null;
-
-    if (evaluationsWithScores.length > 0) {
-      const scores = evaluationsWithScores.map(e => Number(e.score));
-      
-      averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-      this.logger.log(`📊 Promedio: ${averageScore.toFixed(2)}`);
-      
-      // Encontrar evaluación con mayor puntaje
-      const maxScore = Math.max(...scores);
-      const highestEval = evaluationsWithScores.find(e => Number(e.score) === maxScore);
-      if (highestEval) {
-        highestEvaluation = {
-          standard_name: highestEval.standardName,
-          score: maxScore,
+        return {
+          evaluation_id: evaluation.id,
+          standard_name: evaluation.standard.name,
+          created_at: evaluation.created_at,
+          final_score: evalScore,
+          status: evaluation.status ?? EvaluationStatus.IN_PROGRESS,
+          meets_evaluation_threshold: evalScore >= threshold,
         };
-        this.logger.log(`🏆 Mejor: ${highestEval.standardName} - ${maxScore}`);
-      }
+      }),
+    );
 
-      // Encontrar evaluación con menor puntaje
-      const minScore = Math.min(...scores);
-      const lowestEval = evaluationsWithScores.find(e => Number(e.score) === minScore);
-      if (lowestEval) {
-        lowestEvaluation = {
-          standard_name: lowestEval.standardName,
-          score: minScore,
-        };
-        this.logger.log(`📉 Menor: ${lowestEval.standardName} - ${minScore}`);
-      }
-    }
+    const finalProjectScore = projectResult ? Number(projectResult.final_project_score) : 0;
+    const minThreshold = project.minimum_threshold ? Number(project.minimum_threshold) : 0;
 
-    const stats: ProjectStatsDto = {
-      total_evaluations: totalEvaluations,
-      completed_evaluations: completedEvaluations,
-      average_evaluation_score: averageScore,
-      highest_evaluation: highestEvaluation || { standard_name: 'N/A', score: 0 },
-      lowest_evaluation: lowestEvaluation || { standard_name: 'N/A', score: 0 },
+    return {
+      project_id: project.id,
+      project_name: project.name,
+      project_description: project.description,
+      created_by_name: project.creator.name,
+      created_at: project.created_at,
+      final_project_score: finalProjectScore,
+      minimum_threshold: minThreshold,
+      meets_threshold: finalProjectScore >= minThreshold,
+      status: project.status,
+      evaluations: evaluationsWithResults,
     };
+  }
 
-    this.logger.log(`✅ Estadísticas del proyecto ${projectId} calculadas`);
-    return stats;
+  // =========================================================
+  // ESTADÍSTICAS DE UN PROYECTO
+  // =========================================================
+  async getProjectStats(projectId: number): Promise<ProjectStatsDto> {
+    const project = await this.projectRepo.findOne({
+      where: { id: projectId },
+      relations: ['evaluations', 'evaluations.standard'],
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project with ID ${projectId} not found`);
+    }
+
+    const evaluationScores = await Promise.all(
+      project.evaluations.map(async (evaluation) => {
+        const result = await this.evaluationResultRepo.findOne({
+          where: { evaluation_id: evaluation.id },
+        });
+
+        return {
+          standard_name: evaluation.standard.name,
+          score: result ? Number(result.evaluation_score) : 0,
+          has_results: !!result,
+        };
+      }),
+    );
+
+    const completedEvaluations = evaluationScores.filter(e => e.has_results);
+    const scores = completedEvaluations.map(e => e.score);
+
+    const highest = completedEvaluations.length > 0
+      ? completedEvaluations.reduce((prev, current) => prev.score > current.score ? prev : current)
+      : { standard_name: 'N/A', score: 0 };
+
+    const lowest = completedEvaluations.length > 0
+      ? completedEvaluations.reduce((prev, current) => prev.score < current.score ? prev : current)
+      : { standard_name: 'N/A', score: 0 };
+
+    return {
+      total_evaluations: project.evaluations.length,
+      completed_evaluations: completedEvaluations.length,
+      average_evaluation_score: scores.length > 0
+        ? scores.reduce((a, b) => a + b, 0) / scores.length
+        : 0,
+      highest_evaluation: {
+        standard_name: highest.standard_name,
+        score: highest.score,
+      },
+      lowest_evaluation: {
+        standard_name: lowest.standard_name,
+        score: lowest.score,
+      },
+    };
   }
 }

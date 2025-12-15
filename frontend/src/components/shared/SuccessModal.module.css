@@ -1,0 +1,98 @@
+.overlay {
+  position: fixed;
+  inset: 0 0 0 0;
+  background: rgb(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 520px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgb(78, 94, 163, 0.3);
+  animation: slide-up 0.3s ease;
+  text-align: center;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.iconContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.successIcon {
+  width: 64px;
+  height: 64px;
+  color: #10b981;
+  background: linear-gradient(135deg, rgb(78, 94, 163, 0.1) 0%, rgb(89, 70, 154, 0.1) 100%);
+  border-radius: 50%;
+  padding: 0.75rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4E5EA3;
+  margin: 0 0 1rem 0;
+}
+
+.message {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0 0 2rem 0;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+}
+
+.button {
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button:hover {
+  background: linear-gradient(135deg, #3f4d8a 0%, #48377d 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgb(78, 94, 163, 0.3);
+}
+
+.button:active {
+  transform: translateY(0);
+}

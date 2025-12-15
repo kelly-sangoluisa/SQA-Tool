@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 import { ProjectCard } from '@/components/reports/ProjectCard';
 import { LoadMoreTrigger } from '@/components/shared/LoadMoreTrigger';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
@@ -10,7 +11,7 @@ import type { ProjectSummary } from '@/api/reports/reports.types';
 import { useInfiniteScroll } from '@/hooks/shared/useInfiniteScroll';
 import { PAGINATION } from '@/lib/shared/constants';
 
-export default function ResultsPage() {
+function ResultsPageContent() {
   const router = useRouter();
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -573,5 +574,13 @@ export default function ResultsPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function ResultsPage() {
+  return (
+    <ProtectedRoute requiredRole="any">
+      <ResultsPageContent />
+    </ProtectedRoute>
   );
 }

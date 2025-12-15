@@ -61,16 +61,16 @@ export class ApiClient {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.message || `Error ${response.status}: ${response.statusText}`;
-        
+
         // Detectar si es un error de autenticación esperado
         const isAuthError = response.status === 401 || response.status === 403;
         const isAuthEndpoint = endpoint.includes('/auth/');
-        
+
         // Solo mostrar en consola si no es un error de autenticación en endpoint de auth
         if (!(isAuthError && isAuthEndpoint)) {
           console.error('API Error:', errorMessage);
         }
-        
+
         throw new Error(errorMessage);
       }
 
