@@ -1,4 +1,5 @@
 "use client";
+import Image from 'next/image';
 import { useAuth } from '../../hooks/auth/useAuth';
 import { DashboardSidebar } from './sidebar/DashboardSidebar';
 import { useSidebar } from './sidebar/context/SidebarContext';
@@ -23,12 +24,27 @@ export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
   };
 
   const getDashboardTitle = () => {
-    if (!user?.role) return 'Dashboard SQA Tool';
+    if (!user?.role) return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <Image src="/logo-SQATool.png" alt="SQA Tool" width={32} height={32} />
+        <span>Dashboard SQA Tool</span>
+      </div>
+    );
     
     if (user.role.name === 'admin') {
-      return '🔧 Panel de Administración - SQA Tool';
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Image src="/logo-SQATool.png" alt="SQA Tool" width={32} height={32} />
+          <span>Panel de Administración - SQA Tool</span>
+        </div>
+      );
     } else {
-      return '🎉 Dashboard SQA Tool';
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Image src="/logo-SQATool.png" alt="SQA Tool" width={32} height={32} />
+          <span>Dashboard SQA Tool</span>
+        </div>
+      );
     }
   };
 

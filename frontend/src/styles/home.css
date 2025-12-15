@@ -39,7 +39,7 @@
   background: linear-gradient(135deg, #4E5EA3 0%, #59469A 50%, #7462AA 100%);
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
   letter-spacing: -0.02em;
   animation: fade-in-down 0.8s ease-out;
 }
