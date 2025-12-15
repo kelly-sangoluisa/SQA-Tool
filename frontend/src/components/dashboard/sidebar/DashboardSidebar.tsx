@@ -1,40 +1,31 @@
 "use client";
-import React, { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/auth/useAuth';
-import { HiFolder, HiChartBar, HiSearch, HiLogout } from 'react-icons/hi';
-import { SidebarToggle } from './components/SidebarToggle';
-import { NewEvaluationButton } from './components/NewEvaluationButton';
-import { BackToHomeButton } from './components/BackToHomeButton';
-import { SidebarSearch } from './components/SidebarSearch';
-import { SidebarSection } from './components/SidebarSection';
-import { ProjectListItem } from './components/ProjectListItem';
-import { EvaluationListItem } from './components/EvaluationListItem';
-import { useSidebarData } from './hooks/useSidebarData';
-import { useSidebar } from './context/SidebarContext';
-import styles from './DashboardSidebar.module.css';
+
+import React, { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { HiFolder, HiChartBar, HiSearch, HiLogout } from "react-icons/hi";
+
+import { useAuth } from "@/hooks/auth/useAuth";
+import { SidebarToggle } from "./components/SidebarToggle";
+import { NewEvaluationButton } from "./components/NewEvaluationButton";
+import { BackToHomeButton } from "./components/BackToHomeButton";
+import { SidebarSearch } from "./components/SidebarSearch";
+import { SidebarSection } from "./components/SidebarSection";
+import { ProjectListItem } from "./components/ProjectListItem";
+import { EvaluationListItem } from "./components/EvaluationListItem";
+
+import { useSidebarData } from "./hooks/useSidebarData";
+import { useSidebar } from "./context/SidebarContext";
+import styles from "./DashboardSidebar.module.css";
 
 export function DashboardSidebar() {
   const { isOpen, toggleSidebar, closeSidebar } = useSidebar();
   const { signOut } = useAuth();
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
+
+  const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleSignOut = async () => {
-    try {
-      setIsLoggingOut(true);
-      await signOut();
-      router.push('/auth/login');
-    } catch (error) {
-      console.error('Error durante el logout:', error);
-      router.replace('/auth/login');
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
-  
   const {
     recentProjects,
     recentEvaluations,
@@ -42,35 +33,63 @@ export function DashboardSidebar() {
     loadingEvaluations,
   } = useSidebarData();
 
-  // Filtrar proyectos según la búsqueda
+  /* ---------------- LOGOUT ---------------- */
+  const handleSignOut = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      router.push("/auth/login");
+    } catch (error) {
+      console.error("Error durante el logout:", error);
+      router.replace("/auth/login");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  /* ---------------- PROYECTOS ---------------- */
   const filteredProjects = useMemo(() => {
-    if (!searchQuery.trim()) return recentProjects;
-    
-    const query = searchQuery.toLowerCase();
-    return recentProjects.filter(project =>
-      project.project_name.toLowerCase().includes(query)
-    );
+    return recentProjects
+      .filter(
+        (project) =>
+          project.status?.toLowerCase() === "in_progress"
+      )
+      .filter((project) =>
+        searchQuery.trim()
+          ? project.project_name
+              ?.toLowerCase()
+              .includes(searchQuery.toLowerCase())
+          : true
+      );
   }, [recentProjects, searchQuery]);
 
-  // Filtrar evaluaciones según la búsqueda
+  /* ---------------- EVALUACIONES ---------------- */
   const filteredEvaluations = useMemo(() => {
-    if (!searchQuery.trim()) return recentEvaluations;
-    
-    const query = searchQuery.toLowerCase();
-    return recentEvaluations.filter(evaluation =>
-      evaluation.project_name.toLowerCase().includes(query) ||
-      evaluation.standard_name.toLowerCase().includes(query)
-    );
+    return recentEvaluations
+      .filter(
+        (evaluation) =>
+          evaluation.status?.toLowerCase() === "in_progress"
+      )
+      .filter((evaluation) =>
+        searchQuery.trim()
+          ? evaluation.project_name
+              ?.toLowerCase()
+              .includes(searchQuery.toLowerCase()) ||
+            evaluation.standard_name
+              ?.toLowerCase()
+              .includes(searchQuery.toLowerCase())
+          : true
+      );
   }, [recentEvaluations, searchQuery]);
 
   return (
     <>
       <SidebarToggle isOpen={isOpen} onToggle={toggleSidebar} />
 
-      <aside className={`${styles.sidebar} ${!isOpen ? styles.closed : ''}`}>
-        {/* Header simplificado: solo lupa */}
+      <aside className={`${styles.sidebar} ${!isOpen ? styles.closed : ""}`}>
+        {/* HEADER */}
         <div className={styles.sidebarHeader}>
-          <SidebarSearch 
+          <SidebarSearch
             onSearchChange={setSearchQuery}
             isSearching={isSearching}
             onSearchToggle={setIsSearching}
@@ -78,7 +97,7 @@ export function DashboardSidebar() {
         </div>
 
         <div className={styles.sidebarContent}>
-          {/* Sección de búsqueda expandida */}
+          {/* SEARCH */}
           {isSearching && (
             <div className={styles.searchSection}>
               <div className={styles.searchInputWrapper}>
@@ -93,11 +112,10 @@ export function DashboardSidebar() {
                 />
                 <button
                   onClick={() => {
-                    setSearchQuery('');
+                    setSearchQuery("");
                     setIsSearching(false);
                   }}
                   className={styles.searchClearBtn}
-                  aria-label="Cerrar búsqueda"
                 >
                   ×
                 </button>
@@ -105,12 +123,10 @@ export function DashboardSidebar() {
             </div>
           )}
 
-          {/* Botón Dashboard */}
           <BackToHomeButton />
-          
-          {/* Botón Nueva Evaluación */}
           <NewEvaluationButton />
 
+          {/* PROYECTOS */}
           <SidebarSection
             title="Proyectos Recientes"
             icon={HiFolder}
@@ -118,31 +134,45 @@ export function DashboardSidebar() {
             viewAllText="Ver todos los proyectos"
             loading={loadingProjects}
             isEmpty={filteredProjects.length === 0}
-            emptyMessage={searchQuery.trim() ? "No se encontraron proyectos" : "No hay proyectos recientes"}
+            emptyMessage={
+              searchQuery
+                ? "No se encontraron proyectos"
+                : "No hay proyectos en progreso"
+            }
           >
             {filteredProjects.map((project) => (
-              <ProjectListItem key={project.project_id} project={project} />
+              <ProjectListItem
+                key={project.project_id}
+                project={project}
+              />
             ))}
           </SidebarSection>
 
+          {/* EVALUACIONES */}
           <SidebarSection
             title="Evaluaciones Recientes"
             icon={HiChartBar}
             loading={loadingEvaluations}
             isEmpty={filteredEvaluations.length === 0}
-            emptyMessage={searchQuery.trim() ? "No se encontraron evaluaciones" : "No hay evaluaciones recientes"}
+            emptyMessage={
+              searchQuery
+                ? "No se encontraron evaluaciones"
+                : "No hay evaluaciones en progreso"
+            }
           >
             {filteredEvaluations.map((evaluation) => (
-              <EvaluationListItem key={evaluation.evaluation_id} evaluation={evaluation} />
+              <EvaluationListItem
+                key={evaluation.evaluation_id}
+                evaluation={evaluation}
+              />
             ))}
           </SidebarSection>
 
-          {/* Botón Cerrar Sesión */}
+          {/* LOGOUT */}
           <button
             onClick={handleSignOut}
             disabled={isLoggingOut}
             className={styles.logoutButton}
-            aria-label="Cerrar sesión"
           >
             <HiLogout size={20} />
             <span>Cerrar Sesión</span>
@@ -151,8 +181,8 @@ export function DashboardSidebar() {
       </aside>
 
       {isOpen && (
-        <div 
-          className={styles.overlay} 
+        <div
+          className={styles.overlay}
           onClick={closeSidebar}
           aria-hidden="true"
         />
