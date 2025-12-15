@@ -5,7 +5,7 @@
   padding: 1rem 1.25rem;
   border-radius: 8px;
   margin-bottom: 1.5rem;
-  animation: slideDown 0.3s ease-out;
+  animation: slide-down 0.3s ease-out;
   border-left: 4px solid;
 }
 
@@ -36,7 +36,7 @@
 
 .message {
   line-height: 1.5;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .closeButton {
@@ -115,7 +115,7 @@
   color: #0c2340;
 }
 
-@keyframes slideDown {
+@keyframes slide-down {
   from {
     opacity: 0;
     transform: translateY(-10px);

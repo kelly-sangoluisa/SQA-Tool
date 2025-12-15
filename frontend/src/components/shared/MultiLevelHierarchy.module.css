@@ -1,25 +1,25 @@
 /* Importar estilos compartidos */
-@import './hierarchy-common.module.css';
+@import url('./hierarchy-common.module.css');
 
 /* Contenedor principal */
 .sidebar {
-  composes: hierarchyContainer from './hierarchy-common.module.css';
+  composes: hierarchycontainer from './hierarchy-common.module.css';
   border-right: 1px solid rgb(78 94 163 / 0.15);
   box-shadow: 4px 0 20px rgb(78 94 163 / 0.08);
 }
 
 /* Header */
 .header {
-  composes: hierarchyHeader from './hierarchy-common.module.css';
+  composes: hierarchyheader from './hierarchy-common.module.css';
 }
 
 .title {
-  composes: hierarchyTitle from './hierarchy-common.module.css';
+  composes: hierarchytitle from './hierarchy-common.module.css';
 }
 
 /* Navegación */
 .navigation {
-  composes: hierarchyContent from './hierarchy-common.module.css';
+  composes: hierarchycontent from './hierarchy-common.module.css';
 }
 
 /* Nivel 1: Grupos/Evaluaciones (Morado) */
@@ -257,7 +257,7 @@
 /* Iconos de expansión */
 .expandIcon {
   font-size: 0.75rem;
-  color: currentColor;
+  color: currentcolor;
   transition: transform 0.3s ease;
   width: 12px;
   text-align: center;
@@ -267,7 +267,7 @@
 /* Badge de progreso */
 .progressBadge {
   font-size: 0.75rem;
-  color: currentColor;
+  color: currentcolor;
   margin-left: 0.5rem;
   font-weight: 500;
   opacity: 0.85;

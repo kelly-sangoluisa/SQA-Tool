@@ -11,6 +11,9 @@
     "rule-empty-line-before": null,
     "selector-class-pattern": null,
     "property-no-vendor-prefix": null,
+    "property-no-unknown": [true, {
+      "ignoreProperties": ["composes"]
+    }],
     "at-rule-no-unknown": [true, {
       "ignoreAtRules": ["tailwind", "apply", "variants", "responsive", "screen", "layer", "components", "utilities", "theme"]
     }]
