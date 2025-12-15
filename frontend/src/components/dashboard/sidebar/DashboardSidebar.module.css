@@ -75,6 +75,10 @@
   overflow-y: auto;
 }
 
+.sidebarContentAdmin {
+  padding-top: 72px;
+}
+
 /* Overlay for mobile */
 .overlay {
   position: fixed;
@@ -376,6 +380,83 @@
 .viewAllLink:hover {
   color: #764ba2;
   text-decoration: underline;
+}
+
+/* Admin Section */
+.adminSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.adminHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  border-radius: 12px;
+  color: #ffffff;
+}
+
+.adminHeader svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.adminHeaderTitle {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+}
+
+.adminHeaderSubtitle {
+  font-size: 12px;
+  margin: 4px 0 0 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.adminMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adminMenuItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.adminMenuItem svg {
+  color: #4E5EA3;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.adminMenuItemContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.adminMenuItemTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.adminMenuItemDesc {
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.4;
 }
 
 /* Logout Button */
