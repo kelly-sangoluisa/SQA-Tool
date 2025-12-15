@@ -5,12 +5,8 @@ import { formatDate } from '../utils/formatters';
 import styles from '../DashboardSidebar.module.css';
 
 interface ProjectListItemProps {
-<<<<<<< HEAD
   project: DashboardProject;
-=======
-  project: Project;
   linkTo?: string;
->>>>>>> 7b19fc67af1d22e9da8bd04aa3e0d409483e7d44
 }
 
 export function ProjectListItem({ project, linkTo }: ProjectListItemProps) {
