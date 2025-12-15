@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/auth/useAuth';
-import { HiFolder, HiChartBar, HiSearch, HiLogout } from 'react-icons/hi';
+import { HiFolder, HiChartBar, HiSearch, HiLogout, HiCheckCircle } from 'react-icons/hi';
 import { SidebarToggle } from './components/SidebarToggle';
 import { NewEvaluationButton } from './components/NewEvaluationButton';
 import { BackToHomeButton } from './components/BackToHomeButton';
@@ -42,26 +42,40 @@ export function DashboardSidebar() {
     loadingEvaluations,
   } = useSidebarData();
 
-  // Filtrar proyectos según la búsqueda
-  const filteredProjects = useMemo(() => {
-    if (!searchQuery.trim()) return recentProjects;
+  // Separar proyectos en progreso y completados
+  const inProgressProjects = useMemo(() => {
+    return recentProjects
+      .filter(p => p.status !== 'completed')
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+      .slice(0, 3);
+  }, [recentProjects]);
+
+  const completedProjects = useMemo(() => {
+    return recentProjects
+      .filter(p => p.status === 'completed')
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+      .slice(0, 3);
+  }, [recentProjects]);
+
+  // Filtrar proyectos en progreso según la búsqueda
+  const filteredInProgressProjects = useMemo(() => {
+    if (!searchQuery.trim()) return inProgressProjects;
     
     const query = searchQuery.toLowerCase();
-    return recentProjects.filter(project =>
+    return inProgressProjects.filter(project =>
       project.project_name.toLowerCase().includes(query)
     );
-  }, [recentProjects, searchQuery]);
+  }, [inProgressProjects, searchQuery]);
 
-  // Filtrar evaluaciones según la búsqueda
-  const filteredEvaluations = useMemo(() => {
-    if (!searchQuery.trim()) return recentEvaluations;
+  // Filtrar proyectos completados según la búsqueda
+  const filteredCompletedProjects = useMemo(() => {
+    if (!searchQuery.trim()) return completedProjects;
     
     const query = searchQuery.toLowerCase();
-    return recentEvaluations.filter(evaluation =>
-      evaluation.project_name.toLowerCase().includes(query) ||
-      evaluation.standard_name.toLowerCase().includes(query)
+    return completedProjects.filter(project =>
+      project.project_name.toLowerCase().includes(query)
     );
-  }, [recentEvaluations, searchQuery]);
+  }, [completedProjects, searchQuery]);
 
   return (
     <>
@@ -111,29 +125,41 @@ export function DashboardSidebar() {
           {/* Botón Nueva Evaluación */}
           <NewEvaluationButton />
 
+          {/* Proyectos Recientes (En Progreso) */}
           <SidebarSection
             title="Proyectos Recientes"
             icon={HiFolder}
-            viewAllLink="/results"
+            viewAllLink="/dashboard"
             viewAllText="Ver todos los proyectos"
             loading={loadingProjects}
-            isEmpty={filteredProjects.length === 0}
+            isEmpty={filteredInProgressProjects.length === 0}
             emptyMessage={searchQuery.trim() ? "No se encontraron proyectos" : "No hay proyectos recientes"}
           >
-            {filteredProjects.map((project) => (
-              <ProjectListItem key={project.project_id} project={project} />
+            {filteredInProgressProjects.map((project) => (
+              <ProjectListItem 
+                key={project.project_id} 
+                project={project}
+                linkTo={`/data-entry/${project.project_id}`}
+              />
             ))}
           </SidebarSection>
 
+          {/* Proyectos Terminados Recientemente */}
           <SidebarSection
-            title="Evaluaciones Recientes"
-            icon={HiChartBar}
-            loading={loadingEvaluations}
-            isEmpty={filteredEvaluations.length === 0}
-            emptyMessage={searchQuery.trim() ? "No se encontraron evaluaciones" : "No hay evaluaciones recientes"}
+            title="Proyectos Terminados"
+            icon={HiCheckCircle}
+            viewAllLink="/results"
+            viewAllText="Ver todos los proyectos"
+            loading={loadingProjects}
+            isEmpty={filteredCompletedProjects.length === 0}
+            emptyMessage={searchQuery.trim() ? "No se encontraron proyectos completados" : "No hay proyectos completados"}
           >
-            {filteredEvaluations.map((evaluation) => (
-              <EvaluationListItem key={evaluation.evaluation_id} evaluation={evaluation} />
+            {filteredCompletedProjects.map((project) => (
+              <ProjectListItem 
+                key={project.project_id} 
+                project={project}
+                linkTo={`/results/project/${project.project_id}/report`}
+              />
             ))}
           </SidebarSection>
 

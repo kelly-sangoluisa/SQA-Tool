@@ -26,13 +26,11 @@ export function useSidebarData(): UseSidebarDataReturn {
       const response = await fetch('/api/reports/my-projects');
       if (response.ok) {
         const data = await response.json();
-        // Filtrar solo proyectos completados (con resultados)
+        // Obtener todos los proyectos, ordenados por fecha de actualización
         const sorted = data
-          .filter((p: Project) => p.final_project_score !== null)
           .sort((a: Project, b: Project) => 
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-          )
-          .slice(0, 3);
+          );
         setRecentProjects(sorted);
       }
     } catch (err) {
