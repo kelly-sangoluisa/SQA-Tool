@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Metric, parameterizationApi, CreateMetricDto, UpdateMetricDto } from '../../api/parameterization/parameterization-api';
+import { MetricSearchResult } from '../../types/parameterization-search.types';
 import { Button } from '../shared/Button';
+import { Autocomplete } from './Autocomplete';
 import styles from '../shared/FormDrawer.module.css';
 
 interface MetricFormDrawerProps {
@@ -32,6 +34,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isVisible, setIsVisible] = useState(false);
   const [tempIdCounter, setTempIdCounter] = useState(0);
+  const [showAutocomplete, setShowAutocomplete] = useState(true);
 
   useEffect(() => {
     setIsVisible(true);
@@ -48,8 +51,39 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
           description: v.description
         })) || []
       });
+      setShowAutocomplete(false); // Desactivar autocomplete en modo edición
     }
   }, [metric]);
+
+  /**
+   * Maneja la selección de una métrica del autocompletado (Caso A: Simple)
+   * Rellena automáticamente los campos con los datos de la métrica seleccionada
+   * INCLUYENDO las variables de fórmula
+   */
+  const handleMetricSelected = (selectedMetric: MetricSearchResult) => {
+    // Asignar tempIds a las variables para que React las renderice correctamente
+    const variablesWithTempIds = selectedMetric.variables?.map((v, idx) => ({
+      symbol: v.symbol,
+      description: v.description,
+      tempId: `temp-imported-${Date.now()}-${idx}`
+    })) || [];
+
+    setFormData({
+      name: selectedMetric.name,
+      description: selectedMetric.description || '',
+      code: selectedMetric.code || '',
+      formula: selectedMetric.formula || '',
+      desired_threshold: selectedMetric.desired_threshold || null,
+      variables: variablesWithTempIds
+    });
+
+    // Actualizar el contador para que las nuevas variables tengan IDs únicos
+    if (variablesWithTempIds.length > 0) {
+      setTempIdCounter(variablesWithTempIds.length);
+    }
+
+    setShowAutocomplete(false); // Ocultar autocomplete después de seleccionar
+  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -232,16 +266,49 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label htmlFor="name" className={styles.label}>
-                    Nombre *
+                    Nombre * {!metric && '(Búsqueda inteligente)'}
                   </label>
-                  <input
-                    type="text"
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className={`${styles.input} ${errors.name ? styles.error : ''}`}
-                    placeholder="Ej: Porcentaje de éxito"
-                  />
+                  {!metric && showAutocomplete ? (
+                    <Autocomplete
+                      value={formData.name}
+                      onChange={(value) => setFormData(prev => ({ ...prev, name: value }))}
+                      onSelect={handleMetricSelected}
+                      searchFunction={parameterizationApi.searchMetrics}
+                      getItemLabel={(item) => item.name}
+                      getItemDescription={(item) => item.description}
+                      getItemMeta={(item) => (
+                        <>
+                          {item.code && <span className={styles.badge}>{item.code}</span>}
+                          {item.formula && <span>📐 Con fórmula</span>}
+                          {item.variables && item.variables.length > 0 && (
+                            <span>🔢 {item.variables.length} variable{item.variables.length !== 1 ? 's' : ''}</span>
+                          )}
+                        </>
+                      )}
+                      placeholder="Escribe o busca una métrica existente..."
+                      helperText="💡 Puedes reutilizar una métrica existente de cualquier estándar"
+                      name="name"
+                      required
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      className={`${styles.input} ${errors.name ? styles.error : ''}`}
+                      placeholder="Ej: Porcentaje de éxito"
+                    />
+                  )}
+                  {!metric && !showAutocomplete && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAutocomplete(true)}
+                      className={styles.linkButton}
+                    >
+                      🔍 Buscar métrica existente
+                    </button>
+                  )}
                   {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
                 </div>
 
@@ -331,6 +398,12 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                     Agregar Variable
                   </button>
                 </div>
+
+                {!metric && !showAutocomplete && formData.variables.length > 0 && (
+                  <div className={styles.infoBox} style={{ marginBottom: '1rem' }}>
+                    <strong>✅ Variables importadas:</strong> Se copiaron {formData.variables.length} variable{formData.variables.length !== 1 ? 's' : ''} de la métrica seleccionada.
+                  </div>
+                )}
 
                 {formData.variables.length === 0 ? (
                   <div className={styles.emptyVariables}>

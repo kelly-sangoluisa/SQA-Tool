@@ -1,4 +1,9 @@
 import { apiClient } from '../shared/api-client';
+import { 
+  CriterionSearchResult, 
+  SubCriterionSearchResult, 
+  MetricSearchResult 
+} from '../../types/parameterization-search.types';
 
 // Types
 export interface Standard {
@@ -356,5 +361,43 @@ export const parameterizationApi = {
    */
   async deleteVariable(id: number): Promise<void> {
     return this.updateVariableState(id, { state: 'inactive' });
+  },
+
+  // === SEARCH ENDPOINTS FOR INTELLIGENT AUTOCOMPLETE ===
+
+  /**
+   * Search criteria by name (for autocomplete)
+   * Returns criteria from any standard for reuse
+   */
+  async searchCriteria(search: string): Promise<CriterionSearchResult[]> {
+    if (!search || search.trim().length < 2) {
+      return [];
+    }
+    const queryString = new URLSearchParams({ search: search.trim() }).toString();
+    return apiClient.get(`/parameterization/search/criteria?${queryString}`);
+  },
+
+  /**
+   * Search sub-criteria by name (for autocomplete)
+   * Returns sub-criteria WITH their associated metrics for intelligent selection
+   */
+  async searchSubCriteria(search: string): Promise<SubCriterionSearchResult[]> {
+    if (!search || search.trim().length < 2) {
+      return [];
+    }
+    const queryString = new URLSearchParams({ search: search.trim() }).toString();
+    return apiClient.get(`/parameterization/search/sub-criteria?${queryString}`);
+  },
+
+  /**
+   * Search metrics by name (for autocomplete)
+   * Returns metrics from any standard for reuse
+   */
+  async searchMetrics(search: string): Promise<MetricSearchResult[]> {
+    if (!search || search.trim().length < 2) {
+      return [];
+    }
+    const queryString = new URLSearchParams({ search: search.trim() }).toString();
+    return apiClient.get(`/parameterization/search/metrics?${queryString}`);
   }
 };

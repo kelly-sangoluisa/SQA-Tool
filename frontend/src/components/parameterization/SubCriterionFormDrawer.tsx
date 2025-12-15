@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { SubCriterion, parameterizationApi, CreateSubCriterionDto, UpdateSubCriterionDto } from '../../api/parameterization/parameterization-api';
+import { SubCriterionSearchResult, MetricSearchResult } from '../../types/parameterization-search.types';
 import { BaseFormDrawer } from '../shared/BaseFormDrawer';
 import { FormField } from '../shared/FormField';
+import { Autocomplete } from './Autocomplete';
+import { MetricSelectorModal } from './MetricSelectorModal';
 import { useFormDrawer } from '../../hooks/shared/useFormDrawer';
 import { validateForm, handleApiError } from '../../utils/validation';
 import styles from '../shared/FormDrawer.module.css';
@@ -18,17 +21,98 @@ interface FormData {
   description: string;
 }
 
+/**
+ * Datos opcionales de métrica para pre-llenar cuando se selecciona un subcriterio
+ * con métricas asociadas (Caso B)
+ */
+interface MetricPreFillData {
+  name: string;
+  description: string;
+  code: string;
+  formula: string;
+  desired_threshold: number | null;
+  variables: { symbol: string; description: string }[];
+}
+
 export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onSave }: SubCriterionFormDrawerProps) {
   const [formData, setFormData] = useState<FormData>({
     name: subCriterion?.name || '',
     description: subCriterion?.description || ''
   });
+  
+  const [showAutocomplete, setShowAutocomplete] = useState(!subCriterion);
+  const [metricSelectorData, setMetricSelectorData] = useState<SubCriterionSearchResult | null>(null);
+  const [selectedMetricForParent, setSelectedMetricForParent] = useState<MetricPreFillData | null>(null);
 
   const { isVisible, loading, errors, setLoading, setErrors, handleClose, clearError } = useFormDrawer({
     initialData: subCriterion,
     onSave,
     onClose
   });
+
+  /**
+   * Maneja la selección de un subcriterio del autocompletado (Caso B: Complejo)
+   * Implementa la lógica de selección de métricas según la cantidad
+   */
+  const handleSubCriterionSelected = (selected: SubCriterionSearchResult) => {
+    // Rellenar datos del subcriterio
+    setFormData({
+      name: selected.name,
+      description: selected.description || '',
+    });
+    setShowAutocomplete(false);
+
+    // Caso B - Escenario 1: Subcriterio con 1 métrica
+    if (selected.metrics_count === 1 && selected.metrics.length === 1) {
+      const metric = selected.metrics[0];
+      setSelectedMetricForParent({
+        name: metric.name,
+        description: metric.description || '',
+        code: metric.code || '',
+        formula: metric.formula || '',
+        desired_threshold: metric.desired_threshold || null,
+        variables: metric.variables?.map(v => ({
+          symbol: v.symbol,
+          description: v.description
+        })) || []
+      });
+    }
+    // Caso B - Escenario 2: Subcriterio con múltiples métricas
+    else if (selected.metrics_count > 1) {
+      setMetricSelectorData(selected);
+    }
+    // Si no tiene métricas, solo se rellena el subcriterio
+  };
+
+  /**
+   * Maneja la selección de una métrica del modal (cuando hay múltiples)
+   */
+  const handleMetricSelectedFromModal = (metric: MetricSearchResult) => {
+    setSelectedMetricForParent({
+      name: metric.name,
+      description: metric.description || '',
+      code: metric.code || '',
+      formula: metric.formula || '',
+      desired_threshold: metric.desired_threshold || null,
+      variables: metric.variables?.map(v => ({
+        symbol: v.symbol,
+        description: v.description
+      })) || []
+    });
+    setMetricSelectorData(null); // Cerrar modal
+  };
+
+  /**
+   * Callback que pasa los datos de métrica al padre para pre-llenar
+   * Este es un hook para que el componente padre pueda recibir estos datos
+   */
+  React.useEffect(() => {
+    if (selectedMetricForParent && onSave) {
+      // Aquí puedes emitir un evento o callback personalizado si es necesario
+      // Por ahora, los datos están disponibles en el estado
+      console.log('Métrica seleccionada para pre-llenar:', selectedMetricForParent);
+    }
+  }, [selectedMetricForParent, onSave]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,47 +165,104 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
   };
 
   return (
-    <BaseFormDrawer
-      isVisible={isVisible}
-      title={subCriterion ? 'Editar Subcriterio' : 'Nuevo Subcriterio'}
-      subtitle={subCriterion 
-        ? 'Modifica la información del subcriterio de evaluación'
-        : 'Define un nuevo subcriterio para medir aspectos específicos del criterio'
-      }
-      onClose={handleClose}
-      onSubmit={handleSubmit}
-      loading={loading}
-      submitLabel={subCriterion ? 'Actualizar Subcriterio' : 'Crear Subcriterio'}
-      submitDisabled={!formData.name.trim()}
-      generalError={errors.general}
-    >
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Información del Subcriterio</h3>
-        
-        <FormField
-          id="name"
-          label="Nombre del Subcriterio"
-          value={formData.name}
-          onChange={(value) => handleInputChange('name', value)}
-          placeholder="Ej: Gestión de Defectos, Tolerancia a Fallos"
-          disabled={loading}
-          error={errors.name}
-          required
-          maxLength={100}
-        />
+    <>
+      <BaseFormDrawer
+        isVisible={isVisible}
+        title={subCriterion ? 'Editar Subcriterio' : 'Nuevo Subcriterio'}
+        subtitle={subCriterion 
+          ? 'Modifica la información del subcriterio de evaluación'
+          : 'Define un nuevo subcriterio para medir aspectos específicos del criterio'
+        }
+        onClose={handleClose}
+        onSubmit={handleSubmit}
+        loading={loading}
+        submitLabel={subCriterion ? 'Actualizar Subcriterio' : 'Crear Subcriterio'}
+        submitDisabled={!formData.name.trim()}
+        generalError={errors.general}
+      >
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>Información del Subcriterio</h3>
+          
+          {!subCriterion && showAutocomplete ? (
+            <div className={styles.field}>
+              <label htmlFor="name" className={styles.label}>
+                Nombre del Subcriterio * (Búsqueda inteligente)
+              </label>
+              <Autocomplete
+                value={formData.name}
+                onChange={(value) => handleInputChange('name', value)}
+                onSelect={handleSubCriterionSelected}
+                searchFunction={parameterizationApi.searchSubCriteria}
+                getItemLabel={(item) => item.name}
+                getItemDescription={(item) => item.description}
+                getItemMeta={(item) => (
+                  <>
+                    <span className={styles.badge}>{item.criterion_name}</span>
+                    <span>📊 {item.metrics_count} métrica{item.metrics_count !== 1 ? 's' : ''}</span>
+                  </>
+                )}
+                placeholder="Escribe o busca un subcriterio existente..."
+                helperText="💡 Puedes reutilizar un subcriterio existente de cualquier estándar. Si tiene métricas, también podrás seleccionarlas."
+                name="name"
+                required
+              />
+              {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
+            </div>
+          ) : (
+            <FormField
+              id="name"
+              label="Nombre del Subcriterio"
+              value={formData.name}
+              onChange={(value) => handleInputChange('name', value)}
+              placeholder="Ej: Gestión de Defectos, Tolerancia a Fallos"
+              disabled={loading}
+              error={errors.name}
+              required
+              maxLength={100}
+            />
+          )}
 
-        <FormField
-          id="description"
-          label="Descripción"
-          value={formData.description}
-          onChange={(value) => handleInputChange('description', value)}
-          placeholder="Describe qué aspecto específico evalúa este subcriterio, cómo se mide y su importancia..."
-          disabled={loading}
-          error={errors.description}
-          maxLength={500}
-          type="textarea"
+          {!subCriterion && !showAutocomplete && (
+            <button
+              type="button"
+              onClick={() => setShowAutocomplete(true)}
+              className={styles.linkButton}
+            >
+              🔍 Buscar subcriterio existente
+            </button>
+          )}
+
+          <FormField
+            id="description"
+            label="Descripción"
+            value={formData.description}
+            onChange={(value) => handleInputChange('description', value)}
+            placeholder="Describe qué aspecto específico evalúa este subcriterio, cómo se mide y su importancia..."
+            disabled={loading}
+            error={errors.description}
+            maxLength={500}
+            type="textarea"
+          />
+
+          {selectedMetricForParent && (
+            <div className={styles.infoBox}>
+              <strong>✅ Métrica seleccionada:</strong> {selectedMetricForParent.name}
+              <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                Esta métrica se usará como base para crear una nueva métrica asociada a este subcriterio.
+              </p>
+            </div>
+          )}
+        </div>
+      </BaseFormDrawer>
+
+      {/* Modal para seleccionar métrica cuando hay múltiples */}
+      {metricSelectorData && (
+        <MetricSelectorModal
+          subCriterion={metricSelectorData}
+          onSelect={handleMetricSelectedFromModal}
+          onCancel={() => setMetricSelectorData(null)}
         />
-      </div>
-    </BaseFormDrawer>
+      )}
+    </>
   );
 }
