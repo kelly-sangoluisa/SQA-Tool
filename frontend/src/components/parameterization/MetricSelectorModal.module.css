@@ -9,10 +9,10 @@
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  animation: fadeIn 0.2s ease;
+  animation: fade-in 0.2s ease;
 }
 
-@keyframes fadeIn {
+@keyframes fade-in {
   from {
     opacity: 0;
   }
@@ -31,10 +31,10 @@
   overflow-y: auto;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  animation: slideUp 0.3s ease;
+  animation: slide-up 0.3s ease;
 }
 
-@keyframes slideUp {
+@keyframes slide-up {
   from {
     transform: translateY(20px);
     opacity: 0;
@@ -212,11 +212,11 @@
   color: white;
 }
 
-.confirmButton:hover:not(:disabled) {
-  background-color: var(--primary-dark, #2563eb);
-}
-
 .confirmButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.confirmButton:hover:not(:disabled) {
+  background-color: var(--primary-dark, #2563eb);
 }
