@@ -1,11 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
-import type { Evaluation } from '../types';
+import type { DashboardEvaluation } from '../types';
 import { formatDate } from '../utils/formatters';
 import styles from '../DashboardSidebar.module.css';
 
 interface EvaluationListItemProps {
-  evaluation: Evaluation;
+  evaluation: DashboardEvaluation;
 }
 
 export function EvaluationListItem({ evaluation }: EvaluationListItemProps) {

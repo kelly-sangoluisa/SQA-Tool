@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-import type { Project, Evaluation } from '../types';
+import type { DashboardProject, DashboardEvaluation } from '../types';
 
 interface UseSidebarDataReturn {
-  recentProjects: Project[];
-  recentEvaluations: Evaluation[];
+  recentProjects: DashboardProject[];
+  recentEvaluations: DashboardEvaluation[];
   loadingProjects: boolean;
   loadingEvaluations: boolean;
   error: string | null;
 }
 
 export function useSidebarData(): UseSidebarDataReturn {
-  const [recentProjects, setRecentProjects] = useState<Project[]>([]);
-  const [recentEvaluations, setRecentEvaluations] = useState<Evaluation[]>([]);
+  const [recentProjects, setRecentProjects] = useState<DashboardProject[]>([]);
+  const [recentEvaluations, setRecentEvaluations] = useState<DashboardEvaluation[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingEvaluations, setLoadingEvaluations] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,11 +26,12 @@ export function useSidebarData(): UseSidebarDataReturn {
       const response = await fetch('/api/reports/my-projects');
       if (response.ok) {
         const data = await response.json();
-        // Obtener todos los proyectos, ordenados por fecha de actualización
+        // Ordenar por fecha de actualización y tomar los 3 más recientes
         const sorted = data
-          .sort((a: Project, b: Project) => 
+          .sort((a: DashboardProject, b: DashboardProject) =>
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-          );
+          )
+          .slice(0, 3);
         setRecentProjects(sorted);
       }
     } catch (err) {
@@ -47,7 +48,7 @@ export function useSidebarData(): UseSidebarDataReturn {
       if (response.ok) {
         const data = await response.json();
         const sorted = data
-          .sort((a: Evaluation, b: Evaluation) => {
+          .sort((a: DashboardEvaluation, b: DashboardEvaluation) => {
             const dateA = new Date(a.updated_at || a.created_at).getTime();
             const dateB = new Date(b.updated_at || b.created_at).getTime();
             return dateB - dateA;

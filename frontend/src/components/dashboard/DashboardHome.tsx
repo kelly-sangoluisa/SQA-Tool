@@ -93,8 +93,14 @@ export function DashboardHome() {
         if (response.ok) {
           const data = await response.json();
           if (mounted && Array.isArray(data)) {
-            // Ordenar los proyectos por fecha de actualización
-            const sortedProjects = data.sort((a, b) => 
+            // Filtrar: solo proyectos del usuario logueado y en estado "in_progress"
+            const filteredProjects = data.filter(
+              (project) =>
+                project.creator_user_id === user?.id &&
+                project.status === 'in_progress'
+            );
+            // Ordenar por fecha de actualización
+            const sortedProjects = filteredProjects.sort((a, b) =>
               new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
             );
             setProjects(sortedProjects);
@@ -112,7 +118,7 @@ export function DashboardHome() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [user?.id]);
 
   // Separar proyectos recientes (últimos 3) y todos los proyectos
   const recentProjects = projects.slice(0, 3);
@@ -145,7 +151,7 @@ export function DashboardHome() {
               {recentProjects.map((project) => {
                 const latestEvaluation = project.evaluations?.[0];
                 const { icon, bg } = getProjectIcon(latestEvaluation?.status || '');
-                
+
                 return (
                   <article key={project.id} className={styles.recentCardLarge}>
                     <div className={styles.cardIcon} style={{ background: bg }}>

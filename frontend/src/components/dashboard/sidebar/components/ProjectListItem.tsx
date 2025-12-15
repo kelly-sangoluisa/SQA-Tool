@@ -1,11 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
-import type { Project } from '../types';
+import type { DashboardProject } from '../types';
 import { formatDate } from '../utils/formatters';
 import styles from '../DashboardSidebar.module.css';
 
 interface ProjectListItemProps {
-  project: Project;
+  project: DashboardProject;
   linkTo?: string;
 }
 
