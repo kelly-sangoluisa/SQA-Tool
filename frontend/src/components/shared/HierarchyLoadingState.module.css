@@ -98,7 +98,7 @@
 }
 
 .dot {
-  animation: dotPulse 1.4s infinite ease-in-out;
+  animation: dot-pulse 1.4s infinite ease-in-out;
   opacity: 0;
 }
 
@@ -114,7 +114,7 @@
   animation-delay: 0.4s;
 }
 
-@keyframes dotPulse {
+@keyframes dot-pulse {
   0%, 60%, 100% {
     opacity: 0;
     transform: scale(0.8);
@@ -125,16 +125,4 @@
   }
 }
 
-/* Efecto de pulsación suave para todo el contenedor */
-.loadingContainer {
-  animation: containerPulse 2s ease-in-out infinite;
-}
 
-@keyframes containerPulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.95;
-  }
-}

@@ -110,10 +110,10 @@
   height: 4px;
   background: var(--hierarchy-primary);
   border-radius: 50%;
-  animation: loadingDots 1.4s infinite ease-in-out;
+  animation: loading-dots 1.4s infinite ease-in-out;
 }
 
-@keyframes loadingDots {
+@keyframes loading-dots {
   0%, 80%, 100% {
     opacity: 0;
     transform: scale(0);
@@ -347,11 +347,11 @@
 .subCriteriaContainer {
   border-top: 1px solid var(--hierarchy-gray-300);
   background: var(--hierarchy-gray-50);
-  animation: slideDown 0.2s ease-out;
+  animation: slide-down 0.2s ease-out;
   overflow: hidden;
 }
 
-@keyframes slideDown {
+@keyframes slide-down {
   from {
     opacity: 0;
     max-height: 0;
