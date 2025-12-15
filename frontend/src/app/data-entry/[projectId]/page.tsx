@@ -381,7 +381,7 @@ function DataEntryContent() {
     loadProjectData().catch(() => {
       // Error handled in loadProjectData
     });
-  }, [isAuthenticated, projectId, isValidProjectId]);
+  }, [projectId, isValidProjectId]);
 
   // Función para guardar datos en el backend
   const saveCurrentMetricData = async () => {
