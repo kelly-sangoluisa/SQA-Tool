@@ -1,47 +1,39 @@
 'use client';
 import { useAuth } from '../../hooks/auth/useAuth';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import '../../styles/dashboard/dashboard.css';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { DashboardHome } from '../../components/dashboard/DashboardHome';
+import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 
-export default function DashboardPage() {
-  const { isLoading, isAuthenticated, user } = useAuth();
+function DashboardPageContent() {
+  const { user } = useAuth();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { 
-    setMounted(true); 
-  }, []);
-
+  // Redireccionar a admins a su página correspondiente
   useEffect(() => {
-    if (mounted && !isLoading) {
-      if (!isAuthenticated) {
-        router.push('/auth/login');
-        return;
-      }
-      
-      // Redireccionar según el rol del usuario
-      if (user && user.role?.name === 'admin') {
-        router.replace('/parameterization');
-        return;
-      }
+    if (user && user.role?.name === 'admin') {
+      router.replace('/parameterization');
     }
-  }, [mounted, isLoading, isAuthenticated, user, router]);
-
-  if (!mounted || isLoading || !isAuthenticated) {
-    return <div className="min-h-screen bg-white" />;
-  }
+  }, [user, router]);
 
   // Si es admin, no mostrar este dashboard ya que será redirigido
   if (user && user.role?.name === 'admin') {
-    return <div className="min-h-screen bg-white" />;
+    return null;
   }
 
   return (
     <DashboardLayout>
       <DashboardHome />
     </DashboardLayout>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <ProtectedRoute requiredRole="any">
+      <DashboardPageContent />
+    </ProtectedRoute>
   );
 }
