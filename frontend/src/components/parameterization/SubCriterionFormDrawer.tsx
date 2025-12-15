@@ -107,12 +107,12 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
    * Este es un hook para que el componente padre pueda recibir estos datos
    */
   React.useEffect(() => {
-    if (selectedMetricForParent && onSave) {
+    if (selectedMetricForParent) {
       // Aquí puedes emitir un evento o callback personalizado si es necesario
       // Por ahora, los datos están disponibles en el estado
       console.log('Métrica seleccionada para pre-llenar:', selectedMetricForParent);
     }
-  }, [selectedMetricForParent, onSave]);
+  }, [selectedMetricForParent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,7 +194,7 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
                 onSelect={handleSubCriterionSelected}
                 searchFunction={parameterizationApi.searchSubCriteria}
                 getItemLabel={(item) => item.name}
-                getItemDescription={(item) => item.description}
+                getItemDescription={(item) => item.description || ''}
                 getItemMeta={(item) => (
                   <>
                     <span className={styles.badge}>{item.criterion_name}</span>

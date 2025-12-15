@@ -275,7 +275,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                       onSelect={handleMetricSelected}
                       searchFunction={parameterizationApi.searchMetrics}
                       getItemLabel={(item) => item.name}
-                      getItemDescription={(item) => item.description}
+                      getItemDescription={(item) => item.description || ''}
                       getItemMeta={(item) => (
                         <>
                           {item.code && <span className={styles.badge}>{item.code}</span>}

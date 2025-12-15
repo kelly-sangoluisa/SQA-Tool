@@ -131,7 +131,7 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
               onSelect={handleCriterionSelected}
               searchFunction={parameterizationApi.searchCriteria}
               getItemLabel={(item) => item.name}
-              getItemDescription={(item) => item.description}
+              getItemDescription={(item) => item.description || ''}
               getItemMeta={(item) => (
                 <span className={styles.badge}>{item.standard_name}</span>
               )}
