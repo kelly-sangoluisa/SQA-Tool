@@ -16,16 +16,15 @@ function ResultsPageContent() {
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'approved' | 'rejected'>('all');
+  const [filter, setFilter] = useState<'all' | 'approved' | 'rejected' | 'in_progress'>('all');
 
   const loadProjects = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await getMyProjects();
-      // Filtrar solo proyectos completados (con resultados)
-      const completedProjects = data.filter(p => p.final_project_score !== null);
-      setProjects(completedProjects);
+      // Mostrar TODOS los proyectos del usuario
+      setProjects(data);
     } catch {
       setError('Error al cargar los proyectos. Por favor intenta de nuevo.');
     } finally {
@@ -35,8 +34,9 @@ function ResultsPageContent() {
 
   const filteredProjects = (projects || []).filter(project => {
     if (filter === 'all') return true;
-    if (filter === 'approved') return project.meets_threshold;
-    if (filter === 'rejected') return !project.meets_threshold;
+    if (filter === 'approved') return project.status === 'completed' && project.final_project_score !== null && project.meets_threshold;
+    if (filter === 'rejected') return project.status === 'completed' && project.final_project_score !== null && !project.meets_threshold;
+    if (filter === 'in_progress') return project.status === 'in_progress';
     return true;
   });
 
@@ -56,8 +56,9 @@ function ResultsPageContent() {
     reset();
   }, [filter, reset]);
 
-  const approvedCount = (projects || []).filter(p => p.meets_threshold).length;
-  const rejectedCount = (projects || []).filter(p => !p.meets_threshold).length;
+  const approvedCount = (projects || []).filter(p => p.status === 'completed' && p.final_project_score !== null && p.meets_threshold).length;
+  const rejectedCount = (projects || []).filter(p => p.status === 'completed' && p.final_project_score !== null && !p.meets_threshold).length;
+  const inProgressCount = (projects || []).filter(p => p.status === 'in_progress').length;
 
   // Mostrar loading inicial sin contenido para evitar FOUC
   if (loading && projects.length === 0) {
@@ -176,6 +177,10 @@ function ResultsPageContent() {
             <span className="stat-number">{rejectedCount}</span>
             <span className="stat-text">No Aprobados</span>
           </div>
+          <div className="stat-chip stat-chip--in-progress">
+            <span className="stat-number">{inProgressCount}</span>
+            <span className="stat-text">En Progreso</span>
+          </div>
         </div>
       </div>
 
@@ -197,6 +202,12 @@ function ResultsPageContent() {
           onClick={() => setFilter('rejected')}
         >
           No Aprobados ({rejectedCount})
+        </button>
+        <button
+          className={`filter-btn ${filter === 'in_progress' ? 'filter-btn--active' : ''}`}
+          onClick={() => setFilter('in_progress')}
+        >
+          En Progreso ({inProgressCount})
         </button>
       </div>
 
@@ -294,6 +305,9 @@ function ResultsPageContent() {
 
         .header-content {
           margin-bottom: 2rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
         }
 
         .page-title {
@@ -303,14 +317,14 @@ function ResultsPageContent() {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          margin: 0 0 0.75rem 0;
+          margin: 0;
           animation: fadeInDown 0.6s ease;
         }
 
         .page-subtitle {
           font-size: 1.125rem;
           color: #6b7280;
-          margin: 0 0 1.5rem 0;
+          margin: 0;
           max-width: 600px;
           animation: fadeInUp 0.6s ease;
         }
@@ -358,6 +372,10 @@ function ResultsPageContent() {
           border-left: 4px solid #ef4444;
         }
 
+        .stat-chip--in-progress {
+          border-left: 4px solid #f59e0b;
+        }
+
         .stat-chip--pending {
           border-left: 4px solid #f59e0b;
         }
@@ -386,6 +404,10 @@ function ResultsPageContent() {
 
         .stat-chip--rejected .stat-number {
           color: #ef4444;
+        }
+
+        .stat-chip--in-progress .stat-number {
+          color: #f59e0b;
         }
 
         .stat-chip--pending .stat-number {

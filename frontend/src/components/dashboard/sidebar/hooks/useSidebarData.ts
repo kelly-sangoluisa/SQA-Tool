@@ -26,12 +26,12 @@ export function useSidebarData(): UseSidebarDataReturn {
       const response = await fetch('/api/reports/my-projects');
       if (response.ok) {
         const data = await response.json();
-        // Ordenar por fecha de actualización y tomar los 3 más recientes
+        // Ordenar por fecha de actualización y tomar los 10 más recientes
         const sorted = data
           .sort((a: DashboardProject, b: DashboardProject) =>
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
           )
-          .slice(0, 3);
+          .slice(0, 10);
         setRecentProjects(sorted);
       }
     } catch (err) {

@@ -410,6 +410,9 @@ function ProjectEvaluationsPage() {
           flex: 1;
           min-width: 300px;
           margin-bottom: 2rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
         }
 
         .page-title {
@@ -419,7 +422,7 @@ function ProjectEvaluationsPage() {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          margin: 0 0 1rem 0;
+          margin: 0;
           animation: fadeInDown 0.6s ease;
         }
 

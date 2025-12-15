@@ -112,32 +112,47 @@ export class ReportsService {
   // PROYECTOS ACTIVOS DEL USUARIO (DASHBOARD)
   // =========================================================
  async getProjectsByUserId(userId: number): Promise<ProjectSummaryDto[]> {
-  this.logger.log(`🔍 Service: Buscando proyectos para usuario ${userId} con status IN_PROGRESS`);
+  this.logger.log(`🔍 Service: Buscando TODOS los proyectos para usuario ${userId}`);
 
   const projects = await this.projectRepo.find({
     where: {
-      creator_user_id: userId,
-      status: ProjectStatus.IN_PROGRESS
+      creator_user_id: userId
     },
     relations: ['evaluations'],
     order: { created_at: 'DESC' },
   });
 
-  this.logger.log(`📦 Service: Encontrados ${projects.length} proyectos filtrados para usuario ${userId}`);
+  this.logger.log(`📦 Service: Encontrados ${projects.length} proyectos para usuario ${userId}`);
   this.logger.log(`📋 Service: IDs de proyectos: ${projects.map(p => p.id).join(', ')}`);
 
-  return projects.map(project => ({
-    project_id: project.id,
-    project_name: project.name,
-    project_description: project.description,
-    minimum_threshold: project.minimum_threshold ?? null,
-    final_project_score: null,
-    meets_threshold: false,
-    status: project.status,
-    evaluation_count: project.evaluations.length,
-    created_at: project.created_at,
-    updated_at: project.updated_at,
-  }));
+  // Obtener los resultados de los proyectos
+  const projectResults = await Promise.all(
+    projects.map(async (project) => {
+      const result = await this.projectResultRepo.findOne({
+        where: { project_id: project.id },
+      });
+
+      const finalScore = result ? Number(result.final_project_score) : null;
+      const meetsThreshold = finalScore !== null && project.minimum_threshold !== null
+        ? finalScore >= Number(project.minimum_threshold)
+        : false;
+
+      return {
+        project_id: project.id,
+        project_name: project.name,
+        project_description: project.description,
+        minimum_threshold: project.minimum_threshold ?? null,
+        final_project_score: finalScore,
+        meets_threshold: meetsThreshold,
+        status: project.status,
+        evaluation_count: project.evaluations.length,
+        created_at: project.created_at,
+        updated_at: project.updated_at,
+      };
+    })
+  );
+
+  return projectResults;
 }
 
 
