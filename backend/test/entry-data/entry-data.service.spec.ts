@@ -42,6 +42,8 @@ describe('EntryDataService', () => {
       calculateCriteriaResults: jest.fn(),
       calculateEvaluationResult: jest.fn(),
       calculateProjectResult: jest.fn(),
+      updateEvaluationStatus: jest.fn(),
+      updateProjectStatus: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -144,6 +146,8 @@ describe('EntryDataService', () => {
         .mockResolvedValue([mockCriteriaResult] as any);
       jest.spyOn(evaluationCalculationService, 'calculateEvaluationResult')
         .mockResolvedValue(mockEvaluationResult as any);
+      jest.spyOn(evaluationCalculationService, 'updateEvaluationStatus')
+        .mockResolvedValue(undefined);
 
       // Act
       const result = await service.finalizeEvaluation(evaluationId);
@@ -157,6 +161,8 @@ describe('EntryDataService', () => {
         final_score: mockEvaluationResult.evaluation_score,
         finalized_at: mockEvaluationResult.created_at
       });
+      expect(evaluationCalculationService.updateEvaluationStatus)
+        .toHaveBeenCalledWith(evaluationId, 'completed');
     });
   });
 
@@ -167,6 +173,8 @@ describe('EntryDataService', () => {
       
       jest.spyOn(evaluationCalculationService, 'calculateProjectResult')
         .mockResolvedValue(mockProjectResult as any);
+      jest.spyOn(evaluationCalculationService, 'updateProjectStatus')
+        .mockResolvedValue(undefined);
 
       // Act
       const result = await service.finalizeProject(projectId);
@@ -178,6 +186,8 @@ describe('EntryDataService', () => {
         final_score: mockProjectResult.final_project_score,
         finalized_at: mockProjectResult.created_at
       });
+      expect(evaluationCalculationService.updateProjectStatus)
+        .toHaveBeenCalledWith(projectId, 'completed');
     });
   });
 
