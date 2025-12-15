@@ -154,20 +154,23 @@ export class EvaluationCalculationService {
   async calculateEvaluationResult(evaluationId: number): Promise<EvaluationResult> {
     this.logger.log(`Calculating final evaluation result for evaluation ${evaluationId}`);
 
-    const criteriaResults = await this.evaluationCriteriaResultRepo.find({
-      where: { 
-        evaluation_criterion: { 
-          evaluation: { id: evaluationId } 
-        } 
-      },
-      relations: ['evaluation_criterion']
-    });
+    // Primero obtener los IDs de los criterios de esta evaluación
+    const evaluation = await this.getEvaluationWithCriteria(evaluationId);
+    const criterionIds = evaluation.evaluation_criteria.map(ec => ec.id);
+
+    this.logger.debug(`📋 Criterion IDs for evaluation ${evaluationId}: ${JSON.stringify(criterionIds)}`);
+
+    // Buscar solo los resultados de criterios de esta evaluación
+    const criteriaResults = await this.evaluationCriteriaResultRepo
+      .createQueryBuilder('cr')
+      .where('cr.eval_criterion_id IN (:...criterionIds)', { criterionIds })
+      .getMany();
 
     if (criteriaResults.length === 0) {
       throw new BadRequestException(`No criteria results found for evaluation ${evaluationId}`);
     }
 
-    this.logger.debug(`📊 Criteria results scores: ${JSON.stringify(criteriaResults.map(cr => ({ id: cr.id, final_score: cr.final_score, type: typeof cr.final_score })))}`);
+    this.logger.debug(`📊 Criteria results scores: ${JSON.stringify(criteriaResults.map(cr => ({ id: cr.id, eval_criterion_id: cr.eval_criterion_id, final_score: cr.final_score, type: typeof cr.final_score })))}`);
 
     const finalScore = this.calculateSimpleAverage(
       criteriaResults.map(cr => cr.final_score)
