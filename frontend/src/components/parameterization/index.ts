@@ -5,3 +5,5 @@ export { StandardCard } from './StandardCard';
 export { StandardsList } from './StandardsList';
 export { LoadingSpinner } from './LoadingSpinner';
 export { EmptyState } from './EmptyState';
+export { Autocomplete } from './Autocomplete';
+export { MetricSelectorModal } from './MetricSelectorModal';

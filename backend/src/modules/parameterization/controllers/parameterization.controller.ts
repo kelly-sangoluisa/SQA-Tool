@@ -14,6 +14,7 @@ import { CreateMetricDto, UpdateMetricDto } from '../dto/metric.dto';
 import { CreateFormulaVariableDto, UpdateFormulaVariableDto } from '../dto/formula-variable.dto';
 import { UpdateStateDto } from '../dto/update-state.dto'; 
 import { FindAllQueryDto } from '../dto/find-all-query.dto'; 
+import { SearchQueryDto } from '../dto/search.dto'; 
 
 @ApiTags('Parameterization')
 @ApiBearerAuth('bearer')
@@ -228,5 +229,40 @@ export class ParameterizationController {
     @Body() updateStateDto: UpdateStateDto,
   ) {
     return this.service.updateVariableState(id, updateStateDto);
+  }
+
+  // --- SEARCH ENDPOINTS FOR INTELLIGENT AUTOCOMPLETE ---
+
+  @Get('search/criteria')
+  @ROLES('admin')
+  @ApiOperation({ 
+    summary: 'Buscar criterios por nombre (para autocompletado)', 
+    description: 'Retorna criterios de cualquier estándar para reutilización. Mínimo 2 caracteres.' 
+  })
+  @ApiResponse({ status: 200, description: 'Lista de criterios encontrados' })
+  searchCriteria(@Query() query: SearchQueryDto) {
+    return this.service.searchCriteria(query);
+  }
+
+  @Get('search/sub-criteria')
+  @ROLES('admin')
+  @ApiOperation({ 
+    summary: 'Buscar subcriterios por nombre (para autocompletado)', 
+    description: 'Retorna subcriterios CON sus métricas asociadas para selección inteligente. Mínimo 2 caracteres.' 
+  })
+  @ApiResponse({ status: 200, description: 'Lista de subcriterios con métricas' })
+  searchSubCriteria(@Query() query: SearchQueryDto) {
+    return this.service.searchSubCriteria(query);
+  }
+
+  @Get('search/metrics')
+  @ROLES('admin')
+  @ApiOperation({ 
+    summary: 'Buscar métricas por nombre (para autocompletado)', 
+    description: 'Retorna métricas de cualquier estándar para reutilización. Mínimo 2 caracteres.' 
+  })
+  @ApiResponse({ status: 200, description: 'Lista de métricas encontradas' })
+  searchMetrics(@Query() query: SearchQueryDto) {
+    return this.service.searchMetrics(query);
   }
 }

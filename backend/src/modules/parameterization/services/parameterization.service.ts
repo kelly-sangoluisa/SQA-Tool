@@ -17,6 +17,12 @@ import { CreateMetricDto, UpdateMetricDto } from '../dto/metric.dto';
 import { CreateFormulaVariableDto, UpdateFormulaVariableDto } from '../dto/formula-variable.dto';
 import { UpdateStateDto } from '../dto/update-state.dto';
 import { FindAllQueryDto } from '../dto/find-all-query.dto';
+import { 
+  SearchQueryDto, 
+  CriterionSearchResultDto, 
+  SubCriterionSearchResultDto, 
+  MetricSearchResultDto 
+} from '../dto/search.dto';
 
 @Injectable()
 export class ParameterizationService {
@@ -301,5 +307,146 @@ export class ParameterizationService {
 
   async updateVariableState(id: number, updateStateDto: UpdateStateDto) {
     return this.updateEntityState(this.variableRepo, id, updateStateDto, 'FormulaVariable');
+  }
+
+  // --- SEARCH METHODS FOR INTELLIGENT AUTOCOMPLETE ---
+
+  /**
+   * Buscar criterios por nombre (para autocompletado)
+   * Devuelve criterios de CUALQUIER estándar para reutilización
+   */
+  async searchCriteria(query: SearchQueryDto): Promise<CriterionSearchResultDto[]> {
+    const { search } = query;
+    
+    if (!search || search.trim().length < 2) {
+      return [];
+    }
+
+    const searchPattern = `%${search.trim()}%`;
+    
+    const results = await this.criterionRepo
+      .createQueryBuilder('criterion')
+      .leftJoinAndSelect('criterion.standard', 'standard')
+      .where('criterion.name ILIKE :search', { search: searchPattern })
+      .andWhere('criterion.state = :state', { state: 'active' })
+      .andWhere('standard.state = :state', { state: 'active' })
+      .orderBy('criterion.name', 'ASC')
+      .take(10) // Limitar resultados para el autocomplete
+      .getMany();
+
+    return results.map(criterion => ({
+      criterion_id: criterion.id,
+      name: criterion.name,
+      description: criterion.description,
+      standard_id: criterion.standard_id,
+      standard_name: criterion.standard?.name || '',
+    }));
+  }
+
+  /**
+   * Buscar subcriterios por nombre (para autocompletado)
+   * INCLUYE sus métricas asociadas CON sus variables para el caso complejo de selección
+   */
+  async searchSubCriteria(query: SearchQueryDto): Promise<SubCriterionSearchResultDto[]> {
+    const { search } = query;
+    
+    if (!search || search.trim().length < 2) {
+      return [];
+    }
+
+    const searchPattern = `%${search.trim()}%`;
+    
+    const results = await this.subCriterionRepo
+      .createQueryBuilder('sub_criterion')
+      .leftJoinAndSelect('sub_criterion.criterion', 'criterion')
+      .leftJoinAndSelect('criterion.standard', 'standard')
+      .leftJoinAndSelect('sub_criterion.metrics', 'metrics')
+      .leftJoinAndSelect('metrics.variables', 'variables')
+      .where('sub_criterion.name ILIKE :search', { search: searchPattern })
+      .andWhere('sub_criterion.state = :state', { state: 'active' })
+      .andWhere('criterion.state = :state', { state: 'active' })
+      .andWhere('standard.state = :state', { state: 'active' })
+      .orderBy('sub_criterion.name', 'ASC')
+      .take(10)
+      .getMany();
+
+    return results.map(subCriterion => {
+      const activeMetrics = subCriterion.metrics?.filter(m => m.state === 'active') || [];
+      
+      return {
+        sub_criterion_id: subCriterion.id,
+        name: subCriterion.name,
+        description: subCriterion.description,
+        criterion_id: subCriterion.criterion_id,
+        criterion_name: subCriterion.criterion?.name || '',
+        standard_id: subCriterion.criterion?.standard_id || 0,
+        standard_name: subCriterion.criterion?.standard?.name || '',
+        metrics: activeMetrics.map(metric => {
+          const activeVariables = metric.variables?.filter(v => v.state === 'active') || [];
+          
+          return {
+            metric_id: metric.id,
+            code: metric.code,
+            name: metric.name,
+            description: metric.description,
+            formula: metric.formula,
+            desired_threshold: metric.desired_threshold,
+            variables: activeVariables.map(variable => ({
+              variable_id: variable.id,
+              symbol: variable.symbol,
+              description: variable.description,
+            })),
+          };
+        }),
+        metrics_count: activeMetrics.length,
+      };
+    });
+  }
+
+  /**
+   * Buscar métricas por nombre (para autocompletado)
+   * Incluye las variables de fórmula asociadas
+   */
+  async searchMetrics(query: SearchQueryDto): Promise<MetricSearchResultDto[]> {
+    const { search } = query;
+    
+    if (!search || search.trim().length < 2) {
+      return [];
+    }
+
+    const searchPattern = `%${search.trim()}%`;
+    
+    const results = await this.metricRepo
+      .createQueryBuilder('metric')
+      .leftJoinAndSelect('metric.sub_criterion', 'sub_criterion')
+      .leftJoinAndSelect('sub_criterion.criterion', 'criterion')
+      .leftJoinAndSelect('criterion.standard', 'standard')
+      .leftJoinAndSelect('metric.variables', 'variables')
+      .where('metric.name ILIKE :search', { search: searchPattern })
+      .andWhere('metric.state = :state', { state: 'active' })
+      .andWhere('sub_criterion.state = :state', { state: 'active' })
+      .andWhere('criterion.state = :state', { state: 'active' })
+      .andWhere('standard.state = :state', { state: 'active' })
+      .orderBy('metric.name', 'ASC')
+      .take(10)
+      .getMany();
+
+    return results.map(metric => {
+      const activeVariables = metric.variables?.filter(v => v.state === 'active') || [];
+      
+      return {
+        metric_id: metric.id,
+        code: metric.code,
+        name: metric.name,
+        description: metric.description,
+        formula: metric.formula,
+        desired_threshold: metric.desired_threshold,
+        variables: activeVariables.map(variable => ({
+          variable_id: variable.id,
+          symbol: variable.symbol,
+          description: variable.description,
+        })),
+      };
+    });
   }
 }
