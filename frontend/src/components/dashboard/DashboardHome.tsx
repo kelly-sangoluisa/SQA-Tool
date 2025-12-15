@@ -139,7 +139,6 @@ export function DashboardHome() {
         <section className={styles.sectionWrapper}>
           <div className={styles.sectionHeader}>
             <h3 className={styles.sectionTitle}>Proyectos recientes</h3>
-            <Link href="/configuration-evaluation/projects" className={styles.viewAllLink}>Ver todos</Link>
           </div>
 
           {loading && <p className={styles.loadingText}>Cargando...</p>}
