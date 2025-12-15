@@ -298,7 +298,18 @@ describe('EvaluationCalculationService', () => {
 
     it('should calculate evaluation result successfully', async () => {
       // Arrange
-      jest.spyOn(evaluationCriteriaResultRepo, 'find').mockResolvedValue([mockCriteriaResult] as any);
+      const evaluationWithCriteria = {
+        ...mockEvaluation,
+        evaluation_criteria: [mockEvaluationCriterion]
+      };
+      
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([mockCriteriaResult])
+      };
+      
+      jest.spyOn(evaluationRepo, 'findOne').mockResolvedValue(evaluationWithCriteria as any);
+      jest.spyOn(evaluationCriteriaResultRepo, 'createQueryBuilder').mockReturnValue(mockQueryBuilder as any);
       jest.spyOn(evaluationResultRepo, 'create').mockReturnValue(mockEvaluationResult as any);
       jest.spyOn(evaluationResultRepo, 'save').mockResolvedValue(mockEvaluationResult as any);
 
@@ -307,16 +318,35 @@ describe('EvaluationCalculationService', () => {
 
       // Assert
       expect(result).toEqual(mockEvaluationResult);
+      expect(evaluationRepo.findOne).toHaveBeenCalledWith({
+        where: { id: evaluationId },
+        relations: ['evaluation_criteria', 'evaluation_criteria.evaluation_metrics']
+      });
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'cr.eval_criterion_id IN (:...criterionIds)',
+        { criterionIds: [mockEvaluationCriterion.id] }
+      );
       expect(evaluationResultRepo.create).toHaveBeenCalledWith({
         evaluation_id: evaluationId,
-        evaluation_score: mockCriteriaResult.final_score, // Simple average
+        evaluation_score: mockCriteriaResult.final_score,
         conclusion: 'Evaluación calculada automáticamente'
       });
     });
 
     it('should throw error when no criteria results found', async () => {
       // Arrange
-      jest.spyOn(evaluationCriteriaResultRepo, 'find').mockResolvedValue([]);
+      const evaluationWithCriteria = {
+        ...mockEvaluation,
+        evaluation_criteria: [mockEvaluationCriterion]
+      };
+      
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([])
+      };
+      
+      jest.spyOn(evaluationRepo, 'findOne').mockResolvedValue(evaluationWithCriteria as any);
+      jest.spyOn(evaluationCriteriaResultRepo, 'createQueryBuilder').mockReturnValue(mockQueryBuilder as any);
 
       // Act & Assert
       await expect(service.calculateEvaluationResult(evaluationId))
@@ -351,6 +381,38 @@ describe('EvaluationCalculationService', () => {
       // Act & Assert
       await expect(service.calculateProjectResult(projectId))
         .rejects.toThrow(`No evaluation results found for project ${projectId}`);
+    });
+  });
+
+  describe('updateEvaluationStatus', () => {
+    it('should update evaluation status successfully', async () => {
+      // Arrange
+      const evaluationId = 1;
+      const status = 'completed' as any;
+      
+      jest.spyOn(evaluationRepo, 'update').mockResolvedValue({} as any);
+
+      // Act
+      await service.updateEvaluationStatus(evaluationId, status);
+
+      // Assert
+      expect(evaluationRepo.update).toHaveBeenCalledWith(evaluationId, { status });
+    });
+  });
+
+  describe('updateProjectStatus', () => {
+    it('should update project status successfully', async () => {
+      // Arrange
+      const projectId = 1;
+      const status = 'completed' as any;
+      
+      jest.spyOn(projectRepo, 'update').mockResolvedValue({} as any);
+
+      // Act
+      await service.updateProjectStatus(projectId, status);
+
+      // Assert
+      expect(projectRepo.update).toHaveBeenCalledWith(projectId, { status });
     });
   });
 

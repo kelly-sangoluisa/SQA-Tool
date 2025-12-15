@@ -31,9 +31,13 @@ export class EvaluationResult extends BaseTimestampEntity {
   })
   @Column({
     name: 'evaluation_score',
-    type: 'numeric',
+    type: 'decimal',
     precision: 10,
-    scale: 2
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value)
+    }
   })
   evaluation_score: number;
 

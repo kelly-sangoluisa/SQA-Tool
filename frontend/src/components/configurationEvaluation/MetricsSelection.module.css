@@ -10,7 +10,7 @@
   z-index: 100;
   padding: 1rem 2rem;
   background: transparent;
-  animation: slideDown 0.3s ease-out;
+  animation: slide-down 0.3s ease-out;
 }
 
 .container {
@@ -243,7 +243,7 @@
   }
 }
 
-@keyframes slideDown {
+@keyframes slide-down {
   from {
     opacity: 0;
     transform: translateY(-10px);

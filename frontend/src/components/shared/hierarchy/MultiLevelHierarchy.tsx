@@ -189,12 +189,17 @@ export function MultiLevelHierarchy<
           const progress = getGroupProgress?.(group);
           const isCompleted = isGroupCompleted?.(group) || false;
           const level2Items = getLevel2Items(group);
+          
+          // Calcular índice global de nivel 4 para este grupo
+          let globalLevel4Index = 0;
 
           return (
             <div key={group.id} className={styles.level1Group}>
               <button
                 className={`${styles.level1Button} ${isGroupExpanded ? styles.level1Active : ''} ${isCompleted ? styles.level1Completed : ''}`}
                 onClick={() => toggleGroup(group.id)}
+                disabled={isCompleted}
+                title={isCompleted ? 'Esta evaluación ya ha sido finalizada' : ''}
               >
                 <span className={styles.expandIcon}>
                   {isGroupExpanded ? '▼' : '▶'}
@@ -209,7 +214,7 @@ export function MultiLevelHierarchy<
                 )}
               </button>
 
-              {isGroupExpanded && (
+              {isGroupExpanded && !isCompleted && (
                 <div className={styles.level2Container}>
                   {level2Items.length === 0 ? (
                     <div className={styles.emptyMessage}>
@@ -266,9 +271,10 @@ export function MultiLevelHierarchy<
                                               {defaultLabels.emptyLevel4}
                                             </div>
                                           ) : (
-                                            level4Items.map((level4Item, level4LocalIndex) => {
+                                            level4Items.map((level4Item) => {
                                               const isCompleted = isItemCompleted?.(level4Item) || false;
                                               const isActive = level4Item.id === activeLevel4ItemId;
+                                              const currentGlobalIndex = ++globalLevel4Index;
 
                                               return (
                                                 <button
@@ -277,7 +283,7 @@ export function MultiLevelHierarchy<
                                                   onClick={() => onLevel4Select?.(groupIndex, level4Item)}
                                                 >
                                                   <span className={`${styles.level4Number} ${isCompleted ? styles.completedNumber : ''}`}>
-                                                    {isCompleted ? '✓' : level4LocalIndex + 1}
+                                                    {isCompleted ? '✓' : currentGlobalIndex}
                                                   </span>
                                                   <span className={styles.level4Name}>
                                                     {level4Item.name}

@@ -32,6 +32,7 @@ export class EvaluationVariableService {
    */
   async createOrUpdate(dto: CreateEvaluationVariableDto): Promise<EvaluationVariable> {
     this.logger.log(`Creating/updating evaluation variable for metric ${dto.eval_metric_id}`);
+    this.logger.debug(`📥 Received value: ${dto.value}, type: ${typeof dto.value}`);
 
     await this.validateReferences(dto);
 
