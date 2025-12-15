@@ -1,4 +1,5 @@
 "use client";
+<<<<<<< HEAD
 
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -16,6 +17,22 @@ import { EvaluationListItem } from "./components/EvaluationListItem";
 import { useSidebarData } from "./hooks/useSidebarData";
 import { useSidebar } from "./context/SidebarContext";
 import styles from "./DashboardSidebar.module.css";
+=======
+import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/auth/useAuth';
+import { HiFolder, HiChartBar, HiSearch, HiLogout, HiCheckCircle } from 'react-icons/hi';
+import { SidebarToggle } from './components/SidebarToggle';
+import { NewEvaluationButton } from './components/NewEvaluationButton';
+import { BackToHomeButton } from './components/BackToHomeButton';
+import { SidebarSearch } from './components/SidebarSearch';
+import { SidebarSection } from './components/SidebarSection';
+import { ProjectListItem } from './components/ProjectListItem';
+import { EvaluationListItem } from './components/EvaluationListItem';
+import { useSidebarData } from './hooks/useSidebarData';
+import { useSidebar } from './context/SidebarContext';
+import styles from './DashboardSidebar.module.css';
+>>>>>>> 7b19fc67af1d22e9da8bd04aa3e0d409483e7d44
 
 export function DashboardSidebar() {
   const { isOpen, toggleSidebar, closeSidebar } = useSidebar();
@@ -33,6 +50,7 @@ export function DashboardSidebar() {
     loadingEvaluations,
   } = useSidebarData();
 
+<<<<<<< HEAD
   /* ---------------- LOGOUT ---------------- */
   const handleSignOut = async () => {
     try {
@@ -81,6 +99,42 @@ export function DashboardSidebar() {
           : true
       );
   }, [recentEvaluations, searchQuery]);
+=======
+  // Separar proyectos en progreso y completados
+  const inProgressProjects = useMemo(() => {
+    return recentProjects
+      .filter(p => p.status !== 'completed')
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+      .slice(0, 3);
+  }, [recentProjects]);
+
+  const completedProjects = useMemo(() => {
+    return recentProjects
+      .filter(p => p.status === 'completed')
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+      .slice(0, 3);
+  }, [recentProjects]);
+
+  // Filtrar proyectos en progreso según la búsqueda
+  const filteredInProgressProjects = useMemo(() => {
+    if (!searchQuery.trim()) return inProgressProjects;
+    
+    const query = searchQuery.toLowerCase();
+    return inProgressProjects.filter(project =>
+      project.project_name.toLowerCase().includes(query)
+    );
+  }, [inProgressProjects, searchQuery]);
+
+  // Filtrar proyectos completados según la búsqueda
+  const filteredCompletedProjects = useMemo(() => {
+    if (!searchQuery.trim()) return completedProjects;
+    
+    const query = searchQuery.toLowerCase();
+    return completedProjects.filter(project =>
+      project.project_name.toLowerCase().includes(query)
+    );
+  }, [completedProjects, searchQuery]);
+>>>>>>> 7b19fc67af1d22e9da8bd04aa3e0d409483e7d44
 
   return (
     <>
@@ -126,13 +180,18 @@ export function DashboardSidebar() {
           <BackToHomeButton />
           <NewEvaluationButton />
 
+<<<<<<< HEAD
           {/* PROYECTOS */}
+=======
+          {/* Proyectos Recientes (En Progreso) */}
+>>>>>>> 7b19fc67af1d22e9da8bd04aa3e0d409483e7d44
           <SidebarSection
             title="Proyectos Recientes"
             icon={HiFolder}
-            viewAllLink="/results"
+            viewAllLink="/dashboard"
             viewAllText="Ver todos los proyectos"
             loading={loadingProjects}
+<<<<<<< HEAD
             isEmpty={filteredProjects.length === 0}
             emptyMessage={
               searchQuery
@@ -144,10 +203,21 @@ export function DashboardSidebar() {
               <ProjectListItem
                 key={project.project_id}
                 project={project}
+=======
+            isEmpty={filteredInProgressProjects.length === 0}
+            emptyMessage={searchQuery.trim() ? "No se encontraron proyectos" : "No hay proyectos recientes"}
+          >
+            {filteredInProgressProjects.map((project) => (
+              <ProjectListItem 
+                key={project.project_id} 
+                project={project}
+                linkTo={`/data-entry/${project.project_id}`}
+>>>>>>> 7b19fc67af1d22e9da8bd04aa3e0d409483e7d44
               />
             ))}
           </SidebarSection>
 
+<<<<<<< HEAD
           {/* EVALUACIONES */}
           <SidebarSection
             title="Evaluaciones Recientes"
@@ -164,6 +234,23 @@ export function DashboardSidebar() {
               <EvaluationListItem
                 key={evaluation.evaluation_id}
                 evaluation={evaluation}
+=======
+          {/* Proyectos Terminados Recientemente */}
+          <SidebarSection
+            title="Proyectos Terminados"
+            icon={HiCheckCircle}
+            viewAllLink="/results"
+            viewAllText="Ver todos los proyectos"
+            loading={loadingProjects}
+            isEmpty={filteredCompletedProjects.length === 0}
+            emptyMessage={searchQuery.trim() ? "No se encontraron proyectos completados" : "No hay proyectos completados"}
+          >
+            {filteredCompletedProjects.map((project) => (
+              <ProjectListItem 
+                key={project.project_id} 
+                project={project}
+                linkTo={`/results/project/${project.project_id}/report`}
+>>>>>>> 7b19fc67af1d22e9da8bd04aa3e0d409483e7d44
               />
             ))}
           </SidebarSection>

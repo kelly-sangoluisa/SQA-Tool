@@ -7,6 +7,9 @@ import '@/styles/data-entry/data-entry.css';
 import { DataEntryHierarchy } from '@/components/data-entry/DataEntryHierarchy';
 import { MetricCard } from '@/components/data-entry/MetricCard';
 import { EvaluationCompleteModal } from '@/components/data-entry/EvaluationCompleteModal';
+import { FinalizedEvaluationModal } from '@/components/data-entry/FinalizedEvaluationModal';
+import { NextEvaluationModal } from '@/components/data-entry/NextEvaluationModal';
+import AlertBanner from '@/components/shared/AlertBanner';
 import { submitEvaluationData, finalizeEvaluation, finalizeProject } from '@/api/entry-data/entry-data-api';
 
 // Interfaces de tipos
@@ -164,6 +167,11 @@ export default function DataEntryProjectPage() {
   const [currentEvaluationForModal, setCurrentEvaluationForModal] = useState<Evaluation | null>(null);
   const [isFinalizingProject, setIsFinalizingProject] = useState(false);
   const [finalizedEvaluations, setFinalizedEvaluations] = useState<Set<number>>(new Set());
+  
+  // Estados para modales de alerta
+  const [showFinalizedModal, setShowFinalizedModal] = useState(false);
+  const [showNextEvaluationModal, setShowNextEvaluationModal] = useState(false);
+  const [nextEvaluationInfo, setNextEvaluationInfo] = useState<{ current: string; next: string } | null>(null);
 
   // Verificar autenticación y permisos
   useEffect(() => {
@@ -340,6 +348,36 @@ export default function DataEntryProjectPage() {
         }
         
         setAllMetrics(metrics);
+
+        // Encontrar la primera evaluación no finalizada y establecer el índice inicial
+        let initialMetricIndex = 0;
+        for (const evaluation of evaluationsWithMetrics) {
+          // Si esta evaluación está finalizada, buscar la siguiente
+          if (completedEvals.has(evaluation.id)) {
+            continue;
+          }
+          
+          // Encontrar la primera métrica de esta evaluación no finalizada
+          for (let i = 0; i < metrics.length; i++) {
+            const metric = metrics[i];
+            const belongsToThisEval = (evaluation.evaluation_criteria || []).some(ec =>
+              ec.criterion?.subcriteria?.some(sc =>
+                sc.metrics?.some(m => m.id === metric.id)
+              )
+            );
+            
+            if (belongsToThisEval) {
+              initialMetricIndex = i;
+              console.log(`📍 Estableciendo índice inicial en métrica ${i + 1} (evaluación no finalizada: ${evaluation.standard?.name || 'Unknown'})`);
+              break;
+            }
+          }
+          
+          // Salir del loop después de encontrar la primera evaluación no finalizada
+          break;
+        }
+        
+        setCurrentMetricIndex(initialMetricIndex);
         
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Error desconocido');
@@ -414,7 +452,7 @@ export default function DataEntryProjectPage() {
     // Verificar si la evaluación está finalizada
     const targetEvaluation = evaluations[evaluationIndex];
     if (targetEvaluation && finalizedEvaluations.has(targetEvaluation.id)) {
-      alert('Esta evaluación ya ha sido finalizada y no se puede editar.');
+      setShowFinalizedModal(true);
       return;
     }
     
@@ -484,6 +522,25 @@ export default function DataEntryProjectPage() {
   // Función para obtener la evaluación actual basada en la métrica actual
   const getCurrentEvaluation = (): Evaluation | null => {
     const metric = allMetrics[currentMetricIndex];
+    if (!metric) return null;
+    
+    for (const evaluation of evaluations) {
+      for (const ec of evaluation.evaluation_criteria || []) {
+        if (ec.criterion?.subcriteria) {
+          for (const sc of ec.criterion.subcriteria) {
+            if (sc.metrics?.some(m => m.id === metric.id)) {
+              return evaluation;
+            }
+          }
+        }
+      }
+    }
+    return null;
+  };
+
+  // Función para obtener la evaluación de una métrica específica por índice
+  const getEvaluationByMetricIndex = (metricIndex: number): Evaluation | null => {
+    const metric = allMetrics[metricIndex];
     if (!metric) return null;
     
     for (const evaluation of evaluations) {
@@ -637,23 +694,19 @@ export default function DataEntryProjectPage() {
         // Avanzar a la siguiente evaluación si existe
         const currentEvalIndex = evaluations.findIndex(e => e.id === currentEvaluationForModal.id);
         if (currentEvalIndex < evaluations.length - 1) {
-          console.log('➡️ Avanzando a la siguiente evaluación...');
-          // Encontrar la primera métrica de la siguiente evaluación
+          console.log('➡️ Preparando para avanzar a la siguiente evaluación...');
           const nextEval = evaluations[currentEvalIndex + 1];
-          const nextMetricIndex = allMetrics.findIndex(metric =>
-            (nextEval.evaluation_criteria || []).some(ec =>
-              ec.criterion?.subcriteria?.some(sc =>
-                sc.metrics?.some(m => m.id === metric.id)
-              )
-            )
-          );
           
-          if (nextMetricIndex !== -1) {
-            setCurrentMetricIndex(nextMetricIndex);
-          }
+          // Mostrar modal de advertencia antes de continuar
+          setNextEvaluationInfo({
+            current: currentEvaluationForModal.standard.name,
+            next: nextEval.standard?.name || 'Siguiente evaluación'
+          });
+          setIsModalOpen(false);
+          setShowNextEvaluationModal(true);
+        } else {
+          setIsModalOpen(false);
         }
-        
-        setIsModalOpen(false);
       }
     } catch (error) {
       console.error('❌ Error durante la finalización:', error);
@@ -704,6 +757,29 @@ export default function DataEntryProjectPage() {
   }
 
   const currentMetric = allMetrics[currentMetricIndex];
+  const currentEvaluation = getCurrentEvaluation();
+  const isCurrentEvaluationFinalized = currentEvaluation ? finalizedEvaluations.has(currentEvaluation.id) : false;
+
+  // Handler para confirmar avance a siguiente evaluación
+  const handleConfirmNextEvaluation = () => {
+    const currentEvalIndex = evaluations.findIndex(e => e.id === currentEvaluationForModal?.id);
+    if (currentEvalIndex < evaluations.length - 1) {
+      const nextEval = evaluations[currentEvalIndex + 1];
+      const nextMetricIndex = allMetrics.findIndex(metric =>
+        (nextEval.evaluation_criteria || []).some(ec =>
+          ec.criterion?.subcriteria?.some(sc =>
+            sc.metrics?.some(m => m.id === metric.id)
+          )
+        )
+      );
+      
+      if (nextMetricIndex !== -1) {
+        setCurrentMetricIndex(nextMetricIndex);
+      }
+    }
+    setShowNextEvaluationModal(false);
+    setNextEvaluationInfo(null);
+  };
 
   return (
     <div className="enterDataLayout">
@@ -722,7 +798,17 @@ export default function DataEntryProjectPage() {
         </div>
 
         {/* Contenido central */}
-        <div className="content">          
+        <div className="content">
+          {/* Banner de advertencia si la evaluación está finalizada */}
+          {isCurrentEvaluationFinalized && (
+            <AlertBanner
+              type="warning"
+              title="Evaluación Finalizada"
+              message="Esta evaluación ya fue completada. No puedes editar los datos ingresados. Los valores mostrados son de solo lectura."
+              visible={true}
+            />
+          )}
+          
           <div className="metricContainer">
             {currentMetric ? (
               <MetricCard
@@ -745,12 +831,26 @@ export default function DataEntryProjectPage() {
                 }}
                 onPrevious={async () => {
                   if (currentMetricIndex > 0) {
+                    // Verificar si la métrica anterior pertenece a una evaluación finalizada
+                    const previousEval = getEvaluationByMetricIndex(currentMetricIndex - 1);
+                    if (previousEval && finalizedEvaluations.has(previousEval.id)) {
+                      setShowFinalizedModal(true);
+                      return;
+                    }
+                    
                     await saveCurrentMetricData();
                     setCurrentMetricIndex(currentMetricIndex - 1);
                   }
                 }}
                 onNext={async () => {
                   if (currentMetricIndex < allMetrics.length - 1) {
+                    // Verificar si la métrica siguiente pertenece a una evaluación finalizada
+                    const nextEval = getEvaluationByMetricIndex(currentMetricIndex + 1);
+                    if (nextEval && finalizedEvaluations.has(nextEval.id)) {
+                      setShowFinalizedModal(true);
+                      return;
+                    }
+                    
                     await saveCurrentMetricData();
                     setCurrentMetricIndex(currentMetricIndex + 1);
                   }
@@ -771,6 +871,26 @@ export default function DataEntryProjectPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal de evaluación finalizada */}
+      <FinalizedEvaluationModal
+        isOpen={showFinalizedModal}
+        onClose={() => setShowFinalizedModal(false)}
+      />
+
+      {/* Modal de siguiente evaluación */}
+      {nextEvaluationInfo && (
+        <NextEvaluationModal
+          isOpen={showNextEvaluationModal}
+          currentEvaluationName={nextEvaluationInfo.current}
+          nextEvaluationName={nextEvaluationInfo.next}
+          onConfirm={handleConfirmNextEvaluation}
+          onCancel={() => {
+            setShowNextEvaluationModal(false);
+            setNextEvaluationInfo(null);
+          }}
+        />
+      )}
 
       {/* Modal de confirmación */}
       {currentEvaluationForModal && (() => {

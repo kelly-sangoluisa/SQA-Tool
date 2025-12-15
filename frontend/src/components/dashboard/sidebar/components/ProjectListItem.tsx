@@ -5,10 +5,15 @@ import { formatDate } from '../utils/formatters';
 import styles from '../DashboardSidebar.module.css';
 
 interface ProjectListItemProps {
+<<<<<<< HEAD
   project: DashboardProject;
+=======
+  project: Project;
+  linkTo?: string;
+>>>>>>> 7b19fc67af1d22e9da8bd04aa3e0d409483e7d44
 }
 
-export function ProjectListItem({ project }: ProjectListItemProps) {
+export function ProjectListItem({ project, linkTo }: ProjectListItemProps) {
   const getStatusInfo = () => {
     if (project.final_project_score === null) {
       return { label: 'En progreso', className: styles.statusInProgress };
@@ -19,11 +24,12 @@ export function ProjectListItem({ project }: ProjectListItemProps) {
   };
 
   const statusInfo = getStatusInfo();
+  const defaultLink = `/results/project/${project.project_id}`;
 
   return (
     <li className={styles.item}>
       <Link 
-        href={`/results/project/${project.project_id}`}
+        href={linkTo || defaultLink}
         className={styles.itemLink}
       >
         <div className={styles.itemHeader}>
