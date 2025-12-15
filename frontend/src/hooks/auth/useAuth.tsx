@@ -45,32 +45,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [hasLoggedOut, setHasLoggedOut] = useState(false);
   const [isClient, setIsClient] = useState(false);
   
-  // Inicializar estado con cache si existe (para evitar flash)
-  const [state, setState] = useState<AuthState>(() => {
-    // Solo en el cliente intentamos cargar el cache
-    if (typeof window !== 'undefined') {
-      const cachedUser = getUserFromStorage();
-      if (cachedUser) {
-        return {
-          user: cachedUser,
-          isLoading: true, // Verificaremos en background
-          isAuthenticated: true,
-          error: null
-        };
-      }
-    }
-    
-    return {
-      user: null,
-      isLoading: true,
-      isAuthenticated: false,
-      error: null
-    };
+  // Estado inicial siempre igual para evitar hydration mismatch
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    isLoading: true,
+    isAuthenticated: false,
+    error: null
   });
 
-  // Detectar cuando estamos en el cliente
+  // Detectar cuando estamos en el cliente y cargar cache
   useEffect(() => {
     setIsClient(true);
+    
+    // Cargar cache SOLO después de montar en cliente
+    const cachedUser = getUserFromStorage();
+    if (cachedUser) {
+      setState({
+        user: cachedUser,
+        isLoading: true,
+        isAuthenticated: true,
+        error: null
+      });
+    }
   }, []);
 
   const checkAuth = useCallback(async () => {
