@@ -162,9 +162,10 @@ export class ReportsService {
   async getEvaluationStats(evaluationId: number): Promise<EvaluationStatsDto> {
     const criteria = await this.evaluationCriterionRepo.find({
       where: { evaluation_id: evaluationId },
+      relations: ['criterion'],
     });
 
-    const scores: number[] = [];
+    const scores: { name: string; score: number }[] = [];
     const byImportance: Record<'high' | 'medium' | 'low', number[]> = {
       high: [],
       medium: [],
@@ -179,7 +180,7 @@ export class ReportsService {
       if (!result) continue;
 
       const score = Number(result.final_score);
-      scores.push(score);
+      scores.push({ name: c.criterion.name, score });
 
       if (c.importance_level === ImportanceLevel.HIGH)
         byImportance.high.push(score);
@@ -189,13 +190,26 @@ export class ReportsService {
         byImportance.low.push(score);
     }
 
+    // Encontrar mejor y peor criterio
+    let bestCriterion = { name: 'N/A', score: 0 };
+    let worstCriterion = { name: 'N/A', score: 0 };
+
+    if (scores.length > 0) {
+      bestCriterion = scores.reduce((prev, current) => 
+        current.score > prev.score ? current : prev
+      );
+      worstCriterion = scores.reduce((prev, current) => 
+        current.score < prev.score ? current : prev
+      );
+    }
+
     return {
       total_criteria: scores.length,
       total_metrics: 0,
       average_criteria_score:
-        scores.reduce((a, b) => a + b, 0) / (scores.length || 1),
-      best_criterion: { name: 'N/A', score: Math.max(...scores, 0) },
-      worst_criterion: { name: 'N/A', score: Math.min(...scores, 0) },
+        scores.length > 0 ? scores.reduce((a, b) => a + b.score, 0) / scores.length : 0,
+      best_criterion: bestCriterion,
+      worst_criterion: worstCriterion,
       score_by_importance: {
         high: byImportance.high.length
           ? byImportance.high.reduce((a, b) => a + b, 0) / byImportance.high.length
