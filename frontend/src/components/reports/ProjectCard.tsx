@@ -54,7 +54,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       {hasThreshold && (
         <div className="project-threshold-info">
           <span className="threshold-label">Umbral mínimo:</span>
-          <span className="threshold-value">{project.minimum_threshold?.toFixed(1)}</span>
+          <span className="threshold-value">{Number(project.minimum_threshold).toFixed(1)}%</span>
         </div>
       )}
 

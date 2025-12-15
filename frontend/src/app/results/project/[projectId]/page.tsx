@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 import { EvaluationCard } from '@/components/reports/EvaluationCard';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { getEvaluationsByProject, getProjectReport } from '@/api/reports/reports.api';
 import type { EvaluationListItem, ProjectReport } from '@/api/reports/reports.types';
 
-export default function ProjectEvaluationsPage() {
+function ProjectEvaluationsPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = Number(params.projectId);
@@ -409,6 +410,9 @@ export default function ProjectEvaluationsPage() {
           flex: 1;
           min-width: 300px;
           margin-bottom: 2rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
         }
 
         .page-title {
@@ -418,7 +422,7 @@ export default function ProjectEvaluationsPage() {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          margin: 0 0 1rem 0;
+          margin: 0;
           animation: fadeInDown 0.6s ease;
         }
 
@@ -665,5 +669,13 @@ export default function ProjectEvaluationsPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function ProjectEvaluationsPageWrapper() {
+  return (
+    <ProtectedRoute requiredRole="any">
+      <ProjectEvaluationsPage />
+    </ProtectedRoute>
   );
 }

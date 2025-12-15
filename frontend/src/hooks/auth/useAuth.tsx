@@ -96,8 +96,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
+    // Verificar si ya hay un usuario cargado (cache)
+    const cachedUser = getUserFromStorage();
+    
     // Si hay usuario en cache, verificar en background sin loading
-    if (state.user) {
+    if (cachedUser) {
       try {
         const user = await authApi.getMe();
         setState(prev => ({
@@ -154,7 +157,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error('Error inesperado en checkAuth:', error);
       }
     }
-  }, [isClient, hasLoggedOut, state.user]); // Include state.user but handle carefully
+  }, [isClient, hasLoggedOut]); // REMOVIDO state.user - causa loops infinitos
 
   const signIn = useCallback(async (data: SignInData) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));

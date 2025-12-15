@@ -187,10 +187,10 @@ export function DashboardSidebar() {
 
               {/* Proyectos Recientes (En Progreso) */}
               <SidebarSection
-                title="Proyectos Recientes"
+                title="Proyectos en progreso"
                 icon={HiFolder}
                 viewAllLink="/dashboard"
-                viewAllText="Ver todos los proyectos"
+                viewAllText="Ver proyectos en progreso"
                 loading={loadingProjects}
                 isEmpty={filteredInProgressProjects.length === 0}
                 emptyMessage={searchQuery.trim() ? "No se encontraron proyectos" : "No hay proyectos recientes"}

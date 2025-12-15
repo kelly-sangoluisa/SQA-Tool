@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { ScoreGauge } from '@/components/reports/ScoreGauge';
 import { CriterionCard } from '@/components/reports/CriterionCard';
@@ -13,7 +14,7 @@ import type { EvaluationReport, EvaluationStats } from '@/api/reports/reports.ty
 import { generateEvaluationPDF } from '@/utils/pdfGenerator';
 import { formatDate } from '@/lib/shared/formatters';
 
-export default function EvaluationDetailPage() {
+function EvaluationDetailPage() {
   const params = useParams();
   const router = useRouter();
   const evaluationId = Number(params.id);
@@ -1117,5 +1118,13 @@ export default function EvaluationDetailPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function EvaluationDetailPageWrapper() {
+  return (
+    <ProtectedRoute requiredRole="any">
+      <EvaluationDetailPage />
+    </ProtectedRoute>
   );
 }

@@ -33,13 +33,15 @@ export function SidebarSection({
       
       {loading ? (
         <div className={styles.loading}>Cargando...</div>
-      ) : isEmpty ? (
-        <div className={styles.empty}>{emptyMessage}</div>
       ) : (
         <>
-          <ul className={styles.itemList}>
-            {children}
-          </ul>
+          {isEmpty ? (
+            <div className={styles.empty}>{emptyMessage}</div>
+          ) : (
+            <ul className={styles.itemList}>
+              {children}
+            </ul>
+          )}
           {viewAllLink && viewAllText && (
             <Link href={viewAllLink} className={styles.viewAllLink}>
               {viewAllText}
