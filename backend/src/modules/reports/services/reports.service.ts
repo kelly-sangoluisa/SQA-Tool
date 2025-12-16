@@ -112,32 +112,47 @@ export class ReportsService {
   // PROYECTOS ACTIVOS DEL USUARIO (DASHBOARD)
   // =========================================================
  async getProjectsByUserId(userId: number): Promise<ProjectSummaryDto[]> {
-  this.logger.log(`🔍 Service: Buscando proyectos para usuario ${userId} con status IN_PROGRESS`);
+  this.logger.log(`🔍 Service: Buscando TODOS los proyectos para usuario ${userId}`);
 
   const projects = await this.projectRepo.find({
     where: {
-      creator_user_id: userId,
-      status: ProjectStatus.IN_PROGRESS
+      creator_user_id: userId
     },
     relations: ['evaluations'],
     order: { created_at: 'DESC' },
   });
 
-  this.logger.log(`📦 Service: Encontrados ${projects.length} proyectos filtrados para usuario ${userId}`);
+  this.logger.log(`📦 Service: Encontrados ${projects.length} proyectos para usuario ${userId}`);
   this.logger.log(`📋 Service: IDs de proyectos: ${projects.map(p => p.id).join(', ')}`);
 
-  return projects.map(project => ({
-    project_id: project.id,
-    project_name: project.name,
-    project_description: project.description,
-    minimum_threshold: project.minimum_threshold ?? null,
-    final_project_score: null,
-    meets_threshold: false,
-    status: project.status,
-    evaluation_count: project.evaluations.length,
-    created_at: project.created_at,
-    updated_at: project.updated_at,
-  }));
+  // Obtener los resultados de los proyectos
+  const projectResults = await Promise.all(
+    projects.map(async (project) => {
+      const result = await this.projectResultRepo.findOne({
+        where: { project_id: project.id },
+      });
+
+      const finalScore = result ? Number(result.final_project_score) : null;
+      const meetsThreshold = finalScore !== null && project.minimum_threshold !== null
+        ? finalScore >= Number(project.minimum_threshold)
+        : false;
+
+      return {
+        project_id: project.id,
+        project_name: project.name,
+        project_description: project.description,
+        minimum_threshold: project.minimum_threshold ?? null,
+        final_project_score: finalScore,
+        meets_threshold: meetsThreshold,
+        status: project.status,
+        evaluation_count: project.evaluations.length,
+        created_at: project.created_at,
+        updated_at: project.updated_at,
+      };
+    })
+  );
+
+  return projectResults;
 }
 
 
@@ -147,9 +162,10 @@ export class ReportsService {
   async getEvaluationStats(evaluationId: number): Promise<EvaluationStatsDto> {
     const criteria = await this.evaluationCriterionRepo.find({
       where: { evaluation_id: evaluationId },
+      relations: ['criterion'],
     });
 
-    const scores: number[] = [];
+    const scores: { name: string; score: number }[] = [];
     const byImportance: Record<'high' | 'medium' | 'low', number[]> = {
       high: [],
       medium: [],
@@ -164,7 +180,7 @@ export class ReportsService {
       if (!result) continue;
 
       const score = Number(result.final_score);
-      scores.push(score);
+      scores.push({ name: c.criterion.name, score });
 
       if (c.importance_level === ImportanceLevel.HIGH)
         byImportance.high.push(score);
@@ -174,13 +190,26 @@ export class ReportsService {
         byImportance.low.push(score);
     }
 
+    // Encontrar mejor y peor criterio
+    let bestCriterion = { name: 'N/A', score: 0 };
+    let worstCriterion = { name: 'N/A', score: 0 };
+
+    if (scores.length > 0) {
+      bestCriterion = scores.reduce((prev, current) => 
+        current.score > prev.score ? current : prev
+      );
+      worstCriterion = scores.reduce((prev, current) => 
+        current.score < prev.score ? current : prev
+      );
+    }
+
     return {
       total_criteria: scores.length,
       total_metrics: 0,
       average_criteria_score:
-        scores.reduce((a, b) => a + b, 0) / (scores.length || 1),
-      best_criterion: { name: 'N/A', score: Math.max(...scores, 0) },
-      worst_criterion: { name: 'N/A', score: Math.min(...scores, 0) },
+        scores.length > 0 ? scores.reduce((a, b) => a + b.score, 0) / scores.length : 0,
+      best_criterion: bestCriterion,
+      worst_criterion: worstCriterion,
       score_by_importance: {
         high: byImportance.high.length
           ? byImportance.high.reduce((a, b) => a + b, 0) / byImportance.high.length

@@ -11,24 +11,15 @@ interface StandardCardProps {
 }
 
 export function StandardCard({ standard, onSelect, onEdit, onToggleState }: StandardCardProps) {
-  const _handleToggleClick = (e: React.MouseEvent) => {
+  const handleViewDetail = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onToggleState(standard);
+    onSelect(standard);
   };
 
   return (
     <div 
       key={standard.id} 
       className={styles.standardCard}
-      onClick={() => onSelect(standard)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onSelect(standard);
-        }
-      }}
     >
       <div className={styles.cardHeader}>
         <div className={styles.titleSection}>
@@ -61,7 +52,11 @@ export function StandardCard({ standard, onSelect, onEdit, onToggleState }: Stan
       </p>
       
       <div className={styles.cardFooter}>
-        <button className={styles.viewButton}>
+        <button 
+          type="button"
+          className={styles.viewButton}
+          onClick={handleViewDetail}
+        >
           Ver Detalle
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path

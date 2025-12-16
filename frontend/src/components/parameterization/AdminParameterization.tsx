@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { Standard } from '../../api/parameterization/parameterization-api';
 import { useStandardsManagement } from '../../hooks/admin/useStandardsManagement';
 import { StandardDetailView } from './StandardDetailView';
@@ -21,16 +22,45 @@ export function AdminParameterization() {
     addStandard
   } = useStandardsManagement();
   
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStandard, setEditingStandard] = useState<Standard | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Sincronizar el estado con la URL
+  useEffect(() => {
+    const standardId = searchParams.get('standard');
+    
+    if (standardId && standards.length > 0) {
+      const standard = standards.find(s => s.id.toString() === standardId);
+      if (standard && selectedStandard?.id !== standard.id) {
+        setSelectedStandard(standard);
+        setIsTransitioning(false);
+      }
+    } else if (selectedStandard !== null) {
+      setSelectedStandard(null);
+      setIsTransitioning(false);
+    }
+  }, [searchParams, standards, selectedStandard]);
 
   const handleStandardSelect = (standard: Standard) => {
-    setSelectedStandard(standard);
+    // Marcar que estamos en transición
+    setIsTransitioning(true);
+    // Actualizar la URL - el estado se sincronizará automáticamente
+    const params = new URLSearchParams();
+    params.set('standard', standard.id.toString());
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const handleBackToStandards = () => {
-    setSelectedStandard(null);
+    // Marcar que estamos en transición
+    setIsTransitioning(true);
+    // Regresar a la lista de estándares eliminando el parámetro
+    router.push(pathname, { scroll: false });
   };
 
   const handleCreateStandard = () => {
@@ -69,10 +99,12 @@ export function AdminParameterization() {
   // Show detail view if a standard is selected
   if (selectedStandard) {
     return (
-      <StandardDetailView 
-        standard={selectedStandard} 
-        onBack={handleBackToStandards}
-      />
+      <div className={styles.fadeIn}>
+        <StandardDetailView 
+          standard={selectedStandard} 
+          onBack={handleBackToStandards}
+        />
+      </div>
     );
   }
 

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Criterion, parameterizationApi, CreateCriterionDto, UpdateCriterionDto } from '../../api/parameterization/parameterization-api';
+import { CriterionSearchResult } from '../../types/parameterization-search.types';
 import { BaseFormDrawer } from '../shared/BaseFormDrawer';
 import { FormField } from '../shared/FormField';
+import { Autocomplete } from './Autocomplete';
 import { useFormDrawer } from '../../hooks/shared/useFormDrawer';
 import { validateForm, handleApiError } from '../../utils/validation';
 import styles from '../shared/FormDrawer.module.css';
@@ -24,11 +26,25 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
     description: criterion?.description || ''
   });
 
+  const [showAutocomplete, setShowAutocomplete] = useState(!criterion);
+
   const { isVisible, loading, errors, setLoading, setErrors, handleClose, clearError } = useFormDrawer({
     initialData: criterion,
     onSave,
     onClose
   });
+
+  /**
+   * Maneja la selección de un criterio del autocompletado
+   * Rellena automáticamente los campos con los datos del criterio seleccionado
+   */
+  const handleCriterionSelected = (selected: CriterionSearchResult) => {
+    setFormData({
+      name: selected.name,
+      description: selected.description || '',
+    });
+    setShowAutocomplete(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,17 +120,51 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Información del Criterio</h3>
         
-        <FormField
-          id="name"
-          label="Nombre del Criterio"
-          value={formData.name}
-          onChange={(value) => handleInputChange('name', value)}
-          placeholder="Ej: Funcionalidad, Confiabilidad, Usabilidad"
-          disabled={loading}
-          error={errors.name}
-          required
-          maxLength={100}
-        />
+        {!criterion && showAutocomplete ? (
+          <div className={styles.field}>
+            <label htmlFor="name" className={styles.label}>
+              Nombre del Criterio * (Búsqueda inteligente)
+            </label>
+            <Autocomplete
+              value={formData.name}
+              onChange={(value) => handleInputChange('name', value)}
+              onSelect={handleCriterionSelected}
+              searchFunction={parameterizationApi.searchCriteria}
+              getItemLabel={(item) => item.name}
+              getItemDescription={(item) => item.description || ''}
+              getItemMeta={(item) => (
+                <span className={styles.badge}>{item.standard_name}</span>
+              )}
+              placeholder="Escribe o busca un criterio existente..."
+              helperText="💡 Puedes reutilizar un criterio existente de cualquier estándar"
+              name="name"
+              required
+            />
+            {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
+          </div>
+        ) : (
+          <FormField
+            id="name"
+            label="Nombre del Criterio"
+            value={formData.name}
+            onChange={(value) => handleInputChange('name', value)}
+            placeholder="Ej: Funcionalidad, Confiabilidad, Usabilidad"
+            disabled={loading}
+            error={errors.name}
+            required
+            maxLength={100}
+          />
+        )}
+
+        {!criterion && !showAutocomplete && (
+          <button
+            type="button"
+            onClick={() => setShowAutocomplete(true)}
+            className={styles.linkButton}
+          >
+            🔍 Buscar criterio existente
+          </button>
+        )}
 
         <FormField
           id="description"

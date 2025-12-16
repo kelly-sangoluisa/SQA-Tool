@@ -8,34 +8,9 @@ export class ApiClient {
   }
 
   private getToken(): string | null {
-    if (typeof globalThis.window === 'undefined') return null;
-    
-    // Try to get from cookie first (most reliable for SSR)
-    const cookieRegex = /(?:^|;\s*)sb-access-token=([^;]+)/;
-    const cookie = cookieRegex.exec(document.cookie);
-    if (cookie) {
-      return decodeURIComponent(cookie[1]);
-    }
-    
-    // Fallback to localStorage if needed
-    try {
-      const token = localStorage.getItem('sb-access-token');
-      if (token) return token;
-    } catch {
-      // localStorage might not be available
-    }
-    
-    // Last resort: check for other possible token locations
-    try {
-      const authData = localStorage.getItem('auth');
-      if (authData) {
-        const parsed = JSON.parse(authData);
-        if (parsed.access_token) return parsed.access_token;
-      }
-    } catch {
-      // Failed to parse auth data
-    }
-    
+    // Las cookies HttpOnly (sb-access-token) son manejadas automáticamente por el navegador
+    // con credentials: 'include', NO necesitamos leerlas manualmente
+    // Este método solo existe por compatibilidad legacy
     return null;
   }
 

@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import '../styles/home.css';
 import '../styles/components.css';
 
@@ -9,7 +10,17 @@ export default function HomePage() {
     <div className="home-root">
       <div className="home-container home-center">
         {/* Header */}
-        <h1 className="home-title">SQA Tool</h1>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+          <Image 
+            src="/logo-SQATool.png" 
+            alt="SQA Tool Logo" 
+            width={120} 
+            height={120}
+            priority
+            style={{ filter: 'drop-shadow(0 8px 24px rgba(78, 94, 163, 0.3))' }}
+          />
+          <h1 className="home-title">SQA Tool</h1>
+        </div>
         <p className="home-subtitle">
           Herramienta profesional para la evaluación y aseguramiento de la calidad de software. 
           Administra criterios de evaluación, parametriza procesos y genera reportes detallados 

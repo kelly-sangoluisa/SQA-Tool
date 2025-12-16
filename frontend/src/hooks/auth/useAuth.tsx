@@ -42,6 +42,10 @@ const clearUserFromStorage = () => {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const [hasLoggedOut, setHasLoggedOut] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  
+  // Estado inicial siempre igual para evitar hydration mismatch
   const [state, setState] = useState<AuthState>({
     user: null,
     isLoading: true,
@@ -49,21 +53,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     error: null
   });
 
-  const [hasLoggedOut, setHasLoggedOut] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-
-  // Detectar cuando estamos en el cliente e inicializar estado
+  // Detectar cuando estamos en el cliente y cargar cache
   useEffect(() => {
     setIsClient(true);
     
-    // Inicialización SOLO en el cliente para evitar hidration mismatch
-    const storedUser = getUserFromStorage();
-    setState({
-      user: storedUser,
-      isLoading: !storedUser,
-      isAuthenticated: !!storedUser,
-      error: null
-    });
+    // Cargar cache SOLO después de montar en cliente
+    const cachedUser = getUserFromStorage();
+    if (cachedUser) {
+      setState({
+        user: cachedUser,
+        isLoading: true,
+        isAuthenticated: true,
+        error: null
+      });
+    }
   }, []);
 
   const checkAuth = useCallback(async () => {
@@ -78,26 +81,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
-    // Check if we have a token before making API calls
-    const hasToken = typeof window !== 'undefined' && (
-      document.cookie.includes('sb-access-token=') ||
-      localStorage.getItem('sb-access-token')
-    );
-
-    if (!hasToken) {
+    // Verificar si ya hay un usuario cargado (cache)
+    const cachedUser = getUserFromStorage();
+    
+    // Si hay usuario en cache, usarlo inmediatamente y verificar en background
+    // No podemos verificar cookies HttpOnly desde JS, así que confiamos en el cache
+    if (cachedUser) {
+      // Establecer usuario de cache inmediatamente (sin loading)
       setState(prev => ({
         ...prev,
-        user: null,
-        isAuthenticated: false,
+        user: cachedUser,
+        isAuthenticated: true,
         isLoading: false,
         error: null
       }));
-      clearUserFromStorage();
-      return;
-    }
 
-    // Si hay usuario en cache, verificar en background sin loading
-    if (state.user) {
+      // Verificar en background para actualizar si cambió algo
       try {
         const user = await authApi.getMe();
         setState(prev => ({
@@ -106,25 +105,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
           isAuthenticated: true,
           error: null
         }));
-        saveUserToStorage(user); // Actualizar cache seguro
-      } catch {
+        saveUserToStorage(user);
+      } catch (error) {
         // Token expiró o es inválido
-        setState(prev => ({
-          ...prev,
-          user: null,
-          isAuthenticated: false,
-          error: null
-        }));
-        clearUserFromStorage();
+        const isAuthError = error instanceof Error && 
+          (error.message.includes('401') || 
+           error.message.includes('403') || 
+           error.message.includes('No token provided') ||
+           error.message.includes('Unauthorized'));
+        
+        if (isAuthError) {
+          // Cookie expiró, limpiar todo
+          setState(prev => ({
+            ...prev,
+            user: null,
+            isAuthenticated: false,
+            error: null
+          }));
+          clearUserFromStorage();
+        }
       }
       return;
     }
 
-    // Solo mostrar loading si NO hay cache
+    // No hay cache, intentar obtener usuario desde el servidor
+    // Si hay cookie HttpOnly válida, esto funcionará
     setState(prev => ({ ...prev, isLoading: true }));
     
     try {
       const user = await authApi.getMe();
+      // Cookie válida encontrada!
       setState(prev => ({
         ...prev,
         user,
@@ -132,7 +142,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isLoading: false,
         error: null
       }));
-      saveUserToStorage(user); // Guardar de forma segura
+      saveUserToStorage(user);
     } catch (error) {
       const isAuthError = error instanceof Error && 
         (error.message.includes('401') || 
@@ -140,6 +150,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
          error.message.includes('No token provided') ||
          error.message.includes('Unauthorized'));
       
+      // No hay sesión válida
       setState(prev => ({
         ...prev,
         user: null,
@@ -154,7 +165,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error('Error inesperado en checkAuth:', error);
       }
     }
-  }, [isClient, hasLoggedOut, state.user]); // Include state.user but handle carefully
+  }, [isClient, hasLoggedOut]);
 
   const signIn = useCallback(async (data: SignInData) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));

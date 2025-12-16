@@ -13,7 +13,7 @@ export function GlobalLayout({ children }: { children: React.ReactNode }) {
   const [shouldShowSidebar, setShouldShowSidebar] = useState(false);
 
   useEffect(() => {
-    const excludePaths = ['/', '/auth/login', '/auth/register', '/parameterization'];
+    const excludePaths = ['/', '/auth/login', '/auth/register', '/auth/signup', '/auth/forgot-password', '/parameterization'];
     const showSidebar = !isLoading &&
                         user?.role?.name !== 'admin' &&
                         !excludePaths.some(path => pathname === path || pathname?.startsWith(path + '/'));

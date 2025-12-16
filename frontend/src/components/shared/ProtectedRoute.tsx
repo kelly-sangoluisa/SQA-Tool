@@ -48,8 +48,12 @@ export function ProtectedRoute({
     }
   }, [mounted, isLoading, isAuthenticated, user, requiredRole, redirectTo, router]);
 
-  // Mostrar loading mientras se verifica
-  if (!mounted || isLoading || !isAuthenticated || !user) {
+  // Mostrar loading SOLO si realmente está cargando (sin datos en cache)
+  if (!mounted) {
+    return null; // Evitar flash de contenido durante hidratación
+  }
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -58,6 +62,11 @@ export function ProtectedRoute({
         </div>
       </div>
     );
+  }
+
+  // Si no está autenticado, el useEffect manejará la redirección
+  if (!isAuthenticated || !user) {
+    return null; // No mostrar nada mientras redirige
   }
 
   // Verificar rol después de cargar

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/auth/useAuth';
+import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 import {
   EvaluationInfoForm,
   StandardSelection,
@@ -22,8 +23,8 @@ import styles from './page.module.css';
 import Stepper from '@/components/shared/Stepper';
 import SuccessModal from '@/components/shared/SuccessModal';
 
-export default function ConfigurationEvaluationPage() {
-  const { isLoading, isAuthenticated, user } = useAuth();
+function ConfigurationEvaluationPage() {
+  const { user } = useAuth();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
@@ -53,28 +54,6 @@ export default function ConfigurationEvaluationPage() {
     criterionName: string;
   }
   const [createdEvaluationCriteria, setCreatedEvaluationCriteria] = useState<EvaluationCriterionData[]>([]);
-
-  // Auth protection
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
-      return;
-    }
-    
-    // Solo evaluadores pueden acceder a configuración de evaluaciones
-    if (!isLoading && user && user.role?.name === 'admin') {
-      router.push('/parameterization');
-      return;
-    }
-  }, [isLoading, isAuthenticated, user, router]);
-
-  useEffect(() => {
-    // Verificar autenticación
-  }, [isLoading, isAuthenticated, user]);
-
-  if (isLoading || !isAuthenticated) {
-    return null;
-  }
 
   const handleStep1Complete = (data: EvaluationInfo, projectId?: number) => {
     setEvaluationInfo(data);
@@ -352,5 +331,13 @@ export default function ConfigurationEvaluationPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function ConfigurationEvaluationPageWrapper() {
+  return (
+    <ProtectedRoute requiredRole="evaluator">
+      <ConfigurationEvaluationPage />
+    </ProtectedRoute>
   );
 }
