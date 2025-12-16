@@ -84,13 +84,16 @@ export default function ConfigurationEvaluationPage() {
 
   const handleStep2Complete = async (standard: Standard) => {
     // Si es un proyecto existente, validar que no tenga ya una evaluación con este estándar
+    // Solo validamos evaluaciones que NO están completadas
     if (existingProjectId) {
       try {
         const evaluations = await configEvaluationApi.getEvaluationsByProjectId(existingProjectId);
-        const hasStandard = evaluations.some(evaluation => evaluation.standard_id === standard.id);
+        // Filtrar solo evaluaciones que no están completadas
+        const activeEvaluations = evaluations.filter(evaluation => evaluation.status !== 'completed');
+        const hasStandard = activeEvaluations.some(evaluation => evaluation.standard_id === standard.id);
 
         if (hasStandard) {
-          setSaveError(`El proyecto ya tiene una evaluación con el estándar "${standard.name}". Por favor, seleccione otro estándar o cree un proyecto nuevo.`);
+          setSaveError(`El proyecto ya tiene una evaluación activa con el estándar "${standard.name}". Por favor, seleccione otro estándar o cree un proyecto nuevo.`);
           window.scrollTo({ top: 0, behavior: 'smooth' });
           return;
         }
@@ -119,6 +122,12 @@ export default function ConfigurationEvaluationPage() {
   };
 
   const handleStep4Complete = async (subCriteria: SelectedCriterion[]) => {
+    // Prevenir múltiples envíos
+    if (isSaving) {
+      console.warn('Ya se está guardando la evaluación, ignorando solicitud duplicada');
+      return;
+    }
+
     try {
       setIsSaving(true);
       setSaveError(null);
@@ -212,6 +221,12 @@ export default function ConfigurationEvaluationPage() {
   };
 
   const handleStep5Complete = async (selectedMetrics: Map<number, number[]>) => {
+    // Prevenir múltiples envíos
+    if (isSaving) {
+      console.warn('Ya se está guardando las métricas, ignorando solicitud duplicada');
+      return;
+    }
+
     try {
       setIsSaving(true);
       setSaveError(null);
@@ -319,6 +334,7 @@ export default function ConfigurationEvaluationPage() {
           {currentStep === 5 && createdEvaluationCriteria.length > 0 && (
             <MetricsSelection
               evaluationCriteria={createdEvaluationCriteria}
+              selectedSubCriteria={selectedSubCriteria}
               onNext={handleStep5Complete}
               onBack={() => handleBack(4)}
             />

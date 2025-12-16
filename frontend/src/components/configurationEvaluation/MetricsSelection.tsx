@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { configEvaluationApi, CriterionWithMetrics, Metric } from '@/api/config-evaluation/config-evaluation-api';
+import { SelectedCriterion } from '@/types/configurationEvaluation.types';
 import { Button } from '../shared';
 import AlertBanner from '../shared/AlertBanner';
 import styles from './MetricsSelection.module.css';
@@ -14,12 +15,14 @@ interface EvaluationCriterionData {
 
 interface MetricsSelectionProps {
   evaluationCriteria: EvaluationCriterionData[];
+  selectedSubCriteria: SelectedCriterion[];
   onNext: (selectedMetrics: Map<number, number[]>) => void;
   onBack: () => void;
 }
 
 export function MetricsSelection({
   evaluationCriteria,
+  selectedSubCriteria,
   onNext,
   onBack,
 }: MetricsSelectionProps) {
@@ -29,6 +32,7 @@ export function MetricsSelection({
   const [error, setError] = useState<string | null>(null);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<'error' | 'warning' | 'success'>('error');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const loadMetrics = async () => {
@@ -114,7 +118,19 @@ export function MetricsSelection({
     return count;
   };
 
+  // Helper function to get selected sub-criteria IDs for a specific criterion
+  const getSelectedSubCriteriaIds = (criterionId: number): number[] => {
+    const selectedCriterion = selectedSubCriteria.find(sc => sc.criterionId === criterionId);
+    return selectedCriterion?.subCriteriaIds || [];
+  };
+
   const handleNext = () => {
+    // Prevenir doble clic
+    if (isProcessing) {
+      console.warn('Ya se está procesando la solicitud, ignorando clic duplicado');
+      return;
+    }
+
     if (selectedMetrics.size === 0 || getSelectedCount() === 0) {
       setAlertMessage('Debe seleccionar al menos una métrica para continuar.');
       setAlertType('error');
@@ -127,6 +143,7 @@ export function MetricsSelection({
     selectedMetrics.forEach((metricIds, evaluationCriterionId) => {
       metricsMap.set(evaluationCriterionId, Array.from(metricIds));
     });
+    setIsProcessing(true);
     onNext(metricsMap);
   };
 
@@ -199,7 +216,13 @@ export function MetricsSelection({
 
               {criterionData.sub_criteria && criterionData.sub_criteria.length > 0 ? (
                 <div className={styles.subCriteriaList}>
-                  {criterionData.sub_criteria.map((subCriterion) => {
+                  {criterionData.sub_criteria
+                    .filter((subCriterion) => {
+                      // Filtrar solo los subcriterios que fueron seleccionados en el paso anterior
+                      const selectedSubCriteriaIds = getSelectedSubCriteriaIds(evalCriterion.criterionId);
+                      return selectedSubCriteriaIds.includes(subCriterion.id);
+                    })
+                    .map((subCriterion) => {
                     const subMetrics = subCriterion.metrics || [];
 
                     if (subMetrics.length === 0) return null;
@@ -254,11 +277,17 @@ export function MetricsSelection({
       </div>
 
         <div className={styles.actions}>
-          <Button type="button" variant="outline" onClick={onBack}>
+          <Button type="button" variant="outline" onClick={onBack} disabled={isProcessing}>
             Atrás
           </Button>
-          <Button type="button" variant="primary" onClick={handleNext}>
-            Finalizar Configuración
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleNext}
+            disabled={isProcessing}
+            isLoading={isProcessing}
+          >
+            {isProcessing ? 'Guardando...' : 'Finalizar Configuración'}
           </Button>
         </div>
       </div>

@@ -26,6 +26,7 @@ export function SubCriteriaSelection({
   );
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<'error' | 'warning' | 'success'>('error');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     // Initialize with previous selections if any
@@ -113,6 +114,12 @@ export function SubCriteriaSelection({
   };
 
   const handleNext = () => {
+    // Prevenir doble clic
+    if (isProcessing) {
+      console.warn('Ya se está procesando la solicitud, ignorando clic duplicado');
+      return;
+    }
+
     const totalSelected = getSelectedCount();
 
     if (selectedSubCriteria.size === 0 || totalSelected === 0) {
@@ -159,6 +166,7 @@ export function SubCriteriaSelection({
       return;
     }
 
+    setIsProcessing(true);
     onNext(result);
   };
 
@@ -252,11 +260,17 @@ export function SubCriteriaSelection({
       </div>
 
       <div className={styles.actions}>
-        <Button type="button" variant="outline" onClick={onBack}>
+        <Button type="button" variant="outline" onClick={onBack} disabled={isProcessing}>
           Atrás
         </Button>
-        <Button type="button" variant="primary" onClick={handleNext} disabled={!hasSelection}>
-          Siguiente
+        <Button
+          type="button"
+          variant="primary"
+          onClick={handleNext}
+          disabled={!hasSelection || isProcessing}
+          isLoading={isProcessing}
+        >
+          {isProcessing ? 'Guardando...' : 'Siguiente'}
         </Button>
       </div>
       </div>

@@ -41,7 +41,11 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
     try {
       setLoadingProjects(true);
       const projectsList = await configEvaluationApi.getAllProjects();
-      setProjects(projectsList);
+      // Filtrar solo proyectos que están en progreso (no completados ni cancelados)
+      const activeProjects = projectsList.filter(project =>
+        project.status === 'in_progress'
+      );
+      setProjects(activeProjects);
     } catch (error) {
       console.error('Error loading projects:', error);
     } finally {
@@ -148,6 +152,19 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
             </label>
             {loadingProjects ? (
               <p className={styles.loadingText}>Cargando proyectos...</p>
+            ) : projects.length === 0 ? (
+              <div>
+                <p className={styles.loadingText}>
+                  No hay proyectos activos disponibles. Por favor, cree un proyecto nuevo.
+                </p>
+                <button
+                  type="button"
+                  className={styles.switchButton}
+                  onClick={() => setProjectType('new')}
+                >
+                  Crear Proyecto Nuevo
+                </button>
+              </div>
             ) : (
               <select
                 id="project"

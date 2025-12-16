@@ -8,7 +8,7 @@ export interface Project {
   name: string;
   description?: string;
   creator_user_id: number;
-  status: 'active' | 'inactive';
+  status: 'in_progress' | 'completed' | 'cancelled';
   final_project_score?: number;
   created_at: string;
   updated_at: string;
