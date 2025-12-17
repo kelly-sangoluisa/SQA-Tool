@@ -73,27 +73,6 @@ export class ReportsController {
     return result;
   }
 
-  @Get('evaluations')
-  @ROLES('admin', 'evaluator')
-  @ApiOperation({
-    summary: 'Listar todas las evaluaciones',
-    description: 'Obtiene una lista de todas las evaluaciones con información básica y sus resultados'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Lista de evaluaciones obtenida exitosamente',
-    type: [EvaluationListItemDto]
-  })
-  async getAllEvaluations(): Promise<EvaluationListItemDto[]> {
-    this.logger.log('🎯 Controller: getAllEvaluations llamado');
-    const result = await this.reportsService.getAllEvaluations();
-    this.logger.log(`🎯 Controller: Devolviendo ${result.length} evaluaciones al cliente`);
-    if (result.length > 0) {
-      this.logger.log(`🎯 Controller: Primer elemento: ${JSON.stringify(result[0])}`);
-    }
-    return result;
-  }
-
   @Get('projects/:projectId/evaluations')
   @ROLES('admin', 'evaluator')
   @ApiOperation({
