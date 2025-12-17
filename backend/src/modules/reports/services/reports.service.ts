@@ -225,35 +225,6 @@ export class ReportsService {
   }
 
   // =========================================================
-  // TODAS LAS EVALUACIONES (SIN FILTRO DE USUARIO)
-  // =========================================================
-  async getAllEvaluations(): Promise<EvaluationListItemDto[]> {
-    const evaluations = await this.evaluationRepo.find({
-      relations: ['project', 'standard'],
-      order: { created_at: 'DESC' },
-    });
-
-    return Promise.all(
-      evaluations.map(async evaluation => {
-        const result = await this.evaluationResultRepo.findOne({
-          where: { evaluation_id: evaluation.id },
-        });
-
-        return {
-          evaluation_id: evaluation.id,
-          project_id: evaluation.project_id,
-          project_name: evaluation.project.name,
-          standard_name: evaluation.standard.name,
-          created_at: evaluation.created_at,
-          final_score: result ? Number(result.evaluation_score) : null,
-          has_results: !!result,
-          status: evaluation.status ?? EvaluationStatus.IN_PROGRESS,
-        };
-      }),
-    );
-  }
-
-  // =========================================================
   // EVALUACIONES DE UN PROYECTO
   // =========================================================
   async getEvaluationsByProject(projectId: number): Promise<EvaluationListItemDto[]> {

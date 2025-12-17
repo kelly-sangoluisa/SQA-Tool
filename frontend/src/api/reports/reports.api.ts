@@ -28,13 +28,6 @@ export async function getMyEvaluations(): Promise<EvaluationListItem[]> {
 }
 
 /**
- * Obtiene la lista de todas las evaluaciones
- */
-export async function getAllEvaluations(): Promise<EvaluationListItem[]> {
-  return await apiClient.get<EvaluationListItem[]>('/reports/evaluations');
-}
-
-/**
  * Obtiene las evaluaciones de un proyecto específico
  */
 export async function getEvaluationsByProject(projectId: number): Promise<EvaluationListItem[]> {
