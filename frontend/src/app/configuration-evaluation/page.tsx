@@ -55,9 +55,21 @@ function ConfigurationEvaluationPage() {
   }
   const [createdEvaluationCriteria, setCreatedEvaluationCriteria] = useState<EvaluationCriterionData[]>([]);
 
+  // NUEVA: Variables para prevenir duplicación
+  const [createdProjectId, setCreatedProjectId] = useState<number | null>(null);
+  const [createdEvaluationId, setCreatedEvaluationId] = useState<number | null>(null);
+
   const handleStep1Complete = (data: EvaluationInfo, projectId?: number) => {
     setEvaluationInfo(data);
     setExistingProjectId(projectId || null);
+
+    // Si cambió el proyecto, resetear IDs creados
+    if (projectId !== existingProjectId) {
+      setCreatedProjectId(null);
+      setCreatedEvaluationId(null);
+      setCreatedEvaluationCriteria([]);
+    }
+
     setCurrentStep(2);
   };
 
@@ -81,6 +93,13 @@ function ConfigurationEvaluationPage() {
       }
     }
 
+    // Si cambió el estándar, resetear IDs creados
+    if (standard.id !== selectedStandard?.id) {
+      setCreatedProjectId(null);
+      setCreatedEvaluationId(null);
+      setCreatedEvaluationCriteria([]);
+    }
+
     setSaveError(null);
     setSelectedStandard(standard);
     setCurrentStep(3);
@@ -95,13 +114,22 @@ function ConfigurationEvaluationPage() {
       importanceLevel: c.importanceLevel,
       importancePercentage: c.importancePercentage,
     })));
-    
+
     // Avanzar al paso 4
     setCurrentStep(4);
   };
 
   const handleStep4Complete = async (subCriteria: SelectedCriterion[]) => {
-    // Prevenir múltiples envíos
+    // VERIFICAR SI YA SE CREÓ EL PROYECTO/EVALUACIÓN
+    // Si ya existen IDs creados, solo avanzar al paso 5 sin crear de nuevo
+    if (createdEvaluationCriteria.length > 0 && createdEvaluationId) {
+      console.log('Proyecto/evaluación ya creados, avanzando al paso 5 sin duplicar');
+      setSelectedSubCriteria(subCriteria);
+      setCurrentStep(5);
+      return;
+    }
+
+    // Prevenir múltiples envíos simultáneos
     if (isSaving) {
       console.warn('Ya se está guardando la evaluación, ignorando solicitud duplicada');
       return;
@@ -131,6 +159,7 @@ function ConfigurationEvaluationPage() {
       }
 
       if (existingProjectId) {
+        // Flujo: Proyecto existente
         const result = await configEvaluationApi.createEvaluationForExistingProject({
           projectId: existingProjectId,
           standardId: selectedStandard.id,
@@ -140,6 +169,9 @@ function ConfigurationEvaluationPage() {
             importancePercentage: item.importancePercentage,
           })),
         });
+
+        // Guardar IDs creados para prevenir duplicación
+        setCreatedEvaluationId(result.evaluation.id);
 
         const evaluationCriteria: EvaluationCriterionData[] = result.criteria.map((criterion) => {
           const criterionInfo = selectedCriteriaFull.find(c => c.id === criterion.criterion_id);
@@ -151,6 +183,7 @@ function ConfigurationEvaluationPage() {
         });
         setCreatedEvaluationCriteria(evaluationCriteria);
       } else {
+        // Flujo: Proyecto nuevo
         const result = await configEvaluationApi.completeEvaluationConfiguration({
           projectName: evaluationInfo!.name,
           projectDescription: evaluationInfo!.description,
@@ -163,6 +196,10 @@ function ConfigurationEvaluationPage() {
             importancePercentage: item.importancePercentage,
           })),
         });
+
+        // Guardar IDs creados para prevenir duplicación
+        setCreatedProjectId(result.project.id);
+        setCreatedEvaluationId(result.evaluation.id);
 
         const evaluationCriteria: EvaluationCriterionData[] = result.criteria.map((criterion) => {
           const criterionInfo = selectedCriteriaFull.find(c => c.id === criterion.criterion_id);
@@ -234,6 +271,8 @@ function ConfigurationEvaluationPage() {
   };
 
   const handleBack = (targetStep: number) => {
+    // Al retroceder, no resetear los IDs creados
+    // Esto permite que el usuario pueda navegar hacia atrás y adelante sin duplicar
     setCurrentStep(targetStep);
   };
 
@@ -252,10 +291,10 @@ function ConfigurationEvaluationPage() {
         {/* Content */}
         <div className={styles.content}>
           {saveError && (
-            <div style={{ 
-              padding: '1rem', 
-              marginBottom: '1rem', 
-              backgroundColor: '#fee', 
+            <div style={{
+              padding: '1rem',
+              marginBottom: '1rem',
+              backgroundColor: '#fee',
               color: '#c00',
               borderRadius: '8px',
               border: '1px solid #fcc'
@@ -263,12 +302,12 @@ function ConfigurationEvaluationPage() {
               <strong>Error:</strong> {saveError}
             </div>
           )}
-          
+
           {isSaving && (
-            <div style={{ 
-              padding: '1rem', 
-              marginBottom: '1rem', 
-              backgroundColor: '#e3f2fd', 
+            <div style={{
+              padding: '1rem',
+              marginBottom: '1rem',
+              backgroundColor: '#e3f2fd',
               color: '#1976d2',
               borderRadius: '8px',
               textAlign: 'center'

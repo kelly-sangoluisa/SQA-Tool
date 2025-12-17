@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { EvaluationInfo, ValidationErrors } from '@/types/configurationEvaluation.types';
 import { Input, Button } from '../shared';
 import { configEvaluationApi, Project } from '@/api/config-evaluation/config-evaluation-api';
@@ -13,6 +14,7 @@ interface EvaluationInfoFormProps {
 }
 
 export function EvaluationInfoForm({ initialData, onNext, onCancel }: EvaluationInfoFormProps) {
+  const { user } = useAuth(); // Hook para obtener el usuario logeado
   const [projectType, setProjectType] = useState<'new' | 'existing'>('new');
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
@@ -41,11 +43,17 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
     try {
       setLoadingProjects(true);
       const projectsList = await configEvaluationApi.getAllProjects();
-      // Filtrar solo proyectos que están en progreso (no completados ni cancelados)
-      const activeProjects = projectsList.filter(project =>
-        project.status === 'in_progress'
+
+      // Filtrar solo proyectos que:
+      // 1. Están en progreso (no completados ni cancelados)
+      // 2. Fueron creados por el usuario logeado
+      const userProjects = projectsList.filter(project =>
+        project.status === 'in_progress' &&
+        user?.id &&
+        project.creator_user_id === user.id
       );
-      setProjects(activeProjects);
+
+      setProjects(userProjects);
     } catch (error) {
       console.error('Error loading projects:', error);
     } finally {
@@ -155,7 +163,7 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
             ) : projects.length === 0 ? (
               <div>
                 <p className={styles.loadingText}>
-                  No hay proyectos activos disponibles. Por favor, cree un proyecto nuevo.
+                  No tienes proyectos activos disponibles. Por favor, crea un proyecto nuevo.
                 </p>
                 <button
                   type="button"
