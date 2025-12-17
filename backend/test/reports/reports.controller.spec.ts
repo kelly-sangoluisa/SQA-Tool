@@ -243,9 +243,9 @@ describe('ReportsController', () => {
       const mockStats = {
         total_evaluations: 3,
         completed_evaluations: 2,
-        average_score: 82,
-        best_evaluation_score: 90,
-        worst_evaluation_score: 75,
+        average_evaluation_score: 82,
+        highest_evaluation: { standard_name: 'ISO 25010', score: 90 },
+        lowest_evaluation: { standard_name: 'ISO 9126', score: 75 },
       };
 
       reportsService.getProjectStats.mockResolvedValue(mockStats);
@@ -255,7 +255,7 @@ describe('ReportsController', () => {
       expect(reportsService.getProjectStats).toHaveBeenCalledWith(projectId);
       expect(result).toEqual(mockStats);
       expect(result.total_evaluations).toBe(3);
-      expect(result.average_score).toBe(82);
+      expect(result.average_evaluation_score).toBe(82);
     });
   });
 
