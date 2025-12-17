@@ -26,32 +26,39 @@ export function SubCriteriaSelection({
   );
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<'error' | 'warning' | 'success'>('error');
-  const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    // Initialize with previous selections if any
-    if (initialSelected.length > 0) {
-      const initialMap = new Map<number, Set<number>>();
-      initialSelected.forEach((sc) => {
-        initialMap.set(sc.criterionId, new Set(sc.subCriteriaIds));
-      });
-      setSelectedSubCriteria(initialMap);
-    } else {
-      // Select all subcriteria by default
-      const defaultMap = new Map<number, Set<number>>();
-      selectedCriteria.forEach((item) => {
-        const isCriteriaWithImportance = 'criterionId' in item;
-        const criterion = isCriteriaWithImportance ? item.criterion : item;
-        const criterionId = isCriteriaWithImportance ? item.criterionId : item.id;
+useEffect(() => {
+  // 1. Si viene selección previa (volver atrás), usarla SOLO una vez
+  if (initialSelected.length > 0 && selectedSubCriteria.size === 0) {
+    const initialMap = new Map<number, Set<number>>();
+    initialSelected.forEach((sc) => {
+      initialMap.set(sc.criterionId, new Set(sc.subCriteriaIds));
+    });
+    setSelectedSubCriteria(initialMap);
+    return;
+  }
 
-        if (criterion.sub_criteria && criterion.sub_criteria.length > 0) {
-          const subIds = criterion.sub_criteria.map((sc) => sc.id);
-          defaultMap.set(criterionId, new Set(subIds));
-        }
-      });
-      setSelectedSubCriteria(defaultMap);
-    }
-  }, [selectedCriteria, initialSelected]);
+  // 2. Si no hay selección previa, seleccionar todo por defecto SOLO una vez
+  if (selectedCriteria.length > 0 && selectedSubCriteria.size === 0) {
+    const defaultMap = new Map<number, Set<number>>();
+
+    selectedCriteria.forEach((item) => {
+      const isCriteriaWithImportance = 'criterionId' in item;
+      const criterion = isCriteriaWithImportance ? item.criterion : item;
+      const criterionId = isCriteriaWithImportance ? item.criterionId : item.id;
+
+      if (criterion.sub_criteria && criterion.sub_criteria.length > 0) {
+        defaultMap.set(
+          criterionId,
+          new Set(criterion.sub_criteria.map((sc) => sc.id))
+        );
+      }
+    });
+
+    setSelectedSubCriteria(defaultMap);
+  }
+}, [selectedCriteria]); 
+
 
   const handleSubCriterionToggle = (criterionId: number, subCriterionId: number) => {
     const newSelected = new Map(selectedSubCriteria);
@@ -114,12 +121,6 @@ export function SubCriteriaSelection({
   };
 
   const handleNext = () => {
-    // Prevenir doble clic
-    if (isProcessing) {
-      console.warn('Ya se está procesando la solicitud, ignorando clic duplicado');
-      return;
-    }
-
     const totalSelected = getSelectedCount();
 
     if (selectedSubCriteria.size === 0 || totalSelected === 0) {
@@ -166,7 +167,7 @@ export function SubCriteriaSelection({
       return;
     }
 
-    setIsProcessing(true);
+    // Solo pasar los datos al siguiente paso, NO crear nada en la BD
     onNext(result);
   };
 
@@ -260,17 +261,16 @@ export function SubCriteriaSelection({
       </div>
 
       <div className={styles.actions}>
-        <Button type="button" variant="outline" onClick={onBack} disabled={isProcessing}>
+        <Button type="button" variant="outline" onClick={onBack}>
           Atrás
         </Button>
         <Button
           type="button"
           variant="primary"
           onClick={handleNext}
-          disabled={!hasSelection || isProcessing}
-          isLoading={isProcessing}
+          disabled={!hasSelection}
         >
-          {isProcessing ? 'Guardando...' : 'Siguiente'}
+          Siguiente
         </Button>
       </div>
       </div>

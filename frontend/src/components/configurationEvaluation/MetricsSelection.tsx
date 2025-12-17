@@ -1,27 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Criterion } from '@/api/parameterization/parameterization-api';
 import { configEvaluationApi, CriterionWithMetrics, Metric } from '@/api/config-evaluation/config-evaluation-api';
 import { SelectedCriterion } from '@/types/configurationEvaluation.types';
 import { Button } from '../shared';
 import AlertBanner from '../shared/AlertBanner';
 import styles from './MetricsSelection.module.css';
 
-interface EvaluationCriterionData {
-  id: number;
-  criterionId: number;
-  criterionName: string;
-}
-
 interface MetricsSelectionProps {
-  evaluationCriteria: EvaluationCriterionData[];
+  selectedCriteria: Criterion[];
   selectedSubCriteria: SelectedCriterion[];
   onNext: (selectedMetrics: Map<number, number[]>) => void;
   onBack: () => void;
 }
 
 export function MetricsSelection({
-  evaluationCriteria,
+  selectedCriteria,
   selectedSubCriteria,
   onNext,
   onBack,
@@ -42,13 +37,13 @@ export function MetricsSelection({
 
         const metricsMap = new Map<number, CriterionWithMetrics>();
 
-        for (const evalCriterion of evaluationCriteria) {
+        for (const criterion of selectedCriteria) {
           try {
-            const criterionData = await configEvaluationApi.getMetricsByCriterionId(evalCriterion.criterionId);
-            metricsMap.set(evalCriterion.id, criterionData);
+            const criterionData = await configEvaluationApi.getMetricsByCriterionId(criterion.id);
+            metricsMap.set(criterion.id, criterionData);
           } catch (err) {
-            console.error(`Error loading metrics for criterion ${evalCriterion.criterionId} (${evalCriterion.criterionName}):`, err);
-            throw new Error(`No se pudieron cargar las métricas para el criterio "${evalCriterion.criterionName}" (ID: ${evalCriterion.criterionId}). Por favor, verifica que el criterio tenga subcriterios y métricas configuradas.`);
+            console.error(`Error loading metrics for criterion ${criterion.id} (${criterion.name}):`, err);
+            throw new Error(`No se pudieron cargar las métricas para el criterio "${criterion.name}" (ID: ${criterion.id}). Por favor, verifica que el criterio tenga subcriterios y métricas configuradas.`);
           }
         }
 
@@ -63,11 +58,11 @@ export function MetricsSelection({
     };
 
     loadMetrics();
-  }, [evaluationCriteria]);
+  }, [selectedCriteria]);
 
-  const handleMetricToggle = (evaluationCriterionId: number, metricId: number) => {
+  const handleMetricToggle = (criterionId: number, metricId: number) => {
     const newSelected = new Map(selectedMetrics);
-    const metrics = newSelected.get(evaluationCriterionId) || new Set();
+    const metrics = newSelected.get(criterionId) || new Set();
 
     if (metrics.has(metricId)) {
       metrics.delete(metricId);
@@ -76,17 +71,17 @@ export function MetricsSelection({
     }
 
     if (metrics.size > 0) {
-      newSelected.set(evaluationCriterionId, metrics);
+      newSelected.set(criterionId, metrics);
     } else {
-      newSelected.delete(evaluationCriterionId);
+      newSelected.delete(criterionId);
     }
 
     setSelectedMetrics(newSelected);
   };
 
-  const handleSelectAllForSubCriterion = (evaluationCriterionId: number, subCriterionMetrics: Metric[]) => {
+  const handleSelectAllForSubCriterion = (criterionId: number, subCriterionMetrics: Metric[]) => {
     const newSelected = new Map(selectedMetrics);
-    const currentMetrics = newSelected.get(evaluationCriterionId) || new Set();
+    const currentMetrics = newSelected.get(criterionId) || new Set();
     const metricIds = subCriterionMetrics.map(m => m.id);
 
     const allSelected = metricIds.every(id => currentMetrics.has(id));
@@ -98,16 +93,16 @@ export function MetricsSelection({
     }
 
     if (currentMetrics.size > 0) {
-      newSelected.set(evaluationCriterionId, currentMetrics);
+      newSelected.set(criterionId, currentMetrics);
     } else {
-      newSelected.delete(evaluationCriterionId);
+      newSelected.delete(criterionId);
     }
 
     setSelectedMetrics(newSelected);
   };
 
-  const isMetricSelected = (evaluationCriterionId: number, metricId: number): boolean => {
-    return selectedMetrics.get(evaluationCriterionId)?.has(metricId) || false;
+  const isMetricSelected = (criterionId: number, metricId: number): boolean => {
+    return selectedMetrics.get(criterionId)?.has(metricId) || false;
   };
 
   const getSelectedCount = (): number => {
@@ -140,8 +135,8 @@ export function MetricsSelection({
 
     setAlertMessage(null);
     const metricsMap = new Map<number, number[]>();
-    selectedMetrics.forEach((metricIds, evaluationCriterionId) => {
-      metricsMap.set(evaluationCriterionId, Array.from(metricIds));
+    selectedMetrics.forEach((metricIds, criterionId) => {
+      metricsMap.set(criterionId, Array.from(metricIds));
     });
     setIsProcessing(true);
     onNext(metricsMap);
@@ -199,13 +194,13 @@ export function MetricsSelection({
         </div>
 
       <div className={styles.criteriaList}>
-        {evaluationCriteria.map((evalCriterion) => {
-          const criterionData = criteriaWithMetrics.get(evalCriterion.id);
+        {selectedCriteria.map((criterion) => {
+          const criterionData = criteriaWithMetrics.get(criterion.id);
 
           if (!criterionData) return null;
 
           return (
-            <div key={evalCriterion.id} className={styles.criterionCard}>
+            <div key={criterion.id} className={styles.criterionCard}>
               <div className={styles.criterionHeader}>
                 <h3 className={styles.criterionName}>{criterionData.name}</h3>
               </div>
@@ -219,7 +214,7 @@ export function MetricsSelection({
                   {criterionData.sub_criteria
                     .filter((subCriterion) => {
                       // Filtrar solo los subcriterios que fueron seleccionados en el paso anterior
-                      const selectedSubCriteriaIds = getSelectedSubCriteriaIds(evalCriterion.criterionId);
+                      const selectedSubCriteriaIds = getSelectedSubCriteriaIds(criterion.id);
                       return selectedSubCriteriaIds.includes(subCriterion.id);
                     })
                     .map((subCriterion) => {
@@ -228,7 +223,7 @@ export function MetricsSelection({
                     if (subMetrics.length === 0) return null;
 
                     const allSelected = subMetrics.every(m =>
-                      isMetricSelected(evalCriterion.id, m.id)
+                      isMetricSelected(criterion.id, m.id)
                     );
 
                     return (
@@ -238,7 +233,7 @@ export function MetricsSelection({
                           <button
                             type="button"
                             className={styles.selectAllButton}
-                            onClick={() => handleSelectAllForSubCriterion(evalCriterion.id, subMetrics)}
+                            onClick={() => handleSelectAllForSubCriterion(criterion.id, subMetrics)}
                           >
                             {allSelected ? 'Desmarcar todas' : 'Seleccionar todas'}
                           </button>
@@ -251,8 +246,8 @@ export function MetricsSelection({
                                 <input
                                   type="checkbox"
                                   className={styles.checkbox}
-                                  checked={isMetricSelected(evalCriterion.id, metric.id)}
-                                  onChange={() => handleMetricToggle(evalCriterion.id, metric.id)}
+                                  checked={isMetricSelected(criterion.id, metric.id)}
+                                  onChange={() => handleMetricToggle(criterion.id, metric.id)}
                                 />
                                 <div className={styles.metricContent}>
                                   <span className={styles.metricName}>{metric.name}</span>
@@ -287,7 +282,7 @@ export function MetricsSelection({
             disabled={isProcessing}
             isLoading={isProcessing}
           >
-            {isProcessing ? 'Guardando...' : 'Finalizar Configuración'}
+            {isProcessing ? 'Creando evaluación...' : 'Finalizar Configuración'}
           </Button>
         </div>
       </div>
