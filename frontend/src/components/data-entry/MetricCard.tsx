@@ -4,6 +4,8 @@ import { sortVariablesByFormulaOrder } from '@/utils/formulaUtils';
 import type { Variable } from '@/types/data-entry/data-entry.types';
 import styles from './MetricCard.module.css';
 
+export type PrimaryButtonAction = 'next' | 'finish-evaluation' | 'finish-project' | 'disabled';
+
 interface MetricCardProps {
   number: number;
   name: string;
@@ -17,9 +19,7 @@ interface MetricCardProps {
   onFinishEvaluation?: () => void;
   onFinishProject?: () => void;
   isFirstMetric?: boolean;
-  isLastMetric?: boolean;
-  isLastEvaluation?: boolean;
-  allVariablesFilled?: boolean;
+  primaryAction: PrimaryButtonAction;
 }
 
 export function MetricCard({ 
@@ -35,9 +35,7 @@ export function MetricCard({
   onFinishEvaluation,
   onFinishProject,
   isFirstMetric = false,
-  isLastMetric = false,
-  isLastEvaluation = false,
-  allVariablesFilled = false
+  primaryAction
 }: Readonly<MetricCardProps>) {
 
   // Ordenar variables según aparición en la fórmula
@@ -47,28 +45,33 @@ export function MetricCard({
     onValueChange?.(variableSymbol, value);
   };
 
-  // Determinar qué acción tomar con el botón principal
+  // Ejecutar la acción del botón principal
   const handlePrimaryAction = () => {
-    if (isLastMetric && isLastEvaluation && allVariablesFilled) {
-      // Última métrica de la última evaluación → Terminar Proyecto
-      onFinishProject?.();
-    } else if (isLastMetric && allVariablesFilled) {
-      // Última métrica de una evaluación → Terminar Evaluación
-      onFinishEvaluation?.();
-    } else {
-      // Métrica normal → Siguiente
-      onNext?.();
+    switch (primaryAction) {
+      case 'finish-project':
+        onFinishProject?.();
+        break;
+      case 'finish-evaluation':
+        onFinishEvaluation?.();
+        break;
+      case 'next':
+        onNext?.();
+        break;
+      // 'disabled' no hace nada
     }
   };
 
   // Determinar el texto del botón
-  const getPrimaryButtonText = () => {
-    if (isLastMetric && isLastEvaluation && allVariablesFilled) {
-      return 'TERMINAR PROYECTO';
-    } else if (isLastMetric && allVariablesFilled) {
-      return 'TERMINAR EVALUACIÓN';
-    } else {
-      return 'SIGUIENTE';
+  const getPrimaryButtonText = (): string => {
+    switch (primaryAction) {
+      case 'finish-project':
+        return 'TERMINAR PROYECTO';
+      case 'finish-evaluation':
+        return 'TERMINAR EVALUACIÓN';
+      case 'next':
+        return 'SIGUIENTE';
+      case 'disabled':
+        return 'SIGUIENTE';
     }
   };
 
@@ -141,7 +144,7 @@ export function MetricCard({
           variant="primary" 
           size="lg"
           onClick={handlePrimaryAction}
-          disabled={!allVariablesFilled}
+          disabled={primaryAction === 'disabled'}
         >
           {getPrimaryButtonText()}
         </Button>

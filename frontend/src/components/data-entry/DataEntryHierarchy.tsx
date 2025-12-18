@@ -28,7 +28,7 @@ export function DataEntryHierarchy({
   variableValues,
   onMetricSelect,
   finalizedEvaluations = new Set()
-}: DataEntryHierarchyProps) {
+}: Readonly<DataEntryHierarchyProps>) {
   
   // Convertir evaluations a grupos
   const groups: EvaluationGroup[] = evaluations.map(evaluation => ({

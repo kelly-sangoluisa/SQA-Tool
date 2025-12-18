@@ -3,15 +3,7 @@
 import type { NextEvaluationModalProps } from '@/types/data-entry/data-entry-modal.types';
 import styles from './NextEvaluationModal.module.css';
 
-export function NextEvaluationModal({
-  isOpen,
-  currentEvaluationName,
-  nextEvaluationName,
-  onConfirm,
-  onCancel
-}: NextEvaluationModalProps) {
-  if (!isOpen) return null;
-
+export function NextEvaluationModal({currentEvaluationName,nextEvaluationName,onConfirm,onCancel}: Readonly<NextEvaluationModalProps>) {
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>

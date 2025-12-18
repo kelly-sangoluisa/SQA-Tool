@@ -6,23 +6,13 @@ import { useAuth } from '@/hooks/auth/useAuth';
 import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 import '@/styles/data-entry/data-entry.css';
 import { DataEntryHierarchy } from '@/components/data-entry/DataEntryHierarchy';
-import { MetricCard } from '@/components/data-entry/MetricCard';
+import { MetricCard, type PrimaryButtonAction } from '@/components/data-entry/MetricCard';
 import { EvaluationCompleteModal } from '@/components/data-entry/EvaluationCompleteModal';
 import { FinalizedEvaluationModal } from '@/components/data-entry/FinalizedEvaluationModal';
 import { NextEvaluationModal } from '@/components/data-entry/NextEvaluationModal';
 import AlertBanner from '@/components/shared/AlertBanner';
 import { submitEvaluationData, finalizeEvaluation, finalizeProject } from '@/api/entry-data/entry-data-api';
-import type {
-  Variable,
-  Metric,
-  Subcriterion,
-  SubcriterionInput,
-  EvaluationMetricAPI,
-  EvaluationCriterionAPI,
-  EvaluationDataAPI,
-  Evaluation,
-  Project
-} from '@/types/data-entry/data-entry.types';
+import type {Metric,SubcriterionInput,EvaluationCriterionAPI,EvaluationDataAPI,  Evaluation,Project} from '@/types/data-entry/data-entry.types';
 
 // ===== HELPER FUNCTIONS =====
 
@@ -505,7 +495,7 @@ function DataEntryContent() {
         // No mostramos alert para no interrumpir el flujo
       }
     } else {
-      console.log('ℹ️ No hay datos nuevos para guardar en esta métrica');
+      console.log('No hay datos nuevos para guardar en esta métrica');
     }
   };
 
@@ -606,6 +596,26 @@ function DataEntryContent() {
     const currentEval = getCurrentEvaluation();
     if (!currentEval) return false;
     return currentEval.id === evaluations.at(-1)?.id;
+  };
+
+  // Función para calcular la acción del botón primario
+  const calculatePrimaryAction = (): PrimaryButtonAction => {
+    const allVariablesFilled = areCurrentMetricVariablesFilled();
+    
+    if (!allVariablesFilled) {
+      return 'disabled';
+    }
+
+    const isLastMetric = isLastMetricOfEvaluation();
+    const isLastEvaluation = isLastEvaluationOfProject();
+
+    if (isLastMetric && isLastEvaluation) {
+      return 'finish-project';
+    } else if (isLastMetric) {
+      return 'finish-evaluation';
+    } else {
+      return 'next';
+    }
   };
 
   // Handler para terminar evaluación
@@ -878,9 +888,7 @@ function DataEntryContent() {
                 onFinishEvaluation={handleFinishEvaluation}
                 onFinishProject={handleFinishProject}
                 isFirstMetric={currentMetricIndex === 0}
-                isLastMetric={isLastMetricOfEvaluation()}
-                isLastEvaluation={isLastEvaluationOfProject()}
-                allVariablesFilled={areCurrentMetricVariablesFilled()}
+                primaryAction={calculatePrimaryAction()}
               />
             ) : (
               <div className="emptyState">

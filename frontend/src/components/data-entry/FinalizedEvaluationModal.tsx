@@ -6,7 +6,7 @@ import styles from './FinalizedEvaluationModal.module.css';
 export function FinalizedEvaluationModal({
   isOpen,
   onClose
-}: FinalizedEvaluationModalProps) {
+}: Readonly<FinalizedEvaluationModalProps>) {
   if (!isOpen) return null;
 
   return (
@@ -20,7 +20,7 @@ export function FinalizedEvaluationModal({
         </div>
 
         {/* Content */}
-        <h2 className={styles.title}>Evaluación Finalizada</h2>
+        <h2 className={styles.title} id="finalized-modal-title">Evaluación Finalizada</h2>
         <p className={styles.message}>
           Esta evaluación ya ha sido completada y no puede ser editada.
         </p>

@@ -2,6 +2,8 @@
  * Types and interfaces for Data Entry module
  */
 
+export type EvaluationStatus = 'in_progress' | 'completed' | 'cancelled';
+
 export interface Variable {
   id: number;
   metric_id: number;
@@ -79,7 +81,7 @@ export interface EvaluationDataAPI {
   project_id: number;
   standard_id: number;
   creation_date: string;
-  status: 'in_progress' | 'completed' | 'cancelled';
+  status: EvaluationStatus;
   standard?: {
     id: number;
     name: string;
@@ -93,7 +95,7 @@ export interface Evaluation {
   project_id: number;
   standard_id: number;
   creation_date: string;
-  status: 'in_progress' | 'completed' | 'cancelled';
+  status: EvaluationStatus;
   standard: {
     id: number;
     name: string;
@@ -129,7 +131,7 @@ export interface Project {
   id: number;
   name: string;
   description?: string;
-  status: 'in_progress' | 'completed' | 'cancelled';
+  status: EvaluationStatus;
 }
 
 export interface SubcriterionInput {

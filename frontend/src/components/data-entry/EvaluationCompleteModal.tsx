@@ -13,7 +13,7 @@ export function EvaluationCompleteModal({
   onConfirm,
   onCancel,
   loading = false
-}: EvaluationCompleteModalProps) {
+}: Readonly<EvaluationCompleteModalProps>) {
   if (!isOpen) return null;
 
   return (
