@@ -2,19 +2,19 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { ReportsService } from './reports.service';
-import type { AIAnalysisResponse, AIRecommendation } from '../dto/ai-analysis.dto';
+import type { AIAnalysisResponse } from '../dto/ai-analysis.dto';
 import { ProjectReportDto, ProjectStatsDto } from '../dto/evaluation-report.dto';
 
 
 @Injectable()
 export class AIAnalysisService {
   private readonly logger = new Logger(AIAnalysisService.name);
-  private genAI?: GoogleGenerativeAI;
-  private model: GenerativeModel | null = null;
+  private readonly genAI?: GoogleGenerativeAI;
+  private readonly model: GenerativeModel | null = null;
 
   constructor(
-    private configService: ConfigService,
-    private reportsService: ReportsService,
+    private readonly configService: ConfigService,
+    private readonly reportsService: ReportsService,
   ) {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
     
