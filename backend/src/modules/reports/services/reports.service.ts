@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { ProjectStatus } from '../../config-evaluation/entities/project.entity';
 
 // ENTITIES
 import { Evaluation, EvaluationStatus } from '../../config-evaluation/entities/evaluation.entity';
@@ -18,9 +17,6 @@ import { User } from '../../../users/entities/user.entity';
 
 // DTOs
 import {
-  EvaluationReportDto,
-  CriterionResultDto,
-  MetricResultDto,
   EvaluationListItemDto,
   EvaluationStatsDto,
   ProjectStatsDto,
@@ -197,10 +193,10 @@ export class ReportsService {
     if (scores.length > 0) {
       bestCriterion = scores.reduce((prev, current) => 
         current.score > prev.score ? current : prev
-      );
+      , scores[0]);
       worstCriterion = scores.reduce((prev, current) => 
         current.score < prev.score ? current : prev
-      );
+      , scores[0]);
     }
 
     return {
