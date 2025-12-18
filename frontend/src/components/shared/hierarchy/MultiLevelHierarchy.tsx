@@ -95,6 +95,178 @@ export interface MultiLevelHierarchyProps<
   showLevel4?: boolean;
 }
 
+// ===== FUNCIONES AUXILIARES DE RENDERIZADO =====
+
+/**
+ * Renderiza items de nivel 4
+ */
+function renderLevel4Items<TLevel4 extends BaseLevel4Item>(
+  level4Items: TLevel4[],
+  groupIndex: number,
+  globalLevel4IndexRef: { current: number },
+  activeLevel4ItemId: number | undefined,
+  isItemCompleted: ((item: TLevel4) => boolean) | undefined,
+  onLevel4Select: ((groupIndex: number, level4Item: TLevel4) => void) | undefined,
+  styles: Record<string, string>,
+  emptyMessage: string
+) {
+  if (level4Items.length === 0) {
+    return <div className={styles.emptyMessage}>{emptyMessage}</div>;
+  }
+
+  return level4Items.map((level4Item) => {
+    const isCompleted = isItemCompleted?.(level4Item) || false;
+    const isActive = level4Item.id === activeLevel4ItemId;
+    const currentGlobalIndex = ++globalLevel4IndexRef.current;
+
+    return (
+      <button
+        key={level4Item.id}
+        className={`${styles.level4Button} ${isActive ? styles.level4Active : ''} ${isCompleted ? styles.level4Completed : ''}`}
+        onClick={() => onLevel4Select?.(groupIndex, level4Item)}
+      >
+        <span className={`${styles.level4Number} ${isCompleted ? styles.completedNumber : ''}`}>
+          {isCompleted ? '✓' : currentGlobalIndex}
+        </span>
+        <span className={styles.level4Name}>
+          {level4Item.name}
+        </span>
+      </button>
+    );
+  });
+}
+
+/**
+ * Renderiza items de nivel 3
+ */
+function renderLevel3Items<TLevel3 extends BaseLevel3Item, TLevel4 extends BaseLevel4Item>(
+  level3Items: TLevel3[],
+  groupIndex: number,
+  globalLevel4IndexRef: { current: number },
+  expandedLevel3: Set<number>,
+  showLevel4: boolean,
+  getLevel4Items: ((level3Item: TLevel3) => TLevel4[]) | undefined,
+  toggleLevel3: (itemId: number) => void,
+  activeLevel4ItemId: number | undefined,
+  isItemCompleted: ((item: TLevel4) => boolean) | undefined,
+  onLevel4Select: ((groupIndex: number, level4Item: TLevel4) => void) | undefined,
+  styles: Record<string, string>,
+  emptyLevel3Message: string,
+  emptyLevel4Message: string
+) {
+  if (level3Items.length === 0) {
+    return <div className={styles.emptyMessage}>{emptyLevel3Message}</div>;
+  }
+
+  return level3Items.map((level3Item) => {
+    const isLevel3Expanded = expandedLevel3.has(level3Item.id);
+    const level4Items = showLevel4 && getLevel4Items ? getLevel4Items(level3Item) : [];
+
+    return (
+      <div key={level3Item.id} className={styles.level3Group}>
+        <button
+          className={`${styles.level3Button} ${isLevel3Expanded ? styles.level3Active : ''}`}
+          onClick={() => showLevel4 && toggleLevel3(level3Item.id)}
+        >
+          <span className={styles.expandIcon}>
+            {showLevel4 ? (isLevel3Expanded ? '▼' : '▶') : '•'}
+          </span>
+          <span className={styles.level3Name}>
+            {level3Item.name}
+          </span>
+        </button>
+
+        {showLevel4 && isLevel3Expanded && getLevel4Items && (
+          <div className={styles.level4Container}>
+            {renderLevel4Items(
+              level4Items,
+              groupIndex,
+              globalLevel4IndexRef,
+              activeLevel4ItemId,
+              isItemCompleted,
+              onLevel4Select,
+              styles,
+              emptyLevel4Message
+            )}
+          </div>
+        )}
+      </div>
+    );
+  });
+}
+
+/**
+ * Renderiza items de nivel 2
+ */
+function renderLevel2Items<
+  TLevel2 extends BaseLevel2Item,
+  TLevel3 extends BaseLevel3Item,
+  TLevel4 extends BaseLevel4Item
+>(
+  level2Items: TLevel2[],
+  groupIndex: number,
+  globalLevel4IndexRef: { current: number },
+  expandedLevel2: Set<number>,
+  expandedLevel3: Set<number>,
+  showLevel4: boolean,
+  getLevel3Items: (level2Item: TLevel2) => TLevel3[],
+  getLevel4Items: ((level3Item: TLevel3) => TLevel4[]) | undefined,
+  toggleLevel2: (itemId: number) => void,
+  toggleLevel3: (itemId: number) => void,
+  activeLevel4ItemId: number | undefined,
+  isItemCompleted: ((item: TLevel4) => boolean) | undefined,
+  onLevel4Select: ((groupIndex: number, level4Item: TLevel4) => void) | undefined,
+  styles: Record<string, string>,
+  emptyLevel2Message: string,
+  emptyLevel3Message: string,
+  emptyLevel4Message: string
+) {
+  if (level2Items.length === 0) {
+    return <div className={styles.emptyMessage}>{emptyLevel2Message}</div>;
+  }
+
+  return level2Items.map((level2Item) => {
+    const isLevel2Expanded = expandedLevel2.has(level2Item.id);
+    const level3Items = getLevel3Items(level2Item);
+
+    return (
+      <div key={level2Item.id} className={styles.level2Group}>
+        <button
+          className={`${styles.level2Button} ${isLevel2Expanded ? styles.level2Active : ''}`}
+          onClick={() => toggleLevel2(level2Item.id)}
+        >
+          <span className={styles.expandIcon}>
+            {isLevel2Expanded ? '▼' : '▶'}
+          </span>
+          <span className={styles.level2Name}>
+            {level2Item.name}
+          </span>
+        </button>
+
+        {isLevel2Expanded && (
+          <div className={styles.level3Container}>
+            {renderLevel3Items(
+              level3Items,
+              groupIndex,
+              globalLevel4IndexRef,
+              expandedLevel3,
+              showLevel4,
+              getLevel4Items,
+              toggleLevel3,
+              activeLevel4ItemId,
+              isItemCompleted,
+              onLevel4Select,
+              styles,
+              emptyLevel3Message,
+              emptyLevel4Message
+            )}
+          </div>
+        )}
+      </div>
+    );
+  });
+}
+
 /**
  * Componente reutilizable de navegación jerárquica multinivel
  */
@@ -190,8 +362,8 @@ export function MultiLevelHierarchy<
           const isCompleted = isGroupCompleted?.(group) || false;
           const level2Items = getLevel2Items(group);
           
-          // Calcular índice global de nivel 4 para este grupo
-          let globalLevel4Index = 0;
+          // Usar objeto mutable como referencia para el índice global
+          const globalLevel4IndexRef = { current: 0 };
 
           return (
             <div key={group.id} className={styles.level1Group}>
@@ -216,93 +388,24 @@ export function MultiLevelHierarchy<
 
               {isGroupExpanded && !isCompleted && (
                 <div className={styles.level2Container}>
-                  {level2Items.length === 0 ? (
-                    <div className={styles.emptyMessage}>
-                      {defaultLabels.emptyLevel2}
-                    </div>
-                  ) : (
-                    level2Items.map((level2Item) => {
-                      const isLevel2Expanded = expandedLevel2.has(level2Item.id);
-                      const level3Items = getLevel3Items(level2Item);
-
-                      return (
-                        <div key={level2Item.id} className={styles.level2Group}>
-                          <button
-                            className={`${styles.level2Button} ${isLevel2Expanded ? styles.level2Active : ''}`}
-                            onClick={() => toggleLevel2(level2Item.id)}
-                          >
-                            <span className={styles.expandIcon}>
-                              {isLevel2Expanded ? '▼' : '▶'}
-                            </span>
-                            <span className={styles.level2Name}>
-                              {level2Item.name}
-                            </span>
-                          </button>
-
-                          {isLevel2Expanded && (
-                            <div className={styles.level3Container}>
-                              {level3Items.length === 0 ? (
-                                <div className={styles.emptyMessage}>
-                                  {defaultLabels.emptyLevel3}
-                                </div>
-                              ) : (
-                                level3Items.map((level3Item) => {
-                                  const isLevel3Expanded = expandedLevel3.has(level3Item.id);
-                                  const level4Items = showLevel4 && getLevel4Items ? getLevel4Items(level3Item) : [];
-
-                                  return (
-                                    <div key={level3Item.id} className={styles.level3Group}>
-                                      <button
-                                        className={`${styles.level3Button} ${isLevel3Expanded ? styles.level3Active : ''}`}
-                                        onClick={() => showLevel4 && toggleLevel3(level3Item.id)}
-                                      >
-                                        <span className={styles.expandIcon}>
-                                          {showLevel4 ? (isLevel3Expanded ? '▼' : '▶') : '•'}
-                                        </span>
-                                        <span className={styles.level3Name}>
-                                          {level3Item.name}
-                                        </span>
-                                      </button>
-
-                                      {showLevel4 && isLevel3Expanded && getLevel4Items && (
-                                        <div className={styles.level4Container}>
-                                          {level4Items.length === 0 ? (
-                                            <div className={styles.emptyMessage}>
-                                              {defaultLabels.emptyLevel4}
-                                            </div>
-                                          ) : (
-                                            level4Items.map((level4Item) => {
-                                              const isCompleted = isItemCompleted?.(level4Item) || false;
-                                              const isActive = level4Item.id === activeLevel4ItemId;
-                                              const currentGlobalIndex = ++globalLevel4Index;
-
-                                              return (
-                                                <button
-                                                  key={level4Item.id}
-                                                  className={`${styles.level4Button} ${isActive ? styles.level4Active : ''} ${isCompleted ? styles.level4Completed : ''}`}
-                                                  onClick={() => onLevel4Select?.(groupIndex, level4Item)}
-                                                >
-                                                  <span className={`${styles.level4Number} ${isCompleted ? styles.completedNumber : ''}`}>
-                                                    {isCompleted ? '✓' : currentGlobalIndex}
-                                                  </span>
-                                                  <span className={styles.level4Name}>
-                                                    {level4Item.name}
-                                                  </span>
-                                                </button>
-                                              );
-                                            })
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
+                  {renderLevel2Items(
+                    level2Items,
+                    groupIndex,
+                    globalLevel4IndexRef,
+                    expandedLevel2,
+                    expandedLevel3,
+                    showLevel4,
+                    getLevel3Items,
+                    getLevel4Items,
+                    toggleLevel2,
+                    toggleLevel3,
+                    activeLevel4ItemId,
+                    isItemCompleted,
+                    onLevel4Select,
+                    styles,
+                    defaultLabels.emptyLevel2,
+                    defaultLabels.emptyLevel3,
+                    defaultLabels.emptyLevel4
                   )}
                 </div>
               )}

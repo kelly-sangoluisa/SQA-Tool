@@ -144,6 +144,276 @@ interface Project {
   status: 'in_progress' | 'completed' | 'cancelled';
 }
 
+// ===== HELPER FUNCTIONS =====
+
+async function fetchProjectData(projectId: number): Promise<Project> {
+  const projectResponse = await fetch(`/api/config-evaluation/projects/${projectId}`);
+  if (!projectResponse.ok) throw new Error('Error al cargar proyecto');
+  
+  try {
+    return await projectResponse.json();
+  } catch {
+    throw new Error('Respuesta inválida del servidor');
+  }
+}
+
+async function fetchEvaluationsData(projectId: number): Promise<EvaluationDataAPI[]> {
+  const evaluationsResponse = await fetch(`/api/config-evaluation/projects/${projectId}/evaluations`);
+  if (!evaluationsResponse.ok) throw new Error('Error al cargar evaluaciones');
+  
+  try {
+    const data = await evaluationsResponse.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    throw new Error('Respuesta inválida al cargar evaluaciones');
+  }
+}
+
+function buildMetricsBySubcriterion(evaluationCriteria: EvaluationCriterionAPI[]): Map<number, Metric[]> {
+  const metricsBySubcriterion = new Map<number, Metric[]>();
+
+  evaluationCriteria.forEach((evalCriterion) => {
+    (evalCriterion.evaluation_metrics || []).forEach((evalMetric) => {
+      const metric = evalMetric.metric;
+      if (!metric) return;
+
+      const subCriterionId = metric.sub_criterion_id;
+      if (!subCriterionId) return;
+
+      if (!metricsBySubcriterion.has(subCriterionId)) {
+        metricsBySubcriterion.set(subCriterionId, []);
+      }
+
+      const existingMetrics = metricsBySubcriterion.get(subCriterionId) || [];
+      const metricExists = existingMetrics.some(m => m.id === evalMetric.id);
+
+      if (!metricExists) {
+        const metricId = evalMetric.id || metric.id || 0;
+        metricsBySubcriterion.get(subCriterionId)!.push({
+          id: metricId,
+          name: metric.name,
+          description: metric.description,
+          formula: metric.formula,
+          code: metric.code,
+          variables: (metric.variables || []).map((v) => ({
+            id: v.id,
+            metric_id: metricId,
+            symbol: v.symbol,
+            description: v.description,
+            state: v.state
+          }))
+        });
+      }
+    });
+  });
+
+  return metricsBySubcriterion;
+}
+
+interface SubcriterionInput {
+  id: number;
+  name: string;
+  description?: string;
+  criterion_id: number;
+  state: string;
+  metrics?: Metric[];
+  created_at: string;
+  updated_at: string;
+}
+
+function transformSubcriterion(
+  subcriterion: SubcriterionInput,
+  metricsBySubcriterion: Map<number, Metric[]>
+) {
+  const finalMetrics = metricsBySubcriterion.get(subcriterion.id) || [];
+  
+  console.log(`📊 Subcriterio "${subcriterion.name}" (ID: ${subcriterion.id}):`, {
+    metricasDisponiblesEnSubcriterion: subcriterion.metrics?.length || 0,
+    metricasSeleccionadas: finalMetrics.length,
+    metricas: finalMetrics.map(m => ({ id: m.id, name: m.name }))
+  });
+  
+  return {
+    id: subcriterion.id,
+    name: subcriterion.name,
+    description: subcriterion.description,
+    criterion_id: subcriterion.criterion_id,
+    state: subcriterion.state,
+    created_at: subcriterion.created_at,
+    updated_at: subcriterion.updated_at,
+    metrics: finalMetrics
+  };
+}
+
+function transformEvaluationCriteria(
+  evaluationCriteria: EvaluationCriterionAPI[],
+  metricsBySubcriterion: Map<number, Metric[]>
+) {
+  return evaluationCriteria.map((evalCriterion) => ({
+    ...evalCriterion,
+    criterion: {
+      id: evalCriterion.criterion?.id || 0,
+      name: evalCriterion.criterion?.name || 'Unknown',
+      description: evalCriterion.criterion?.description,
+      subcriteria: (evalCriterion.criterion?.sub_criteria || [])
+        .map((sc) => transformSubcriterion(sc, metricsBySubcriterion))
+        .filter(subcriterion => subcriterion.metrics.length > 0)
+    }
+  }));
+}
+
+function transformEvaluationData(evaluation: EvaluationDataAPI): Evaluation {
+  const metricsBySubcriterion = buildMetricsBySubcriterion(evaluation.evaluation_criteria || []);
+
+  return {
+    ...evaluation,
+    standard: evaluation.standard || { id: 0, name: 'Unknown', version: '0.0' },
+    evaluation_criteria: transformEvaluationCriteria(
+      evaluation.evaluation_criteria || [],
+      metricsBySubcriterion
+    )
+  };
+}
+
+async function fetchEvaluationStatuses(evaluations: Evaluation[]): Promise<Set<number>> {
+  const completedEvals = new Set<number>();
+  
+  for (const evaluation of evaluations) {
+    try {
+      const statusResponse = await fetch(`/api/entry-data/evaluations/${evaluation.id}/status`);
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        if (statusData.status === 'completed') {
+          completedEvals.add(evaluation.id);
+        }
+      }
+    } catch {
+      console.warn(`No se pudo verificar estado de evaluación ${evaluation.id}`);
+    }
+  }
+  
+  return completedEvals;
+}
+
+function buildMetricsList(evaluations: Evaluation[]): Metric[] {
+  const metrics: Metric[] = [];
+  
+  for (const evaluation of evaluations) {
+    for (const evalCriterion of evaluation.evaluation_criteria) {
+      if (evalCriterion.criterion.subcriteria?.length) {
+        for (const subcriterion of evalCriterion.criterion.subcriteria) {
+          if (subcriterion.metrics?.length) {
+            metrics.push(...subcriterion.metrics);
+          }
+        }
+      }
+    }
+  }
+  
+  return metrics;
+}
+
+function findInitialMetricIndex(
+  evaluations: Evaluation[],
+  metrics: Metric[],
+  completedEvals: Set<number>
+): number {
+  for (const evaluation of evaluations) {
+    if (completedEvals.has(evaluation.id)) {
+      continue;
+    }
+
+    for (let i = 0; i < metrics.length; i++) {
+      const metric = metrics[i];
+      const belongsToThisEval = evaluation.evaluation_criteria.some(ec =>
+        ec.criterion?.subcriteria?.some(sc =>
+          sc.metrics?.some(m => m.id === metric.id)
+        )
+      );
+
+      if (belongsToThisEval) {
+        console.log(`📍 Estableciendo índice inicial en métrica ${i + 1} (evaluación no finalizada: ${evaluation.standard?.name || 'Unknown'})`);
+        return i;
+      }
+    }
+    break;
+  }
+  
+  return 0;
+}
+
+function getEvaluationMetricIds(evaluation: Evaluation): Set<number> {
+  const metricIds = new Set<number>();
+  
+  for (const evalCriterion of evaluation.evaluation_criteria || []) {
+    if (!evalCriterion.criterion?.subcriteria) continue;
+    
+    for (const subcriterion of evalCriterion.criterion.subcriteria) {
+      if (!subcriterion.metrics) continue;
+      
+      for (const metric of subcriterion.metrics) {
+        metricIds.add(metric.id);
+      }
+    }
+  }
+  
+  return metricIds;
+}
+
+function findVariableId(allMetrics: Metric[], metricId: number, symbol: string): number {
+  for (const metric of allMetrics) {
+    if (metric.id !== metricId || !metric.variables) continue;
+    
+    const variable = metric.variables.find(v => v.symbol === symbol);
+    if (variable) {
+      console.log(`✅ Found variable: metricId=${metricId}, variableId=${variable.id}, symbol=${symbol}`);
+      return variable.id;
+    }
+  }
+  
+  return 0;
+}
+
+function buildVariablesToSubmit(
+  variableValues: Record<string, string>,
+  currentEvalMetricIds: Set<number>,
+  allMetrics: Metric[],
+  evaluationId: number
+) {
+  return Object.entries(variableValues)
+    .filter(([key]) => key.startsWith('metric-'))
+    .map(([key, value]) => {
+      const parts = key.split('-');
+      if (parts.length < 3) return null;
+      
+      const metricId = parseInt(parts[1]);
+      const symbol = parts[2];
+      
+      // ✅ FILTRO CRÍTICO: Solo métricas de la evaluación actual
+      if (!currentEvalMetricIds.has(metricId)) {
+        console.log(`⏭️ Ignorando métrica ${metricId} (no pertenece a evaluación ${evaluationId})`);
+        return null;
+      }
+      
+      console.log(`🔍 DEBUG: Processing key=${key}, metricId=${metricId}, symbol=${symbol}`);
+      
+      const variableId = findVariableId(allMetrics, metricId, symbol);
+      
+      if (variableId === 0) {
+        console.warn(`⚠️ Ignorando variable inválida: metricId=${metricId}, symbol=${symbol} (ID no existe en allMetrics)`);
+        return null;
+      }
+      
+      return {
+        eval_metric_id: metricId,
+        variable_id: variableId,
+        symbol,
+        value: parseFloat(value.toString()) || 0
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null && item.variable_id > 0);
+}
+
 function DataEntryContent() {
   const params = useParams();
   const router = useRouter();
@@ -195,171 +465,30 @@ function DataEntryContent() {
         setError(null);
 
         // Cargar proyecto
-        const projectResponse = await fetch(`/api/config-evaluation/projects/${projectId}`);
-        if (!projectResponse.ok) throw new Error('Error al cargar proyecto');
-        
-        let projectData;
-        try {
-          projectData = await projectResponse.json();
-        } catch {
-          throw new Error('Respuesta inválida del servidor');
-        }
+        const projectData = await fetchProjectData(projectId);
         setProject(projectData);
 
-        // Cargar evaluaciones del proyecto desde la API
-        const evaluationsResponse = await fetch(`/api/config-evaluation/projects/${projectId}/evaluations`);
-        if (!evaluationsResponse.ok) throw new Error('Error al cargar evaluaciones');
-        
-        let evaluationsData;
-        try {
-          evaluationsData = await evaluationsResponse.json();
-        } catch {
-          throw new Error('Respuesta inválida al cargar evaluaciones');
-        }
+        // Cargar evaluaciones
+        const evaluationsData = await fetchEvaluationsData(projectId);
 
-        // Transformar datos: mapear evaluation_metrics a métricas en subcriteria
-        const evaluationsWithMetrics = (Array.isArray(evaluationsData) ? evaluationsData : []).map((evaluation: EvaluationDataAPI) => {
-          // Crear un mapa de métricas por sub_criterion_id desde evaluation_metrics
-          const metricsBySubcriterion = new Map<number, Metric[]>();
-
-          // Procesar evaluation_metrics para extraer métricas
-          (evaluation.evaluation_criteria || []).forEach((evalCriterion: EvaluationCriterionAPI) => {
-            (evalCriterion.evaluation_metrics || []).forEach((evalMetric: EvaluationMetricAPI) => {
-              const metric = evalMetric.metric;
-              if (!metric) return;
-
-              const subCriterionId = metric.sub_criterion_id;
-              if (subCriterionId) {
-                if (!metricsBySubcriterion.has(subCriterionId)) {
-                  metricsBySubcriterion.set(subCriterionId, []);
-                }
-                
-                // Agregar métrica con sus variables
-                const existingMetrics = metricsBySubcriterion.get(subCriterionId) || [];
-                const metricExists = existingMetrics.some(m => m.id === evalMetric.id);
-                
-                if (!metricExists) {
-                  const metricId = evalMetric.id || metric.id || 0;
-                  metricsBySubcriterion.get(subCriterionId)!.push({
-                    id: metricId, // CRÍTICO: usar evalMetric.id (evaluation_metrics.id) NO metric.id
-                    name: metric.name,
-                    description: metric.description,
-                    formula: metric.formula,
-                    code: metric.code,
-                    variables: (metric.variables || []).map((v) => ({
-                      id: v.id,
-                      metric_id: metricId, // CRÍTICO: usar evalMetric.id
-                      symbol: v.symbol,
-                      description: v.description,
-                      state: v.state
-                    }))
-                  });
-                }
-              }
-            });
-          });
-
-          return {
-            ...evaluation,
-            standard: evaluation.standard || { id: 0, name: 'Unknown', version: '0.0' },
-            evaluation_criteria: (evaluation.evaluation_criteria || []).map((evalCriterion: EvaluationCriterionAPI) => ({
-              ...evalCriterion,
-              criterion: {
-                id: evalCriterion.criterion?.id || 0,
-                name: evalCriterion.criterion?.name || 'Unknown',
-                description: evalCriterion.criterion?.description,
-                subcriteria: (evalCriterion.criterion?.sub_criteria || [])
-                  .map((subcriterion) => {
-                    // Obtener SOLO métricas de evaluation_metrics (las que el usuario seleccionó)
-                    const finalMetrics = metricsBySubcriterion.get(subcriterion.id) || [];
-                    
-                    console.log(`📊 Subcriterio "${subcriterion.name}" (ID: ${subcriterion.id}):`, {
-                      metricasDisponiblesEnSubcriterion: subcriterion.metrics?.length || 0,
-                      metricasSeleccionadas: finalMetrics.length,
-                      metricas: finalMetrics.map(m => ({ id: m.id, name: m.name }))
-                    });
-                    
-                    return {
-                      id: subcriterion.id,
-                      name: subcriterion.name,
-                      description: subcriterion.description,
-                      criterion_id: subcriterion.criterion_id,
-                      state: subcriterion.state,
-                      created_at: subcriterion.created_at,
-                      updated_at: subcriterion.updated_at,
-                      metrics: finalMetrics
-                    };
-                  })
-                  .filter(subcriterion => subcriterion.metrics.length > 0) // ✅ FILTRAR subcriterios sin métricas
-              }
-            }))
-          };
-        });
-
+        // Transformar datos
+        const evaluationsWithMetrics = evaluationsData.map(transformEvaluationData);
         setEvaluations(evaluationsWithMetrics as Evaluation[]);
 
-        // Cargar estado de cada evaluación para determinar cuáles están finalizadas
-        const completedEvals = new Set<number>();
-        for (const evaluation of evaluationsWithMetrics) {
-          try {
-            const statusResponse = await fetch(`/api/entry-data/evaluations/${evaluation.id}/status`);
-            if (statusResponse.ok) {
-              const statusData = await statusResponse.json();
-              if (statusData.status === 'completed') {
-                completedEvals.add(evaluation.id);
-              }
-            }
-          } catch {
-            console.warn(`No se pudo verificar estado de evaluación ${evaluation.id}`);
-          }
-        }
+        // Cargar estados de evaluaciones
+        const completedEvals = await fetchEvaluationStatuses(evaluationsWithMetrics as Evaluation[]);
         setFinalizedEvaluations(completedEvals);
 
-        // Construir lista plana de métricas
-        // Procesar métricas de todas las evaluaciones
-        const metrics: Metric[] = [];
-        for (const evaluation of evaluationsWithMetrics) {
-          for (const evalCriterion of evaluation.evaluation_criteria) {
-            if (evalCriterion.criterion.subcriteria && evalCriterion.criterion.subcriteria.length > 0) {
-              for (const subcriterion of evalCriterion.criterion.subcriteria) {
-                if (subcriterion.metrics && subcriterion.metrics.length > 0) {
-                  metrics.push(...subcriterion.metrics);
-                }
-              }
-            }
-          }
-        }
-        
+        // Construir lista de métricas
+        const metrics = buildMetricsList(evaluationsWithMetrics as Evaluation[]);
         setAllMetrics(metrics);
 
-        // Encontrar la primera evaluación no finalizada y establecer el índice inicial
-        let initialMetricIndex = 0;
-        for (const evaluation of evaluationsWithMetrics) {
-          // Si esta evaluación está finalizada, buscar la siguiente
-          if (completedEvals.has(evaluation.id)) {
-            continue;
-          }
-          
-          // Encontrar la primera métrica de esta evaluación no finalizada
-          for (let i = 0; i < metrics.length; i++) {
-            const metric = metrics[i];
-            const belongsToThisEval = (evaluation.evaluation_criteria || []).some(ec =>
-              ec.criterion?.subcriteria?.some(sc =>
-                sc.metrics?.some(m => m.id === metric.id)
-              )
-            );
-            
-            if (belongsToThisEval) {
-              initialMetricIndex = i;
-              console.log(`📍 Estableciendo índice inicial en métrica ${i + 1} (evaluación no finalizada: ${evaluation.standard?.name || 'Unknown'})`);
-              break;
-            }
-          }
-          
-          // Salir del loop después de encontrar la primera evaluación no finalizada
-          break;
-        }
-        
+        // Encontrar índice inicial
+        const initialMetricIndex = findInitialMetricIndex(
+          evaluationsWithMetrics as Evaluation[],
+          metrics,
+          completedEvals
+        );
         setCurrentMetricIndex(initialMetricIndex);
         
       } catch (error) {
@@ -604,67 +733,18 @@ function DataEntryContent() {
       setModalLoading(true);
 
       // ✅ PASO 1: Obtener SOLO las métricas de la evaluación actual
-      const currentEvalMetricIds = new Set<number>();
-      for (const evalCriterion of currentEvaluationForModal.evaluation_criteria || []) {
-        if (evalCriterion.criterion?.subcriteria) {
-          for (const subcriterion of evalCriterion.criterion.subcriteria) {
-            if (subcriterion.metrics) {
-              for (const metric of subcriterion.metrics) {
-                currentEvalMetricIds.add(metric.id);
-              }
-            }
-          }
-        }
-      }
+      const currentEvalMetricIds = getEvaluationMetricIds(currentEvaluationForModal);
       
       console.log('🔍 DEBUG: Métricas de la evaluación actual:', Array.from(currentEvalMetricIds));
       console.log('🔍 DEBUG: variableValues keys:', Object.keys(variableValues));
       
       // ✅ PASO 2: Filtrar SOLO las variables de las métricas de esta evaluación
-      const variablesToSubmit = Object.entries(variableValues)
-        .filter(([key]) => key.startsWith('metric-'))
-        .map(([key, value]) => {
-          const parts = key.split('-');
-          if (parts.length < 3) {
-            return null;
-          }
-          const metricId = parseInt(parts[1]);
-          const symbol = parts[2];
-          
-          // ✅ FILTRO CRÍTICO: Solo métricas de la evaluación actual
-          if (!currentEvalMetricIds.has(metricId)) {
-            console.log(`⏭️ Ignorando métrica ${metricId} (no pertenece a evaluación ${currentEvaluationForModal.id})`);
-            return null;
-          }
-          
-          console.log(`🔍 DEBUG: Processing key=${key}, metricId=${metricId}, symbol=${symbol}`);
-          
-          // Buscar la variable para obtener su ID
-          let variableId = 0;
-          for (const metric of allMetrics) {
-            if (metric.id === metricId && metric.variables) {
-              const variable = metric.variables.find(v => v.symbol === symbol);
-              if (variable) {
-                variableId = variable.id;
-                console.log(`✅ Found variable: metricId=${metricId}, variableId=${variableId}, symbol=${symbol}`);
-                break;
-              }
-            }
-          }
-          
-          if (variableId === 0) {
-            console.warn(`⚠️ Ignorando variable inválida: metricId=${metricId}, symbol=${symbol} (ID no existe en allMetrics)`);
-            return null;
-          }
-          
-          return {
-            eval_metric_id: metricId,
-            variable_id: variableId,
-            symbol,
-            value: parseFloat(value.toString()) || 0
-          };
-        })
-        .filter((item): item is NonNullable<typeof item> => item !== null && item.variable_id > 0);
+      const variablesToSubmit = buildVariablesToSubmit(
+        variableValues,
+        currentEvalMetricIds,
+        allMetrics,
+        currentEvaluationForModal.id
+      );
 
       // Paso 1: Enviar los datos
       console.log('📤 Enviando datos al backend...', {
@@ -763,6 +843,77 @@ function DataEntryContent() {
   const currentEvaluation = getCurrentEvaluation();
   const isCurrentEvaluationFinalized = currentEvaluation ? finalizedEvaluations.has(currentEvaluation.id) : false;
 
+  // Funciones auxiliares para handlers
+  const handlePreviousMetric = async () => {
+    if (currentMetricIndex === 0) return;
+    
+    const previousEval = getEvaluationByMetricIndex(currentMetricIndex - 1);
+    if (previousEval && finalizedEvaluations.has(previousEval.id)) {
+      setShowFinalizedModal(true);
+      return;
+    }
+    
+    await saveCurrentMetricData();
+    setCurrentMetricIndex(currentMetricIndex - 1);
+  };
+
+  const handleNextMetric = async () => {
+    if (currentMetricIndex >= allMetrics.length - 1) return;
+    
+    const nextEval = getEvaluationByMetricIndex(currentMetricIndex + 1);
+    if (nextEval && finalizedEvaluations.has(nextEval.id)) {
+      setShowFinalizedModal(true);
+      return;
+    }
+    
+    await saveCurrentMetricData();
+    setCurrentMetricIndex(currentMetricIndex + 1);
+  };
+
+  const getMetricsForCurrentEvaluation = (): Metric[] => {
+    if (!currentEvaluationForModal) return [];
+    
+    const metrics: Metric[] = [];
+    for (const evalCriterion of currentEvaluationForModal.evaluation_criteria || []) {
+      if (!evalCriterion.criterion?.subcriteria) continue;
+      
+      for (const subcriterion of evalCriterion.criterion.subcriteria) {
+        if (subcriterion.metrics) {
+          metrics.push(...subcriterion.metrics);
+        }
+      }
+    }
+    return metrics;
+  };
+
+  const isMetricCompleted = (metric: Metric): boolean => {
+    const metricVariables = metric.variables || [];
+    if (metricVariables.length === 0) return true;
+    
+    return metricVariables.every(v => {
+      const key = `metric-${metric.id}-${v.symbol}`;
+      const value = variableValues[key];
+      return value !== undefined && value !== null && value !== '';
+    });
+  };
+
+  const getCompletedMetricsCount = (metrics: Metric[]): number => {
+    return metrics.filter(isMetricCompleted).length;
+  };
+
+  const getVariablesForModal = (metrics: Metric[]) => {
+    return metrics.flatMap(metric => 
+      (metric.variables || []).map(v => {
+        const key = `metric-${metric.id}-${v.symbol}`;
+        return {
+          metric_name: metric.name,
+          variable_symbol: v.symbol,
+          variable_value: variableValues[key] || ''
+        };
+      }).filter(v => v.variable_value)
+    );
+  };
+
   // Handler para confirmar avance a siguiente evaluación
   const handleConfirmNextEvaluation = () => {
     const currentEvalIndex = evaluations.findIndex(e => e.id === currentEvaluationForModal?.id);
@@ -832,32 +983,8 @@ function DataEntryContent() {
                 onValueChange={(symbol, value) => {
                   handleVariableUpdate(currentMetric.id, symbol, value);
                 }}
-                onPrevious={async () => {
-                  if (currentMetricIndex > 0) {
-                    // Verificar si la métrica anterior pertenece a una evaluación finalizada
-                    const previousEval = getEvaluationByMetricIndex(currentMetricIndex - 1);
-                    if (previousEval && finalizedEvaluations.has(previousEval.id)) {
-                      setShowFinalizedModal(true);
-                      return;
-                    }
-                    
-                    await saveCurrentMetricData();
-                    setCurrentMetricIndex(currentMetricIndex - 1);
-                  }
-                }}
-                onNext={async () => {
-                  if (currentMetricIndex < allMetrics.length - 1) {
-                    // Verificar si la métrica siguiente pertenece a una evaluación finalizada
-                    const nextEval = getEvaluationByMetricIndex(currentMetricIndex + 1);
-                    if (nextEval && finalizedEvaluations.has(nextEval.id)) {
-                      setShowFinalizedModal(true);
-                      return;
-                    }
-                    
-                    await saveCurrentMetricData();
-                    setCurrentMetricIndex(currentMetricIndex + 1);
-                  }
-                }}
+                onPrevious={handlePreviousMetric}
+                onNext={handleNextMetric}
                 onFinishEvaluation={handleFinishEvaluation}
                 onFinishProject={handleFinishProject}
                 isFirstMetric={currentMetricIndex === 0}
@@ -897,43 +1024,16 @@ function DataEntryContent() {
 
       {/* Modal de confirmación */}
       {currentEvaluationForModal && (() => {
-        // Obtener solo las métricas de la evaluación actual
-        const currentEvalMetrics: Metric[] = [];
-        for (const evalCriterion of currentEvaluationForModal.evaluation_criteria || []) {
-          if (evalCriterion.criterion?.subcriteria) {
-            for (const subcriterion of evalCriterion.criterion.subcriteria) {
-              if (subcriterion.metrics) {
-                currentEvalMetrics.push(...subcriterion.metrics);
-              }
-            }
-          }
-        }
+        const currentEvalMetrics = getMetricsForCurrentEvaluation();
 
         return (
           <EvaluationCompleteModal
             isOpen={isModalOpen}
             evaluationName={currentEvaluationForModal.standard.name}
             isLastEvaluation={isFinalizingProject}
-            completedMetrics={currentEvalMetrics.filter(metric => {
-              const metricVariables = metric.variables || [];
-              if (metricVariables.length === 0) return true;
-              return metricVariables.every(v => {
-                const key = `metric-${metric.id}-${v.symbol}`;
-                const value = variableValues[key];
-                return value !== undefined && value !== null && value !== '';
-              });
-            }).length}
+            completedMetrics={getCompletedMetricsCount(currentEvalMetrics)}
             totalMetrics={currentEvalMetrics.length}
-            variables={currentEvalMetrics.flatMap(metric => 
-              (metric.variables || []).map(v => {
-                const key = `metric-${metric.id}-${v.symbol}`;
-                return {
-                  metric_name: metric.name,
-                  variable_symbol: v.symbol,
-                  variable_value: variableValues[key] || ''
-                };
-              }).filter(v => v.variable_value)
-            )}
+            variables={getVariablesForModal(currentEvalMetrics)}
             onConfirm={handleModalConfirm}
             onCancel={() => setIsModalOpen(false)}
             loading={modalLoading}

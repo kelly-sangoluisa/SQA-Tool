@@ -199,29 +199,54 @@ export function DataEntryHierarchy({
     });
   };
 
+  // Función auxiliar para verificar si todas las variables de una métrica tienen valores
+  const hasAllVariableValues = (metric: Metric): boolean => {
+    if (!metric.variables) return false;
+    
+    return metric.variables.every(v => {
+      const key = `metric-${metric.id}-${v.symbol}`;
+      return variableValues[key];
+    });
+  };
+
+  // Tipo para subcriterio con métricas
+  type SubcriterionWithMetrics = NonNullable<Evaluation['evaluation_criteria'][0]['criterion']['subcriteria']>[0];
+
+  // Función auxiliar para contar métricas de un subcriterio
+  const countSubcriterionMetrics = (sc: SubcriterionWithMetrics): { completed: number; total: number } => {
+    if (!sc.metrics) return { completed: 0, total: 0 };
+    
+    const total = sc.metrics.length;
+    const completed = sc.metrics.filter(hasAllVariableValues).length;
+    
+    return { completed, total };
+  };
+
+  // Función auxiliar para contar métricas de un criterio
+  const countCriterionMetrics = (ec: Evaluation['evaluation_criteria'][0]): { completed: number; total: number } => {
+    if (!ec.criterion.subcriteria) return { completed: 0, total: 0 };
+    
+    return ec.criterion.subcriteria.reduce((acc, sc) => {
+      const counts = countSubcriterionMetrics(sc);
+      return {
+        completed: acc.completed + counts.completed,
+        total: acc.total + counts.total
+      };
+    }, { completed: 0, total: 0 });
+  };
+
   // Función para calcular progreso de una evaluación
   const getGroupProgress = (group: EvaluationGroup): { completed: number; total: number } => {
     const evaluation = evaluations.find(e => e.id === group.id);
     if (!evaluation) return { completed: 0, total: 0 };
 
-    let completed = 0;
-    let total = 0;
-
-    evaluation.evaluation_criteria.forEach(ec => {
-      ec.criterion.subcriteria?.forEach(sc => {
-        sc.metrics?.forEach(metric => {
-          total++;
-          if (metric.variables?.every(v => {
-            const key = `metric-${metric.id}-${v.symbol}`;
-            return variableValues[key];
-          })) {
-            completed++;
-          }
-        });
-      });
-    });
-
-    return { completed, total };
+    return evaluation.evaluation_criteria.reduce((acc, ec) => {
+      const counts = countCriterionMetrics(ec);
+      return {
+        completed: acc.completed + counts.completed,
+        total: acc.total + counts.total
+      };
+    }, { completed: 0, total: 0 });
   };
 
   // Callback cuando se selecciona una métrica
