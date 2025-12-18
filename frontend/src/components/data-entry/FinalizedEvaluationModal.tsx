@@ -1,11 +1,7 @@
 'use client';
 
+import type { FinalizedEvaluationModalProps } from '@/types/data-entry/data-entry-modal.types';
 import styles from './FinalizedEvaluationModal.module.css';
-
-interface FinalizedEvaluationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
 
 export function FinalizedEvaluationModal({
   isOpen,

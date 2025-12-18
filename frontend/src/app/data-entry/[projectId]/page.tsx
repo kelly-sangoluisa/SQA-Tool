@@ -12,137 +12,17 @@ import { FinalizedEvaluationModal } from '@/components/data-entry/FinalizedEvalu
 import { NextEvaluationModal } from '@/components/data-entry/NextEvaluationModal';
 import AlertBanner from '@/components/shared/AlertBanner';
 import { submitEvaluationData, finalizeEvaluation, finalizeProject } from '@/api/entry-data/entry-data-api';
-
-// Interfaces de tipos
-interface Variable {
-  id: number;
-  metric_id: number;
-  symbol: string;
-  description: string;
-  state: string;
-  [key: string]: unknown;
-}
-
-interface Metric {
-  id: number;
-  name: string;
-  description: string;
-  formula: string;
-  code?: string;
-  variables?: Variable[];
-}
-
-interface Subcriterion {
-  id: number;
-  name: string;
-  description?: string;
-  criterion_id: number;
-  state: string;
-  metrics?: Metric[];
-  created_at: string;
-  updated_at: string;
-}
-
-// API response types
-interface EvaluationMetricAPI {
-  id?: number;
-  metric?: {
-    id: number;
-    name: string;
-    description: string;
-    formula: string;
-    code?: string;
-    sub_criterion_id?: number;
-    variables?: Array<{
-      id: number;
-      symbol: string;
-      description: string;
-      state: string;
-    }>;
-  };
-}
-
-interface EvaluationCriterionAPI {
-  id: number;
-  evaluation_id: number;
-  criterion_id: number;
-  importance_level: string;
-  importance_percentage: number;
-  criterion?: {
-    id: number;
-    name: string;
-    description?: string;
-    sub_criteria?: Array<{
-      id: number;
-      name: string;
-      description?: string;
-      criterion_id: number;
-      state: string;
-      metrics?: Metric[];
-      created_at: string;
-      updated_at: string;
-    }>;
-  };
-  evaluation_metrics?: EvaluationMetricAPI[];
-}
-
-interface EvaluationDataAPI {
-  id: number;
-  project_id: number;
-  standard_id: number;
-  creation_date: string;
-  status: 'in_progress' | 'completed' | 'cancelled';
-  standard?: {
-    id: number;
-    name: string;
-    version: string;
-  };
-  evaluation_criteria?: EvaluationCriterionAPI[];
-}
-
-interface Evaluation {
-  id: number;
-  project_id: number;
-  standard_id: number;
-  creation_date: string;
-  status: 'in_progress' | 'completed' | 'cancelled';
-  standard: {
-    id: number;
-    name: string;
-    version: string;
-  };
-  evaluation_criteria: Array<{
-    id: number;
-    evaluation_id: number;
-    criterion_id: number;
-    importance_level: string;
-    importance_percentage: number;
-    criterion: {
-      id: number;
-      name: string;
-      description?: string;
-      subcriteria?: Subcriterion[];
-      sub_criteria?: Array<{
-        id: number;
-        name: string;
-        description?: string;
-        criterion_id: number;
-        state: string;
-        metrics?: Metric[];
-        created_at: string;
-        updated_at: string;
-      }>;
-    };
-    evaluation_metrics?: EvaluationMetricAPI[];
-  }>;
-}
-
-interface Project {
-  id: number;
-  name: string;
-  description?: string;
-  status: 'in_progress' | 'completed' | 'cancelled';
-}
+import type {
+  Variable,
+  Metric,
+  Subcriterion,
+  SubcriterionInput,
+  EvaluationMetricAPI,
+  EvaluationCriterionAPI,
+  EvaluationDataAPI,
+  Evaluation,
+  Project
+} from '@/types/data-entry/data-entry.types';
 
 // ===== HELPER FUNCTIONS =====
 
@@ -208,17 +88,6 @@ function buildMetricsBySubcriterion(evaluationCriteria: EvaluationCriterionAPI[]
   });
 
   return metricsBySubcriterion;
-}
-
-interface SubcriterionInput {
-  id: number;
-  name: string;
-  description?: string;
-  criterion_id: number;
-  state: string;
-  metrics?: Metric[];
-  created_at: string;
-  updated_at: string;
 }
 
 function transformSubcriterion(
@@ -295,6 +164,19 @@ async function fetchEvaluationStatuses(evaluations: Evaluation[]): Promise<Set<n
   return completedEvals;
 }
 
+async function initializeProjectMetrics(
+  evaluationsWithMetrics: Evaluation[],
+  projectId: number,
+  completedEvals: Set<number>
+): Promise<{ metrics: Metric[]; initialIndex: number; savedValues: Record<string, string> }> {
+  const metrics = buildMetricsList(evaluationsWithMetrics);
+  const savedData = localStorage.getItem(`data-entry-project-${projectId}`);
+  const savedValues = savedData ? JSON.parse(savedData) : {};
+  const initialMetricIndex = findInitialMetricIndex(evaluationsWithMetrics, metrics, completedEvals, savedValues);
+  
+  return { metrics, initialIndex: initialMetricIndex, savedValues };
+}
+
 function buildMetricsList(evaluations: Evaluation[]): Metric[] {
   const metrics: Metric[] = [];
   
@@ -313,30 +195,64 @@ function buildMetricsList(evaluations: Evaluation[]): Metric[] {
   return metrics;
 }
 
+function isMetricFilledCompletely(metric: Metric, savedValues: Record<string, string>): boolean {
+  if (!metric.variables?.length) return true;
+  
+  return metric.variables.every(variable => {
+    const key = `metric-${metric.id}-${variable.symbol}`;
+    const value = savedValues[key];
+    return value && value.trim() !== '';
+  });
+}
+
+function findFirstMetricInEvaluation(
+  evaluation: Evaluation,
+  metrics: Metric[],
+  savedValues: Record<string, string>
+): number {
+  for (let i = 0; i < metrics.length; i++) {
+    const metric = metrics[i];
+    
+    if (!metricBelongsToEvaluation(metric, evaluation)) {
+      continue;
+    }
+    
+    // Si encontramos una métrica vacía, retornar su índice
+    if (!isMetricFilledCompletely(metric, savedValues)) {
+      console.log(`📍 Primera métrica vacía: ${i + 1} de ${evaluation.standard?.name || 'Unknown'}`);
+      return i;
+    }
+  }
+  
+  // Si todas están llenas, retornar la primera de esta evaluación
+  for (let i = 0; i < metrics.length; i++) {
+    if (metricBelongsToEvaluation(metrics[i], evaluation)) {
+      console.log(`📍 Todas llenas, primera métrica de: ${evaluation.standard?.name || 'Unknown'}`);
+      return i;
+    }
+  }
+  
+  return -1;
+}
+
 function findInitialMetricIndex(
   evaluations: Evaluation[],
   metrics: Metric[],
-  completedEvals: Set<number>
+  completedEvals: Set<number>,
+  savedValues: Record<string, string> = {}
 ): number {
+  // Buscar la primera evaluación no completada
   for (const evaluation of evaluations) {
     if (completedEvals.has(evaluation.id)) {
       continue;
     }
-
-    for (let i = 0; i < metrics.length; i++) {
-      const metric = metrics[i];
-      const belongsToThisEval = evaluation.evaluation_criteria.some(ec =>
-        ec.criterion?.subcriteria?.some(sc =>
-          sc.metrics?.some(m => m.id === metric.id)
-        )
-      );
-
-      if (belongsToThisEval) {
-        console.log(`📍 Estableciendo índice inicial en métrica ${i + 1} (evaluación no finalizada: ${evaluation.standard?.name || 'Unknown'})`);
-        return i;
-      }
+    
+    const metricIndex = findFirstMetricInEvaluation(evaluation, metrics, savedValues);
+    if (metricIndex !== -1) {
+      return metricIndex;
     }
-    break;
+    
+    break; // Solo procesar la primera evaluación no completada
   }
   
   return 0;
@@ -508,23 +424,22 @@ function DataEntryContent() {
 
         // Transformar datos
         const evaluationsWithMetrics = evaluationsData.map(transformEvaluationData);
-        setEvaluations(evaluationsWithMetrics as Evaluation[]);
+        setEvaluations(evaluationsWithMetrics);
 
         // Cargar estados de evaluaciones
-        const completedEvals = await fetchEvaluationStatuses(evaluationsWithMetrics as Evaluation[]);
+        const completedEvals = await fetchEvaluationStatuses(evaluationsWithMetrics);
         setFinalizedEvaluations(completedEvals);
 
-        // Construir lista de métricas
-        const metrics = buildMetricsList(evaluationsWithMetrics as Evaluation[]);
-        setAllMetrics(metrics);
-
-        // Encontrar índice inicial
-        const initialMetricIndex = findInitialMetricIndex(
-          evaluationsWithMetrics as Evaluation[],
-          metrics,
+        // Inicializar métricas y valores
+        const { metrics, initialIndex, savedValues } = await initializeProjectMetrics(
+          evaluationsWithMetrics,
+          projectId,
           completedEvals
         );
-        setCurrentMetricIndex(initialMetricIndex);
+        
+        setAllMetrics(metrics);
+        setVariableValues(savedValues);
+        setCurrentMetricIndex(initialIndex);
         
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Error desconocido');
@@ -682,7 +597,7 @@ function DataEntryContent() {
     if (!currentEval || !currentMetric) return false;
 
     const evalMetrics = getMetricsFromEvaluation(currentEval, allMetrics);
-    const lastMetricOfEval = evalMetrics[evalMetrics.length - 1];
+    const lastMetricOfEval = evalMetrics.at(-1);
     return currentMetric.id === lastMetricOfEval?.id;
   };
 
@@ -690,7 +605,7 @@ function DataEntryContent() {
   const isLastEvaluationOfProject = (): boolean => {
     const currentEval = getCurrentEvaluation();
     if (!currentEval) return false;
-    return currentEval.id === evaluations[evaluations.length - 1]?.id;
+    return currentEval.id === evaluations.at(-1)?.id;
   };
 
   // Handler para terminar evaluación
@@ -795,7 +710,7 @@ function DataEntryContent() {
         <div className="error-container">
           <h2>Error al cargar el proyecto</h2>
           <p>{error}</p>
-          <button onClick={() => window.location.reload()}>
+          <button onClick={() => globalThis.location.reload()}>
             Reintentar
           </button>
         </div>

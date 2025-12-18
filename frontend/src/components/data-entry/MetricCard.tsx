@@ -1,16 +1,8 @@
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { sortVariablesByFormulaOrder } from '@/utils/formulaUtils';
+import type { Variable } from '@/types/data-entry/data-entry.types';
 import styles from './MetricCard.module.css';
-
-interface Variable {
-  id?: number;
-  metric_id?: number;
-  symbol: string;
-  description: string;
-  state?: string;
-  [key: string]: unknown;
-}
 
 interface MetricCardProps {
   number: number;
