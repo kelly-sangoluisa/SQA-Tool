@@ -414,6 +414,42 @@ function buildVariablesToSubmit(
     .filter((item): item is NonNullable<typeof item> => item !== null && item.variable_id > 0);
 }
 
+// Función auxiliar para verificar si una métrica pertenece a una evaluación
+function metricBelongsToEvaluation(metric: Metric, evaluation: Evaluation): boolean {
+  for (const ec of evaluation.evaluation_criteria || []) {
+    if (!ec.criterion?.subcriteria) continue;
+    
+    for (const sc of ec.criterion.subcriteria) {
+      if (sc.metrics?.some(m => m.id === metric.id)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// Función auxiliar para encontrar evaluación que contiene una métrica
+function findEvaluationForMetric(metric: Metric | undefined, evaluations: Evaluation[]): Evaluation | null {
+  if (!metric) return null;
+  
+  for (const evaluation of evaluations) {
+    if (metricBelongsToEvaluation(metric, evaluation)) {
+      return evaluation;
+    }
+  }
+  return null;
+}
+
+// Función auxiliar para obtener métricas de una evaluación
+function getMetricsFromEvaluation(evaluation: Evaluation, allMetrics: Metric[]): Metric[] {
+  return allMetrics.filter(metric => metricBelongsToEvaluation(metric, evaluation));
+}
+
+// Función auxiliar para encontrar índice de métrica que pertenece a evaluación
+function findMetricIndexForEvaluation(evaluation: Evaluation, allMetrics: Metric[]): number {
+  return allMetrics.findIndex(metric => metricBelongsToEvaluation(metric, evaluation));
+}
+
 function DataEntryContent() {
   const params = useParams();
   const router = useRouter();
@@ -633,57 +669,22 @@ function DataEntryContent() {
 
   // Función para obtener la evaluación actual basada en la métrica actual
   const getCurrentEvaluation = (): Evaluation | null => {
-    const metric = allMetrics[currentMetricIndex];
-    if (!metric) return null;
-    
-    for (const evaluation of evaluations) {
-      for (const ec of evaluation.evaluation_criteria || []) {
-        if (ec.criterion?.subcriteria) {
-          for (const sc of ec.criterion.subcriteria) {
-            if (sc.metrics?.some(m => m.id === metric.id)) {
-              return evaluation;
-            }
-          }
-        }
-      }
-    }
-    return null;
+    return findEvaluationForMetric(allMetrics[currentMetricIndex], evaluations);
   };
 
   // Función para obtener la evaluación de una métrica específica por índice
   const getEvaluationByMetricIndex = (metricIndex: number): Evaluation | null => {
-    const metric = allMetrics[metricIndex];
-    if (!metric) return null;
-    
-    for (const evaluation of evaluations) {
-      for (const ec of evaluation.evaluation_criteria || []) {
-        if (ec.criterion?.subcriteria) {
-          for (const sc of ec.criterion.subcriteria) {
-            if (sc.metrics?.some(m => m.id === metric.id)) {
-              return evaluation;
-            }
-          }
-        }
-      }
-    }
-    return null;
+    return findEvaluationForMetric(allMetrics[metricIndex], evaluations);
   };
 
   // Función para verificar si es la última métrica de una evaluación
   const isLastMetricOfEvaluation = (): boolean => {
     const currentEval = getCurrentEvaluation();
-    if (!currentEval) return false;
+    if (!currentEval || !currentMetric) return false;
 
-    const evalMetrics = allMetrics.filter(metric => {
-      return (currentEval.evaluation_criteria || []).some(ec =>
-        ec.criterion?.subcriteria?.some(sc =>
-          sc.metrics?.some(m => m.id === metric.id)
-        )
-      );
-    });
-
+    const evalMetrics = getMetricsFromEvaluation(currentEval, allMetrics);
     const lastMetricOfEval = evalMetrics[evalMetrics.length - 1];
-    return currentMetric?.id === lastMetricOfEval?.id;
+    return currentMetric.id === lastMetricOfEval?.id;
   };
 
   // Función para verificar si es la última evaluación del proyecto
@@ -917,20 +918,17 @@ function DataEntryContent() {
   // Handler para confirmar avance a siguiente evaluación
   const handleConfirmNextEvaluation = () => {
     const currentEvalIndex = evaluations.findIndex(e => e.id === currentEvaluationForModal?.id);
-    if (currentEvalIndex < evaluations.length - 1) {
+    const hasNextEval = currentEvalIndex < evaluations.length - 1;
+    
+    if (hasNextEval) {
       const nextEval = evaluations[currentEvalIndex + 1];
-      const nextMetricIndex = allMetrics.findIndex(metric =>
-        (nextEval.evaluation_criteria || []).some(ec =>
-          ec.criterion?.subcriteria?.some(sc =>
-            sc.metrics?.some(m => m.id === metric.id)
-          )
-        )
-      );
+      const nextMetricIndex = findMetricIndexForEvaluation(nextEval, allMetrics);
       
       if (nextMetricIndex !== -1) {
         setCurrentMetricIndex(nextMetricIndex);
       }
     }
+    
     setShowNextEvaluationModal(false);
     setNextEvaluationInfo(null);
   };
