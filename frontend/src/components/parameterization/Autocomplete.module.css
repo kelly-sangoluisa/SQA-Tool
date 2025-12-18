@@ -15,7 +15,7 @@
 .autocompleteInput:focus {
   outline: none;
   border-color: var(--primary-color, #3b82f6);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgb(59, 130, 246, 0.1);
 }
 
 .autocompleteInput.hasResults {
@@ -36,7 +36,7 @@
   max-height: 300px;
   overflow-y: auto;
   z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgb(0, 0, 0, 0.1);
 }
 
 .resultItem {

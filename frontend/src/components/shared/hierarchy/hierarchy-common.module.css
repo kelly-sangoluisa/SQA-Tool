@@ -151,7 +151,7 @@
   justify-content: center;
   padding: 3rem 2rem;
   text-align: center;
-  background: linear-gradient(135deg, rgba(78, 94, 163, 0.03) 0%, rgba(89, 70, 154, 0.03) 100%);
+  background: linear-gradient(135deg, rgb(78, 94, 163, 0.03) 0%, rgb(89, 70, 154, 0.03) 100%);
   border-radius: 12px;
   margin: 1rem 0;
 }
@@ -173,7 +173,7 @@
 .hierarchyLoadingSpinner::before {
   width: 50px;
   height: 50px;
-  border: 3px solid rgba(78, 94, 163, 0.2);
+  border: 3px solid rgb(78, 94, 163, 0.2);
   border-top-color: var(--hierarchy-primary);
   animation: hierarchy-spin 1s linear infinite;
 }

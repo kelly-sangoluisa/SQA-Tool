@@ -57,14 +57,14 @@
 
 .iconSuccess {
   color: #059669;
-  background: linear-gradient(135deg, rgba(78, 94, 163, 0.15) 0%, rgba(89, 70, 154, 0.15) 100%);
+  background: linear-gradient(135deg, rgb(78, 94, 163, 0.15) 0%, rgb(89, 70, 154, 0.15) 100%);
   border-radius: 50%;
   padding: 0.5rem;
 }
 
 .iconInfo {
   color: #2d3660;
-  background: linear-gradient(135deg, rgba(78, 94, 163, 0.15) 0%, rgba(89, 70, 154, 0.15) 100%);
+  background: linear-gradient(135deg, rgb(78, 94, 163, 0.15) 0%, rgb(89, 70, 154, 0.15) 100%);
   border-radius: 50%;
   padding: 0.5rem;
 }
@@ -175,10 +175,10 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: #2d3660;
-  background: linear-gradient(135deg, rgba(78, 94, 163, 0.25) 0%, rgba(89, 70, 154, 0.25) 100%);
+  background: linear-gradient(135deg, rgb(78, 94, 163, 0.25) 0%, rgb(89, 70, 154, 0.25) 100%);
   padding: 0.25rem 0.75rem;
   border-radius: 6px;
-  border: 1px solid rgba(78, 94, 163, 0.5);
+  border: 1px solid rgb(78, 94, 163, 0.5);
 }
 
 .moreVariables {

@@ -7,19 +7,19 @@
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgb(0, 0, 0, 0.15);
   z-index: 9998;
   display: flex;
   align-items: center;
   gap: 8px;
-  animation: slideUp 0.3s ease-out;
+  animation: slide-up 0.3s ease-out;
 }
 
 .spinner {
   animation: spin 1s linear infinite;
 }
 
-@keyframes slideUp {
+@keyframes slide-up {
   from {
     opacity: 0;
     transform: translateX(-50%) translateY(20px);

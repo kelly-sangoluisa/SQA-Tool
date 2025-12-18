@@ -33,9 +33,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgb(255, 255, 255, 0.2) !important;
   color: #FFFFFF !important;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgb(255, 255, 255, 0.3);
   border-radius: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -44,10 +44,10 @@
 }
 
 .createButton:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgb(255, 255, 255, 0.3) !important;
+  border-color: rgb(255, 255, 255, 0.5);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 8px rgb(0, 0, 0, 0.12);
 }
 
 .createButton:active {
@@ -77,12 +77,12 @@
 }
 
 .content::-webkit-scrollbar-thumb {
-  background: rgba(78, 94, 163, 0.3);
+  background: rgb(78, 94, 163, 0.3);
   border-radius: 3px;
 }
 
 .content::-webkit-scrollbar-thumb:hover {
-  background: rgba(78, 94, 163, 0.5);
+  background: rgb(78, 94, 163, 0.5);
 }
 
 .loading {

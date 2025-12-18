@@ -5,13 +5,13 @@
   max-width: 500px;
   width: 90%;
   border: none;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideIn 0.3s ease-out;
+  box-shadow: 0 20px 60px rgb(0, 0, 0, 0.3);
+  animation: slide-in 0.3s ease-out;
 }
 
 .modal::backdrop {
-  background: rgba(0, 0, 0, 0.5);
-  animation: fadeIn 0.2s ease-out;
+  background: rgb(0, 0, 0, 0.5);
+  animation: fade-in 0.2s ease-out;
 }
 
 .header {
@@ -27,7 +27,7 @@
 
 .title {
   margin: 0;
-  fontSize: 20px;
+  font-size: 20px;
   font-weight: 600;
   color: #1a1a2e;
 }
@@ -72,7 +72,7 @@
   background: #dc2626;
 }
 
-@keyframes fadeIn {
+@keyframes fade-in {
   from {
     opacity: 0;
   }
@@ -81,7 +81,7 @@
   }
 }
 
-@keyframes slideIn {
+@keyframes slide-in {
   from {
     opacity: 0;
     transform: translateY(-20px);
