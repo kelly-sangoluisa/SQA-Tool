@@ -366,6 +366,12 @@ export class ParameterizationService {
     return this.updateEntityState(this.variableRepo, id, updateStateDto, 'FormulaVariable');
   }
 
+  async deleteVariable(id: number): Promise<void> {
+    const variable = await this.findOneVariable(id);
+    await this.variableRepo.remove(variable);
+    this.logger.log(`Deleted formula variable with ID: ${id}`);
+  }
+
   // --- SEARCH METHODS FOR INTELLIGENT AUTOCOMPLETE ---
 
   /**

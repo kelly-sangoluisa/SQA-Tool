@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Body, Patch, Param,
+  Controller, Get, Post, Body, Patch, Param, Delete, HttpCode,
   ParseIntPipe, Query
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
@@ -229,6 +229,15 @@ export class ParameterizationController {
     @Body() updateStateDto: UpdateStateDto,
   ) {
     return this.service.updateVariableState(id, updateStateDto);
+  }
+
+  @Delete('variables/:id')
+  @HttpCode(204)
+  @ROLES('admin')
+  @ApiOperation({ summary: 'Eliminar una variable de fórmula' })
+  @ApiResponse({ status: 204, description: 'Variable eliminada exitosamente' })
+  deleteVariable(@Param('id', ParseIntPipe) id: number) {
+    return this.service.deleteVariable(id);
   }
 
   // --- SEARCH ENDPOINTS FOR INTELLIGENT AUTOCOMPLETE ---

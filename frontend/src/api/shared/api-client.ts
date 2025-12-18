@@ -49,7 +49,19 @@ export class ApiClient {
         throw new Error(errorMessage);
       }
 
-      return await response.json();
+      // Si la respuesta es 204 (No Content) o no tiene contenido, retornar vacío
+      if (response.status === 204 || response.headers.get('content-length') === '0') {
+        return {} as T;
+      }
+
+      // Verificar si hay contenido antes de parsear JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const text = await response.text();
+        return text ? JSON.parse(text) : {} as T;
+      }
+
+      return {} as T;
     } catch (error) {
       // Filtrar errores de autenticación para no mostrarlos en consola
       const isAuthError = error instanceof Error && 

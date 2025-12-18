@@ -134,14 +134,9 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
 
         // Actualizar variables de forma inteligente
         const existingVariableIds = new Set(metric.variables?.map(v => v.id) || []);
-        const currentVariableIds = new Set(formData.variables.filter(v => v.id).map(v => v.id!));
         
-        // 1. Eliminar variables que ya no están en el formulario
-        const variablesToDelete = metric.variables?.filter(v => !currentVariableIds.has(v.id)) || [];
-        await Promise.all(
-          variablesToDelete.map(v => parameterizationApi.deleteVariable(v.id))
-        );
-
+        // 1. Las variables ya se eliminan inmediatamente cuando el usuario hace clic en X
+        
         // 2. Actualizar variables existentes
         const variablesToUpdate = formData.variables.filter(v => v.id && existingVariableIds.has(v.id));
         await Promise.all(
@@ -226,11 +221,35 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
     }));
   };
 
-  const removeVariable = (index: number) => {
+  const removeVariable = async (index: number) => {
+    const variableToRemove = formData.variables[index];
+    
+    // Remover inmediatamente del estado local (optimistic update)
     setFormData(prev => ({
       ...prev,
       variables: prev.variables.filter((_, i) => i !== index)
     }));
+    
+    // Si la variable tiene ID (existe en BD), eliminarla del backend
+    if (variableToRemove.id) {
+      try {
+        await parameterizationApi.deleteVariable(variableToRemove.id);
+        console.log(`✅ Variable ${variableToRemove.id} (${variableToRemove.symbol}) eliminada de la base de datos`);
+      } catch (error) {
+        console.error('❌ Error al eliminar variable:', error);
+        setErrors({ general: `Error al eliminar la variable "${variableToRemove.symbol}": ${error}` });
+        
+        // Si falla, restaurar la variable en su posición original
+        setFormData(prev => ({
+          ...prev,
+          variables: [
+            ...prev.variables.slice(0, index),
+            variableToRemove,
+            ...prev.variables.slice(index)
+          ]
+        }));
+      }
+    }
   };
 
   return (

@@ -357,11 +357,10 @@ export const parameterizationApi = {
   },
 
   /**
-   * Deactivate a variable (legacy method for compatibility)
-   * @deprecated Use updateVariableState instead
+   * Delete a variable permanently from the database
    */
   async deleteVariable(id: number): Promise<void> {
-    return this.updateVariableState(id, { state: 'inactive' });
+    return apiClient.delete(`/parameterization/variables/${id}`);
   },
 
   // === SEARCH ENDPOINTS FOR INTELLIGENT AUTOCOMPLETE ===
