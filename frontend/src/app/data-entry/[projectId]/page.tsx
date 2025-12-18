@@ -268,38 +268,29 @@ function DataEntryContent() {
                 id: evalCriterion.criterion?.id || 0,
                 name: evalCriterion.criterion?.name || 'Unknown',
                 description: evalCriterion.criterion?.description,
-                subcriteria: (evalCriterion.criterion?.sub_criteria || []).map((subcriterion) => {
-                  // Obtener métricas de evaluation_metrics o de sub_criteria.metrics si existen
-                  const metricsFromEvalMetrics = metricsBySubcriterion.get(subcriterion.id) || [];
-                  const metricsFromSubcriterion = (subcriterion.metrics || []).map((m) => ({
-                    id: m.id,
-                    name: m.name,
-                    description: m.description,
-                    formula: m.formula,
-                    code: m.code,
-                    variables: (m.variables || []).map((v) => ({
-                      id: v.id,
-                      metric_id: m.id,
-                      symbol: v.symbol,
-                      description: v.description,
-                      state: v.state
-                    }))
-                  }));
-                  
-                  // Combinar: si hay en evaluation_metrics usa esos, sino usa los del subcriterion
-                  const finalMetrics = metricsFromEvalMetrics.length > 0 ? metricsFromEvalMetrics : metricsFromSubcriterion;
-                  
-                  return {
-                    id: subcriterion.id,
-                    name: subcriterion.name,
-                    description: subcriterion.description,
-                    criterion_id: subcriterion.criterion_id,
-                    state: subcriterion.state,
-                    created_at: subcriterion.created_at,
-                    updated_at: subcriterion.updated_at,
-                    metrics: finalMetrics
-                  };
-                })
+                subcriteria: (evalCriterion.criterion?.sub_criteria || [])
+                  .map((subcriterion) => {
+                    // Obtener SOLO métricas de evaluation_metrics (las que el usuario seleccionó)
+                    const finalMetrics = metricsBySubcriterion.get(subcriterion.id) || [];
+                    
+                    console.log(`📊 Subcriterio "${subcriterion.name}" (ID: ${subcriterion.id}):`, {
+                      metricasDisponiblesEnSubcriterion: subcriterion.metrics?.length || 0,
+                      metricasSeleccionadas: finalMetrics.length,
+                      metricas: finalMetrics.map(m => ({ id: m.id, name: m.name }))
+                    });
+                    
+                    return {
+                      id: subcriterion.id,
+                      name: subcriterion.name,
+                      description: subcriterion.description,
+                      criterion_id: subcriterion.criterion_id,
+                      state: subcriterion.state,
+                      created_at: subcriterion.created_at,
+                      updated_at: subcriterion.updated_at,
+                      metrics: finalMetrics
+                    };
+                  })
+                  .filter(subcriterion => subcriterion.metrics.length > 0) // ✅ FILTRAR subcriterios sin métricas
               }
             }))
           };
@@ -612,10 +603,24 @@ function DataEntryContent() {
     try {
       setModalLoading(true);
 
-      // Preparar datos de variables para enviar
-      console.log('🔍 DEBUG: allMetrics IDs:', allMetrics.map(m => ({ id: m.id, name: m.name })));
+      // ✅ PASO 1: Obtener SOLO las métricas de la evaluación actual
+      const currentEvalMetricIds = new Set<number>();
+      for (const evalCriterion of currentEvaluationForModal.evaluation_criteria || []) {
+        if (evalCriterion.criterion?.subcriteria) {
+          for (const subcriterion of evalCriterion.criterion.subcriteria) {
+            if (subcriterion.metrics) {
+              for (const metric of subcriterion.metrics) {
+                currentEvalMetricIds.add(metric.id);
+              }
+            }
+          }
+        }
+      }
+      
+      console.log('🔍 DEBUG: Métricas de la evaluación actual:', Array.from(currentEvalMetricIds));
       console.log('🔍 DEBUG: variableValues keys:', Object.keys(variableValues));
       
+      // ✅ PASO 2: Filtrar SOLO las variables de las métricas de esta evaluación
       const variablesToSubmit = Object.entries(variableValues)
         .filter(([key]) => key.startsWith('metric-'))
         .map(([key, value]) => {
@@ -625,6 +630,12 @@ function DataEntryContent() {
           }
           const metricId = parseInt(parts[1]);
           const symbol = parts[2];
+          
+          // ✅ FILTRO CRÍTICO: Solo métricas de la evaluación actual
+          if (!currentEvalMetricIds.has(metricId)) {
+            console.log(`⏭️ Ignorando métrica ${metricId} (no pertenece a evaluación ${currentEvaluationForModal.id})`);
+            return null;
+          }
           
           console.log(`🔍 DEBUG: Processing key=${key}, metricId=${metricId}, symbol=${symbol}`);
           
@@ -643,14 +654,14 @@ function DataEntryContent() {
           
           if (variableId === 0) {
             console.warn(`⚠️ Ignorando variable inválida: metricId=${metricId}, symbol=${symbol} (ID no existe en allMetrics)`);
-            return null; // Filtrar esta variable inválida
+            return null;
           }
           
           return {
-            eval_metric_id: metricId, // CRÍTICO: usar eval_metric_id
+            eval_metric_id: metricId,
             variable_id: variableId,
             symbol,
-            value: parseFloat(value.toString()) || 0 // Enviar como número
+            value: parseFloat(value.toString()) || 0
           };
         })
         .filter((item): item is NonNullable<typeof item> => item !== null && item.variable_id > 0);
