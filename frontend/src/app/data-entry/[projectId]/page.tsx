@@ -386,10 +386,9 @@ function buildVariablesToSubmit(
       const parts = key.split('-');
       if (parts.length < 3) return null;
       
-      const metricId = parseInt(parts[1]);
+      const metricId = Number.parseInt(parts[1], 10);
       const symbol = parts[2];
       
-      // ✅ FILTRO CRÍTICO: Solo métricas de la evaluación actual
       if (!currentEvalMetricIds.has(metricId)) {
         console.log(`⏭️ Ignorando métrica ${metricId} (no pertenece a evaluación ${evaluationId})`);
         return null;
@@ -408,7 +407,7 @@ function buildVariablesToSubmit(
         eval_metric_id: metricId,
         variable_id: variableId,
         symbol,
-        value: parseFloat(value.toString()) || 0
+        value: Number.parseFloat(value.toString()) || 0
       };
     })
     .filter((item): item is NonNullable<typeof item> => item !== null && item.variable_id > 0);
@@ -569,10 +568,10 @@ function DataEntryContent() {
         if (!value || value.trim() === '') return null;
         
         const varData = {
-          eval_metric_id: metric.id, // CRÍTICO: usar eval_metric_id para el backend
+          eval_metric_id: metric.id,
           variable_id: variable.id,
           symbol: variable.symbol,
-          value: parseFloat(value) || 0 // Enviar como número
+          value: Number.parseFloat(value) || 0
         };
         
         console.log('🔍 DEBUG - Variable mapeada:', varData);
@@ -638,7 +637,7 @@ function DataEntryContent() {
         // Verificar si hay IDs inválidos (de versiones anteriores del código)
         const hasInvalidIds = Object.keys(parsedValues).some(key => {
           if (!key.startsWith('metric-')) return false;
-          const metricId = parseInt(key.split('-')[1]);
+          const metricId = Number.parseInt(key.split('-')[1], 10);
           return !validMetricIds.has(metricId);
         });
         
@@ -658,7 +657,7 @@ function DataEntryContent() {
 
   // Función para verificar si todas las variables de la métrica actual están llenas
   const areCurrentMetricVariablesFilled = (): boolean => {
-    if (!currentMetric || !currentMetric.variables) return false;
+    if (!currentMetric?.variables) return false;
     
     return currentMetric.variables.every(variable => {
       const key = `metric-${currentMetric.id}-${variable.symbol}`;
@@ -733,13 +732,8 @@ function DataEntryContent() {
     try {
       setModalLoading(true);
 
-      // ✅ PASO 1: Obtener SOLO las métricas de la evaluación actual
       const currentEvalMetricIds = getEvaluationMetricIds(currentEvaluationForModal);
       
-      console.log('🔍 DEBUG: Métricas de la evaluación actual:', Array.from(currentEvalMetricIds));
-      console.log('🔍 DEBUG: variableValues keys:', Object.keys(variableValues));
-      
-      // ✅ PASO 2: Filtrar SOLO las variables de las métricas de esta evaluación
       const variablesToSubmit = buildVariablesToSubmit(
         variableValues,
         currentEvalMetricIds,
@@ -747,29 +741,14 @@ function DataEntryContent() {
         currentEvaluationForModal.id
       );
 
-      // Paso 1: Enviar los datos
-      console.log('📤 Enviando datos al backend...', {
-        evaluationId: currentEvaluationForModal.id,
-        variablesCount: variablesToSubmit.length
-      });
       await submitEvaluationData(currentEvaluationForModal.id, variablesToSubmit);
-
-      // Paso 2: SIEMPRE finalizar la evaluación individual primero
-      console.log('🎯 Finalizando evaluación individual...');
       await finalizeEvaluation(currentEvaluationForModal.id);
-      console.log('✅ Evaluación finalizada exitosamente');
       
-      // Marcar evaluación como finalizada
       setFinalizedEvaluations(prev => new Set([...prev, currentEvaluationForModal.id]));
 
-      // Paso 3: Si es la última evaluación, finalizar proyecto completo
       if (isFinalizingProject) {
-        console.log('🏁 Finalizando proyecto completo (última evaluación)...');
         await finalizeProject(projectId);
         
-        console.log('✅ Proyecto finalizado. Redirigiendo a resultados...');
-        
-        // Limpiar localStorage
         localStorage.removeItem(`data-entry-project-${projectId}`);
         
         // Navegar a resultados del proyecto
@@ -778,10 +757,8 @@ function DataEntryContent() {
         // Avanzar a la siguiente evaluación si existe
         const currentEvalIndex = evaluations.findIndex(e => e.id === currentEvaluationForModal.id);
         if (currentEvalIndex < evaluations.length - 1) {
-          console.log('➡️ Preparando para avanzar a la siguiente evaluación...');
           const nextEval = evaluations[currentEvalIndex + 1];
           
-          // Mostrar modal de advertencia antes de continuar
           setNextEvaluationInfo({
             current: currentEvaluationForModal.standard.name,
             next: nextEval.standard?.name || 'Siguiente evaluación'
