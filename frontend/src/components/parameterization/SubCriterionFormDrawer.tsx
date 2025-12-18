@@ -22,7 +22,7 @@ interface FormData {
 }
 
 /**
- * Datos opcionales de métrica para pre-llenar cuando se selecciona un subcriterio
+ * Datos opcionales de métricas para pre-llenar cuando se seleccionan subcriterios
  * con métricas asociadas (Caso B)
  */
 interface MetricPreFillData {
@@ -42,7 +42,8 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
   
   const [showAutocomplete, setShowAutocomplete] = useState(!subCriterion);
   const [metricSelectorData, setMetricSelectorData] = useState<SubCriterionSearchResult | null>(null);
-  const [selectedMetricForParent, setSelectedMetricForParent] = useState<MetricPreFillData | null>(null);
+  const [selectedMetricsForParent, setSelectedMetricsForParent] = useState<MetricPreFillData[]>([]);
+  const [metricIdsToCopy, setMetricIdsToCopy] = useState<number[]>([]);
 
   const { isVisible, loading, errors, setLoading, setErrors, handleClose, clearError } = useFormDrawer({
     initialData: subCriterion,
@@ -65,7 +66,7 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
     // Caso B - Escenario 1: Subcriterio con 1 métrica
     if (selected.metrics_count === 1 && selected.metrics.length === 1) {
       const metric = selected.metrics[0];
-      setSelectedMetricForParent({
+      setSelectedMetricsForParent([{
         name: metric.name,
         description: metric.description || '',
         code: metric.code || '',
@@ -75,7 +76,8 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
           symbol: v.symbol,
           description: v.description
         })) || []
-      });
+      }]);
+      setMetricIdsToCopy([metric.metric_id]);
     }
     // Caso B - Escenario 2: Subcriterio con múltiples métricas
     else if (selected.metrics_count > 1) {
@@ -85,10 +87,10 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
   };
 
   /**
-   * Maneja la selección de una métrica del modal (cuando hay múltiples)
+   * Maneja la selección de múltiples métricas del modal (cuando hay múltiples)
    */
-  const handleMetricSelectedFromModal = (metric: MetricSearchResult) => {
-    setSelectedMetricForParent({
+  const handleMetricSelectedFromModal = (metrics: MetricSearchResult[]) => {
+    setSelectedMetricsForParent(metrics.map(metric => ({
       name: metric.name,
       description: metric.description || '',
       code: metric.code || '',
@@ -98,21 +100,22 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
         symbol: v.symbol,
         description: v.description
       })) || []
-    });
+    })));
+    setMetricIdsToCopy(metrics.map(m => m.metric_id));
     setMetricSelectorData(null); // Cerrar modal
   };
 
   /**
-   * Callback que pasa los datos de métrica al padre para pre-llenar
+   * Callback que pasa los datos de métricas al padre para pre-llenar
    * Este es un hook para que el componente padre pueda recibir estos datos
    */
   React.useEffect(() => {
-    if (selectedMetricForParent) {
+    if (selectedMetricsForParent.length > 0) {
       // Aquí puedes emitir un evento o callback personalizado si es necesario
       // Por ahora, los datos están disponibles en el estado
-      console.log('Métrica seleccionada para pre-llenar:', selectedMetricForParent);
+      console.log('Métricas seleccionadas para pre-llenar:', selectedMetricsForParent);
     }
-  }, [selectedMetricForParent]);
+  }, [selectedMetricsForParent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,7 +147,8 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
         const createData: CreateSubCriterionDto = {
           name: formData.name.trim(),
           description: formData.description.trim() || undefined,
-          criterion_id: criterionId
+          criterion_id: criterionId,
+          metric_ids_to_copy: metricIdsToCopy.length > 0 ? metricIdsToCopy : undefined
         };
         savedSubCriterion = await parameterizationApi.createSubCriterion(createData);
       }
@@ -244,11 +248,16 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
             type="textarea"
           />
 
-          {selectedMetricForParent && (
+          {selectedMetricsForParent.length > 0 && (
             <div className={styles.infoBox}>
-              <strong>✅ Métrica seleccionada:</strong> {selectedMetricForParent.name}
+              <strong>✅ {selectedMetricsForParent.length} Métrica{selectedMetricsForParent.length !== 1 ? 's' : ''} seleccionada{selectedMetricsForParent.length !== 1 ? 's' : ''}:</strong>
+              <ul style={{ fontSize: '0.875rem', marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
+                {selectedMetricsForParent.map((metric, index) => (
+                  <li key={index}>{metric.name} {metric.code && `(${metric.code})`}</li>
+                ))}
+              </ul>
               <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                Esta métrica se usará como base para crear una nueva métrica asociada a este subcriterio.
+                Estas métricas se copiarán y asociarán automáticamente al crear el subcriterio.
               </p>
             </div>
           )}

@@ -139,15 +139,17 @@ export function CriteriaNavigation({
   };
 
   // Handler for criterion saved
-  const handleCriterionSaved = (savedCriterion?: Criterion) => {
+  const handleCriterionSaved = async (savedCriterion?: Criterion) => {
     if (savedCriterion) {
       if (editingCriterion) {
         updateCriterion(savedCriterion);
       } else {
         addCriterion(savedCriterion);
       }
+      // Force immediate reload to ensure the UI is synchronized
+      await loadCriteria();
     } else {
-      loadCriteria();
+      await loadCriteria();
     }
     handleCloseForm();
     onRefresh?.();
@@ -155,8 +157,9 @@ export function CriteriaNavigation({
 
   // Handler for sub-criterion saved
   const handleSubCriterionSaved = async (savedSubCriterion?: SubCriterion) => {
-    // Refresh sub-criteria for the parent criterion
+    // Refresh sub-criteria for the parent criterion with forceRefresh=true
     if (parentCriterion && refreshSubCriteriaFnRef.current) {
+      // Force refresh to ensure the new sub-criterion appears immediately
       await refreshSubCriteriaFnRef.current(parentCriterion.id);
     }
     handleCloseSubForm();

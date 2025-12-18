@@ -18,7 +18,7 @@ interface FormData {
   code: string;
   formula: string;
   desired_threshold: number | null;
-  variables: { symbol: string; description: string; tempId?: string }[];
+  variables: { id?: number; symbol: string; description: string; tempId?: string }[];
 }
 
 export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: MetricFormDrawerProps) {
@@ -47,6 +47,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
         formula: metric.formula || '',
         desired_threshold: metric.desired_threshold,
         variables: metric.variables?.map(v => ({
+          id: v.id, // Mantener el ID para actualizar en lugar de recrear
           symbol: v.symbol,
           description: v.description
         })) || []
@@ -131,28 +132,39 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
         
         await parameterizationApi.updateMetric(metric.id, updateData);
 
-        // Update variables
-        if (metric.variables) {
-          // Delete old variables
-          await Promise.all(
-            metric.variables.map(v => 
-              parameterizationApi.deleteVariable(v.id)
-            )
-          );
-        }
+        // Actualizar variables de forma inteligente
+        const existingVariableIds = new Set(metric.variables?.map(v => v.id) || []);
+        const currentVariableIds = new Set(formData.variables.filter(v => v.id).map(v => v.id!));
+        
+        // 1. Eliminar variables que ya no están en el formulario
+        const variablesToDelete = metric.variables?.filter(v => !currentVariableIds.has(v.id)) || [];
+        await Promise.all(
+          variablesToDelete.map(v => parameterizationApi.deleteVariable(v.id))
+        );
 
-        // Create new variables
-        if (formData.variables.length > 0) {
-          await Promise.all(
-            formData.variables.map(v =>
-              parameterizationApi.createVariable({
-                symbol: v.symbol,
-                description: v.description,
-                metric_id: metric.id
-              })
-            )
-          );
-        }
+        // 2. Actualizar variables existentes
+        const variablesToUpdate = formData.variables.filter(v => v.id && existingVariableIds.has(v.id));
+        await Promise.all(
+          variablesToUpdate.map(v =>
+            parameterizationApi.updateVariable(v.id!, {
+              symbol: v.symbol,
+              description: v.description,
+              metric_id: metric.id
+            })
+          )
+        );
+
+        // 3. Crear variables nuevas (las que no tienen ID)
+        const variablesToCreate = formData.variables.filter(v => !v.id);
+        await Promise.all(
+          variablesToCreate.map(v =>
+            parameterizationApi.createVariable({
+              symbol: v.symbol,
+              description: v.description,
+              metric_id: metric.id
+            })
+          )
+        );
       } else {
         // Create new metric
         const createData: CreateMetricDto = {
@@ -412,7 +424,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                 ) : (
                   <div className={styles.variablesList}>
                     {formData.variables.map((variable, index) => (
-                      <div key={variable.tempId || index} className={styles.variableItem}>
+                      <div key={variable.id || variable.tempId || index} className={styles.variableItem}>
                         <div className={styles.variableFields}>
                           <div className={styles.field}>
                             <input
@@ -477,8 +489,8 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                   <div className={styles.variablesPreview}>
                     <h5>Vista Previa de Variables:</h5>
                     <div className={styles.chipsContainer}>
-                      {formData.variables.filter(v => v.symbol && v.description).map((variable) => (
-                        <span key={variable.tempId || variable.symbol} className={styles.variableChip}>
+                      {formData.variables.filter(v => v.symbol && v.description).map((variable, index) => (
+                        <span key={variable.id || variable.tempId || `var-${index}`} className={styles.variableChip}>
                           <span className={styles.chipSymbol}>{variable.symbol}</span>
                           <span className={styles.chipDescription}>{variable.description}</span>
                         </span>

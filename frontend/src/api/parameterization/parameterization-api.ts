@@ -87,6 +87,7 @@ export interface CreateSubCriterionDto {
   name: string;
   description?: string;
   criterion_id: number;
+  metric_ids_to_copy?: number[];
 }
 
 export type UpdateSubCriterionDto = Partial<CreateSubCriterionDto>;

@@ -200,13 +200,70 @@ export class ParameterizationService {
   async createSubCriterion(createSubCriterionDto: CreateSubCriterionDto) {
     return this.dataSource.transaction(async manager => {
       await this.findOneCriterion(createSubCriterionDto.criterion_id);
-      const newSubCriterion = manager.create(SubCriterion, createSubCriterionDto);
-      const result = await manager.save(newSubCriterion);
       
-      this.logger.log(`Created new sub-criterion: ${result.name} (ID: ${result.id}) for criterion ${createSubCriterionDto.criterion_id}`);
+      // Crear el subcriterio
+      const newSubCriterion = manager.create(SubCriterion, {
+        name: createSubCriterionDto.name,
+        description: createSubCriterionDto.description,
+        criterion_id: createSubCriterionDto.criterion_id,
+      });
+      const savedSubCriterion = await manager.save(newSubCriterion);
       
-      return result;
+      // Si se proporcionaron IDs de métricas para copiar, copiarlas con sus variables
+      if (createSubCriterionDto.metric_ids_to_copy && createSubCriterionDto.metric_ids_to_copy.length > 0) {
+        await this.copyMetricsToSubCriterion(
+          manager,
+          createSubCriterionDto.metric_ids_to_copy,
+          savedSubCriterion.id
+        );
+        this.logger.log(`Copied ${createSubCriterionDto.metric_ids_to_copy.length} metrics to sub-criterion ${savedSubCriterion.id}`);
+      }
+      
+      this.logger.log(`Created new sub-criterion: ${savedSubCriterion.name} (ID: ${savedSubCriterion.id}) for criterion ${createSubCriterionDto.criterion_id}`);
+      
+      return savedSubCriterion;
     });
+  }
+
+  /**
+   * Copia múltiples métricas existentes a un subcriterio
+   */
+  private async copyMetricsToSubCriterion(
+    manager: any,
+    metricIds: number[],
+    newSubCriterionId: number
+  ): Promise<void> {
+    // Obtener las métricas originales con sus variables
+    const originalMetrics = await manager.find(Metric, {
+      where: metricIds.map(id => ({ id })),
+      relations: ['variables']
+    });
+
+    // Copiar cada métrica y sus variables
+    for (const originalMetric of originalMetrics) {
+      // Crear la nueva métrica
+      const newMetric = manager.create(Metric, {
+        name: originalMetric.name,
+        description: originalMetric.description,
+        code: originalMetric.code,
+        formula: originalMetric.formula,
+        desired_threshold: originalMetric.desired_threshold,
+        sub_criterion_id: newSubCriterionId,
+      });
+      const savedMetric = await manager.save(newMetric);
+
+      // Copiar las variables de la métrica si existen
+      if (originalMetric.variables && originalMetric.variables.length > 0) {
+        const newVariables = originalMetric.variables.map(variable =>
+          manager.create(FormulaVariable, {
+            symbol: variable.symbol,
+            description: variable.description,
+            metric_id: savedMetric.id,
+          })
+        );
+        await manager.save(newVariables);
+      }
+    }
   }
 
   async updateSubCriterion(id: number, updateSubCriterionDto: UpdateSubCriterionDto) {

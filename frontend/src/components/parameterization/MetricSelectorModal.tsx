@@ -4,12 +4,12 @@ import styles from './MetricSelectorModal.module.css';
 
 interface MetricSelectorModalProps {
   subCriterion: SubCriterionSearchResult;
-  onSelect: (metric: MetricSearchResult) => void;
+  onSelect: (metrics: MetricSearchResult[]) => void;
   onCancel: () => void;
 }
 
 /**
- * Modal para seleccionar una métrica cuando un subcriterio tiene múltiples métricas asociadas
+ * Modal para seleccionar múltiples métricas cuando un subcriterio tiene métricas asociadas
  * Este es el "Caso B - Escenario 2" de los requerimientos
  */
 export function MetricSelectorModal({
@@ -17,17 +17,25 @@ export function MetricSelectorModal({
   onSelect,
   onCancel,
 }: MetricSelectorModalProps) {
-  const [selectedMetricId, setSelectedMetricId] = useState<number | null>(null);
+  const [selectedMetricIds, setSelectedMetricIds] = useState<number[]>([]);
+
+  const handleToggleMetric = (metricId: number) => {
+    setSelectedMetricIds(prev => 
+      prev.includes(metricId) 
+        ? prev.filter(id => id !== metricId)
+        : [...prev, metricId]
+    );
+  };
 
   const handleConfirm = () => {
-    if (selectedMetricId === null) return;
+    if (selectedMetricIds.length === 0) return;
     
-    const selectedMetric = subCriterion.metrics.find(
-      (m) => m.metric_id === selectedMetricId
+    const selectedMetrics = subCriterion.metrics.filter(
+      (m) => selectedMetricIds.includes(m.metric_id)
     );
     
-    if (selectedMetric) {
-      onSelect(selectedMetric);
+    if (selectedMetrics.length > 0) {
+      onSelect(selectedMetrics);
     }
   };
 
@@ -35,10 +43,10 @@ export function MetricSelectorModal({
     <div className={styles.modalOverlay} onClick={onCancel}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>Seleccionar Métrica</h2>
+          <h2 className={styles.modalTitle}>Seleccionar Métricas</h2>
           <p className={styles.modalSubtitle}>
             El subcriterio seleccionado tiene {subCriterion.metrics_count} métricas
-            asociadas. Por favor, selecciona cuál deseas utilizar:
+            asociadas. Puedes seleccionar una o más métricas para copiar:
           </p>
         </div>
 
@@ -54,18 +62,18 @@ export function MetricSelectorModal({
             <div
               key={metric.metric_id}
               className={`${styles.metricCard} ${
-                selectedMetricId === metric.metric_id ? styles.selected : ''
+                selectedMetricIds.includes(metric.metric_id) ? styles.selected : ''
               }`}
-              onClick={() => setSelectedMetricId(metric.metric_id)}
+              onClick={() => handleToggleMetric(metric.metric_id)}
             >
               <div className={styles.metricHeader}>
                 <input
-                  type="radio"
+                  type="checkbox"
                   name="metric"
                   value={metric.metric_id}
-                  checked={selectedMetricId === metric.metric_id}
-                  onChange={() => setSelectedMetricId(metric.metric_id)}
-                  className={styles.radioButton}
+                  checked={selectedMetricIds.includes(metric.metric_id)}
+                  onChange={() => handleToggleMetric(metric.metric_id)}
+                  className={styles.checkbox}
                 />
                 <div className={styles.metricInfo}>
                   <div className={styles.metricName}>
@@ -123,10 +131,10 @@ export function MetricSelectorModal({
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={selectedMetricId === null}
+            disabled={selectedMetricIds.length === 0}
             className={`${styles.button} ${styles.confirmButton}`}
           >
-            Usar Métrica Seleccionada
+            Usar {selectedMetricIds.length > 0 ? `${selectedMetricIds.length} ` : ''}Métrica{selectedMetricIds.length !== 1 ? 's' : ''} Seleccionada{selectedMetricIds.length !== 1 ? 's' : ''}
           </button>
         </div>
       </div>

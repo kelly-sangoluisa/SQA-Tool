@@ -146,11 +146,6 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
   }, [parentId]);
   
   const loadSubCriteriaForCriterion = useCallback(async (criterionId: number, forceRefresh: boolean = false) => {
-    // Si ya tenemos datos en caché y no es un force refresh, no hacer nada
-    if (subCriteria[criterionId] && !forceRefresh) {
-      return;
-    }
-    
     setLoadingSubCriteria(prev => {
       // Solo proceder si no está cargando ya o es un force refresh
       if (prev.has(criterionId) && !forceRefresh) return prev;
@@ -172,7 +167,7 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
         return newSet;
       });
     }
-  }, [loadSubCriteria, subCriteria]);
+  }, [loadSubCriteria]);
   
   // Expose refresh function to parent
   useEffect(() => {
