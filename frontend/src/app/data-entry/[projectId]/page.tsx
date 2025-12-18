@@ -672,12 +672,14 @@ function DataEntryContent() {
       setFinalizedEvaluations(prev => new Set([...prev, currentEvaluationForModal.id]));
 
       if (isFinalizingProject) {
+        // Finalizar proyecto inmediatamente sin cerrar el modal
         await finalizeProject(projectId);
         
         localStorage.removeItem(`data-entry-project-${projectId}`);
         
         // Navegar a resultados del proyecto
         router.push(`/results/project/${projectId}/report`);
+        return; // Salir inmediatamente para evitar más procesamiento
       } else {
         // Avanzar a la siguiente evaluación si existe
         const currentEvalIndex = evaluations.findIndex(e => e.id === currentEvaluationForModal.id);
@@ -697,9 +699,10 @@ function DataEntryContent() {
     } catch (error) {
       console.error('❌ Error durante la finalización:', error);
       alert('Error al finalizar. Por favor intenta de nuevo.');
-    } finally {
-      setModalLoading(false);
+      setModalLoading(false); // Solo establecer loading en caso de error
     }
+    // NO establecer modalLoading a false en el finally cuando isFinalizingProject
+    // porque la navegación debe ocurrir primero
   };
 
   // Estados de carga y error
