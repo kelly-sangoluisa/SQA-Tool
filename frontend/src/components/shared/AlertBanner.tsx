@@ -13,13 +13,7 @@ interface AlertBannerProps {
   visible?: boolean;
 }
 
-export default function AlertBanner({
-  type,
-  title,
-  message,
-  onClose,
-  visible = true,
-}: AlertBannerProps) {
+export default function AlertBanner({type,title,message,onClose,visible = true,}: Readonly<AlertBannerProps>) {
   if (!visible) return null;
 
   const getIcon = (type: AlertType): string => {

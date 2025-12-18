@@ -1,16 +1,10 @@
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { sortVariablesByFormulaOrder } from '@/utils/formulaUtils';
+import type { Variable } from '@/types/data-entry/data-entry.types';
 import styles from './MetricCard.module.css';
 
-interface Variable {
-  id?: number;
-  metric_id?: number;
-  symbol: string;
-  description: string;
-  state?: string;
-  [key: string]: unknown;
-}
+export type PrimaryButtonAction = 'next' | 'finish-evaluation' | 'finish-project' | 'disabled';
 
 interface MetricCardProps {
   number: number;
@@ -25,9 +19,7 @@ interface MetricCardProps {
   onFinishEvaluation?: () => void;
   onFinishProject?: () => void;
   isFirstMetric?: boolean;
-  isLastMetric?: boolean;
-  isLastEvaluation?: boolean;
-  allVariablesFilled?: boolean;
+  primaryAction: PrimaryButtonAction;
 }
 
 export function MetricCard({ 
@@ -43,9 +35,7 @@ export function MetricCard({
   onFinishEvaluation,
   onFinishProject,
   isFirstMetric = false,
-  isLastMetric = false,
-  isLastEvaluation = false,
-  allVariablesFilled = false
+  primaryAction
 }: Readonly<MetricCardProps>) {
 
   // Ordenar variables según aparición en la fórmula
@@ -55,28 +45,67 @@ export function MetricCard({
     onValueChange?.(variableSymbol, value);
   };
 
-  // Determinar qué acción tomar con el botón principal
+  // Validar que solo se ingresen números enteros positivos
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Permitir: backspace, delete, tab, escape, enter, flechas
+    if (
+      ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)
+    ) {
+      return;
+    }
+    
+    // Permitir Ctrl/Cmd+A, Ctrl/Cmd+C, Ctrl/Cmd+V, Ctrl/Cmd+X
+    if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) {
+      return;
+    }
+    
+    // Bloquear punto y coma (no permitir decimales)
+    if (e.key === '.' || e.key === ',') {
+      e.preventDefault();
+      return;
+    }
+    
+    // Bloquear si no es un número
+    if (!/^\d$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text');
+    // Permitir solo números enteros (sin punto ni coma)
+    if (!/^\d+$/.test(text)) {
+      e.preventDefault();
+    }
+  };
+
+  // Ejecutar la acción del botón principal
   const handlePrimaryAction = () => {
-    if (isLastMetric && isLastEvaluation && allVariablesFilled) {
-      // Última métrica de la última evaluación → Terminar Proyecto
-      onFinishProject?.();
-    } else if (isLastMetric && allVariablesFilled) {
-      // Última métrica de una evaluación → Terminar Evaluación
-      onFinishEvaluation?.();
-    } else {
-      // Métrica normal → Siguiente
-      onNext?.();
+    switch (primaryAction) {
+      case 'finish-project':
+        onFinishProject?.();
+        break;
+      case 'finish-evaluation':
+        onFinishEvaluation?.();
+        break;
+      case 'next':
+        onNext?.();
+        break;
+      // 'disabled' no hace nada
     }
   };
 
   // Determinar el texto del botón
-  const getPrimaryButtonText = () => {
-    if (isLastMetric && isLastEvaluation && allVariablesFilled) {
-      return 'TERMINAR PROYECTO';
-    } else if (isLastMetric && allVariablesFilled) {
-      return 'TERMINAR EVALUACIÓN';
-    } else {
-      return 'SIGUIENTE';
+  const getPrimaryButtonText = (): string => {
+    switch (primaryAction) {
+      case 'finish-project':
+        return 'TERMINAR PROYECTO';
+      case 'finish-evaluation':
+        return 'TERMINAR EVALUACIÓN';
+      case 'next':
+        return 'SIGUIENTE';
+      case 'disabled':
+        return 'SIGUIENTE';
     }
   };
 
@@ -123,9 +152,13 @@ export function MetricCard({
                   </label>
                   <Input 
                     type="number" 
-                    placeholder="0"
+                    placeholder="Ej: 12"
+                    min="0"
+                    step="any"
                     value={values[variable.symbol] || ''}
                     onChange={(e) => handleInputChange(variable.symbol, e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onPaste={handlePaste}
                     className={styles.valueInput}
                   />
                 </div>
@@ -149,7 +182,7 @@ export function MetricCard({
           variant="primary" 
           size="lg"
           onClick={handlePrimaryAction}
-          disabled={!allVariablesFilled}
+          disabled={primaryAction === 'disabled'}
         >
           {getPrimaryButtonText()}
         </Button>

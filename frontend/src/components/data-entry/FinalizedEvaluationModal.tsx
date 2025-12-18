@@ -1,16 +1,12 @@
 'use client';
 
+import type { FinalizedEvaluationModalProps } from '@/types/data-entry/data-entry-modal.types';
 import styles from './FinalizedEvaluationModal.module.css';
-
-interface FinalizedEvaluationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
 
 export function FinalizedEvaluationModal({
   isOpen,
   onClose
-}: FinalizedEvaluationModalProps) {
+}: Readonly<FinalizedEvaluationModalProps>) {
   if (!isOpen) return null;
 
   return (
@@ -24,7 +20,7 @@ export function FinalizedEvaluationModal({
         </div>
 
         {/* Content */}
-        <h2 className={styles.title}>Evaluación Finalizada</h2>
+        <h2 className={styles.title} id="finalized-modal-title">Evaluación Finalizada</h2>
         <p className={styles.message}>
           Esta evaluación ya ha sido completada y no puede ser editada.
         </p>

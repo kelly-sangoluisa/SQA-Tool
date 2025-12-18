@@ -955,7 +955,7 @@
 .nav-button.next:disabled {
   background: #9ca3af;
   border-color: #9ca3af;
-  color: #d1d5db;
+  color: #e5e7eb;
 }
 
 .nav-button.next:hover:not(:disabled) {

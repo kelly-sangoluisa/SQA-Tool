@@ -1,102 +1,13 @@
 'use client';
 
-import { MultiLevelHierarchy, BaseGroup, BaseLevel2Item, BaseLevel3Item, BaseLevel4Item } from '../shared/hierarchy/MultiLevelHierarchy';
-
-// Interfaces específicas que extienden las interfaces base
-interface EvaluationGroup extends BaseGroup {
-  id: number;
-  name: string;
-  version: string;
-  standard_id: number;
-  project_id: number;
-  status: 'in_progress' | 'completed' | 'cancelled';
-}
-
-interface EvaluationCriterion extends BaseLevel2Item {
-  id: number;
-  name: string;
-  description?: string;
-  importance_level: string;
-  importance_percentage: number;
-}
-
-interface EvaluationSubcriterion extends BaseLevel3Item {
-  id: number;
-  name: string;
-  description?: string;
-  parent_id: number;
-  state: string;
-}
-
-interface EvaluationMetric extends BaseLevel4Item {
-  id: number;
-  name: string;
-  description?: string;
-  parent_id: number;
-  formula: string;
-  variables?: Array<{
-    id: number;
-    metric_id: number;
-    symbol: string;
-    description: string;
-    state: string;
-  }>;
-}
-
-// Interfaces completas del sistema
-interface Variable {
-  id: number;
-  metric_id: number;
-  symbol: string;
-  description: string;
-  state: string;
-}
-
-interface Metric {
-  id: number;
-  name: string;
-  description: string;
-  formula: string;
-  variables?: Variable[];
-}
-
-/* Unused interface removed - Subcriterion */
-
-interface Evaluation {
-  id: number;
-  project_id: number;
-  standard_id: number;
-  creation_date: string;
-  status: 'in_progress' | 'completed' | 'cancelled';
-  standard: {
-    id: number;
-    name: string;
-    version: string;
-  };
-  evaluation_criteria: Array<{
-    id: number;
-    evaluation_id: number;
-    criterion_id: number;
-    importance_level: string;
-    importance_percentage: number;
-    criterion: {
-      id: number;
-      name: string;
-      description?: string;
-      state?: 'active' | 'inactive';
-      subcriteria?: Array<{
-        id: number;
-        name: string;
-        description?: string;
-        criterion_id: number;
-        state: string;
-        metrics?: Metric[];
-        created_at: string;
-        updated_at: string;
-      }>;
-    };
-  }>;
-}
+import { MultiLevelHierarchy } from '../shared/hierarchy/MultiLevelHierarchy';
+import type { Metric, Evaluation } from '@/types/data-entry/data-entry.types';
+import type {
+  EvaluationGroup,
+  EvaluationCriterion,
+  EvaluationSubcriterion,
+  EvaluationMetric
+} from '@/types/data-entry/data-entry-hierarchy.types';
 
 interface DataEntryHierarchyProps {
   evaluations: Evaluation[];
@@ -117,7 +28,7 @@ export function DataEntryHierarchy({
   variableValues,
   onMetricSelect,
   finalizedEvaluations = new Set()
-}: DataEntryHierarchyProps) {
+}: Readonly<DataEntryHierarchyProps>) {
   
   // Convertir evaluations a grupos
   const groups: EvaluationGroup[] = evaluations.map(evaluation => ({

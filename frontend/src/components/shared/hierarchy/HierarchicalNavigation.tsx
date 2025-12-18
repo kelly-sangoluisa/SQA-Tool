@@ -4,6 +4,418 @@ import { HierarchyLoadingState } from '../HierarchyLoadingState';
 import styles from './HierarchicalNavigation.module.css';
 
 /**
+ * Props for EmptySubCriteria component
+ */
+interface EmptySubCriteriaProps {
+  message: string;
+  allowEdit: boolean;
+  onCreateClick: (e: React.MouseEvent) => void;
+}
+
+/**
+ * Component for empty subcriteria state
+ */
+function EmptySubCriteria({ message, allowEdit, onCreateClick }: EmptySubCriteriaProps) {
+  return (
+    <div className={styles.emptySubCriteria}>
+      <p>{message}</p>
+      {allowEdit && (
+        <button
+          type="button"
+          onClick={onCreateClick}
+          className={styles.createSubButton}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M8 1V15M1 8H15"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+          Agregar Subcriterio
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Props for SubCriterionItem component
+ */
+interface SubCriterionItemProps<C extends BaseCriterion, S extends BaseSubCriterion> {
+  subCriterion: S;
+  criterion: C;
+  allowEdit: boolean;
+  showStateToggles: boolean;
+  toggleLoading: Set<string>;
+  onSubCriterionClick: (criterion: C, subCriterion: S) => void;
+  onEditClick: (criterion: C, subCriterion: S, e: React.MouseEvent) => void;
+  onToggleState: (subCriterion: S, e: React.MouseEvent) => void;
+}
+
+/**
+ * Props for CriterionHeader component
+ */
+interface CriterionHeaderProps<C extends BaseCriterion> {
+  criterion: C;
+  isExpanded: boolean;
+  allowEdit: boolean;
+  showStateToggles: boolean;
+  isToggling: boolean;
+  onToggleExpansion: (criterion: C) => void;
+  onCriterionSelect?: (criterion: C) => void;
+  onEditClick: (criterion: C, e: React.MouseEvent) => void;
+  onToggleState: (criterion: C, e: React.MouseEvent) => void;
+}
+
+/**
+ * Component for criterion header
+ */
+function CriterionHeader<C extends BaseCriterion>({
+  criterion,
+  isExpanded,
+  allowEdit,
+  showStateToggles,
+  isToggling,
+  onToggleExpansion,
+  onCriterionSelect,
+  onEditClick,
+  onToggleState
+}: CriterionHeaderProps<C>) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onCriterionSelect?.(criterion);
+    }
+  };
+
+  return (
+    <div className={`${styles.criterionHeader} ${styles[criterion.state]}`}>
+      <button
+        className={styles.expandButton}
+        onClick={() => onToggleExpansion(criterion)}
+        title={isExpanded ? 'Contraer' : 'Expandir'}
+      >
+        <svg 
+          width="16" 
+          height="16" 
+          viewBox="0 0 16 16" 
+          style={{ 
+            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease'
+          }}
+        >
+          <path
+            d="M6 12L10 8L6 4"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </svg>
+      </button>
+
+      <div
+        className={styles.criterionClickArea}
+        onClick={() => onCriterionSelect?.(criterion)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+      >
+        <span className={styles.criterionName}>{criterion.name}</span>
+      </div>
+
+      {allowEdit && (
+        <button
+          type="button"
+          onClick={(e) => onEditClick(criterion, e)}
+          className={styles.editButton}
+          title="Editar criterio"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="m18.5 2.5 A2.121 2.121 0 0 1 21 4.5L20 5.5l-3 3L12 13.5 9 12.5 10.5 9.5 18.5 2.5z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      )}
+
+      {showStateToggles && (
+        <Switch
+          checked={criterion.state === 'active'}
+          onChange={() => {
+            const e = { stopPropagation: () => {}, preventDefault: () => {} } as React.MouseEvent;
+            onToggleState(criterion, e);
+          }}
+          disabled={isToggling}
+          title={`${criterion.state === 'active' ? 'Desactivar' : 'Activar'} criterio`}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Props for SubCriteriaContainer component  
+ */
+interface SubCriteriaContainerProps<C extends BaseCriterion, S extends BaseSubCriterion> {
+  criterion: C;
+  isLoadingSubCriteria: boolean;
+  subCriteria: S[];
+  allowEdit: boolean;
+  showStateToggles: boolean;
+  toggleLoading: Set<string>;
+  emptySubCriteriaMessage: string;
+  subCriteriaTitle: string;
+  onSubCriterionClick: (criterion: C, subCriterion: S) => void;
+  onEditClick: (criterion: C, subCriterion: S, e: React.MouseEvent) => void;
+  onToggleState: (subCriterion: S, e: React.MouseEvent) => void;
+  onCreateClick: (criterion: C, e: React.MouseEvent) => void;
+}
+
+/**
+ * Component for subcriteria container
+ */
+function SubCriteriaContainer<C extends BaseCriterion, S extends BaseSubCriterion>({
+  criterion,
+  isLoadingSubCriteria,
+  subCriteria,
+  allowEdit,
+  showStateToggles,
+  toggleLoading,
+  emptySubCriteriaMessage,
+  subCriteriaTitle,
+  onSubCriterionClick,
+  onEditClick,
+  onToggleState,
+  onCreateClick
+}: SubCriteriaContainerProps<C, S>) {
+  if (isLoadingSubCriteria) {
+    return (
+      <div className={styles.subCriteriaContainer}>
+        <HierarchyLoadingState 
+          message="Cargando subcriterios" 
+          size="small" 
+        />
+      </div>
+    );
+  }
+
+  const content = subCriteria.length === 0 
+    ? (
+        <EmptySubCriteria
+          message={emptySubCriteriaMessage}
+          allowEdit={allowEdit}
+          onCreateClick={(e) => onCreateClick(criterion, e)}
+        />
+      )
+    : (
+        <SubCriteriaList
+          criterion={criterion}
+          subCriteria={subCriteria}
+          allowEdit={allowEdit}
+          showStateToggles={showStateToggles}
+          toggleLoading={toggleLoading}
+          subCriteriaTitle={subCriteriaTitle}
+          onSubCriterionClick={onSubCriterionClick}
+          onEditClick={onEditClick}
+          onToggleState={onToggleState}
+          onCreateClick={onCreateClick}
+        />
+      );
+
+  return (
+    <div className={styles.subCriteriaContainer}>
+      {content}
+    </div>
+  );
+}
+
+/**
+ * Props for SubCriteriaList component
+ */
+interface SubCriteriaListProps<C extends BaseCriterion, S extends BaseSubCriterion> {
+  criterion: C;
+  subCriteria: S[];
+  allowEdit: boolean;
+  showStateToggles: boolean;
+  toggleLoading: Set<string>;
+  subCriteriaTitle: string;
+  onSubCriterionClick: (criterion: C, subCriterion: S) => void;
+  onEditClick: (criterion: C, subCriterion: S, e: React.MouseEvent) => void;
+  onToggleState: (subCriterion: S, e: React.MouseEvent) => void;
+  onCreateClick: (criterion: C, e: React.MouseEvent) => void;
+}
+
+/**
+ * Component for subcriteria list with header
+ */
+function SubCriteriaList<C extends BaseCriterion, S extends BaseSubCriterion>({
+  criterion,
+  subCriteria,
+  allowEdit,
+  showStateToggles,
+  toggleLoading,
+  subCriteriaTitle,
+  onSubCriterionClick,
+  onEditClick,
+  onToggleState,
+  onCreateClick
+}: SubCriteriaListProps<C, S>) {
+  return (
+    <div className={styles.subCriteriaListContainer}>
+      <div className={styles.subCriteriaHeader}>
+        <span className={styles.subCriteriaTitle}>
+          {subCriteriaTitle} ({subCriteria.length})
+        </span>
+        {allowEdit && (
+          <button
+            type="button"
+            onClick={(e) => onCreateClick(criterion, e)}
+            className={styles.createSubButtonSmall}
+            title="Agregar subcriterio"
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M8 1V15M1 8H15"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        )}
+      </div>
+      <div className={styles.subCriteriaList}>
+        {subCriteria.map((subCriterion) => (
+          <SubCriterionItem
+            key={subCriterion.id}
+            subCriterion={subCriterion}
+            criterion={criterion}
+            allowEdit={allowEdit}
+            showStateToggles={showStateToggles}
+            toggleLoading={toggleLoading}
+            onSubCriterionClick={onSubCriterionClick}
+            onEditClick={onEditClick}
+            onToggleState={onToggleState}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Component for individual subcriterion item
+ */
+function SubCriterionItem<C extends BaseCriterion, S extends BaseSubCriterion>({
+  subCriterion,
+  criterion,
+  allowEdit,
+  showStateToggles,
+  toggleLoading,
+  onSubCriterionClick,
+  onEditClick,
+  onToggleState
+}: SubCriterionItemProps<C, S>) {
+  const subToggleKey = `subcriterion-${subCriterion.id}`;
+  const isSubToggling = toggleLoading.has(subToggleKey);
+  const isDisabled = isSubToggling || (criterion.state === 'inactive' && subCriterion.state === 'inactive');
+  
+  const getToggleTitle = () => {
+    if (criterion.state === 'inactive' && subCriterion.state === 'inactive') {
+      return 'No se puede activar cuando el criterio padre está inactivo';
+    }
+    return subCriterion.state === 'active' ? 'Desactivar subcriterio' : 'Activar subcriterio';
+  };
+  
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSubCriterionClick(criterion, subCriterion);
+  };
+  
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      onSubCriterionClick(criterion, subCriterion);
+    }
+  };
+
+  return (
+    <div
+      key={subCriterion.id}
+      className={`${styles.subCriterionItem} ${styles[subCriterion.state]}`}
+    >
+      <div className={styles.subCriterionIcon}>
+        <div className={styles.subCriterionDot}></div>
+      </div>
+
+      <div
+        className={styles.subCriterionClickArea}
+        onClick={handleClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+      >
+        <span className={styles.subCriterionName}>{subCriterion.name}</span>
+      </div>
+
+      {allowEdit && (
+        <button
+          type="button"
+          onClick={(e) => onEditClick(criterion, subCriterion, e)}
+          className={styles.editSubButton}
+          title="Editar subcriterio"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="m18.5 2.5 A2.121 2.121 0 0 1 21 4.5L20 5.5l-3 3L12 13.5 9 12.5 10.5 9.5 18.5 2.5z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      )}
+
+      {showStateToggles && (
+        <Switch
+          checked={subCriterion.state === 'active'}
+          onChange={() => {
+            const e = { stopPropagation: () => {}, preventDefault: () => {} } as React.MouseEvent;
+            onToggleState(subCriterion, e);
+          }}
+          disabled={isDisabled}
+          title={getToggleTitle()}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
  * Base interface for criterion-like items
  */
 export interface BaseCriterion {
@@ -387,234 +799,33 @@ export function HierarchicalNavigation<C extends BaseCriterion, S extends BaseSu
                     }
                   }}
                 >
-                  {/* Criterion Header */}
-                  <div className={`${styles.criterionHeader} ${styles[criterion.state]}`}>
-                    {/* Expand/Collapse Icon */}
-                    <button
-                      className={styles.expandButton}
-                      onClick={() => toggleCriterionExpansion(criterion)}
-                      title={isExpanded ? 'Contraer' : 'Expandir'}
-                    >
-                      <svg 
-                        width="16" 
-                        height="16" 
-                        viewBox="0 0 16 16" 
-                        style={{ 
-                          transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                          transition: 'transform 0.2s ease'
-                        }}
-                      >
-                        <path
-                          d="M6 12L10 8L6 4"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          fill="none"
-                        />
-                      </svg>
-                    </button>
+                  <CriterionHeader
+                    criterion={criterion}
+                    isExpanded={isExpanded}
+                    allowEdit={allowEdit}
+                    showStateToggles={showStateToggles}
+                    isToggling={isToggling}
+                    onToggleExpansion={toggleCriterionExpansion}
+                    onCriterionSelect={onCriterionSelect}
+                    onEditClick={handleEditCriterion}
+                    onToggleState={toggleCriterionState}
+                  />
 
-                    {/* Criterion Name - Clickable */}
-                    <div
-                      className={styles.criterionClickArea}
-                      onClick={() => onCriterionSelect?.(criterion)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          onCriterionSelect?.(criterion);
-                        }
-                      }}
-                    >
-                      <span className={styles.criterionName}>{criterion.name}</span>
-                    </div>
-
-                    {/* Edit Button */}
-                    {allowEdit && (
-                      <button
-                        type="button"
-                        onClick={(e) => handleEditCriterion(criterion, e)}
-                        className={styles.editButton}
-                        title="Editar criterio"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                          <path
-                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="m18.5 2.5 A2.121 2.121 0 0 1 21 4.5L20 5.5l-3 3L12 13.5 9 12.5 10.5 9.5 18.5 2.5z"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                    )}
-
-                    {/* Toggle Switch */}
-                    {showStateToggles && (
-                      <Switch
-                        checked={criterion.state === 'active'}
-                        onChange={(checked) => {
-                          const e = { stopPropagation: () => {}, preventDefault: () => {} } as React.MouseEvent;
-                          toggleCriterionState(criterion, e);
-                        }}
-                        disabled={isToggling}
-                        title={`${criterion.state === 'active' ? 'Desactivar' : 'Activar'} criterio`}
-                      />
-                    )}
-                  </div>
-
-                  {/* Subcriteria */}
                   {isExpanded && (
-                    <div className={styles.subCriteriaContainer}>
-                      {isLoadingSubCriteria ? (
-                        <HierarchyLoadingState 
-                          message="Cargando subcriterios" 
-                          size="small" 
-                        />
-                      ) : (
-                        criterionSubCriteria.length === 0 ? (
-                          <div className={styles.emptySubCriteria}>
-                            <p>{emptySubCriteriaMessage}</p>
-                            {allowEdit && (
-                              <button
-                                type="button"
-                                onClick={(e) => handleCreateSubCriterion(criterion, e)}
-                                className={styles.createSubButton}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                                  <path
-                                    d="M8 1V15M1 8H15"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                  />
-                                </svg>
-                                Agregar Subcriterio
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <div className={styles.subCriteriaListContainer}>
-                            <div className={styles.subCriteriaHeader}>
-                              <span className={styles.subCriteriaTitle}>
-                                {subCriteriaTitle} ({criterionSubCriteria.length})
-                              </span>
-                              {allowEdit && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => handleCreateSubCriterion(criterion, e)}
-                                  className={styles.createSubButtonSmall}
-                                  title="Agregar subcriterio"
-                                >
-                                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                                    <path
-                                      d="M8 1V15M1 8H15"
-                                      stroke="currentColor"
-                                      strokeWidth="2"
-                                      strokeLinecap="round"
-                                    />
-                                  </svg>
-                                </button>
-                              )}
-                            </div>
-                            <div className={styles.subCriteriaList}>
-                              {criterionSubCriteria.map((subCriterion) => {
-                                const subToggleKey = `subcriterion-${subCriterion.id}`;
-                                const isSubToggling = toggleLoading.has(subToggleKey);
-
-                                return (
-                                  <div
-                                    key={subCriterion.id}
-                                    className={`${styles.subCriterionItem} ${styles[subCriterion.state]}`}
-                                  >
-                                    {/* Subcriteria icon placeholder */}
-                                    <div className={styles.subCriterionIcon}>
-                                      <div className={styles.subCriterionDot}></div>
-                                    </div>
-
-                                    {/* Subcriteria name - clickable */}
-                                    <div
-                                      className={styles.subCriterionClickArea}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleSubCriterionClick(criterion, subCriterion);
-                                      }}
-                                      role="button"
-                                      tabIndex={0}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          handleSubCriterionClick(criterion, subCriterion);
-                                        }
-                                      }}
-                                    >
-                                      <span className={styles.subCriterionName}>{subCriterion.name}</span>
-                                    </div>
-
-                                    {/* Edit SubCriterion Button */}
-                                    {allowEdit && (
-                                      <button
-                                        type="button"
-                                        onClick={(e) => handleEditSubCriterion(criterion, subCriterion, e)}
-                                        className={styles.editSubButton}
-                                        title="Editar subcriterio"
-                                      >
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                          <path
-                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                          />
-                                          <path
-                                            d="m18.5 2.5 A2.121 2.121 0 0 1 21 4.5L20 5.5l-3 3L12 13.5 9 12.5 10.5 9.5 18.5 2.5z"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                          />
-                                        </svg>
-                                      </button>
-                                    )}
-
-                                    {/* Subcriteria toggle switch */}
-                                    {showStateToggles && (
-                                      <Switch
-                                        checked={subCriterion.state === 'active'}
-                                        onChange={(checked) => {
-                                          const e = { stopPropagation: () => {}, preventDefault: () => {} } as React.MouseEvent;
-                                          toggleSubCriterionState(subCriterion, e);
-                                        }}
-                                        disabled={isSubToggling || (criterion.state === 'inactive' && subCriterion.state === 'inactive')}
-                                        title={
-                                          (() => {
-                                            if (criterion.state === 'inactive' && subCriterion.state === 'inactive') {
-                                              return 'No se puede activar cuando el criterio padre está inactivo';
-                                            }
-                                            return subCriterion.state === 'active' ? 'Desactivar subcriterio' : 'Activar subcriterio';
-                                          })()
-                                        }
-                                      />
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </div>
+                    <SubCriteriaContainer
+                      criterion={criterion}
+                      isLoadingSubCriteria={isLoadingSubCriteria}
+                      subCriteria={criterionSubCriteria}
+                      allowEdit={allowEdit}
+                      showStateToggles={showStateToggles}
+                      toggleLoading={toggleLoading}
+                      emptySubCriteriaMessage={emptySubCriteriaMessage}
+                      subCriteriaTitle={subCriteriaTitle}
+                      onSubCriterionClick={handleSubCriterionClick}
+                      onEditClick={handleEditSubCriterion}
+                      onToggleState={toggleSubCriterionState}
+                      onCreateClick={handleCreateSubCriterion}
+                    />
                   )}
                 </div>
               );
