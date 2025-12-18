@@ -45,6 +45,40 @@ export function MetricCard({
     onValueChange?.(variableSymbol, value);
   };
 
+  // Validar que solo se ingresen números enteros positivos
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Permitir: backspace, delete, tab, escape, enter, flechas
+    if (
+      ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)
+    ) {
+      return;
+    }
+    
+    // Permitir Ctrl/Cmd+A, Ctrl/Cmd+C, Ctrl/Cmd+V, Ctrl/Cmd+X
+    if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) {
+      return;
+    }
+    
+    // Bloquear punto y coma (no permitir decimales)
+    if (e.key === '.' || e.key === ',') {
+      e.preventDefault();
+      return;
+    }
+    
+    // Bloquear si no es un número
+    if (!/^\d$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text');
+    // Permitir solo números enteros (sin punto ni coma)
+    if (!/^\d+$/.test(text)) {
+      e.preventDefault();
+    }
+  };
+
   // Ejecutar la acción del botón principal
   const handlePrimaryAction = () => {
     switch (primaryAction) {
@@ -118,9 +152,13 @@ export function MetricCard({
                   </label>
                   <Input 
                     type="number" 
-                    placeholder="0"
+                    placeholder="Ej: 12"
+                    min="0"
+                    step="any"
                     value={values[variable.symbol] || ''}
                     onChange={(e) => handleInputChange(variable.symbol, e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onPaste={handlePaste}
                     className={styles.valueInput}
                   />
                 </div>

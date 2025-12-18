@@ -11,6 +11,9 @@ import { EvaluationCompleteModal } from '@/components/data-entry/EvaluationCompl
 import { FinalizedEvaluationModal } from '@/components/data-entry/FinalizedEvaluationModal';
 import { NextEvaluationModal } from '@/components/data-entry/NextEvaluationModal';
 import AlertBanner from '@/components/shared/AlertBanner';
+import { Toast, type ToastType } from '@/components/shared/Toast';
+import { SaveIndicator } from '@/components/shared/SaveIndicator';
+import { ErrorModal } from '@/components/shared/ErrorModal';
 import { submitEvaluationData, finalizeEvaluation, finalizeProject } from '@/api/entry-data/entry-data-api';
 import type {Metric,SubcriterionInput,EvaluationCriterionAPI,EvaluationDataAPI,  Evaluation,Project} from '@/types/data-entry/data-entry.types';
 
@@ -385,6 +388,20 @@ function DataEntryContent() {
   const [showNextEvaluationModal, setShowNextEvaluationModal] = useState(false);
   const [nextEvaluationInfo, setNextEvaluationInfo] = useState<{ current: string; next: string } | null>(null);
 
+  // Estados para feedback de guardado
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [toast, setToast] = useState<{ message: string; type: ToastType; isVisible: boolean }>(
+    { message: '', type: 'info', isVisible: false }
+  );
+
+  // Estados para modal de error
+  const [errorModal, setErrorModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    details?: string;
+  }>({ isOpen: false, title: '', message: '', details: '' });
+
   // Redireccionar a admins (solo verificación de rol)
   useEffect(() => {
     if (user && user.role?.name === 'admin') {
@@ -487,12 +504,29 @@ function DataEntryContent() {
 
     if (variablesToSubmit.length > 0) {
       try {
+        setSaveStatus('saving');
         console.log(`💾 Guardando ${variablesToSubmit.length} variables de la métrica "${metric.name}"...`);
+        
         await submitEvaluationData(currentEval.id, variablesToSubmit);
+        
+        setSaveStatus('success');
+        setToast({
+          message: `✅ Datos de "${metric.name}" guardados correctamente`,
+          type: 'success',
+          isVisible: true
+        });
         console.log('✅ Datos guardados correctamente');
+        
+        setTimeout(() => setSaveStatus('idle'), 2000);
       } catch (error) {
+        setSaveStatus('error');
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+        setToast({
+          message: `❌ Error al guardar: ${errorMessage}`,
+          type: 'error',
+          isVisible: true
+        });
         console.error('❌ Error al guardar datos:', error);
-        // No mostramos alert para no interrumpir el flujo
       }
     } else {
       console.log('No hay datos nuevos para guardar en esta métrica');
@@ -697,9 +731,23 @@ function DataEntryContent() {
         }
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       console.error('❌ Error durante la finalización:', error);
-      alert('Error al finalizar. Por favor intenta de nuevo.');
-      setModalLoading(false); // Solo establecer loading en caso de error
+      
+      setErrorModal({
+        isOpen: true,
+        title: 'Error al finalizar evaluación',
+        message: errorMessage,
+        details: 'Verifique que todos los datos sean correctos y que tenga conexión a internet. Si el problema persiste, intente nuevamente.'
+      });
+      
+      setToast({
+        message: `Error: ${errorMessage}`,
+        type: 'error',
+        isVisible: true
+      });
+      
+      setModalLoading(false);
     }
     // NO establecer modalLoading a false en el finally cuando isFinalizingProject
     // porque la navegación debe ocurrir primero
@@ -941,6 +989,27 @@ function DataEntryContent() {
           />
         );
       })()}
+
+      {/* Toast de notificaciones */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+        duration={3000}
+      />
+
+      {/* Indicador de guardado en curso */}
+      <SaveIndicator isVisible={saveStatus === 'saving'} />
+
+      {/* Modal de error mejorado */}
+      <ErrorModal
+        isOpen={errorModal.isOpen}
+        title={errorModal.title}
+        message={errorModal.message}
+        details={errorModal.details}
+        onClose={() => setErrorModal({ ...errorModal, isOpen: false })}
+      />
     </div>
   );
 }
