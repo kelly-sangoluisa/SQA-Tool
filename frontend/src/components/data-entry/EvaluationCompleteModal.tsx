@@ -77,8 +77,8 @@ export function EvaluationCompleteModal({
         <div className={styles.content}>
           <h3 className={styles.sectionTitle}>Resumen de datos ingresados</h3>
           <div className={styles.variablesList}>
-            {variables.slice(0, 10).map((variable, index) => (
-              <div key={index} className={styles.variableItem}>
+            {variables.slice(0, 10).map((variable) => (
+              <div key={`${variable.metric_name}-${variable.variable_symbol}`} className={styles.variableItem}>
                 <div className={styles.variableInfo}>
                   <span className={styles.metricName}>{variable.metric_name}</span>
                   <span className={styles.variableSymbol}>{variable.variable_symbol}</span>
@@ -118,16 +118,22 @@ export function EvaluationCompleteModal({
             onClick={onConfirm}
             disabled={loading}
           >
-            {loading ? (
-              <>
-                <span className={styles.spinner}></span>
-                Procesando...
-              </>
-            ) : isLastEvaluation ? (
-              'Terminar y Ver Resultados'
-            ) : (
-              'Continuar a Siguiente Evaluación'
-            )}
+            {(() => {
+              if (loading) {
+                return (
+                  <>
+                    <span className={styles.spinner}></span>{' '}
+                    Procesando...
+                  </>
+                );
+              }
+              
+              if (isLastEvaluation) {
+                return 'Terminar y Ver Resultados';
+              }
+              
+              return 'Continuar a Siguiente Evaluación';
+            })()}
           </button>
         </div>
       </div>
