@@ -154,7 +154,9 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
         // 1. Las variables ya se eliminan inmediatamente cuando el usuario hace clic en X
         
         // 2. Actualizar variables existentes
-        const variablesToUpdate = formData.variables.filter(v => v.id && existingVariableIds.has(v.id));
+        const variablesToUpdate = formData.variables.filter((v): v is typeof v & { id: number } => 
+          typeof v.id === 'number' && existingVariableIds.has(v.id)
+        );
         await Promise.all(
           variablesToUpdate.map(v =>
             parameterizationApi.updateVariable(v.id, {
