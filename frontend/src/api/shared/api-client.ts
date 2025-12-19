@@ -14,6 +14,54 @@ export class ApiClient {
     return null;
   }
 
+  private isAuthError(error: unknown, statusCode?: number): boolean {
+    if (statusCode === 401 || statusCode === 403) {
+      return true;
+    }
+    
+    if (!(error instanceof Error)) {
+      return false;
+    }
+
+    return error.message.includes('401') || 
+           error.message.includes('403') ||
+           error.message.includes('Unauthorized') ||
+           error.message.includes('No token provided');
+  }
+
+  private shouldLogError(endpoint: string, error: unknown, statusCode?: number): boolean {
+    const isAuthEndpoint = endpoint.includes('/auth/');
+    const isAuthErr = this.isAuthError(error, statusCode);
+    return !(isAuthErr && isAuthEndpoint);
+  }
+
+  private async handleErrorResponse(response: Response, endpoint: string): Promise<never> {
+    const errorData = await response.json().catch(() => ({}));
+    const errorMessage = errorData.message || `Error ${response.status}: ${response.statusText}`;
+
+    if (this.shouldLogError(endpoint, errorMessage, response.status)) {
+      console.error('API Error:', errorMessage);
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  private async parseResponse<T>(response: Response): Promise<T> {
+    // Si la respuesta es 204 (No Content) o no tiene contenido, retornar vacío
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+      return {} as T;
+    }
+
+    // Verificar si hay contenido antes de parsear JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const text = await response.text();
+      return text ? JSON.parse(text) : {} as T;
+    }
+
+    return {} as T;
+  }
+
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
@@ -34,46 +82,12 @@ export class ApiClient {
       const response = await fetch(url, config);
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.message || `Error ${response.status}: ${response.statusText}`;
-
-        // Detectar si es un error de autenticación esperado
-        const isAuthError = response.status === 401 || response.status === 403;
-        const isAuthEndpoint = endpoint.includes('/auth/');
-
-        // Solo mostrar en consola si no es un error de autenticación en endpoint de auth
-        if (!(isAuthError && isAuthEndpoint)) {
-          console.error('API Error:', errorMessage);
-        }
-
-        throw new Error(errorMessage);
+        await this.handleErrorResponse(response, endpoint);
       }
 
-      // Si la respuesta es 204 (No Content) o no tiene contenido, retornar vacío
-      if (response.status === 204 || response.headers.get('content-length') === '0') {
-        return {} as T;
-      }
-
-      // Verificar si hay contenido antes de parsear JSON
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const text = await response.text();
-        return text ? JSON.parse(text) : {} as T;
-      }
-
-      return {} as T;
+      return await this.parseResponse<T>(response);
     } catch (error) {
-      // Filtrar errores de autenticación para no mostrarlos en consola
-      const isAuthError = error instanceof Error && 
-        (error.message.includes('401') || 
-         error.message.includes('403') ||
-         error.message.includes('Unauthorized') ||
-         error.message.includes('No token provided'));
-      
-      const isAuthEndpoint = endpoint.includes('/auth/');
-      
-      // Solo mostrar errores que no sean de autenticación en endpoints de auth
-      if (!(isAuthError && isAuthEndpoint)) {
+      if (this.shouldLogError(endpoint, error)) {
         console.error('API Error:', error);
       }
       
