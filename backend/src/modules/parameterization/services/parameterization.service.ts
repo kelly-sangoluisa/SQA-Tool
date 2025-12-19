@@ -135,18 +135,39 @@ export class ParameterizationService {
   }
 
   // --- CRUD for Criteria ---
-  findAllCriteria(query: FindAllQueryDto, standard_id?: number) {
-    const baseWhere = standard_id ? { standard_id } : {};
-    const where = this.buildFindAllWhere(query, ['name', 'description'], baseWhere);
-    const { page = 1, limit = 10 } = query;
-    
-    return this.criterionRepo.find({
-      where,
-      order: { name: 'ASC' },
-      relations: ['sub_criteria', 'sub_criteria.metrics', 'sub_criteria.metrics.variables'],
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+  async findAllCriteria(query: FindAllQueryDto, standard_id?: number) {
+    const { state, search, page = 1, limit = 10 } = query;
+
+    const queryBuilder = this.criterionRepo.createQueryBuilder('criterion')
+      .leftJoinAndSelect('criterion.sub_criteria', 'sub_criterion', 'sub_criterion.state = :activeState', { activeState: 'active' })
+      .leftJoinAndSelect('sub_criterion.metrics', 'metric', 'metric.state = :activeState')
+      .leftJoinAndSelect('metric.variables', 'variable', 'variable.state = :activeState')
+      .orderBy('criterion.name', 'ASC');
+
+    // Filtrar por standard_id si se proporciona
+    if (standard_id) {
+      queryBuilder.andWhere('criterion.standard_id = :standard_id', { standard_id });
+    }
+
+    // Filtrar por estado del criterio
+    if (state && state !== 'all') {
+      queryBuilder.andWhere('criterion.state = :state', { state });
+    }
+
+    // Búsqueda por nombre o descripción
+    if (search && search.trim() !== '') {
+      queryBuilder.andWhere(
+        '(criterion.name ILIKE :search OR criterion.description ILIKE :search)',
+        { search: `%${search.trim()}%` }
+      );
+    }
+
+    // Paginación
+    queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    return queryBuilder.getMany();
   }
 
   findOneCriterion(id: number) {
