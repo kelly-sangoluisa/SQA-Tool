@@ -338,17 +338,16 @@ function EvaluationDetailPage() {
           </div>
         )}
       </div>
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 1.5rem;
-          background: white;
-          padding: 1.5rem;
-          border-radius: 16px;
-          box-shadow: 0 8px 24px rgba(78, 94, 163, 0.12);
-        }
+  );
+}
 
-        .header-info {
+export default function EvaluationDetailPageWrapper() {
+  return (
+    <ProtectedRoute requiredRole="any">
+      <EvaluationDetailPage />
+    </ProtectedRoute>
+  );
+}
           flex: 1;
         }
 

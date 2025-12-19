@@ -572,24 +572,15 @@ function ProjectReportPageWrapper() {
       <ProjectReportPage />
     </ProtectedRoute>
   );
+function ProjectReportPageWrapper() {
+  return (
+    <ProtectedRoute requiredRole="any">
+      <ProjectReportPage />
+    </ProtectedRoute>
+  );
 }
 
 export default ProjectReportPageWrapper;
-
-        .page-subtitle {
-          font-size: 0.95rem;
-          font-weight: 600;
-          color: var(--color-primary);
-          margin: 0 0 0.25rem 0;
-        }
-
-        .page-date {
-          font-size: 0.8rem;
-          color: #6b7280;
-          margin: 0 0 1rem 0;
-        }
-
-        .status-badge {
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
