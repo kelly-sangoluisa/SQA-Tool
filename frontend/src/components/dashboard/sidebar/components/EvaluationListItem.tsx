@@ -5,7 +5,7 @@ import { formatDate } from '../utils/formatters';
 import styles from '../DashboardSidebar.module.css';
 
 interface EvaluationListItemProps {
-  evaluation: DashboardEvaluation;
+  readonly evaluation: DashboardEvaluation;
 }
 
 export function EvaluationListItem({ evaluation }: EvaluationListItemProps) {

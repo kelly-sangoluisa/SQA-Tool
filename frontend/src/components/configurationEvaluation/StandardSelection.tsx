@@ -7,9 +7,9 @@ import { Button, Loading } from '../shared';
 import styles from './StandardSelection.module.css';
 
 interface StandardSelectionProps {
-  initialSelectedId?: number;
-  onNext: (standard: Standard) => void;
-  onBack: () => void;
+  readonly initialSelectedId?: number;
+  readonly onNext: (standard: Standard) => void;
+  readonly onBack: () => void;
 }
 
 export function StandardSelection({ initialSelectedId, onNext, onBack }: StandardSelectionProps) {

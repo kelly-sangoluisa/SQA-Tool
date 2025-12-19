@@ -9,10 +9,39 @@ import AlertBanner from '../shared/AlertBanner';
 import styles from './MetricsSelection.module.css';
 
 interface MetricsSelectionProps {
-  selectedCriteria: Criterion[];
-  selectedSubCriteria: SelectedCriterion[];
-  onNext: (selectedMetrics: Map<number, number[]>) => void;
-  onBack: () => void;
+  readonly selectedCriteria: Criterion[];
+  readonly selectedSubCriteria: SelectedCriterion[];
+  readonly onNext: (selectedMetrics: Map<number, number[]>) => void;
+  readonly onBack: () => void;
+}
+
+// Helper component para renderizar una métrica individual
+interface MetricItemProps {
+  readonly metric: Metric;
+  readonly criterionId: number;
+  readonly isSelected: boolean;
+  readonly onToggle: (criterionId: number, metricId: number) => void;
+}
+
+function MetricItem({ metric, criterionId, isSelected, onToggle }: MetricItemProps) {
+  return (
+    <div className={styles.metricItem}>
+      <label className={styles.checkboxLabel}>
+        <input
+          type="checkbox"
+          className={styles.checkbox}
+          checked={isSelected}
+          onChange={() => onToggle(criterionId, metric.id)}
+        />
+        <div className={styles.metricContent}>
+          <span className={styles.metricName}>{metric.name}</span>
+          {metric.formula && (
+            <p className={styles.metricFormula}>Fórmula: {metric.formula}</p>
+          )}
+        </div>
+      </label>
+    </div>
+  );
 }
 
 export function MetricsSelection({
@@ -241,22 +270,13 @@ export function MetricsSelection({
 
                         <div className={styles.metricsList}>
                           {subMetrics.map((metric) => (
-                            <div key={metric.id} className={styles.metricItem}>
-                              <label className={styles.checkboxLabel}>
-                                <input
-                                  type="checkbox"
-                                  className={styles.checkbox}
-                                  checked={isMetricSelected(criterion.id, metric.id)}
-                                  onChange={() => handleMetricToggle(criterion.id, metric.id)}
-                                />
-                                <div className={styles.metricContent}>
-                                  <span className={styles.metricName}>{metric.name}</span>
-                                  {metric.formula && (
-                                    <p className={styles.metricFormula}>Fórmula: {metric.formula}</p>
-                                  )}
-                                </div>
-                              </label>
-                            </div>
+                            <MetricItem
+                              key={metric.id}
+                              metric={metric}
+                              criterionId={criterion.id}
+                              isSelected={isMetricSelected(criterion.id, metric.id)}
+                              onToggle={handleMetricToggle}
+                            />
                           ))}
                         </div>
                       </div>
