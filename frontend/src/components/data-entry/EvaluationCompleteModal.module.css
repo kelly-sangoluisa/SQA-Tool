@@ -218,6 +218,14 @@
   font-weight: 700;
   color: #78350f;
   line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.warningEmoji {
+  font-size: 1.25rem;
+  color: #f59e0b;
 }
 
 .warningText {

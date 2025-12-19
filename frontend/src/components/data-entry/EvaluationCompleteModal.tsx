@@ -85,7 +85,7 @@ export function EvaluationCompleteModal({
           <div className={styles.warningContent}>
             {isLastEvaluation ? (
               <>
-                <p className={styles.warningTitle}>⚠️ Última Evaluación - Finalización del Proyecto</p>
+                <p className={styles.warningTitle}> Última Evaluación - Finalización del Proyecto</p>
                 <p className={styles.warningText}>
                   Al confirmar se finalizará esta evaluación y el proyecto completo. 
                   Se calcularán todos los resultados finales y <strong>no podrás editar ningún dato después</strong>. 
@@ -94,7 +94,7 @@ export function EvaluationCompleteModal({
               </>
             ) : (
               <>
-                <p className={styles.warningTitle}>⚠️ Finalizar Evaluación</p>
+                <p className={styles.warningTitle}> Finalizar Evaluación</p>
                 <p className={styles.warningText}>
                   Al confirmar se finalizará esta evaluación y <strong>no podrás editar estos datos después</strong>. 
                   Revisa cuidadosamente la información antes de continuar a la siguiente evaluación.
