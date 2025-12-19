@@ -1,0 +1,329 @@
+/* ===================================================================
+   PROJECT EVALUATIONS PAGE - Lista de evaluaciones de un proyecto
+   Archivo: frontend/src/app/results/project/[projectId]/page.tsx
+   =================================================================== */
+
+/* ===================================================================
+   SKELETON LOADING
+   =================================================================== */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+.skeleton-title { height: 40px; width: 300px; margin-bottom: 0.5rem; }
+.skeleton-subtitle { height: 20px; width: 400px; }
+.skeleton-filters { height: 60px; width: 100%; margin-bottom: 2rem; }
+.skeleton-card { height: 180px; width: 100%; }
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===================================================================
+   MAIN LAYOUT
+   =================================================================== */
+.evaluations-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 2rem;
+  position: relative;
+}
+
+/* ===================================================================
+   PROJECT RESULTS WIDGET (Floating Score Circle)
+   =================================================================== */
+.project-results-widget {
+  position: fixed;
+  top: 6rem;
+  right: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  z-index: 100;
+  animation: slideInRight 0.5s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.score-circle {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.score-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.widget-results-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  white-space: nowrap;
+}
+
+.widget-results-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.widget-results-btn svg {
+  flex-shrink: 0;
+}
+
+/* ===================================================================
+   PAGE HEADER
+   =================================================================== */
+.page-header {
+  max-width: 1200px;
+  margin: 0 auto 3rem;
+  padding-right: 180px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 3rem;
+}
+
+.header-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.header-content {
+  flex: 1;
+  min-width: 300px;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.page-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  animation: fadeInDown 0.6s ease;
+}
+
+.page-subtitle {
+  font-size: 1.125rem;
+  color: #6b7280;
+  margin: 0;
+  animation: fadeInUp 0.6s ease;
+}
+
+/* ===================================================================
+   STATS SUMMARY
+   =================================================================== */
+.stats-summary {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  min-width: 100px;
+  transition: all 0.3s ease;
+}
+
+.stat-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.stat-chip--total {
+  border-left: 4px solid var(--color-primary);
+}
+
+.stat-chip--completed {
+  border-left: 4px solid #10b981;
+}
+
+.stat-chip--pending {
+  border-left: 4px solid #f59e0b;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stat-chip--total .stat-number {
+  color: var(--color-primary);
+}
+
+.stat-chip--completed .stat-number {
+  color: #10b981;
+}
+
+.stat-chip--pending .stat-number {
+  color: #f59e0b;
+}
+
+.stat-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===================================================================
+   EVALUATIONS GRID
+   =================================================================== */
+.evaluations-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  animation: fadeIn 0.6s ease;
+}
+
+/* ===================================================================
+   ANIMATIONS
+   =================================================================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===================================================================
+   RESPONSIVE
+   =================================================================== */
+@media (max-width: 768px) {
+  .evaluations-page {
+    padding: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-right: 0;
+  }
+
+  .evaluations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .project-results-widget {
+    top: auto;
+    bottom: 1rem;
+    right: 1rem;
+    left: 1rem;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .score-circle {
+    width: 80px;
+    height: 80px;
+  }
+
+  .score-circle svg {
+    width: 80px;
+    height: 80px;
+  }
+
+  .score-value {
+    font-size: 1.25rem;
+  }
+
+  .score-label {
+    font-size: 0.625rem;
+  }
+
+  .widget-results-btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.8125rem;
+  }
+}

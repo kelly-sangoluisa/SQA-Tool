@@ -12,6 +12,7 @@ import type { ProjectReport, ProjectStats } from '@/api/reports/reports.types';
 import { generateProjectPDF } from '@/utils/projectPDFGenerator';
 import { formatDate } from '@/lib/shared/formatters';
 import { useAIAnalysis } from '@/hooks/shared/useAIAnalysis';
+import '@/styles/reports/project-report.css';
 import { 
   HiOutlineDocumentText,
   HiOutlineCheckCircle,
@@ -117,32 +118,6 @@ function ProjectReportPage() {
       <div className="loading-container">
         <div className="loader"></div>
         <p>Cargando resultados del proyecto...</p>
-        <style jsx>{`
-          .loading-container {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          }
-          .loader {
-            width: 64px;
-            height: 64px;
-            border: 6px solid #f1f5f9;
-            border-top-color: var(--color-primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-          p {
-            margin-top: 1rem;
-            color: #6b7280;
-            font-weight: 600;
-          }
-        `}</style>
       </div>
     );
   }
@@ -158,44 +133,6 @@ function ProjectReportPage() {
         <button onClick={() => router.push('/results')} className="back-btn">
           Volver a Resultados
         </button>
-        <style jsx>{`
-          .error-container {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            padding: 2rem;
-            text-align: center;
-          }
-          svg {
-            color: #ef4444;
-            margin-bottom: 1rem;
-          }
-          h2 {
-            color: var(--color-primary-dark);
-            margin: 0 0 0.5rem 0;
-          }
-          p {
-            color: #6b7280;
-            margin: 0 0 1.5rem 0;
-          }
-          .back-btn {
-            padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-          }
-          .back-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(78, 94, 163, 0.25);
-          }
-        `}</style>
       </div>
     );
   }
@@ -625,40 +562,19 @@ function ProjectReportPage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
 
-      <style jsx>{`
-        .project-report-page {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          padding: 2rem;
-        }
+function ProjectReportPageWrapper() {
+  return (
+    <ProtectedRoute requiredRole="any">
+      <ProjectReportPage />
+    </ProtectedRoute>
+  );
+}
 
-        .page-header {
-          max-width: 1200px;
-          margin: 0 auto 2rem;
-        }
-
-        .header-content {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 1.5rem;
-          background: white;
-          padding: 1.5rem;
-          border-radius: 16px;
-          box-shadow: 0 8px 24px rgba(78, 94, 163, 0.12);
-        }
-
-        .header-info {
-          flex: 1;
-        }
-
-        .page-title {
-          font-size: clamp(1.25rem, 2.5vw, 1.75rem);
-          font-weight: 700;
-          color: var(--color-primary-dark);
-          margin: 0 0 0.375rem 0;
-        }
+export default ProjectReportPageWrapper;
 
         .page-subtitle {
           font-size: 0.95rem;
@@ -1201,48 +1117,6 @@ function ProjectReportPage() {
           box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
         }
 
-        @media (max-width: 768px) {
-          .project-report-page {
-            padding: 1rem;
-          }
-
-          .page-title {
-            font-size: 1.5rem;
-          }
-
-          .header-actions {
-            flex-direction: column;
-          }
-
-          .evaluations-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .modal-header {
-            padding: 1rem 1.5rem;
-          }
-
-          .modal-header h3 {
-            font-size: 1.125rem;
-          }
-
-          .modal-body {
-            padding: 1.5rem;
-          }
-
-          .modal-footer {
-            padding: 1rem 1.5rem;
-            flex-direction: column-reverse;
-          }
-
-          .btn-secondary,
-          .btn-primary {
-            width: 100%;
-            justify-content: center;
-          }
-        }
-      `}</style>
-    </div>
   );
 }
 

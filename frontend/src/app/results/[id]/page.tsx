@@ -13,6 +13,7 @@ import { getEvaluationReport, getEvaluationStats } from '@/api/reports/reports.a
 import type { EvaluationReport, EvaluationStats } from '@/api/reports/reports.types';
 import { generateEvaluationPDF } from '@/utils/pdfGenerator';
 import { formatDate } from '@/lib/shared/formatters';
+import '@/styles/reports/evaluation-detail.css';
 
 function EvaluationDetailPage() {
   const params = useParams();
@@ -104,32 +105,6 @@ function EvaluationDetailPage() {
       <div className="loading-container">
         <div className="loader"></div>
         <p>Cargando resultados...</p>
-        <style jsx>{`
-          .loading-container {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          }
-          .loader {
-            width: 64px;
-            height: 64px;
-            border: 6px solid #f1f5f9;
-            border-top-color: var(--color-primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-          p {
-            margin-top: 1rem;
-            color: #6b7280;
-            font-weight: 600;
-          }
-        `}</style>
       </div>
     );
   }
@@ -145,44 +120,6 @@ function EvaluationDetailPage() {
         <button onClick={() => router.push('/results')} className="back-btn">
           Volver
         </button>
-        <style jsx>{`
-          .error-container {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            padding: 2rem;
-            text-align: center;
-          }
-          svg {
-            color: #ef4444;
-            margin-bottom: 1rem;
-          }
-          h2 {
-            color: var(--color-primary-dark);
-            margin: 0 0 0.5rem 0;
-          }
-          p {
-            color: #6b7280;
-            margin: 0 0 1.5rem 0;
-          }
-          .back-btn {
-            padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-          }
-          .back-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(78, 94, 163, 0.25);
-          }
-        `}</style>
       </div>
     );
   }
@@ -401,20 +338,6 @@ function EvaluationDetailPage() {
           </div>
         )}
       </div>
-
-      <style jsx>{`
-        .detail-page {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          padding: 2rem;
-        }
-
-        .page-header {
-          max-width: 1200px;
-          margin: 0 auto 2rem;
-        }
-
-        .header-content {
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -1074,50 +997,6 @@ function EvaluationDetailPage() {
           to { opacity: 1; }
         }
 
-        @media (max-width: 768px) {
-          .detail-page {
-            padding: 1rem;
-          }
-
-          .header-content {
-            flex-direction: column;
-            text-align: center;
-          }
-
-          .tabs {
-            flex-direction: column;
-          }
-
-          .tab {
-            justify-content: flex-start;
-          }
-
-          .metric-header {
-            flex-direction: column;
-            gap: 0.75rem;
-          }
-
-          .metric-threshold-badge {
-            align-self: flex-start;
-          }
-
-          .criterion-detail-header {
-            flex-direction: column;
-            gap: 1rem;
-          }
-
-          .criterion-detail-score {
-            align-items: flex-start;
-          }
-
-          .variable-content {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.5rem;
-          }
-        }
-      `}</style>
-    </div>
   );
 }
 
