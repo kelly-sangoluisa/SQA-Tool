@@ -254,38 +254,64 @@ export class ParameterizationService {
     metricIds: number[],
     newSubCriterionId: number
   ): Promise<void> {
-    // Obtener las métricas originales con sus variables
-    const originalMetrics = await manager.find(Metric, {
+    const originalMetrics = await this.fetchOriginalMetrics(manager, metricIds);
+
+    for (const originalMetric of originalMetrics) {
+      const savedMetric = await this.createMetricCopy(manager, originalMetric, newSubCriterionId);
+      await this.copyMetricVariables(manager, originalMetric, savedMetric.id);
+    }
+  }
+
+  /**
+   * Obtiene las métricas originales con sus variables
+   */
+  private async fetchOriginalMetrics(manager: any, metricIds: number[]): Promise<Metric[]> {
+    return manager.find(Metric, {
       where: metricIds.map(id => ({ id })),
       relations: ['variables']
     });
+  }
 
-    // Copiar cada métrica y sus variables
-    for (const originalMetric of originalMetrics) {
-      // Crear la nueva métrica
-      const newMetric = manager.create(Metric, {
-        name: originalMetric.name,
-        description: originalMetric.description,
-        code: originalMetric.code,
-        formula: originalMetric.formula,
-        desired_threshold: originalMetric.desired_threshold,
-        worst_case: originalMetric.worst_case,
-        sub_criterion_id: newSubCriterionId,
-      });
-      const savedMetric = await manager.save(newMetric);
+  /**
+   * Crea una copia de una métrica para un nuevo subcriterio
+   */
+  private async createMetricCopy(
+    manager: any,
+    originalMetric: Metric,
+    newSubCriterionId: number
+  ): Promise<Metric> {
+    const newMetric = manager.create(Metric, {
+      name: originalMetric.name,
+      description: originalMetric.description,
+      code: originalMetric.code,
+      formula: originalMetric.formula,
+      desired_threshold: originalMetric.desired_threshold,
+      worst_case: originalMetric.worst_case,
+      sub_criterion_id: newSubCriterionId,
+    });
+    return manager.save(newMetric);
+  }
 
-      // Copiar las variables de la métrica si existen
-      if (originalMetric.variables && originalMetric.variables.length > 0) {
-        const newVariables = originalMetric.variables.map(variable =>
-          manager.create(FormulaVariable, {
-            symbol: variable.symbol,
-            description: variable.description,
-            metric_id: savedMetric.id,
-          })
-        );
-        await manager.save(newVariables);
-      }
+  /**
+   * Copia las variables de una métrica a una nueva métrica
+   */
+  private async copyMetricVariables(
+    manager: any,
+    originalMetric: Metric,
+    newMetricId: number
+  ): Promise<void> {
+    if (!originalMetric.variables || originalMetric.variables.length === 0) {
+      return;
     }
+
+    const newVariables = originalMetric.variables.map(variable =>
+      manager.create(FormulaVariable, {
+        symbol: variable.symbol,
+        description: variable.description,
+        metric_id: newMetricId,
+      })
+    );
+    await manager.save(newVariables);
   }
 
   async updateSubCriterion(id: number, updateSubCriterionDto: UpdateSubCriterionDto) {
@@ -455,38 +481,55 @@ export class ParameterizationService {
       .take(10)
       .getMany();
 
-    return results.map(subCriterion => {
-      const activeMetrics = subCriterion.metrics?.filter(m => m.state === 'active') || [];
-      
-      return {
-        sub_criterion_id: subCriterion.id,
-        name: subCriterion.name,
-        description: subCriterion.description,
-        criterion_id: subCriterion.criterion_id,
-        criterion_name: subCriterion.criterion?.name || '',
-        standard_id: subCriterion.criterion?.standard_id || 0,
-        standard_name: subCriterion.criterion?.standard?.name || '',
-        metrics: activeMetrics.map(metric => {
-          const activeVariables = metric.variables?.filter(v => v.state === 'active') || [];
-          
-          return {
-            metric_id: metric.id,
-            code: metric.code,
-            name: metric.name,
-            description: metric.description,
-            formula: metric.formula,
-            desired_threshold: metric.desired_threshold,
-            worst_case: metric.worst_case,
-            variables: activeVariables.map(variable => ({
-              variable_id: variable.id,
-              symbol: variable.symbol,
-              description: variable.description,
-            })),
-          };
-        }),
-        metrics_count: activeMetrics.length,
-      };
-    });
+    return results.map(subCriterion => this.mapSubCriterionToSearchResult(subCriterion));
+  }
+
+  /**
+   * Mapea un subcriterio a su DTO de resultado de búsqueda
+   */
+  private mapSubCriterionToSearchResult(subCriterion: SubCriterion): SubCriterionSearchResultDto {
+    const activeMetrics = subCriterion.metrics?.filter(m => m.state === 'active') || [];
+    
+    return {
+      sub_criterion_id: subCriterion.id,
+      name: subCriterion.name,
+      description: subCriterion.description,
+      criterion_id: subCriterion.criterion_id,
+      criterion_name: subCriterion.criterion?.name || '',
+      standard_id: subCriterion.criterion?.standard_id || 0,
+      standard_name: subCriterion.criterion?.standard?.name || '',
+      metrics: activeMetrics.map(metric => this.mapMetricToSearchResult(metric)),
+      metrics_count: activeMetrics.length,
+    };
+  }
+
+  /**
+   * Mapea una métrica a su DTO de resultado de búsqueda
+   */
+  private mapMetricToSearchResult(metric: Metric): MetricSearchResultDto {
+    const activeVariables = metric.variables?.filter(v => v.state === 'active') || [];
+    
+    return {
+      metric_id: metric.id,
+      code: metric.code,
+      name: metric.name,
+      description: metric.description,
+      formula: metric.formula,
+      desired_threshold: metric.desired_threshold,
+      worst_case: metric.worst_case,
+      variables: activeVariables.map(variable => this.mapVariableToSearchResult(variable)),
+    };
+  }
+
+  /**
+   * Mapea una variable a su DTO de resultado de búsqueda
+   */
+  private mapVariableToSearchResult(variable: FormulaVariable): any {
+    return {
+      variable_id: variable.id,
+      symbol: variable.symbol,
+      description: variable.description,
+    };
   }
 
   /**
@@ -517,23 +560,6 @@ export class ParameterizationService {
       .take(10)
       .getMany();
 
-    return results.map(metric => {
-      const activeVariables = metric.variables?.filter(v => v.state === 'active') || [];
-      
-      return {
-        metric_id: metric.id,
-        code: metric.code,
-        name: metric.name,
-        description: metric.description,
-        formula: metric.formula,
-        desired_threshold: metric.desired_threshold,
-        worst_case: metric.worst_case,
-        variables: activeVariables.map(variable => ({
-          variable_id: variable.id,
-          symbol: variable.symbol,
-          description: variable.description,
-        })),
-      };
-    });
+    return results.map(metric => this.mapMetricToSearchResult(metric));
   }
 }
