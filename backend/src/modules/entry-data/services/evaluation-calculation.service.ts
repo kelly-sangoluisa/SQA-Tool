@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-
+import { MetricScoringService } from './metric-scoring.service';
 // Entities
 import { EvaluationMetricResult } from '../entities/evaluation_metric_result.entity';
 import { EvaluationCriteriaResult } from '../entities/evaluation_criteria_result.entity';
@@ -45,6 +45,8 @@ export class EvaluationCalculationService {
     @InjectRepository(Project)
     private readonly projectRepo: Repository<Project>,
 
+    private readonly metricScoringService: MetricScoringService, // AGREGAR ESTA LÍNEA
+
     // Servicios especializados
     private readonly formulaEvaluationService: FormulaEvaluationService,
     private readonly evaluationVariableService: EvaluationVariableService,
@@ -84,43 +86,51 @@ export class EvaluationCalculationService {
    * Calcula resultados para una métrica específica
    */
   async calculateMetricResult(evalMetricId: number): Promise<EvaluationMetricResult> {
-    this.logger.log(`Calculating metric result for evaluation metric ${evalMetricId}`);
+  this.logger.log(`Calculating metric result for evaluation metric ${evalMetricId}`);
 
-    const evaluationMetric = await this.getEvaluationMetricWithDetails(evalMetricId);
-    const variables = await this.evaluationVariableService.findByEvaluationMetric(evalMetricId);
+  const evaluationMetric = await this.getEvaluationMetricWithDetails(evalMetricId);
+  const variables = await this.evaluationVariableService.findByEvaluationMetric(evalMetricId);
 
-    this.logger.debug(`🔍 Variables retrieved: ${JSON.stringify(variables.map(v => ({ symbol: v.variable.symbol, value: v.value, valueType: typeof v.value })))}`);
+  this.logger.debug(`🔍 Variables retrieved: ${JSON.stringify(variables.map(v => ({ symbol: v.variable.symbol, value: v.value, valueType: typeof v.value })))}`);
 
-    if (variables.length === 0) {
-      throw new BadRequestException(`No variables found for evaluation metric ${evalMetricId}`);
-    }
-
-    const formula = evaluationMetric.metric.formula;
-    const variableValues = variables.map(v => ({
-      symbol: v.variable.symbol,
-      value: Number(v.value) // FORZAR conversión a número por si viene como string de PostgreSQL
-    }));
-
-    this.logger.debug(`📐 Formula: ${formula}, Variables: ${JSON.stringify(variableValues)}`);
-
-    const calculatedValue = this.formulaEvaluationService.evaluateFormula(formula, variableValues);
-    this.logger.debug(`✅ Calculated value: ${calculatedValue}, type: ${typeof calculatedValue}`);
-    
-    const weightedValue = this.calculateWeightedValue(calculatedValue, evaluationMetric);
-    this.logger.debug(`⚖️ Weighted value: ${weightedValue}`);
-
-    return this.saveMetricResult(evalMetricId, calculatedValue, weightedValue);
+  if (variables.length === 0) {
+    throw new BadRequestException(`No variables found for evaluation metric ${evalMetricId}`);
   }
+
+  const formula = evaluationMetric.metric.formula;
+  const desiredThreshold = evaluationMetric.metric.desired_threshold;
+  const worstCase = evaluationMetric.metric.worst_case;
+  
+  const variableValues = variables.map(v => ({
+    symbol: v.variable.symbol,
+    value: Number(v.value) // FORZAR conversión a número por si viene como string de PostgreSQL
+  }));
+  this.logger.debug(`📐 Formula: ${formula}, Variables: ${JSON.stringify(variableValues)}`);
+  this.logger.debug(`🎯 Thresholds - Desired: ${desiredThreshold}, Worst: ${worstCase}`);
+
+  // Usar el nuevo servicio de scoring
+  const score = this.metricScoringService.calculateScore(
+    formula,
+    variableValues,
+    desiredThreshold,
+    worstCase,
+  );
+
+  this.logger.debug(`✅ Calculated value: ${score.calculated_value}, Weighted value: ${score.weighted_value}`);
+
+  return this.saveMetricResult(evalMetricId, score.calculated_value, score.weighted_value);
+}
+
 
   /**
    * Calcula y guarda resultados de criterios de evaluación
    */
   async calculateCriteriaResults(evaluationId: number): Promise<EvaluationCriteriaResult[]> {
     this.logger.log(`Calculating criteria results for evaluation ${evaluationId}`);
-
+  
     const evaluation = await this.getEvaluationWithCriteria(evaluationId);
     const criteriaResults: EvaluationCriteriaResult[] = [];
-
+  
     await this.dataSource.transaction(async (manager) => {
       for (const criterion of evaluation.evaluation_criteria) {
         const metricResults = await this.evaluationMetricResultRepo.find({
@@ -131,20 +141,33 @@ export class EvaluationCalculationService {
           },
           relations: ['evaluation_metric']
         });
-
+  
         if (metricResults.length === 0) {
           throw new BadRequestException(`No metric results found for criterion ${criterion.id}`);
         }
-
-        const criteriaScore = this.calculateSimpleAverage(
+  
+        // Calcular promedio de weighted_values de las métricas
+        const averageWeightedValue = this.calculateSimpleAverage(
           metricResults.map(mr => mr.weighted_value)
         );
-
+  
+        // Multiplicar por importance_percentage (si existe, sino usar 1)
+        const importanceMultiplier = criterion.importance_percentage 
+          ? criterion.importance_percentage / 100 
+          : 1;
+        
+        const criteriaScore = averageWeightedValue * importanceMultiplier;
+  
+        this.logger.debug(
+          `📊 Criterion ${criterion.id}: avg_weighted=${averageWeightedValue}, ` +
+          `importance=${criterion.importance_percentage}%, final_score=${criteriaScore}`
+        );
+  
         const criteriaResult = await this.saveCriteriaResult(criterion.id, criteriaScore);
         criteriaResults.push(criteriaResult);
       }
     });
-
+  
     return criteriaResults;
   }
 
@@ -172,11 +195,12 @@ export class EvaluationCalculationService {
 
     this.logger.debug(`📊 Criteria results scores: ${JSON.stringify(criteriaResults.map(cr => ({ id: cr.id, eval_criterion_id: cr.eval_criterion_id, final_score: cr.final_score, type: typeof cr.final_score })))}`);
 
-    const finalScore = this.calculateSimpleAverage(
+    // SUMA de todos los final_score (no promedio)
+    const finalScore = this.calculateSum(
       criteriaResults.map(cr => cr.final_score)
     );
 
-    this.logger.debug(`🎯 Final evaluation score: ${finalScore}`);
+    this.logger.debug(`🎯 Final evaluation score (sum): ${finalScore}`);
 
     return this.saveEvaluationResult(evaluationId, finalScore);
   }
@@ -269,11 +293,11 @@ export class EvaluationCalculationService {
   // MÉTODOS PRIVADOS DE CÁLCULO
   // =========================================================================
 
-  private calculateWeightedValue(value: number, evaluationMetric: EvaluationMetric): number {
+  //private calculateWeightedValue(value: number, evaluationMetric: EvaluationMetric): number {
     // Por ahora retornamos el valor calculado directamente
     // TODO: Implementar lógica de normalización cuando se definan umbrales
-    return Math.max(0, value);
-  }
+   // return Math.max(0, value);
+  //}
 
   private calculateWeightedAverage(items: { score: number; weight: number }[]): number {
     const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
@@ -284,6 +308,13 @@ export class EvaluationCalculationService {
 
   private calculateSimpleAverage(scores: number[]): number {
     return scores.length > 0 ? scores.reduce((sum, score) => sum + score, 0) / scores.length : 0;
+  }
+
+  /**
+   * Calcula la suma de valores
+   */
+  private calculateSum(scores: number[]): number {
+    return scores.reduce((sum, score) => sum + score, 0);
   }
 
   // =========================================================================
