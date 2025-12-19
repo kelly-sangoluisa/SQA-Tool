@@ -19,7 +19,6 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
-  const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [selectedCriterion, setSelectedCriterion] = useState<Criterion | null>(null);
   const [selectedSubCriterion, setSelectedSubCriterion] = useState<SubCriterion | null>(null);
   const [metrics, setMetrics] = useState<Metric[]>([]);
@@ -33,10 +32,10 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
     try {
       // Load all criteria including inactive ones
       const data = await parameterizationApi.getCriteriaByStandard(standard.id, { state: 'all' });
-      setCriteria(data);
+      return data;
     } catch {
       // Error loading criteria - silently fail
-      setCriteria([]);
+      return [];
     } finally {
       setLoading(false);
       setInitialLoading(false);

@@ -31,7 +31,7 @@ export function MetricsView({
       const newState = metric.state === 'active' ? 'inactive' : 'active';
       
       // Cambio optimista: notificar al padre inmediatamente
-      const updatedMetric: Metric = { ...metric, state: newState as 'active' | 'inactive' };
+      const updatedMetric: Metric = { ...metric, state: newState };
       onMetricStateChange?.(updatedMetric);
       
       // Actualizar en el servidor

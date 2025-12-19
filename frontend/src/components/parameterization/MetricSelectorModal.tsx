@@ -64,7 +64,15 @@ export function MetricSelectorModal({
               className={`${styles.metricCard} ${
                 selectedMetricIds.includes(metric.metric_id) ? styles.selected : ''
               }`}
+              role="button"
+              tabIndex={0}
               onClick={() => handleToggleMetric(metric.metric_id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleToggleMetric(metric.metric_id);
+                }
+              }}
             >
               <div className={styles.metricHeader}>
                 <input
@@ -134,7 +142,7 @@ export function MetricSelectorModal({
             disabled={selectedMetricIds.length === 0}
             className={`${styles.button} ${styles.confirmButton}`}
           >
-            Usar {selectedMetricIds.length > 0 ? `${selectedMetricIds.length} ` : ''}Métrica{selectedMetricIds.length !== 1 ? 's' : ''} Seleccionada{selectedMetricIds.length !== 1 ? 's' : ''}
+            Usar {selectedMetricIds.length > 0 ? `${selectedMetricIds.length} ` : ''}Métrica{selectedMetricIds.length === 1 ? '' : 's'} Seleccionada{selectedMetricIds.length === 1 ? '' : 's'}
           </button>
         </div>
       </div>

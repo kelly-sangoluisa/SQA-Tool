@@ -29,7 +29,6 @@ export function AdminParameterization() {
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStandard, setEditingStandard] = useState<Standard | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Sincronizar el estado con la URL
   useEffect(() => {
@@ -39,17 +38,13 @@ export function AdminParameterization() {
       const standard = standards.find(s => s.id.toString() === standardId);
       if (standard && selectedStandard?.id !== standard.id) {
         setSelectedStandard(standard);
-        setIsTransitioning(false);
       }
     } else if (selectedStandard !== null) {
       setSelectedStandard(null);
-      setIsTransitioning(false);
     }
   }, [searchParams, standards, selectedStandard]);
 
   const handleStandardSelect = (standard: Standard) => {
-    // Marcar que estamos en transición
-    setIsTransitioning(true);
     // Actualizar la URL - el estado se sincronizará automáticamente
     const params = new URLSearchParams();
     params.set('standard', standard.id.toString());
@@ -57,8 +52,6 @@ export function AdminParameterization() {
   };
 
   const handleBackToStandards = () => {
-    // Marcar que estamos en transición
-    setIsTransitioning(true);
     // Regresar a la lista de estándares eliminando el parámetro
     router.push(pathname, { scroll: false });
   };

@@ -2,20 +2,20 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './Autocomplete.module.css';
 
 interface AutocompleteProps<T> {
-  value: string;
-  onChange: (value: string) => void;
-  onSelect: (item: T) => void;
-  searchFunction: (query: string) => Promise<T[]>;
-  getItemLabel: (item: T) => string;
-  getItemDescription?: (item: T) => string;
-  getItemMeta?: (item: T) => React.ReactNode;
-  placeholder?: string;
-  minChars?: number;
-  debounceMs?: number;
-  disabled?: boolean;
-  helperText?: string;
-  name?: string;
-  required?: boolean;
+  readonly value: string;
+  readonly onChange: (value: string) => void;
+  readonly onSelect: (item: T) => void;
+  readonly searchFunction: (query: string) => Promise<T[]>;
+  readonly getItemLabel: (item: T) => string;
+  readonly getItemDescription?: (item: T) => string;
+  readonly getItemMeta?: (item: T) => React.ReactNode;
+  readonly placeholder?: string;
+  readonly minChars?: number;
+  readonly debounceMs?: number;
+  readonly disabled?: boolean;
+  readonly helperText?: string;
+  readonly name?: string;
+  readonly required?: boolean;
 }
 
 export function Autocomplete<T>({
@@ -160,30 +160,44 @@ export function Autocomplete<T>({
           {isLoading ? (
             <div className={styles.loading}>Buscando...</div>
           ) : results.length > 0 ? (
-            results.map((item, index) => (
-              <div
-                key={index}
-                className={`${styles.resultItem} ${
-                  index === highlightedIndex ? styles.highlighted : ''
-                }`}
-                onClick={() => handleSelect(item)}
-                onMouseEnter={() => setHighlightedIndex(index)}
-              >
-                <div className={styles.resultItemName}>
-                  {getItemLabel(item)}
+            results.map((item, index) => {
+              const itemKey = `result-${getItemLabel(item)}-${index}`;
+              const isHighlighted = index === highlightedIndex;
+              
+              return (
+                <div
+                  key={itemKey}
+                  className={`${styles.resultItem} ${
+                    isHighlighted ? styles.highlighted : ''
+                  }`}
+                  role="option"
+                  aria-selected={isHighlighted}
+                  tabIndex={0}
+                  onClick={() => handleSelect(item)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSelect(item);
+                    }
+                  }}
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                >
+                  <div className={styles.resultItemName}>
+                    {getItemLabel(item)}
+                  </div>
+                  {getItemMeta && (
+                    <div className={styles.resultItemMeta}>
+                      {getItemMeta(item)}
+                    </div>
+                  )}
+                  {getItemDescription && (
+                    <div className={styles.resultItemDescription}>
+                      {getItemDescription(item)}
+                    </div>
+                  )}
                 </div>
-                {getItemMeta && (
-                  <div className={styles.resultItemMeta}>
-                    {getItemMeta(item)}
-                  </div>
-                )}
-                {getItemDescription && (
-                  <div className={styles.resultItemDescription}>
-                    {getItemDescription(item)}
-                  </div>
-                )}
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className={styles.noResults}>
               No se encontraron resultados

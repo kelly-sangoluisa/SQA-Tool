@@ -253,10 +253,10 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
 
           {selectedMetricsForParent.length > 0 && (
             <div className={styles.infoBox}>
-              <strong>✅ {selectedMetricsForParent.length} Métrica{selectedMetricsForParent.length !== 1 ? 's' : ''} seleccionada{selectedMetricsForParent.length !== 1 ? 's' : ''}:</strong>
+              <strong>✅ {selectedMetricsForParent.length} Métrica{selectedMetricsForParent.length === 1 ? '' : 's'} seleccionada{selectedMetricsForParent.length === 1 ? '' : 's'}:</strong>
               <ul style={{ fontSize: '0.875rem', marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
-                {selectedMetricsForParent.map((metric, index) => (
-                  <li key={index}>{metric.name} {metric.code && `(${metric.code})`}</li>
+                {selectedMetricsForParent.map((metric) => (
+                  <li key={`${metric.name}-${metric.code || 'no-code'}`}>{metric.name} {metric.code && `(${metric.code})`}</li>
                 ))}
               </ul>
               <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>

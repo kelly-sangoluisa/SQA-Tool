@@ -333,7 +333,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className={`${styles.input} ${errors.name ? styles.error : ''}`}
+                      className={`${styles.input} ${errors.name ? styles.error : ''}}`}
                       placeholder="Ej: Porcentaje de éxito"
                     />
                   )}
@@ -456,7 +456,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                   </button>
                 </div>
 
-                {!metric && !showAutocomplete && formData.variables.length > 0 && (
+                {metric || showAutocomplete || formData.variables.length === 0 ? null : (
                   <div className={styles.infoBox} style={{ marginBottom: '1rem' }}>
                     <strong>✅ Variables importadas:</strong> Se copiaron {formData.variables.length} variable{formData.variables.length !== 1 ? 's' : ''} de la métrica seleccionada.
                   </div>
