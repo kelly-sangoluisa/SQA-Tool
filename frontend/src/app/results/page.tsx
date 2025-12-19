@@ -176,11 +176,15 @@ function ResultsPageContent() {
           </svg>
           <h3>No hay datos para visualizar</h3>
           <p>
-            {filter === 'approved' 
-              ? 'No hay proyectos aprobados disponibles. Una vez que completes las evaluaciones, los proyectos aprobados aparecerán aquí.'
-              : filter === 'rejected'
-              ? 'No hay proyectos no aprobados. Los proyectos que no cumplan el umbral aparecerán aquí.'
-              : 'No se encontraron proyectos completados. Los proyectos con evaluaciones finalizadas aparecerán aquí.'}
+            {(() => {
+              if (filter === 'approved') {
+                return 'No hay proyectos aprobados disponibles. Una vez que completes las evaluaciones, los proyectos aprobados aparecerán aquí.';
+              }
+              if (filter === 'rejected') {
+                return 'No hay proyectos no aprobados. Los proyectos que no cumplan el umbral aparecerán aquí.';
+              }
+              return 'No se encontraron proyectos completados. Los proyectos con evaluaciones finalizadas aparecerán aquí.';
+            })()}
           </p>
         </div>
       )}

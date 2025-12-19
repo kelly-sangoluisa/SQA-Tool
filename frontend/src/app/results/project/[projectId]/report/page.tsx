@@ -308,21 +308,24 @@ function ProjectReportPage() {
         {stats.completed_evaluations > 0 && stats.highest_evaluation && stats.highest_evaluation.standard_name !== 'N/A' && (
           <>
             {/* Si solo hay 1 evaluación, mostrar solo "Mejor" si aprobó o "Menor" si no aprobó */}
-            {stats.completed_evaluations === 1 ? (
-              <>
-                {report.meets_threshold ? (
-                  <div className="stat-card">
-                    <div className="stat-icon stat-icon--success">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+            {(() => {
+              if (stats.completed_evaluations === 1) {
+                if (report.meets_threshold) {
+                  return (
+                    <div className="stat-card">
+                      <div className="stat-icon stat-icon--success">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="stat-value">{stats.highest_evaluation?.score?.toFixed(1) || '0.0'}</div>
+                        <div className="stat-label">Mejor: {stats.highest_evaluation?.standard_name || 'N/A'}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="stat-value">{stats.highest_evaluation?.score?.toFixed(1) || '0.0'}</div>
-                      <div className="stat-label">Mejor: {stats.highest_evaluation?.standard_name || 'N/A'}</div>
-                    </div>
-                  </div>
-                ) : (
+                  );
+                }
+                return (
                   <div className="stat-card">
                     <div className="stat-icon stat-icon--warning">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -334,36 +337,38 @@ function ProjectReportPage() {
                       <div className="stat-label">Menor: {stats.lowest_evaluation?.standard_name || 'N/A'}</div>
                     </div>
                   </div>
-                )}
-              </>
-            ) : (
+                );
+              }
+              
               /* Si hay 2 o más evaluaciones, mostrar ambos */
-              <>
-                <div className="stat-card">
-                  <div className="stat-icon stat-icon--success">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+              return (
+                <>
+                  <div className="stat-card">
+                    <div className="stat-icon stat-icon--success">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="stat-value">{stats.highest_evaluation?.score?.toFixed(1) || '0.0'}</div>
+                      <div className="stat-label">Mejor: {stats.highest_evaluation?.standard_name || 'N/A'}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="stat-value">{stats.highest_evaluation?.score?.toFixed(1) || '0.0'}</div>
-                    <div className="stat-label">Mejor: {stats.highest_evaluation?.standard_name || 'N/A'}</div>
-                  </div>
-                </div>
 
-                <div className="stat-card">
-                  <div className="stat-icon stat-icon--warning">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                  <div className="stat-card">
+                    <div className="stat-icon stat-icon--warning">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="stat-value">{stats.lowest_evaluation?.score?.toFixed(1) || '0.0'}</div>
+                      <div className="stat-label">Menor: {stats.lowest_evaluation?.standard_name || 'N/A'}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="stat-value">{stats.lowest_evaluation?.score?.toFixed(1) || '0.0'}</div>
-                    <div className="stat-label">Menor: {stats.lowest_evaluation?.standard_name || 'N/A'}</div>
-                  </div>
-                </div>
-              </>
-            )}
+                </>
+              );
+            })()}
           </>
         )}
       </div>

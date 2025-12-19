@@ -211,11 +211,15 @@ function ProjectEvaluationsPage() {
           </svg>
           <h3>No hay datos para visualizar</h3>
           <p>
-            {filter === 'completed' 
-              ? 'No hay evaluaciones completadas disponibles. Una vez que finalices una evaluación, los resultados aparecerán aquí.'
-              : filter === 'pending'
-              ? 'No hay evaluaciones pendientes. Las evaluaciones sin resultados aparecerán aquí.'
-              : 'Este proyecto no tiene evaluaciones registradas. Comienza creando una nueva evaluación.'}
+            {(() => {
+              if (filter === 'completed') {
+                return 'No hay evaluaciones completadas disponibles. Una vez que finalices una evaluación, los resultados aparecerán aquí.';
+              }
+              if (filter === 'pending') {
+                return 'No hay evaluaciones pendientes. Las evaluaciones sin resultados aparecerán aquí.';
+              }
+              return 'Este proyecto no tiene evaluaciones registradas. Comienza creando una nueva evaluación.';
+            })()}
           </p>
         </div>
       )}
