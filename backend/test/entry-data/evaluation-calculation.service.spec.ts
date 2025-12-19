@@ -6,6 +6,8 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { EvaluationCalculationService } from '../../src/modules/entry-data/services/evaluation-calculation.service';
 import { FormulaEvaluationService } from '../../src/modules/entry-data/services/formula-evaluation.service';
 import { EvaluationVariableService } from '../../src/modules/entry-data/services/evaluation-variable.service';
+import { MetricScoringService } from '../../src/modules/entry-data/services/metric-scoring.service';
+import { ThresholdParserService } from '../../src/modules/entry-data/services/threshold-parser.service';
 
 // Entities
 import { EvaluationMetricResult } from '../../src/modules/entry-data/entities/evaluation_metric_result.entity';
@@ -34,6 +36,7 @@ describe('EvaluationCalculationService', () => {
   let service: EvaluationCalculationService;
   let formulaEvaluationService: FormulaEvaluationService;
   let evaluationVariableService: EvaluationVariableService;
+  let metricScoringService: MetricScoringService;
   let evaluationMetricResultRepo: Repository<EvaluationMetricResult>;
   let evaluationCriteriaResultRepo: Repository<EvaluationCriteriaResult>;
   let evaluationResultRepo: Repository<EvaluationResult>;
@@ -53,6 +56,10 @@ describe('EvaluationCalculationService', () => {
       findByEvaluationMetric: jest.fn(),
     };
 
+    const mockScoringService = {
+      calculateScore: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EvaluationCalculationService,
@@ -64,6 +71,11 @@ describe('EvaluationCalculationService', () => {
           provide: EvaluationVariableService,
           useValue: mockVariableService,
         },
+        {
+          provide: MetricScoringService,
+          useValue: mockScoringService,
+        },
+        ThresholdParserService,
         {
           provide: getRepositoryToken(EvaluationMetricResult),
           useValue: createMockRepository(),
@@ -102,6 +114,7 @@ describe('EvaluationCalculationService', () => {
     service = module.get<EvaluationCalculationService>(EvaluationCalculationService);
     formulaEvaluationService = module.get<FormulaEvaluationService>(FormulaEvaluationService);
     evaluationVariableService = module.get<EvaluationVariableService>(EvaluationVariableService);
+    metricScoringService = module.get<MetricScoringService>(MetricScoringService);
     evaluationMetricResultRepo = module.get<Repository<EvaluationMetricResult>>(
       getRepositoryToken(EvaluationMetricResult),
     );
@@ -200,12 +213,14 @@ describe('EvaluationCalculationService', () => {
 
     it('should calculate metric result successfully', async () => {
       // Arrange
-      const calculatedValue = 15.5;
-      const weightedValue = 77.5;
+      const scoreResult = {
+        calculated_value: 15.5,
+        weighted_value: 77.5
+      };
       
       jest.spyOn(evaluationMetricRepo, 'findOne').mockResolvedValue(mockEvaluationMetric as any);
       jest.spyOn(evaluationVariableService, 'findByEvaluationMetric').mockResolvedValue([mockEvaluationVariable] as any);
-      jest.spyOn(formulaEvaluationService, 'evaluateFormula').mockReturnValue(calculatedValue);
+      jest.spyOn(metricScoringService, 'calculateScore').mockReturnValue(scoreResult);
       jest.spyOn(evaluationMetricResultRepo, 'create').mockReturnValue(mockMetricResult as any);
       jest.spyOn(evaluationMetricResultRepo, 'save').mockResolvedValue(mockMetricResult as any);
 
@@ -213,14 +228,21 @@ describe('EvaluationCalculationService', () => {
       const result = await service.calculateMetricResult(evalMetricId);
 
       // Assert
-      expect(formulaEvaluationService.evaluateFormula).toHaveBeenCalledWith(
+      expect(metricScoringService.calculateScore).toHaveBeenCalledWith(
         mockEvaluationMetric.metric.formula,
-        [{ symbol: mockEvaluationVariable.variable.symbol, value: mockEvaluationVariable.value }]
+        expect.arrayContaining([
+          expect.objectContaining({
+            symbol: mockEvaluationVariable.variable.symbol,
+            value: expect.any(Number)
+          })
+        ]),
+        mockEvaluationMetric.metric.desired_threshold,
+        mockEvaluationMetric.metric.worst_case
       );
       expect(evaluationMetricResultRepo.create).toHaveBeenCalledWith({
         eval_metric_id: evalMetricId,
-        calculated_value: calculatedValue,
-        weighted_value: calculatedValue // calculateWeightedValue devuelve Math.max(0, value)
+        calculated_value: scoreResult.calculated_value,
+        weighted_value: scoreResult.weighted_value
       });
       expect(result).toEqual(mockMetricResult);
     });
@@ -268,9 +290,14 @@ describe('EvaluationCalculationService', () => {
 
       // Assert
       expect(result).toEqual([mockCriteriaResult]);
+      
+      // final_score = AVG(weighted_values) × (importance_percentage / 100)
+      // = 77.5 × (30 / 100) = 77.5 × 0.3 = 23.25
+      const expectedFinalScore = mockMetricResult.weighted_value * (mockEvaluationCriterion.importance_percentage / 100);
+      
       expect(evaluationCriteriaResultRepo.create).toHaveBeenCalledWith({
         eval_criterion_id: mockEvaluationCriterion.id,
-        final_score: mockMetricResult.weighted_value // Simple average
+        final_score: expectedFinalScore // 23.25
       });
     });
 
