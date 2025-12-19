@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MetricScoringService } from '../../src/modules/entry-data/services/metric-scoring.service';
-import { ThresholdParserService, ThresholdCaseType } from '../../src/modules/entry-data/services/threshold-parser.service';
+import { ThresholdParserService} from '../../src/modules/entry-data/services/threshold-parser.service';
 import { FormulaEvaluationService } from '../../src/modules/entry-data/services/formula-evaluation.service';
 
 describe('MetricScoringService', () => {
@@ -18,8 +18,6 @@ describe('MetricScoringService', () => {
     }).compile();
 
     service = module.get<MetricScoringService>(MetricScoringService);
-    thresholdParser = module.get<ThresholdParserService>(ThresholdParserService);
-    formulaEvaluation = module.get<FormulaEvaluationService>(FormulaEvaluationService);
   });
 
   it('should be defined', () => {

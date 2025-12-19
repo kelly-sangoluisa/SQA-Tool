@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundException } from '@nestjs/common';
 
 import { EvaluationVariableService } from '../../src/modules/entry-data/services/evaluation-variable.service';
 import { EvaluationVariable } from '../../src/modules/entry-data/entities/evaluation_variable.entity';
@@ -86,7 +85,7 @@ describe('EvaluationVariableService', () => {
 
     it('should update existing variable when it exists', async () => {
       // Arrange
-      const existingVariable = { ...mockEvaluationVariable, value: 5.0 };
+      const existingVariable = { ...mockEvaluationVariable, value: 5 };
       jest.spyOn(evaluationVariableRepo, 'findOne').mockResolvedValue(existingVariable as any);
       jest.spyOn(evaluationVariableRepo, 'save').mockResolvedValue({
         ...existingVariable,

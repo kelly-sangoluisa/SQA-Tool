@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpStatus } from '@nestjs/common';
 import { SupabaseAuthGuard } from '../../src/auth/guards/supabase-auth.guard';
 import { RolesGuard } from '../../src/common/guards/roles.guard';
 
@@ -8,9 +7,6 @@ import { EntryDataService } from '../../src/modules/entry-data/services/entry-da
 import { CreateEvaluationVariableDto } from '../../src/modules/entry-data/dto/evaluation-variable.dto';
 
 import {
-  mockEvaluationVariable,
-  mockMetricResult,
-  mockCriteriaResult,
   mockEvaluationResult,
   mockProjectResult,
   mockEvaluationVariables,

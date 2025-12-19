@@ -1,9 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { 
-  ThresholdParserService,
-  ThresholdCaseType,
-  ParsedThreshold 
-} from '../../src/modules/entry-data/services/threshold-parser.service';
+import { ThresholdParserService,ThresholdCaseType} from '../../src/modules/entry-data/services/threshold-parser.service';
 
 describe('ThresholdParserService', () => {
   let service: ThresholdParserService;
