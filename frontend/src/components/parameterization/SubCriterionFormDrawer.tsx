@@ -30,7 +30,8 @@ interface MetricPreFillData {
   description: string;
   code: string;
   formula: string;
-  desired_threshold: number | null;
+  desired_threshold: string | null;
+  worst_case: string | null;
   variables: { symbol: string; description: string }[];
 }
 
@@ -72,6 +73,7 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
         code: metric.code || '',
         formula: metric.formula || '',
         desired_threshold: metric.desired_threshold || null,
+        worst_case: metric.worst_case || null,
         variables: metric.variables?.map(v => ({
           symbol: v.symbol,
           description: v.description
@@ -96,6 +98,7 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
       code: metric.code || '',
       formula: metric.formula || '',
       desired_threshold: metric.desired_threshold || null,
+      worst_case: metric.worst_case || null,
       variables: metric.variables?.map(v => ({
         symbol: v.symbol,
         description: v.description

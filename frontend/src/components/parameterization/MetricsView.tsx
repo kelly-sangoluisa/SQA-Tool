@@ -136,16 +136,26 @@ export function MetricsView({
                   )}
                   
                   <div className={styles.metricData}>
-                    {metric.desired_threshold !== null && (
-                      <div className={styles.threshold}>
-                        <span className={styles.thresholdIcon}>🎯</span>
-                        <span className={styles.thresholdLabel}>Umbral:</span>
-                        <span className={styles.thresholdValue}>
-                          {metric.desired_threshold > 1 
-                            ? `${metric.desired_threshold}%` 
-                            : `${(metric.desired_threshold * 100).toFixed(1)}%`
-                          }
-                        </span>
+                    {(metric.desired_threshold || metric.worst_case) && (
+                      <div className={styles.thresholdSection}>
+                        {metric.desired_threshold && (
+                          <div className={styles.threshold}>
+                            <span className={styles.thresholdIcon}>🎯</span>
+                            <span className={styles.thresholdLabel}>Umbral:</span>
+                            <span className={styles.thresholdValue}>
+                              {metric.desired_threshold}
+                            </span>
+                          </div>
+                        )}
+                        {metric.worst_case && (
+                          <div className={styles.threshold}>
+                            <span className={styles.thresholdIcon}>⚠️</span>
+                            <span className={styles.thresholdLabel}>Peor caso:</span>
+                            <span className={styles.thresholdValue}>
+                              {metric.worst_case}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                     

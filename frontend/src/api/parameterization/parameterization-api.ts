@@ -46,7 +46,8 @@ export interface Metric {
   description: string | null;
   code: string | null;
   formula: string | null;
-  desired_threshold: number | null;
+  desired_threshold: string | null;
+  worst_case: string | null;
   state: 'active' | 'inactive';
   variables?: FormulaVariable[];
 }
@@ -98,7 +99,8 @@ export interface CreateMetricDto {
   sub_criterion_id: number;
   code?: string;
   formula?: string;
-  desired_threshold?: number;
+  desired_threshold?: string;
+  worst_case?: string;
 }
 
 export type UpdateMetricDto = Partial<CreateMetricDto>;

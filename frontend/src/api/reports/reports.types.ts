@@ -38,7 +38,7 @@ export interface MetricResult {
   formula: string;
   calculated_value: number;
   weighted_value: number;
-  desired_threshold: number;
+  desired_threshold: string;
   meets_threshold: boolean;
   variables: VariableResult[];
 }
