@@ -1,17 +1,25 @@
 import React from 'react';
 import styles from './FormDrawer.module.css';
 
+const ErrorIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
+  </svg>
+);
+
 interface FormFieldProps {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  disabled?: boolean;
-  error?: string;
-  required?: boolean;
-  maxLength?: number;
-  type?: 'text' | 'textarea';
+  readonly id: string;
+  readonly label: string;
+  readonly value: string;
+  readonly onChange: (value: string) => void;
+  readonly placeholder?: string;
+  readonly disabled?: boolean;
+  readonly error?: string;
+  readonly required?: boolean;
+  readonly maxLength?: number;
+  readonly type?: 'text' | 'textarea';
 }
 
 export function FormField({
@@ -30,14 +38,6 @@ export function FormField({
   const criticalThreshold = maxLength * 0.95;
   const isWarning = value.length > warningThreshold;
   const isCritical = value.length > criticalThreshold;
-
-  const ErrorIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M7 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
-    </svg>
-  );
 
   return (
     <div className={styles.field}>

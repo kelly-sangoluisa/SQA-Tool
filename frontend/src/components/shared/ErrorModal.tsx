@@ -2,11 +2,11 @@ import { useEffect, useRef } from 'react';
 import styles from './ErrorModal.module.css';
 
 interface ErrorModalProps {
-  isOpen: boolean;
-  title: string;
-  message: string;
-  details?: string;
-  onClose: () => void;
+  readonly isOpen: boolean;
+  readonly title: string;
+  readonly message: string;
+  readonly details?: string;
+  readonly onClose: () => void;
 }
 
 export function ErrorModal({ isOpen, title, message, details, onClose }: ErrorModalProps) {

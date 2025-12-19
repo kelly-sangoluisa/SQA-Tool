@@ -3,8 +3,8 @@
  */
 
 interface LoadMoreTriggerProps {
-  observerRef: React.RefObject<HTMLDivElement | null>;
-  message?: string;
+  readonly observerRef: React.RefObject<HTMLDivElement | null>;
+  readonly message?: string;
 }
 
 export function LoadMoreTrigger({ observerRef, message = 'Cargando más...' }: LoadMoreTriggerProps) {
@@ -13,7 +13,7 @@ export function LoadMoreTrigger({ observerRef, message = 'Cargando más...' }: L
       <div className="loader-small"></div>
       <p>{message}</p>
       
-      <style jsx>{`
+      <style>{`
         .load-more-trigger {
           max-width: 1200px;
           margin: 2rem auto;
