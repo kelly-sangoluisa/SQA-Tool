@@ -40,22 +40,16 @@ export function MetricSelectorModal({
   };
 
   return (
-    <div 
-      className={styles.modalOverlay} 
-      onClick={onCancel}
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') {
-          onCancel();
-        }
-      }}
-      role="presentation"
-    >
-      <div 
+    <div className={styles.modalOverlay}>
+      <button 
+        className={styles.modalBackdrop}
+        onClick={onCancel}
+        aria-label="Cerrar modal"
+        type="button"
+      />
+      <dialog 
         className={styles.modalContent} 
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
+        open
         aria-labelledby="modal-title"
       >
         <div className={styles.modalHeader}>
@@ -158,7 +152,7 @@ export function MetricSelectorModal({
             Usar {selectedMetricIds.length > 0 ? `${selectedMetricIds.length} ` : ''}Métrica{selectedMetricIds.length === 1 ? '' : 's'} Seleccionada{selectedMetricIds.length === 1 ? '' : 's'}
           </button>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 }

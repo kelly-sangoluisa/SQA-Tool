@@ -463,7 +463,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
 
                 {!metric && !showAutocomplete && formData.variables.length > 0 && (
                   <div className={styles.infoBox} style={{ marginBottom: '1rem' }}>
-                    <strong>✅ Variables importadas:</strong> Se copiaron {formData.variables.length} variable{formData.variables.length !== 1 ? 's' : ''} de la métrica seleccionada.
+                    <strong>✅ Variables importadas:</strong> Se copiaron {formData.variables.length} variable{formData.variables.length === 1 ? '' : 's'} de la métrica seleccionada.
                   </div>
                 )}
 
