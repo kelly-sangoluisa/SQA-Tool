@@ -68,6 +68,8 @@ function buildMetricsBySubcriterion(evaluationCriteria: EvaluationCriterionAPI[]
           description: metric.description,
           formula: metric.formula,
           code: metric.code,
+          desired_threshold: metric.desired_threshold,
+          worst_case: metric.worst_case,
           variables: (metric.variables || []).map((v) => ({
             id: v.id,
             metric_id: metricId,
@@ -511,7 +513,7 @@ function DataEntryContent() {
         
         setSaveStatus('success');
         setToast({
-          message: `✅ Datos de "${metric.name}" guardados correctamente`,
+          message: `Datos de "${metric.name}" guardados correctamente`,
           type: 'success',
           isVisible: true
         });
@@ -522,7 +524,7 @@ function DataEntryContent() {
         setSaveStatus('error');
         const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
         setToast({
-          message: `❌ Error al guardar: ${errorMessage}`,
+          message: `Error al guardar: ${errorMessage}`,
           type: 'error',
           isVisible: true
         });
@@ -921,6 +923,8 @@ function DataEntryContent() {
                 name={currentMetric.name}
                 description={currentMetric.description}
                 formula={currentMetric.formula}
+                desiredThreshold={currentMetric.desired_threshold}
+                worstCase={currentMetric.worst_case}
                 variables={currentMetric.variables || []}
                 values={Object.fromEntries(
                   Object.entries(variableValues)

@@ -269,6 +269,7 @@ export class ParameterizationService {
         code: originalMetric.code,
         formula: originalMetric.formula,
         desired_threshold: originalMetric.desired_threshold,
+        worst_case: originalMetric.worst_case,
         sub_criterion_id: newSubCriterionId,
       });
       const savedMetric = await manager.save(newMetric);
@@ -475,6 +476,7 @@ export class ParameterizationService {
             description: metric.description,
             formula: metric.formula,
             desired_threshold: metric.desired_threshold,
+            worst_case: metric.worst_case,
             variables: activeVariables.map(variable => ({
               variable_id: variable.id,
               symbol: variable.symbol,
@@ -525,6 +527,7 @@ export class ParameterizationService {
         description: metric.description,
         formula: metric.formula,
         desired_threshold: metric.desired_threshold,
+        worst_case: metric.worst_case,
         variables: activeVariables.map(variable => ({
           variable_id: variable.id,
           symbol: variable.symbol,

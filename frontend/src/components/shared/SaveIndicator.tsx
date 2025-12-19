@@ -1,7 +1,8 @@
+import { FaSave } from 'react-icons/fa';
 import styles from './SaveIndicator.module.css';
 
 interface SaveIndicatorProps {
-  isVisible: boolean;
+  readonly isVisible: boolean;
 }
 
 export function SaveIndicator({ isVisible }: SaveIndicatorProps) {
@@ -26,7 +27,7 @@ export function SaveIndicator({ isVisible }: SaveIndicatorProps) {
       >
         <path d="M21 12a9 9 0 1 1-6.219-8.56" />
       </svg>
-      💾 Guardando datos...
+      <FaSave className={styles.saveIcon} /> Guardando datos...
     </output>
   );
 }

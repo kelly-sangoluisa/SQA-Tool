@@ -17,10 +17,13 @@ El **Entry Data Module** es responsable del procesamiento, cálculo y gestión d
 
 ```
 services/
-├── formula-evaluation.service.ts    # Evaluación matemática pura
-├── evaluation-variable.service.ts   # CRUD de variables
+├── formula-evaluation.service.ts     # Evaluación matemática pura
+├── threshold-parser.service.ts       # Parseo y clasificación de thresholds
+├── metric-scoring.service.ts         # Cálculo de scores según casos de negocio
+├── score-classification.service.ts   # Clasificación de niveles y satisfacción
+├── evaluation-variable.service.ts    # CRUD de variables
 ├── evaluation-calculation.service.ts # Orquestación de cálculos
-└── entry-data.service.ts           # Servicio coordinador principal
+└── entry-data.service.ts            # Servicio coordinador principal
 ```
 
 ## 📁 Estructura del Módulo
@@ -29,8 +32,11 @@ services/
 entry-data/
 ├── controllers/
 │   └── entry-data.controller.ts    # 18 endpoints REST API
-├── services/                       # 4 servicios especializados
+├── services/                       # 7 servicios especializados
 │   ├── formula-evaluation.service.ts
+│   ├── threshold-parser.service.ts
+│   ├── metric-scoring.service.ts
+│   ├── score-classification.service.ts
 │   ├── evaluation-variable.service.ts
 │   ├── evaluation-calculation.service.ts
 │   └── entry-data.service.ts
@@ -40,6 +46,8 @@ entry-data/
 │   ├── evaluation_criteria_result.entity.ts
 │   ├── evaluation_result.entity.ts
 │   └── project_result.entity.ts
+├── enums/                        # Enumeraciones
+│   └── score-classification.enum.ts
 ├── dto/                          # DTOs para validación
 │   ├── evaluation-variable.dto.ts
 │   ├── evaluation-metric-result.dto.ts
@@ -60,7 +68,50 @@ entry-data/
 - prepareExpression()
 ```
 
-### 2. EvaluationVariableService  
+### 2. ThresholdParserService
+**Responsabilidad**: Parseo y clasificación de thresholds
+```typescript
+- parseThreshold(threshold: string): ParsedThreshold
+- classifyCase(desired: string, worst: string): ThresholdCase
+```
+**Maneja 8 casos de negocio**:
+- SIMPLE_BINARY: `desired=1/0, worst=null`
+- RATIO_WITH_MIN_THRESHOLD: `desired=">=10/20min", worst="0/20min"`
+- INVERSE_RATIO_WITH_MAX: `desired="0/1min", worst=">=10/1min"`
+- TIME_THRESHOLD: `desired="20min", worst=">20 min"`
+- ZERO_WITH_MAX_THRESHOLD: `desired="0seg", worst=">=15 seg"`
+- PERCENTAGE_WITH_MAX: `desired="0 %", worst=">=10%"`
+- NUMERIC_WITH_MAX: `desired="1", worst=">=4"`
+- NUMERIC_WITH_MIN: `desired="4", worst="0"`
+
+### 3. MetricScoringService
+**Responsabilidad**: Cálculo de scores según casos de negocio
+```typescript
+- calculateScore(formula, variables, desired, worst): MetricScore
+```
+**Retorna**: `{ calculated_value, weighted_value }`
+
+### 4. ScoreClassificationService
+**Responsabilidad**: Clasificación adaptativa de puntuaciones
+```typescript
+- calculateScoreLevel(score: number, minimumThreshold: number): ScoreLevel
+- calculateSatisfactionGrade(score: number, minimumThreshold: number): SatisfactionGrade
+- classifyScore(score: number, minimumThreshold: number): { score_level, satisfaction_grade }
+```
+**Lógica adaptativa**:
+- Convierte `minimum_threshold` (porcentaje 0-100) a escala 0-10
+- Calcula rangos dinámicamente basados en el threshold del proyecto
+- **Niveles de Puntuación**:
+  - `Inaceptable`: score < threshold × 0.34375
+  - `Mínimamente Aceptable`: score < threshold × 0.625
+  - `Rango Objetivo`: score < threshold × 1.09375
+  - `Excede los Requisitos`: score ≥ threshold × 1.09375
+- **Grados de Satisfacción**:
+  - `Insatisfactorio`: score < threshold × 0.625
+  - `Satisfactorio`: score < threshold × 1.09375
+  - `Muy Satisfactorio`: score ≥ threshold × 1.09375
+
+### 5. EvaluationVariableService  
 **Responsabilidad**: CRUD de variables de evaluación
 ```typescript
 - createOrUpdate(data: CreateEvaluationVariableDto)
@@ -68,7 +119,7 @@ entry-data/
 - remove(evalMetricId: number, variableId: number)
 ```
 
-### 3. EvaluationCalculationService
+### 6. EvaluationCalculationService
 **Responsabilidad**: Orquestación de cálculos complejos
 ```typescript
 - processEvaluationData()
@@ -78,7 +129,7 @@ entry-data/
 - calculateProjectResult()
 ```
 
-### 4. EntryDataService
+### 7. EntryDataService
 **Responsabilidad**: Coordinación principal y gestión de flujo
 ```typescript
 - receiveEvaluationData()
@@ -108,8 +159,40 @@ updated_at: Date;
 | `EvaluationVariable` | Variables capturadas del frontend | `eval_metric_id`, `variable_id`, `value` |
 | `EvaluationMetricResult` | Resultados calculados de métricas | `calculated_value`, `weighted_value` |
 | `EvaluationCriteriaResult` | Resultados de criterios agregados | `final_score`, `eval_criterion_id` |
-| `EvaluationResult` | Resultado final de evaluación | `evaluation_score`, `conclusion` |
-| `ProjectResult` | Resultado final del proyecto | `final_project_score` |
+| `EvaluationResult` | Resultado final de evaluación | `evaluation_score`, `conclusion`, `score_level`, `satisfaction_grade` |
+| `ProjectResult` | Resultado final del proyecto | `final_project_score`, `score_level`, `satisfaction_grade` |
+
+### Clasificación Automática de Resultados
+
+Tanto `EvaluationResult` como `ProjectResult` incluyen clasificación automática:
+
+**Campos de Clasificación**:
+- `score_level`: Nivel de puntuación (enum `ScoreLevel`)
+  - `Inaceptable`
+  - `Mínimamente Aceptable`
+  - `Rango Objetivo`
+  - `Excede los Requisitos`
+
+- `satisfaction_grade`: Grado de satisfacción (enum `SatisfactionGrade`)
+  - `Insatisfactorio`
+  - `Satisfactorio`
+  - `Muy Satisfactorio`
+
+**Cálculo Adaptativo**:
+Los rangos se calculan dinámicamente basados en el `minimum_threshold` del proyecto:
+- `minimum_threshold` viene en porcentaje (ej: 80 = 80%)
+- Se convierte a escala 0-10 para los cálculos
+- Los límites se ajustan proporcionalmente al threshold configurado
+
+**Ejemplo**: Para `minimum_threshold = 80%` (8.0 en escala 0-10):
+```
+Score | Nivel                    | Grado
+------|--------------------------|------------------
+< 2.75 | Inaceptable             | Insatisfactorio
+< 5.0  | Mínimamente Aceptable   | Insatisfactorio  
+< 8.75 | Rango Objetivo          | Satisfactorio
+≥ 8.75 | Excede los Requisitos   | Muy Satisfactorio
+```
 
 ## 🌐 API Endpoints (18 endpoints)
 
@@ -168,6 +251,8 @@ npm test -- --testPathPatterns="entry-data.service.spec.ts"
 npm test -- --testPathPatterns="evaluation-calculation.service.spec.ts"
 npm test -- --testPathPatterns="evaluation-variable.service.spec.ts"
 npm test -- --testPathPatterns="formula-evaluation.service.spec.ts"
+npm test -- --testPathPatterns="threshold-parser.service.spec.ts"
+npm test -- --testPathPatterns="metric-scoring.service.spec.ts"
 npm test -- --testPathPatterns="entry-data.controller.spec.ts"
 
 # Tests con coverage
@@ -188,23 +273,137 @@ npm run format
 ## 🧪 Cobertura de Tests
 
 ### Estadísticas Actuales
-- **Total Tests**: 71 tests ✅
-- **Servicios**: 4/4 cubiertos (52 tests)
+- **Total Tests**: 100+ tests ✅
+- **Servicios**: 6/6 cubiertos (80+ tests)
 - **Controlador**: 1/1 cubierto (19 tests)  
 - **Coverage**: 100% endpoints y servicios
-- **Ejecución**: ~3.3 segundos
+- **Ejecución**: ~4.5 segundos
 
 ### Tests por Componente
 
 | Componente | Tests | Estado |
 |------------|-------|---------|
 | `FormulaEvaluationService` | 15 | ✅ PASS |
+| `ThresholdParserService` | 18 | ✅ PASS |
+| `MetricScoringService` | 16 | ✅ PASS |
 | `EvaluationVariableService` | 8 | ✅ PASS |
 | `EvaluationCalculationService` | 13 | ✅ PASS |
 | `EntryDataService` | 16 | ✅ PASS |
 | `EntryDataController` | 19 | ✅ PASS |
 
 ## 🔄 Flujo de Procesamiento
+
+### Flujo Completo de Cálculo de Evaluación
+
+```
+1. Frontend envía variables
+   ↓
+2. EntryDataService.receiveEvaluationData()
+   ↓
+3. EvaluationVariableService.createOrUpdate()
+   ↓ (guardar variables en DB)
+   
+4. EntryDataService.finalizeEvaluation()
+   ↓
+5. EvaluationCalculationService.calculateMetricResult()
+   ├─> ThresholdParserService.classifyCase() (clasifica caso de negocio)
+   ├─> MetricScoringService.calculateScore() (calcula según caso)
+   │   ├─> FormulaEvaluationService.evaluateFormula()
+   │   └─> Retorna { calculated_value, weighted_value }
+   └─> Guarda en evaluation_metric_results
+   
+6. EvaluationCalculationService.calculateCriteriaResults()
+   ├─> Promedio de weighted_values por criterio
+   ├─> Multiplica por importance_percentage
+   └─> Guarda final_score en evaluation_criteria_results
+   
+7. EvaluationCalculationService.calculateEvaluationResult()
+   ├─> SUMA de todos los final_score
+   └─> Guarda evaluation_score en evaluation_results
+   
+8. EntryDataService.finalizeProject()
+   ↓
+9. EvaluationCalculationService.calculateProjectResult()
+   ├─> Promedio de evaluation_scores
+   └─> Guarda final_project_score en project_results
+```
+
+### Cálculo de Scores Según Casos de Negocio
+
+El sistema maneja **8 casos diferentes** según `desired_threshold` y `worst_case`:
+
+#### Caso 1: SIMPLE_BINARY (`desired="1"`, `worst=null`)
+```typescript
+calculated_value = evaluar fórmula (ej: 1-(A/B))
+weighted_value = calculated_value * 10
+```
+
+#### Caso 2: RATIO_WITH_MIN_THRESHOLD (`desired=">=10/20min"`, `worst="0/20min"`)
+```typescript
+calculated_value = A (informativo)
+weighted_value = A >= D ? 10 : (A/D) * 10
+```
+
+#### Caso 3: INVERSE_RATIO_WITH_MAX (`desired="0/1min"`, `worst=">=10/1min"`)
+```typescript
+calculated_value = A (informativo)
+weighted_value = A > W ? 0 : (1 - A/W) * 10
+```
+
+#### Caso 4: TIME_THRESHOLD (`desired="20min"`, `worst=">20 min"`)
+```typescript
+calculated_value = evaluar fórmula (ej: B-A)
+weighted_value = calculated > W ? 0 : (calculated/D) * 10
+```
+
+#### Caso 5: ZERO_WITH_MAX_THRESHOLD (`desired="0seg"`, `worst=">=15 seg"`)
+```typescript
+calculated_value = evaluar fórmula
+weighted_value = calculated > W ? 0 : (1 - calculated/W) * 10
+```
+
+#### Caso 6: PERCENTAGE_WITH_MAX (`desired="0 %"`, `worst=">=10%"`)
+```typescript
+calculated_value = A o evaluar fórmula
+weighted_value = {
+  calculated >= W → 0
+  calculated == 1 → 10
+  else → (1 - calculated/W) * 10
+}
+```
+
+#### Caso 7: NUMERIC_WITH_MAX (`desired="1"`, `worst=">=4"`)
+```typescript
+calculated_value = A o evaluar fórmula
+weighted_value = {
+  calculated >= W → 0
+  calculated == D → 10
+  else → (1 - calculated/W) * 10
+}
+```
+
+#### Caso 8: NUMERIC_WITH_MIN (`desired="4"`, `worst="0"`)
+```typescript
+calculated_value = A o evaluar fórmula
+weighted_value = {
+  calculated == W → 0
+  calculated >= D → 10
+  else → (calculated/D) * 10
+}
+```
+
+### Fórmulas de Agregación
+
+```typescript
+// final_score (por criterio)
+final_score = AVG(weighted_values) × (importance_percentage / 100)
+
+// evaluation_score (por evaluación)
+evaluation_score = SUM(final_scores)
+
+// final_project_score (por proyecto)
+final_project_score = AVG(evaluation_scores)
+```
 
 ### 1. Captura de Datos (Frontend → Backend)
 ```

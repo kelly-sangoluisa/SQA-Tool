@@ -1,11 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Logger } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 import { EvaluationCalculationService } from '../../src/modules/entry-data/services/evaluation-calculation.service';
 import { FormulaEvaluationService } from '../../src/modules/entry-data/services/formula-evaluation.service';
 import { EvaluationVariableService } from '../../src/modules/entry-data/services/evaluation-variable.service';
+import { MetricScoringService } from '../../src/modules/entry-data/services/metric-scoring.service';
+import { ThresholdParserService } from '../../src/modules/entry-data/services/threshold-parser.service';
+import { ScoreClassificationService } from '../../src/modules/entry-data/services/score-classification.service';
 
 // Entities
 import { EvaluationMetricResult } from '../../src/modules/entry-data/entities/evaluation_metric_result.entity';
@@ -32,8 +35,9 @@ import {
 
 describe('EvaluationCalculationService', () => {
   let service: EvaluationCalculationService;
-  let formulaEvaluationService: FormulaEvaluationService;
   let evaluationVariableService: EvaluationVariableService;
+  let metricScoringService: MetricScoringService;
+  let scoreClassificationService: any;
   let evaluationMetricResultRepo: Repository<EvaluationMetricResult>;
   let evaluationCriteriaResultRepo: Repository<EvaluationCriteriaResult>;
   let evaluationResultRepo: Repository<EvaluationResult>;
@@ -53,6 +57,14 @@ describe('EvaluationCalculationService', () => {
       findByEvaluationMetric: jest.fn(),
     };
 
+    const mockScoringService = {
+      calculateScore: jest.fn(),
+    };
+
+    const mockClassificationService = {
+      classifyScore: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EvaluationCalculationService,
@@ -64,6 +76,15 @@ describe('EvaluationCalculationService', () => {
           provide: EvaluationVariableService,
           useValue: mockVariableService,
         },
+        {
+          provide: ScoreClassificationService,
+          useValue: mockClassificationService,
+        },
+        {
+          provide: MetricScoringService,
+          useValue: mockScoringService,
+        },
+        ThresholdParserService,
         {
           provide: getRepositoryToken(EvaluationMetricResult),
           useValue: createMockRepository(),
@@ -100,8 +121,9 @@ describe('EvaluationCalculationService', () => {
     }).compile();
 
     service = module.get<EvaluationCalculationService>(EvaluationCalculationService);
-    formulaEvaluationService = module.get<FormulaEvaluationService>(FormulaEvaluationService);
     evaluationVariableService = module.get<EvaluationVariableService>(EvaluationVariableService);
+    metricScoringService = module.get<MetricScoringService>(MetricScoringService);
+    scoreClassificationService = module.get(ScoreClassificationService);
     evaluationMetricResultRepo = module.get<Repository<EvaluationMetricResult>>(
       getRepositoryToken(EvaluationMetricResult),
     );
@@ -124,6 +146,10 @@ describe('EvaluationCalculationService', () => {
       getRepositoryToken(Project),
     );
     dataSource = module.get<DataSource>(DataSource);
+    
+    // Silenciar logs durante los tests
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
   });
 
   it('should be defined', () => {
@@ -200,12 +226,14 @@ describe('EvaluationCalculationService', () => {
 
     it('should calculate metric result successfully', async () => {
       // Arrange
-      const calculatedValue = 15.5;
-      const weightedValue = 77.5;
+      const scoreResult = {
+        calculated_value: 15.5,
+        weighted_value: 77.5
+      };
       
       jest.spyOn(evaluationMetricRepo, 'findOne').mockResolvedValue(mockEvaluationMetric as any);
       jest.spyOn(evaluationVariableService, 'findByEvaluationMetric').mockResolvedValue([mockEvaluationVariable] as any);
-      jest.spyOn(formulaEvaluationService, 'evaluateFormula').mockReturnValue(calculatedValue);
+      jest.spyOn(metricScoringService, 'calculateScore').mockReturnValue(scoreResult);
       jest.spyOn(evaluationMetricResultRepo, 'create').mockReturnValue(mockMetricResult as any);
       jest.spyOn(evaluationMetricResultRepo, 'save').mockResolvedValue(mockMetricResult as any);
 
@@ -213,14 +241,21 @@ describe('EvaluationCalculationService', () => {
       const result = await service.calculateMetricResult(evalMetricId);
 
       // Assert
-      expect(formulaEvaluationService.evaluateFormula).toHaveBeenCalledWith(
+      expect(metricScoringService.calculateScore).toHaveBeenCalledWith(
         mockEvaluationMetric.metric.formula,
-        [{ symbol: mockEvaluationVariable.variable.symbol, value: mockEvaluationVariable.value }]
+        expect.arrayContaining([
+          expect.objectContaining({
+            symbol: mockEvaluationVariable.variable.symbol,
+            value: expect.any(Number)
+          })
+        ]),
+        mockEvaluationMetric.metric.desired_threshold,
+        mockEvaluationMetric.metric.worst_case
       );
       expect(evaluationMetricResultRepo.create).toHaveBeenCalledWith({
         eval_metric_id: evalMetricId,
-        calculated_value: calculatedValue,
-        weighted_value: calculatedValue // calculateWeightedValue devuelve Math.max(0, value)
+        calculated_value: scoreResult.calculated_value,
+        weighted_value: scoreResult.weighted_value
       });
       expect(result).toEqual(mockMetricResult);
     });
@@ -268,9 +303,14 @@ describe('EvaluationCalculationService', () => {
 
       // Assert
       expect(result).toEqual([mockCriteriaResult]);
+      
+      // final_score = AVG(weighted_values) × (importance_percentage / 100)
+      // = 77.5 × (30 / 100) = 77.5 × 0.3 = 23.25
+      const expectedFinalScore = mockMetricResult.weighted_value * (mockEvaluationCriterion.importance_percentage / 100);
+      
       expect(evaluationCriteriaResultRepo.create).toHaveBeenCalledWith({
         eval_criterion_id: mockEvaluationCriterion.id,
-        final_score: mockMetricResult.weighted_value // Simple average
+        final_score: expectedFinalScore // 23.25
       });
     });
 
@@ -300,7 +340,8 @@ describe('EvaluationCalculationService', () => {
       // Arrange
       const evaluationWithCriteria = {
         ...mockEvaluation,
-        evaluation_criteria: [mockEvaluationCriterion]
+        evaluation_criteria: [mockEvaluationCriterion],
+        project: mockProject
       };
       
       const mockQueryBuilder = {
@@ -308,8 +349,14 @@ describe('EvaluationCalculationService', () => {
         getMany: jest.fn().mockResolvedValue([mockCriteriaResult])
       };
       
+      const mockClassification = {
+        score_level: mockEvaluationResult.score_level,
+        satisfaction_grade: mockEvaluationResult.satisfaction_grade
+      };
+      
       jest.spyOn(evaluationRepo, 'findOne').mockResolvedValue(evaluationWithCriteria as any);
       jest.spyOn(evaluationCriteriaResultRepo, 'createQueryBuilder').mockReturnValue(mockQueryBuilder as any);
+      jest.spyOn(scoreClassificationService, 'classifyScore').mockReturnValue(mockClassification);
       jest.spyOn(evaluationResultRepo, 'create').mockReturnValue(mockEvaluationResult as any);
       jest.spyOn(evaluationResultRepo, 'save').mockResolvedValue(mockEvaluationResult as any);
 
@@ -318,18 +365,16 @@ describe('EvaluationCalculationService', () => {
 
       // Assert
       expect(result).toEqual(mockEvaluationResult);
-      expect(evaluationRepo.findOne).toHaveBeenCalledWith({
-        where: { id: evaluationId },
-        relations: ['evaluation_criteria', 'evaluation_criteria.evaluation_metrics']
-      });
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
-        'cr.eval_criterion_id IN (:...criterionIds)',
-        { criterionIds: [mockEvaluationCriterion.id] }
+      expect(scoreClassificationService.classifyScore).toHaveBeenCalledWith(
+        mockCriteriaResult.final_score,
+        mockProject.minimum_threshold
       );
       expect(evaluationResultRepo.create).toHaveBeenCalledWith({
         evaluation_id: evaluationId,
         evaluation_score: mockCriteriaResult.final_score,
-        conclusion: 'Evaluación calculada automáticamente'
+        conclusion: 'Evaluación calculada automáticamente',
+        score_level: mockClassification.score_level,
+        satisfaction_grade: mockClassification.satisfaction_grade
       });
     });
 
@@ -359,7 +404,14 @@ describe('EvaluationCalculationService', () => {
 
     it('should calculate project result successfully', async () => {
       // Arrange
+      const mockClassification = {
+        score_level: mockProjectResult.score_level,
+        satisfaction_grade: mockProjectResult.satisfaction_grade
+      };
+      
       jest.spyOn(evaluationResultRepo, 'find').mockResolvedValue([mockEvaluationResult] as any);
+      jest.spyOn(projectRepo, 'findOneBy').mockResolvedValue(mockProject as any);
+      jest.spyOn(scoreClassificationService, 'classifyScore').mockReturnValue(mockClassification);
       jest.spyOn(projectResultRepo, 'create').mockReturnValue(mockProjectResult as any);
       jest.spyOn(projectResultRepo, 'save').mockResolvedValue(mockProjectResult as any);
 
@@ -368,9 +420,16 @@ describe('EvaluationCalculationService', () => {
 
       // Assert
       expect(result).toEqual(mockProjectResult);
+      expect(projectRepo.findOneBy).toHaveBeenCalledWith({ id: projectId });
+      expect(scoreClassificationService.classifyScore).toHaveBeenCalledWith(
+        mockEvaluationResult.evaluation_score,
+        mockProject.minimum_threshold
+      );
       expect(projectResultRepo.create).toHaveBeenCalledWith({
         project_id: projectId,
-        final_project_score: mockEvaluationResult.evaluation_score // Simple average
+        final_project_score: mockEvaluationResult.evaluation_score,
+        score_level: mockClassification.score_level,
+        satisfaction_grade: mockClassification.satisfaction_grade
       });
     });
 

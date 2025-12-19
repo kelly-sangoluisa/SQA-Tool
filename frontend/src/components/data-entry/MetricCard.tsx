@@ -1,6 +1,7 @@
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { sortVariablesByFormulaOrder } from '@/utils/formulaUtils';
+import { isVariableFixed } from '@/utils/thresholdUtils';
 import type { Variable } from '@/types/data-entry/data-entry.types';
 import styles from './MetricCard.module.css';
 
@@ -11,6 +12,8 @@ interface MetricCardProps {
   name: string;
   description: string;
   formula: string;
+  desiredThreshold?: string | null;
+  worstCase?: string | null;
   variables: Variable[];
   values?: Record<string, string>;
   onValueChange?: (variableSymbol: string, value: string) => void;
@@ -26,7 +29,9 @@ export function MetricCard({
   number, 
   name, 
   description, 
-  formula, 
+  formula,
+  desiredThreshold,
+  worstCase,
   variables,
   values = {},
   onValueChange,
@@ -145,24 +150,47 @@ export function MetricCard({
         <div className={styles.rightColumn}>
           {variables.length > 0 && (
             <div className={styles.inputsSection}>
-              {sortedVariables.map((variable) => (
-                <div key={variable.symbol} className={styles.inputGroup}>
-                  <label className={styles.inputLabel}>
-                    {variable.symbol} =
-                  </label>
-                  <Input 
-                    type="number" 
-                    placeholder="Ej: 12"
-                    min="0"
-                    step="any"
-                    value={values[variable.symbol] || ''}
-                    onChange={(e) => handleInputChange(variable.symbol, e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    onPaste={handlePaste}
-                    className={styles.valueInput}
-                  />
-                </div>
-              ))}
+              {sortedVariables.map((variable) => {
+                // Detectar si la variable es fija
+                const fixedInfo = isVariableFixed(
+                  variable.symbol,
+                  formula,
+                  desiredThreshold || null,
+                  worstCase || null
+                );
+                const isFixed = fixedInfo.isFixed;
+                const fixedValue = fixedInfo.fixedValue;
+
+                // Si es fija y no tiene valor en el state, auto-completar
+                if (isFixed && fixedValue !== undefined && !values[variable.symbol]) {
+                  // Auto-completar valor fijo al montar
+                  setTimeout(() => {
+                    handleInputChange(variable.symbol, fixedValue.toString());
+                  }, 0);
+                }
+
+                return (
+                  <div key={variable.symbol} className={styles.inputGroup}>
+                    <label className={styles.inputLabel}>
+                      {variable.symbol} =
+                    </label>
+                    <Input 
+                      type="number" 
+                      placeholder={isFixed ? `Valor fijo: ${fixedValue}` : "Ej: 12"}
+                      min="0"
+                      step="any"
+                      value={isFixed && fixedValue !== undefined ? fixedValue.toString() : (values[variable.symbol] || '')}
+                      onChange={(e) => handleInputChange(variable.symbol, e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      onPaste={handlePaste}
+                      className={styles.valueInput}
+                      disabled={isFixed}
+                      readOnly={isFixed}
+                      title={isFixed ? fixedInfo.reason : undefined}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

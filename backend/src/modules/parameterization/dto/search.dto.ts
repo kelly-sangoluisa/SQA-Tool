@@ -71,7 +71,10 @@ export class MetricSearchResultDto {
   formula?: string;
 
   @ApiProperty({ description: 'Umbral deseado', required: false })
-  desired_threshold?: number;
+  desired_threshold?: string;
+
+  @ApiProperty({ description: 'Peor caso', required: false })
+  worst_case?: string;
 
   @ApiProperty({ 
     description: 'Variables de fórmula asociadas',

@@ -22,9 +22,13 @@ export class Metric extends BaseNamedEntity {
   @Column({ type: 'varchar', length: 200, nullable: true })
   formula: string;
 
-  @ApiProperty({ description: 'Umbral deseado para la métrica', example: 95.5, required: false })
-  @Column({ type: 'numeric', precision: 10, scale: 4, nullable: true })
-  desired_threshold: number;
+  @ApiProperty({ description: 'Umbral deseado para la métrica', example: '>=95', required: false })
+  @Column({ type: 'varchar', nullable: true })
+  desired_threshold: string;
+
+  @ApiProperty({ description: 'Peor caso para la métrica', example: '<60', required: false })
+  @Column({ type: 'varchar', nullable: true })
+  worst_case: string;
 
   @ManyToOne(() => SubCriterion, subCriterion => subCriterion.metrics, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'sub_criterion_id' })

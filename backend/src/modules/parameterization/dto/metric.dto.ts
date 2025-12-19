@@ -20,10 +20,15 @@ export class CreateMetricDto extends BaseNameDescriptionDto {
   @MaxLength(200)
   formula?: string;
   
-  @ApiProperty({ description: 'Umbral deseado', example: 99.0, required: false })
+  @ApiProperty({ description: 'Umbral deseado', example: '>=95', required: false })
   @IsOptional()
-  @IsNumber()
-  desired_threshold?: number;
+  @IsString()
+  desired_threshold?: string;
+  
+  @ApiProperty({ description: 'Peor caso', example: '<60', required: false })
+  @IsOptional()
+  @IsString()
+  worst_case?: string;
 }
 
 export class UpdateMetricDto extends PartialType(CreateMetricDto) {}

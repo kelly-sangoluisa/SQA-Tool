@@ -26,7 +26,8 @@ export interface MetricSearchResult {
   name: string;
   description?: string;
   formula?: string;
-  desired_threshold?: number;
+  desired_threshold?: string;
+  worst_case?: string;
   variables?: FormulaVariableSearchResult[];
 }
 

@@ -90,7 +90,7 @@ export function MetricSelectorModal({
                 </div>
               </div>
 
-              {(metric.formula || metric.desired_threshold !== null || (metric.variables && metric.variables.length > 0)) && (
+              {(metric.formula || metric.desired_threshold || (metric.variables && metric.variables.length > 0)) && (
                 <div className={styles.metricDetails}>
                   {metric.formula && (
                     <div className={styles.detailRow}>
@@ -98,7 +98,7 @@ export function MetricSelectorModal({
                       <span className={styles.detailValue}>{metric.formula}</span>
                     </div>
                   )}
-                  {metric.desired_threshold !== null && (
+                  {metric.desired_threshold && (
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>Umbral:</span>
                       <span className={styles.detailValue}>
