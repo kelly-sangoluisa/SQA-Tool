@@ -133,14 +133,16 @@ export const parameterizationApi = {
   /**
    * Get all standards (only active by default)
    */
-  async getStandards(params: QueryParams = { state: 'active' }): Promise<Standard[]> {
+  async getStandards(params?: QueryParams): Promise<Standard[]> {
+    const effectiveParams = params ?? { state: 'active' };
     const queryString = new URLSearchParams(
-      Object.entries(params)
+      Object.entries(effectiveParams)
         .filter(([, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString();
 
-    return apiClient.get(`/parameterization/standards${queryString ? `?${queryString}` : ''}`);
+    const url = queryString ? `/parameterization/standards?${queryString}` : '/parameterization/standards';
+    return apiClient.get(url);
   },
 
   /**
@@ -178,17 +180,19 @@ export const parameterizationApi = {
    */
   async getCriteriaByStandard(
     standardId: number,
-    params: QueryParams = { state: 'active' }
+    params?: QueryParams
   ): Promise<Criterion[]> {
+    const effectiveParams = params ?? { state: 'active' };
     const queryString = new URLSearchParams(
-      Object.entries(params)
+      Object.entries(effectiveParams)
         .filter(([, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString();
 
-    return apiClient.get(
-      `/parameterization/standards/${standardId}/criteria${queryString ? `?${queryString}` : ''}`
-    );
+    const url = queryString 
+      ? `/parameterization/standards/${standardId}/criteria?${queryString}` 
+      : `/parameterization/standards/${standardId}/criteria`;
+    return apiClient.get(url);
   },
 
   /**
@@ -226,17 +230,19 @@ export const parameterizationApi = {
    */
   async getSubCriteriaByCriterion(
     criterionId: number,
-    params: QueryParams = { state: 'active' }
+    params?: QueryParams
   ): Promise<SubCriterion[]> {
+    const effectiveParams = params ?? { state: 'active' };
     const queryString = new URLSearchParams(
-      Object.entries(params)
+      Object.entries(effectiveParams)
         .filter(([, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString();
 
-    return apiClient.get(
-      `/parameterization/criteria/${criterionId}/sub-criteria${queryString ? `?${queryString}` : ''}`
-    );
+    const url = queryString 
+      ? `/parameterization/criteria/${criterionId}/sub-criteria?${queryString}` 
+      : `/parameterization/criteria/${criterionId}/sub-criteria`;
+    return apiClient.get(url);
   },
 
   /**

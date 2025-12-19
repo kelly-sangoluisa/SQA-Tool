@@ -89,7 +89,7 @@ export class ParameterizationService {
     updateStateDto: UpdateStateDto,
     entityName: string,
   ): Promise<T> {
-    const entity = await this.findOneOrFail(repo, id, entityName) as T;
+    const entity = await this.findOneOrFail(repo, id, entityName);
     const oldState = entity.state;
     entity.state = updateStateDto.state;
 

@@ -54,7 +54,7 @@ export class ApiClient {
 
     // Verificar si hay contenido antes de parsear JSON
     const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
+    if (contentType?.includes('application/json')) {
       const text = await response.text();
       return text ? JSON.parse(text) : {} as T;
     }
