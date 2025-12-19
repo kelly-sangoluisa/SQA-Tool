@@ -16,7 +16,7 @@ import { User } from '../../../users/entities/user.entity';
 import { CreateProjectDto } from '../dto/project.dto';
 import { CreateEvaluationDto } from '../dto/evaluation.dto';
 import { CreateEvaluationCriterionDto, BulkCreateEvaluationCriteriaDto } from '../dto/evaluation-criterion.dto';
-import { CreateEvaluationMetricDto, BulkCreateEvaluationMetricsDto } from '../dto/evaluation-metric.dto';
+import { BulkCreateEvaluationMetricsDto } from '../dto/evaluation-metric.dto';
 
 @Injectable()
 export class ConfigEvaluationService {

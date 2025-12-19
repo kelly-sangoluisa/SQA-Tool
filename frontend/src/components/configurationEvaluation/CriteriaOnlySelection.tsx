@@ -313,13 +313,13 @@ export function CriteriaOnlySelection({
                         {criterion.sub_criteria.length} subcriterios
                       </span>
                       {criterion.sub_criteria.map(sc => {
-                        const metricsCount = sc.metrics ? sc.metrics.length : 0;
-                        const hasFormulas = sc.metrics && sc.metrics.some(m => m.formula);
+                        const metricsCount = sc.metrics?.length ?? 0;
+                        const hasFormulas = sc.metrics?.some(m => m.formula);
                         return (
                           <div key={sc.id} className={styles.subcriterionDetail}>
                             <span className={styles.subcriterionName}>{sc.name}</span>
                             <span className={`${styles.metricsCount} ${metricsCount > 0 ? styles.hasMetrics : styles.noMetrics}`}>
-                              {metricsCount} métrica{metricsCount !== 1 ? 's' : ''}
+                              {metricsCount} métrica{metricsCount === 1 ? '' : 's'}
                               {hasFormulas && metricsCount > 0 && ' ✓'}
                             </span>
                           </div>

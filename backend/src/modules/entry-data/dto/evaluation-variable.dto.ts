@@ -17,13 +17,13 @@ export class CreateEvaluationVariableDto {
   @Transform(({ value }) => Number(value))
   variable_id: number;
 
-  @ApiProperty({ 
-    description: 'Valor numérico de la variable para el cálculo', 
+  @ApiProperty({
+    description: 'Valor numérico de la variable para el cálculo',
     example: 85.5
   })
   @IsNumber({ maxDecimalPlaces: 4 }, { message: 'El valor debe ser un número con máximo 4 decimales' })
   @Min(0, { message: 'El valor no puede ser negativo' })
   @IsNotEmpty({ message: 'El valor de la variable es obligatorio' })
-  @Transform(({ value }) => typeof value === 'string' ? parseFloat(value) : value)
+  @Transform(({ value }) => typeof value === 'string' ? Number.parseFloat(value) : value)
   value: number;
 }
