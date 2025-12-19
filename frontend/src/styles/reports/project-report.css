@@ -198,14 +198,14 @@
   grid-row: 1;
 }
 
-.export-pdf-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-}
-
 .export-pdf-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.export-pdf-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
 .ai-analysis-btn {
@@ -229,15 +229,15 @@
   grid-row: 1;
 }
 
+.ai-analysis-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .ai-analysis-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgb(102 126 234 / 40%);
   background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-}
-
-.ai-analysis-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .add-to-pdf-btn {
@@ -304,14 +304,6 @@
   opacity: 0.5;
 }
 
-.certificate-checkbox span {
-  font-weight: 500;
-}
-
-.certificate-checkbox:hover span {
-  color: var(--color-primary);
-}
-
 /* ===================================================================
    AI ERROR BANNER
    =================================================================== */
@@ -336,6 +328,14 @@
 
 .ai-error-banner span {
   flex: 1;
+}
+
+.certificate-checkbox span {
+  font-weight: 500;
+}
+
+.certificate-checkbox:hover span {
+  color: var(--color-primary);
 }
 
 .retry-btn-inline {
@@ -490,10 +490,10 @@
   z-index: 1000;
   padding: 1rem;
   backdrop-filter: blur(4px);
-  animation: fadeIn 0.2s ease;
+  animation: fade-in 0.2s ease;
 }
 
-@keyframes fadeIn {
+@keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
@@ -508,10 +508,10 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: slideUp 0.3s ease;
+  animation: slide-up 0.3s ease;
 }
 
-@keyframes slideUp {
+@keyframes slide-up {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
