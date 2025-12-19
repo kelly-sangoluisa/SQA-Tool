@@ -29,7 +29,6 @@ function ConfigurationEvaluationPage() {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -40,7 +39,6 @@ function ConfigurationEvaluationPage() {
   const [evaluationInfo, setEvaluationInfo] = useState<EvaluationInfo | null>(null);
   const [existingProjectId, setExistingProjectId] = useState<number | null>(null);
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null);
-  const [selectedCriteriaIds, setSelectedCriteriaIds] = useState<number[]>([]);
   const [selectedCriteriaFull, setSelectedCriteriaFull] = useState<Criterion[]>([]);
   const [selectedSubCriteria, setSelectedSubCriteria] = useState<SelectedCriterion[]>([]);
 
@@ -78,7 +76,6 @@ useEffect(() => {
   };
 
   const handleStep3Complete = (criteriaWithImportance: CriteriaWithImportance[]) => {
-    setSelectedCriteriaIds(criteriaWithImportance.map(c => c.criterionId));
     setSelectedCriteriaFull(criteriaWithImportance.map(c => c.criterion));
     setCriteriaImportance(criteriaWithImportance.map(c => ({
       criterionId: c.criterionId,
@@ -98,7 +95,6 @@ const handleStep5Complete = async (selectedMetrics: Map<number, number[]>) => {
 
   try {
     setIsSaving(true);
-    setSaveError(null);
 
     if (!user?.id) throw new Error('Usuario no válido');
     if (!evaluationInfo) throw new Error('Información de evaluación faltante');
@@ -169,9 +165,11 @@ const handleStep5Complete = async (selectedMetrics: Map<number, number[]>) => {
     setSuccessModalOpen(true);
 
   } catch (error) {
-    setSaveError(
-      error instanceof Error ? error.message : 'Error inesperado'
+    console.error('Error al crear la evaluación:', error);
+    setSuccessMessage(
+      error instanceof Error ? error.message : 'Error inesperado al crear la evaluación'
     );
+    setSuccessModalOpen(true);
   } finally {
     setIsSaving(false);
   }

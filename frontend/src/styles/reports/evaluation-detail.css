@@ -119,10 +119,6 @@
   align-items: center;
 }
 
-.header-score {
-  /* ScoreGauge wrapper - styles from component */
-}
-
 /* ============================================
    EXPORT PDF BUTTON
    ============================================ */
@@ -144,15 +140,15 @@
   min-width: 180px;
 }
 
-.export-pdf-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-}
-
 .export-pdf-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+.export-pdf-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
 .certificate-checkbox {
@@ -274,7 +270,7 @@
 }
 
 .tab-content {
-  animation: fadeIn 0.4s ease;
+  animation: fade-in 0.4s ease;
 }
 
 /* ============================================
@@ -787,7 +783,7 @@
   }
 }
 
-@keyframes fadeIn {
+@keyframes fade-in {
   from {
     opacity: 0;
   }

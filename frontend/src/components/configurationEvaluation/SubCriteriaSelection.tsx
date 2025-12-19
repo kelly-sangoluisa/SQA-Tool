@@ -9,10 +9,10 @@ import styles from './SubCriteriaSelection.module.css';
 import { CriteriaWithImportance } from './CriteriaOnlySelection';
 
 interface SubCriteriaSelectionProps {
-  selectedCriteria: Criterion[] | CriteriaWithImportance[];
-  initialSelected?: SelectedCriterion[];
-  onNext: (selectedCriteria: SelectedCriterion[]) => void;
-  onBack: () => void;
+  readonly selectedCriteria: Criterion[] | CriteriaWithImportance[];
+  readonly initialSelected?: SelectedCriterion[];
+  readonly onNext: (selectedCriteria: SelectedCriterion[]) => void;
+  readonly onBack: () => void;
 }
 
 export function SubCriteriaSelection({

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsNotEmpty, IsEnum, IsPositive, Max, Min, IsArray, ValidateNested, ArrayMinSize } from 'class-validator';
+import { IsNumber, IsNotEmpty, IsEnum, Max, Min, IsArray, ValidateNested, ArrayMinSize } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ImportanceLevel } from '../entities/evaluation-criterion.entity';
 
