@@ -41,7 +41,7 @@ export class FormulaEvaluationService {
     this.validateForInvalidCharacters(formula);
 
     // Reemplazar variables manteniendo orden de precedencia
-    const sortedVariables = variables.toSorted((a, b) => b.symbol.length - a.symbol.length);
+    const sortedVariables = [...variables].sort((a, b) => b.symbol.length - a.symbol.length);
     
     for (const variable of sortedVariables) {
       const regex = new RegExp(String.raw`\b${this.escapeRegExp(variable.symbol)}\b`, 'g');

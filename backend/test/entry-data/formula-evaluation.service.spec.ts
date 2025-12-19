@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Logger } from '@nestjs/common';
 import { FormulaEvaluationService } from '../../src/modules/entry-data/services/formula-evaluation.service';
 
 describe('FormulaEvaluationService', () => {
@@ -10,6 +11,10 @@ describe('FormulaEvaluationService', () => {
     }).compile();
 
     service = module.get<FormulaEvaluationService>(FormulaEvaluationService);
+    
+    // Silenciar logs durante los tests
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
   });
 
   it('should be defined', () => {

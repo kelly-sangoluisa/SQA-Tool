@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Logger } from '@nestjs/common';
 import { MetricScoringService } from '../../src/modules/entry-data/services/metric-scoring.service';
 import { ThresholdParserService} from '../../src/modules/entry-data/services/threshold-parser.service';
 import { FormulaEvaluationService } from '../../src/modules/entry-data/services/formula-evaluation.service';
@@ -18,6 +19,10 @@ describe('MetricScoringService', () => {
     }).compile();
 
     service = module.get<MetricScoringService>(MetricScoringService);
+    
+    // Silenciar logs durante los tests
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
   });
 
   it('should be defined', () => {

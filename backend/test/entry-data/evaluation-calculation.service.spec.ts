@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Logger } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 
@@ -145,6 +146,10 @@ describe('EvaluationCalculationService', () => {
       getRepositoryToken(Project),
     );
     dataSource = module.get<DataSource>(DataSource);
+    
+    // Silenciar logs durante los tests
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
   });
 
   it('should be defined', () => {
