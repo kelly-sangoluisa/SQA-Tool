@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Get, Post, Body, Patch, Param, ParseIntPipe } from '@nestjs/common';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ROLES } from '../decorators/roles.decorator';
-import { FindAllQueryDto } from '../../modules/parameterization/dto/find-all-query.dto';
 import { UpdateStateDto } from '../../modules/parameterization/dto/update-state.dto';
 
 /**
