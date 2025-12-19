@@ -35,6 +35,17 @@ interface MetricPreFillData {
   variables: { symbol: string; description: string }[];
 }
 
+// Helper function to render subcriterion metadata
+const renderSubCriterionMeta = (item: SubCriterionSearchResult) => {
+  const metricsText = item.metrics_count === 1 ? 'métrica' : 'métricas';
+  return (
+    <>
+      <span className={styles.badge}>{item.criterion_name}</span>
+      <span>📊 {item.metrics_count} {metricsText}</span>
+    </>
+  );
+};
+
 export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onSave }: SubCriterionFormDrawerProps) {
   const [formData, setFormData] = useState<FormData>({
     name: subCriterion?.name || '',
@@ -202,12 +213,7 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
                 searchFunction={parameterizationApi.searchSubCriteria}
                 getItemLabel={(item) => item.name}
                 getItemDescription={(item) => item.description || ''}
-                getItemMeta={(item) => (
-                  <>
-                    <span className={styles.badge}>{item.criterion_name}</span>
-                    <span>📊 {item.metrics_count} métrica{item.metrics_count !== 1 ? 's' : ''}</span>
-                  </>
-                )}
+                getItemMeta={renderSubCriterionMeta}
                 placeholder="Escribe o busca un subcriterio existente..."
                 helperText="💡 Puedes reutilizar un subcriterio existente de cualquier estándar. Si tiene métricas, también podrás seleccionarlas."
                 name="name"

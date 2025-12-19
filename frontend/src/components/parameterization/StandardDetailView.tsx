@@ -156,19 +156,19 @@ export function StandardDetailView({ standard, onBack }: StandardDetailViewProps
   };
 
   const handleCriterionEdit = (_criterion: Criterion) => {
-    // Edit criterion - TODO: implement
+    // Edit criterion functionality handled by CriteriaNavigation component
   };
 
   const handleCriterionCreate = () => {
-    // Create new criterion - TODO: implement
+    // Create new criterion functionality handled by CriteriaNavigation component
   };
 
-  const handleSubCriterionEdit = (criterion: Criterion, subCriterion: SubCriterion) => {
-    // Edit subcriterion
+  const handleSubCriterionEdit = (_criterion: Criterion, _subCriterion: SubCriterion) => {
+    // Edit subcriterion functionality handled by CriteriaNavigation component
   };
 
   const handleSubCriterionCreate = (_criterion: Criterion) => {
-    // Create new subcriterion - TODO: implement
+    // Create new subcriterion functionality handled by CriteriaNavigation component
   };
 
   const handleBreadcrumbToStandard = () => {

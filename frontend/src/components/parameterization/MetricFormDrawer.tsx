@@ -22,6 +22,17 @@ interface FormData {
   variables: { id?: number; symbol: string; description: string; tempId?: string }[];
 }
 
+// Helper function to render metric metadata
+const renderMetricMeta = (item: MetricSearchResult) => (
+  <>
+    {item.code && <span className={styles.badge}>{item.code}</span>}
+    {item.formula && <span>📐 Con fórmula</span>}
+    {item.variables && item.variables.length > 0 && (
+      <span>🔢 {item.variables.length} variable{item.variables.length === 1 ? '' : 's'}</span>
+    )}
+  </>
+);
+
 export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: MetricFormDrawerProps) {
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -313,15 +324,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                       searchFunction={parameterizationApi.searchMetrics}
                       getItemLabel={(item) => item.name}
                       getItemDescription={(item) => item.description || ''}
-                      getItemMeta={(item) => (
-                        <>
-                          {item.code && <span className={styles.badge}>{item.code}</span>}
-                          {item.formula && <span>📐 Con fórmula</span>}
-                          {item.variables && item.variables.length > 0 && (
-                            <span>🔢 {item.variables.length} variable{item.variables.length !== 1 ? 's' : ''}</span>
-                          )}
-                        </>
-                      )}
+                      getItemMeta={renderMetricMeta}
                       placeholder="Escribe o busca una métrica existente..."
                       helperText="💡 Puedes reutilizar una métrica existente de cualquier estándar"
                       name="name"

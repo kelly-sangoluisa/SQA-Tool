@@ -156,11 +156,17 @@ export function Autocomplete<T>({
       />
 
       {showResults && (
-        <div className={styles.resultsList}>
-          {isLoading ? (
-            <div className={styles.loading}>Buscando...</div>
-          ) : results.length > 0 ? (
-            results.map((item, index) => {
+        <div className={styles.resultsList} role="listbox">
+          {(() => {
+            if (isLoading) {
+              return <div className={styles.loading}>Buscando...</div>;
+            }
+            
+            if (results.length === 0) {
+              return <div className={styles.noResults}>No se encontraron resultados</div>;
+            }
+            
+            return results.map((item, index) => {
               const itemKey = `result-${getItemLabel(item)}-${index}`;
               const isHighlighted = index === highlightedIndex;
               
@@ -170,8 +176,8 @@ export function Autocomplete<T>({
                   className={`${styles.resultItem} ${
                     isHighlighted ? styles.highlighted : ''
                   }`}
-                  role="option"
-                  aria-selected={isHighlighted}
+                  role="button"
+                  aria-pressed={false}
                   tabIndex={0}
                   onClick={() => handleSelect(item)}
                   onKeyDown={(e) => {
@@ -197,12 +203,8 @@ export function Autocomplete<T>({
                   )}
                 </div>
               );
-            })
-          ) : (
-            <div className={styles.noResults}>
-              No se encontraron resultados
-            </div>
-          )}
+            });
+          })()}
         </div>
       )}
 

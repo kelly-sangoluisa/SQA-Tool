@@ -3,9 +3,9 @@ import { SubCriterionSearchResult, MetricSearchResult } from '../../types/parame
 import styles from './MetricSelectorModal.module.css';
 
 interface MetricSelectorModalProps {
-  subCriterion: SubCriterionSearchResult;
-  onSelect: (metrics: MetricSearchResult[]) => void;
-  onCancel: () => void;
+  readonly subCriterion: SubCriterionSearchResult;
+  readonly onSelect: (metrics: MetricSearchResult[]) => void;
+  readonly onCancel: () => void;
 }
 
 /**
@@ -58,23 +58,19 @@ export function MetricSelectorModal({
         </div>
 
         <div className={styles.metricsGrid}>
-          {subCriterion.metrics.map((metric) => (
-            <div
-              key={metric.metric_id}
-              className={`${styles.metricCard} ${
-                selectedMetricIds.includes(metric.metric_id) ? styles.selected : ''
-              }`}
-              role="button"
-              tabIndex={0}
-              onClick={() => handleToggleMetric(metric.metric_id)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleToggleMetric(metric.metric_id);
-                }
-              }}
-            >
-              <div className={styles.metricHeader}>
+          {subCriterion.metrics.map((metric) => {
+            const isSelected = selectedMetricIds.includes(metric.metric_id);
+            
+            return (
+              <button
+                key={metric.metric_id}
+                type="button"
+                className={`${styles.metricCard} ${
+                  isSelected ? styles.selected : ''
+                }`}
+                onClick={() => handleToggleMetric(metric.metric_id)}
+              >
+                <div className={styles.metricHeader}>
                 <input
                   type="checkbox"
                   name="metric"
@@ -118,14 +114,15 @@ export function MetricSelectorModal({
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>Variables:</span>
                       <span className={styles.detailValue}>
-                        {metric.variables.length} variable{metric.variables.length !== 1 ? 's' : ''} ({metric.variables.map(v => v.symbol).join(', ')})
+                        {metric.variables.length} variable{metric.variables.length === 1 ? '' : 's'} ({metric.variables.map(v => v.symbol).join(', ')})
                       </span>
                     </div>
                   )}
                 </div>
               )}
-            </div>
-          ))}
+              </button>
+            );
+          })}
         </div>
 
         <div className={styles.modalActions}>
