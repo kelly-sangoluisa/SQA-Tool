@@ -337,7 +337,7 @@ export class EntryDataService {
     `;
     
     const totalEvaluationsResult = await this.evaluationVariableRepo.query(query, [projectId]);
-    const totalEvaluations = parseInt(totalEvaluationsResult[0]?.total_evaluations || '0');
+    const totalEvaluations = Number.parseInt(totalEvaluationsResult[0]?.total_evaluations || '0');
     
     return {
       project_id: projectId,
@@ -460,6 +460,6 @@ export class EntryDataService {
     `;
     
     const result = await this.evaluationVariableRepo.query(query, [evaluationId]);
-    return parseInt(result[0]?.total || '0');
+    return Number.parseInt(result[0]?.total || '0');
   }
 }

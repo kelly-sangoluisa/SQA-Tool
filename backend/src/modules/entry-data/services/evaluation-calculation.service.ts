@@ -14,6 +14,7 @@ import { Project, ProjectStatus } from '../../config-evaluation/entities/project
 // Services
 import { FormulaEvaluationService } from './formula-evaluation.service';
 import { EvaluationVariableService } from './evaluation-variable.service';
+import { ScoreClassificationService } from './score-classification.service';
 
 // DTOs
 import { CreateEvaluationVariableDto } from '../dto/evaluation-variable.dto';
@@ -50,6 +51,7 @@ export class EvaluationCalculationService {
     // Servicios especializados
     private readonly formulaEvaluationService: FormulaEvaluationService,
     private readonly evaluationVariableService: EvaluationVariableService,
+    private readonly scoreClassificationService: ScoreClassificationService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -295,16 +297,8 @@ export class EvaluationCalculationService {
 
   //private calculateWeightedValue(value: number, evaluationMetric: EvaluationMetric): number {
     // Por ahora retornamos el valor calculado directamente
-    // TODO: Implementar lógica de normalización cuando se definan umbrales
    // return Math.max(0, value);
   //}
-
-  private calculateWeightedAverage(items: { score: number; weight: number }[]): number {
-    const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
-    const weightedSum = items.reduce((sum, item) => sum + (item.score * item.weight), 0);
-    
-    return totalWeight > 0 ? weightedSum / totalWeight : 0;
-  }
 
   private calculateSimpleAverage(scores: number[]): number {
     return scores.length > 0 ? scores.reduce((sum, score) => sum + score, 0) / scores.length : 0;
@@ -345,25 +339,82 @@ export class EvaluationCalculationService {
   }
 
   private async saveEvaluationResult(evaluationId: number, evaluationScore: number): Promise<EvaluationResult> {
+    // Obtener el proyecto para acceder al minimum_threshold
+    const evaluation = await this.evaluationRepo.findOne({
+      where: { id: evaluationId },
+      relations: ['project']
+    });
+
+    if (!evaluation) {
+      throw new NotFoundException(`Evaluation ${evaluationId} not found`);
+    }
+
+    // Usar minimum_threshold del proyecto (default 80 si no está definido)
+    const minimumThreshold = evaluation.project.minimum_threshold || 80;
+
+    // Calcular clasificaciones
+    const classification = this.scoreClassificationService.classifyScore(
+      evaluationScore,
+      minimumThreshold
+    );
+
+    this.logger.debug(
+      `Evaluation ${evaluationId} classification: score=${evaluationScore}, ` +
+      `threshold=${minimumThreshold}%, level=${classification.score_level}, ` +
+      `grade=${classification.satisfaction_grade}`
+    );
+
     const evaluationResult = this.evaluationResultRepo.create({
       evaluation_id: evaluationId,
       evaluation_score: evaluationScore,
-      conclusion: 'Evaluación calculada automáticamente'
+      conclusion: 'Evaluación calculada automáticamente',
+      score_level: classification.score_level,
+      satisfaction_grade: classification.satisfaction_grade
     });
 
     const saved = await this.evaluationResultRepo.save(evaluationResult);
-    this.logger.log(`Saved evaluation result ${saved.id} with evaluation score ${evaluationScore}`);
+    this.logger.log(
+      `Saved evaluation result ${saved.id} with score ${evaluationScore}, ` +
+      `level: ${classification.score_level}, grade: ${classification.satisfaction_grade}`
+    );
     return saved;
   }
 
   private async saveProjectResult(projectId: number, finalProjectScore: number): Promise<ProjectResult> {
+    // Obtener el proyecto para acceder al minimum_threshold
+    const project = await this.projectRepo.findOneBy({ id: projectId });
+
+    if (!project) {
+      throw new NotFoundException(`Project ${projectId} not found`);
+    }
+
+    // Usar minimum_threshold del proyecto (default 80 si no está definido)
+    const minimumThreshold = project.minimum_threshold || 80;
+
+    // Calcular clasificaciones
+    const classification = this.scoreClassificationService.classifyScore(
+      finalProjectScore,
+      minimumThreshold
+    );
+
+    this.logger.debug(
+      `Project ${projectId} classification: score=${finalProjectScore}, ` +
+      `threshold=${minimumThreshold}%, level=${classification.score_level}, ` +
+      `grade=${classification.satisfaction_grade}`
+    );
+
     const projectResult = this.projectResultRepo.create({
       project_id: projectId,
-      final_project_score: finalProjectScore
+      final_project_score: finalProjectScore,
+      score_level: classification.score_level,
+      satisfaction_grade: classification.satisfaction_grade
     });
 
     const saved = await this.projectResultRepo.save(projectResult);
-    this.logger.log(`Saved project result ${saved.id} with final project score ${finalProjectScore}`);
+    this.logger.log(
+      `Saved project result ${saved.id} with score ${finalProjectScore}, ` +
+      `level: ${classification.score_level}, grade: ${classification.satisfaction_grade}`
+    );
     return saved;
   }
 

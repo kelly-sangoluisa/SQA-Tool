@@ -208,34 +208,34 @@ export class ThresholdParserService {
     const trimmed = threshold.trim();
 
     // Extraer operador si existe
-    const operatorMatch = trimmed.match(/^(>=|<=|>|<|=)/);
+    const operatorMatch = /^(>=|<=|>|<|=)/.exec(trimmed);
     const operator = operatorMatch ? operatorMatch[1] : undefined;
     const valueStr = operator ? trimmed.substring(operator.length).trim() : trimmed;
 
     // Extraer unidad (min, seg, %)
-    const unitMatch = valueStr.match(/(min|seg|%)\s*$/);
+    const unitMatch = /(min|seg|%)\s*$/.exec(valueStr);
     const unit = unitMatch ? unitMatch[1] : undefined;
-    const numberStr = unit ? valueStr.replace(new RegExp(`\\s*${unit}\\s*$`), '').trim() : valueStr;
+    const numberStr = unit ? valueStr.replace(new RegExp(String.raw`\s*${unit}\s*$`), '').trim() : valueStr;
 
     // Eliminar espacios antes de parsear (para manejar "10 / 3" o "10 /3" o "10/ 3")
-    const cleanNumberStr = numberStr.replace(/\s+/g, '');
+    const cleanNumberStr = numberStr.replaceAll(/\s+/g, '');
 
     // Verificar si es ratio (ej: "10/20")
-    const ratioMatch = cleanNumberStr.match(/^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/);
+    const ratioMatch = /^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/.exec(cleanNumberStr);
     if (ratioMatch) {
       return {
         operator,
-        value: parseFloat(ratioMatch[1]) / parseFloat(ratioMatch[2]),
-        numerator: parseFloat(ratioMatch[1]),
-        denominator: parseFloat(ratioMatch[2]),
+        value: Number.parseFloat(ratioMatch[1]) / Number.parseFloat(ratioMatch[2]),
+        numerator: Number.parseFloat(ratioMatch[1]),
+        denominator: Number.parseFloat(ratioMatch[2]),
         unit,
       };
     }
 
     // Número simple
-    const value = parseFloat(cleanNumberStr);
-    if (isNaN(value)) {
-      throw new Error(`Cannot parse threshold value: ${threshold}`);
+    const value = Number.parseFloat(cleanNumberStr);
+    if (Number.isNaN(value)) {
+      throw new TypeError(`Cannot parse threshold value: ${threshold}`);
     }
 
     return {

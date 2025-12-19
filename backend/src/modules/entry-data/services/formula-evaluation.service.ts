@@ -41,10 +41,10 @@ export class FormulaEvaluationService {
     this.validateForInvalidCharacters(formula);
 
     // Reemplazar variables manteniendo orden de precedencia
-    const sortedVariables = variables.sort((a, b) => b.symbol.length - a.symbol.length);
+    const sortedVariables = variables.toSorted((a, b) => b.symbol.length - a.symbol.length);
     
     for (const variable of sortedVariables) {
-      const regex = new RegExp(`\\b${this.escapeRegExp(variable.symbol)}\\b`, 'g');
+      const regex = new RegExp(String.raw`\b${this.escapeRegExp(variable.symbol)}\b`, 'g');
       expression = expression.replace(regex, variable.value.toString());
     }
 
@@ -98,7 +98,7 @@ export class FormulaEvaluationService {
   private executeCalculation(expression: string): number {
     try {
       // Limpiar espacios y validar expresión final
-      const cleanExpression = expression.replace(/\s/g, '');
+      const cleanExpression = expression.replaceAll(' ', '');
       
       if (!cleanExpression) {
         throw new Error('Empty expression');
@@ -107,8 +107,8 @@ export class FormulaEvaluationService {
       // Usar parser manual seguro
       const result = this.evaluateExpression(cleanExpression);
       
-      if (typeof result !== 'number' || !isFinite(result)) {
-        throw new Error(`Invalid calculation result: ${result}`);
+      if (typeof result !== 'number' || !Number.isFinite(result)) {
+        throw new TypeError(`Invalid calculation result: ${result}`);
       }
 
       return Number(result.toFixed(4)); // Redondear a 4 decimales
@@ -124,7 +124,7 @@ export class FormulaEvaluationService {
    */
   private evaluateExpression(expression: string): number {
     // Eliminar espacios
-    expression = expression.replace(/\s/g, '');
+    expression = expression.replaceAll(/\s/g, '');
     
     // Validar que solo contenga caracteres matemáticos válidos
     if (!/^[\d+\-*/().]+$/.test(expression)) {
@@ -243,10 +243,10 @@ export class FormulaEvaluationService {
       throw new Error(`Expected number at position ${index}`);
     }
     
-    const value = parseFloat(numberStr);
+    const value = Number.parseFloat(numberStr);
     
-    if (isNaN(value)) {
-      throw new Error(`Invalid number: ${numberStr}`);
+    if (Number.isNaN(value)) {
+      throw new TypeError(`Invalid number: ${numberStr}`);
     }
     
     return { value, nextIndex: currentIndex };
@@ -256,7 +256,7 @@ export class FormulaEvaluationService {
    * Escapa caracteres especiales para regex
    */
   private escapeRegExp(string: string): string {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return string.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   /**
@@ -265,8 +265,8 @@ export class FormulaEvaluationService {
   validateRequiredVariables(formula: string, providedVariables: {symbol: string}[]): string[] {
     const variablePattern = /\b[a-zA-Z_][a-zA-Z0-9_]*\b/g;
     const requiredVariables = formula.match(variablePattern) || [];
-    const providedSymbols = providedVariables.map(v => v.symbol);
+    const providedSymbols = new Set(providedVariables.map(v => v.symbol));
     
-    return requiredVariables.filter(variable => !providedSymbols.includes(variable));
+    return requiredVariables.filter(variable => !providedSymbols.has(variable));
   }
 }
