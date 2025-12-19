@@ -157,7 +157,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
         const variablesToUpdate = formData.variables.filter(v => v.id && existingVariableIds.has(v.id));
         await Promise.all(
           variablesToUpdate.map(v =>
-            parameterizationApi.updateVariable(v.id!, {
+            parameterizationApi.updateVariable(v.id, {
               symbol: v.symbol,
               description: v.description,
               metric_id: metric.id
@@ -459,7 +459,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                   </button>
                 </div>
 
-                {metric || showAutocomplete || formData.variables.length === 0 ? null : (
+                {!metric && !showAutocomplete && formData.variables.length > 0 && (
                   <div className={styles.infoBox} style={{ marginBottom: '1rem' }}>
                     <strong>✅ Variables importadas:</strong> Se copiaron {formData.variables.length} variable{formData.variables.length !== 1 ? 's' : ''} de la métrica seleccionada.
                   </div>

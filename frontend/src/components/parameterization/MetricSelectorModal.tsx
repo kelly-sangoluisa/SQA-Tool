@@ -40,10 +40,26 @@ export function MetricSelectorModal({
   };
 
   return (
-    <div className={styles.modalOverlay} onClick={onCancel}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+    <div 
+      className={styles.modalOverlay} 
+      onClick={onCancel}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          onCancel();
+        }
+      }}
+      role="presentation"
+    >
+      <div 
+        className={styles.modalContent} 
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
         <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>Seleccionar Métricas</h2>
+          <h2 id="modal-title" className={styles.modalTitle}>Seleccionar Métricas</h2>
           <p className={styles.modalSubtitle}>
             El subcriterio seleccionado tiene {subCriterion.metrics_count} métricas
             asociadas. Puedes seleccionar una o más métricas para copiar:

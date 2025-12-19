@@ -156,14 +156,14 @@ export function Autocomplete<T>({
       />
 
       {showResults && (
-        <div className={styles.resultsList} role="listbox">
+        <ul className={styles.resultsList}>
           {(() => {
             if (isLoading) {
-              return <div className={styles.loading}>Buscando...</div>;
+              return <li className={styles.loading}>Buscando...</li>;
             }
             
             if (results.length === 0) {
-              return <div className={styles.noResults}>No se encontraron resultados</div>;
+              return <li className={styles.noResults}>No se encontraron resultados</li>;
             }
             
             return results.map((item, index) => {
@@ -171,41 +171,34 @@ export function Autocomplete<T>({
               const isHighlighted = index === highlightedIndex;
               
               return (
-                <div
-                  key={itemKey}
-                  className={`${styles.resultItem} ${
-                    isHighlighted ? styles.highlighted : ''
-                  }`}
-                  role="button"
-                  aria-pressed={false}
-                  tabIndex={0}
-                  onClick={() => handleSelect(item)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleSelect(item);
-                    }
-                  }}
-                  onMouseEnter={() => setHighlightedIndex(index)}
-                >
-                  <div className={styles.resultItemName}>
-                    {getItemLabel(item)}
-                  </div>
-                  {getItemMeta && (
-                    <div className={styles.resultItemMeta}>
-                      {getItemMeta(item)}
+                <li key={itemKey}>
+                  <button
+                    type="button"
+                    className={`${styles.resultItem} ${
+                      isHighlighted ? styles.highlighted : ''
+                    }`}
+                    onClick={() => handleSelect(item)}
+                    onMouseEnter={() => setHighlightedIndex(index)}
+                  >
+                    <div className={styles.resultItemName}>
+                      {getItemLabel(item)}
                     </div>
-                  )}
-                  {getItemDescription && (
-                    <div className={styles.resultItemDescription}>
-                      {getItemDescription(item)}
-                    </div>
-                  )}
-                </div>
+                    {getItemMeta && (
+                      <div className={styles.resultItemMeta}>
+                        {getItemMeta(item)}
+                      </div>
+                    )}
+                    {getItemDescription && (
+                      <div className={styles.resultItemDescription}>
+                        {getItemDescription(item)}
+                      </div>
+                    )}
+                  </button>
+                </li>
               );
             });
           })()}
-        </div>
+        </ul>
       )}
 
       {helperText && !showResults && (
