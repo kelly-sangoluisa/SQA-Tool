@@ -20,6 +20,7 @@ services/
 ├── formula-evaluation.service.ts     # Evaluación matemática pura
 ├── threshold-parser.service.ts       # Parseo y clasificación de thresholds
 ├── metric-scoring.service.ts         # Cálculo de scores según casos de negocio
+├── score-classification.service.ts   # Clasificación de niveles y satisfacción
 ├── evaluation-variable.service.ts    # CRUD de variables
 ├── evaluation-calculation.service.ts # Orquestación de cálculos
 └── entry-data.service.ts            # Servicio coordinador principal
@@ -31,10 +32,11 @@ services/
 entry-data/
 ├── controllers/
 │   └── entry-data.controller.ts    # 18 endpoints REST API
-├── services/                       # 6 servicios especializados
+├── services/                       # 7 servicios especializados
 │   ├── formula-evaluation.service.ts
 │   ├── threshold-parser.service.ts
 │   ├── metric-scoring.service.ts
+│   ├── score-classification.service.ts
 │   ├── evaluation-variable.service.ts
 │   ├── evaluation-calculation.service.ts
 │   └── entry-data.service.ts
@@ -44,6 +46,8 @@ entry-data/
 │   ├── evaluation_criteria_result.entity.ts
 │   ├── evaluation_result.entity.ts
 │   └── project_result.entity.ts
+├── enums/                        # Enumeraciones
+│   └── score-classification.enum.ts
 ├── dto/                          # DTOs para validación
 │   ├── evaluation-variable.dto.ts
 │   ├── evaluation-metric-result.dto.ts
@@ -87,7 +91,27 @@ entry-data/
 ```
 **Retorna**: `{ calculated_value, weighted_value }`
 
-### 4. EvaluationVariableService  
+### 4. ScoreClassificationService
+**Responsabilidad**: Clasificación adaptativa de puntuaciones
+```typescript
+- calculateScoreLevel(score: number, minimumThreshold: number): ScoreLevel
+- calculateSatisfactionGrade(score: number, minimumThreshold: number): SatisfactionGrade
+- classifyScore(score: number, minimumThreshold: number): { score_level, satisfaction_grade }
+```
+**Lógica adaptativa**:
+- Convierte `minimum_threshold` (porcentaje 0-100) a escala 0-10
+- Calcula rangos dinámicamente basados en el threshold del proyecto
+- **Niveles de Puntuación**:
+  - `Inaceptable`: score < threshold × 0.34375
+  - `Mínimamente Aceptable`: score < threshold × 0.625
+  - `Rango Objetivo`: score < threshold × 1.09375
+  - `Excede los Requisitos`: score ≥ threshold × 1.09375
+- **Grados de Satisfacción**:
+  - `Insatisfactorio`: score < threshold × 0.625
+  - `Satisfactorio`: score < threshold × 1.09375
+  - `Muy Satisfactorio`: score ≥ threshold × 1.09375
+
+### 5. EvaluationVariableService  
 **Responsabilidad**: CRUD de variables de evaluación
 ```typescript
 - createOrUpdate(data: CreateEvaluationVariableDto)
@@ -95,7 +119,7 @@ entry-data/
 - remove(evalMetricId: number, variableId: number)
 ```
 
-### 5. EvaluationCalculationService
+### 6. EvaluationCalculationService
 **Responsabilidad**: Orquestación de cálculos complejos
 ```typescript
 - processEvaluationData()
@@ -105,7 +129,7 @@ entry-data/
 - calculateProjectResult()
 ```
 
-### 6. EntryDataService
+### 7. EntryDataService
 **Responsabilidad**: Coordinación principal y gestión de flujo
 ```typescript
 - receiveEvaluationData()
@@ -135,8 +159,40 @@ updated_at: Date;
 | `EvaluationVariable` | Variables capturadas del frontend | `eval_metric_id`, `variable_id`, `value` |
 | `EvaluationMetricResult` | Resultados calculados de métricas | `calculated_value`, `weighted_value` |
 | `EvaluationCriteriaResult` | Resultados de criterios agregados | `final_score`, `eval_criterion_id` |
-| `EvaluationResult` | Resultado final de evaluación | `evaluation_score`, `conclusion` |
-| `ProjectResult` | Resultado final del proyecto | `final_project_score` |
+| `EvaluationResult` | Resultado final de evaluación | `evaluation_score`, `conclusion`, `score_level`, `satisfaction_grade` |
+| `ProjectResult` | Resultado final del proyecto | `final_project_score`, `score_level`, `satisfaction_grade` |
+
+### Clasificación Automática de Resultados
+
+Tanto `EvaluationResult` como `ProjectResult` incluyen clasificación automática:
+
+**Campos de Clasificación**:
+- `score_level`: Nivel de puntuación (enum `ScoreLevel`)
+  - `Inaceptable`
+  - `Mínimamente Aceptable`
+  - `Rango Objetivo`
+  - `Excede los Requisitos`
+
+- `satisfaction_grade`: Grado de satisfacción (enum `SatisfactionGrade`)
+  - `Insatisfactorio`
+  - `Satisfactorio`
+  - `Muy Satisfactorio`
+
+**Cálculo Adaptativo**:
+Los rangos se calculan dinámicamente basados en el `minimum_threshold` del proyecto:
+- `minimum_threshold` viene en porcentaje (ej: 80 = 80%)
+- Se convierte a escala 0-10 para los cálculos
+- Los límites se ajustan proporcionalmente al threshold configurado
+
+**Ejemplo**: Para `minimum_threshold = 80%` (8.0 en escala 0-10):
+```
+Score | Nivel                    | Grado
+------|--------------------------|------------------
+< 2.75 | Inaceptable             | Insatisfactorio
+< 5.0  | Mínimamente Aceptable   | Insatisfactorio  
+< 8.75 | Rango Objetivo          | Satisfactorio
+≥ 8.75 | Excede los Requisitos   | Muy Satisfactorio
+```
 
 ## 🌐 API Endpoints (18 endpoints)
 

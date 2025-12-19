@@ -2,6 +2,7 @@
 import { ProjectStatus } from '../../src/modules/config-evaluation/entities/project.entity';
 import { ImportanceLevel } from '../../src/modules/config-evaluation/entities/evaluation-criterion.entity';
 import { ItemStatus } from '../../src/modules/parameterization/types/parameterization.types';
+import { ScoreLevel, SatisfactionGrade } from '../../src/common/decorators/score-classification.enum';
 
 // Imports de las entidades para tipado
 import { ProjectResult } from '../../src/modules/entry-data/entities/project_result.entity';
@@ -18,7 +19,7 @@ export const mockProject = {
   id: 1,
   name: 'Test Project',
   description: 'Test Description',
-  minimum_threshold: 85.0,
+  minimum_threshold: 85,
   creator_user_id: 1,
   status: ProjectStatus.IN_PROGRESS, // ✅ Usando el enum correcto
   created_at: new Date('2023-01-01T10:00:00Z'),
@@ -80,7 +81,7 @@ export const mockMetric = {
   description: 'Test Metric Description',
   formula: 'a/b',
   desired_threshold: '1',
-  worst_case: null,
+  worst_case: '0',
   sub_criterion_id: 1,
   state: ItemStatus.ACTIVE,
   created_at: new Date('2023-01-01T09:00:00Z'),
@@ -118,6 +119,8 @@ export const mockProjectResult: ProjectResult = {
   id: 1,
   project_id: 1,
   final_project_score: 85.5,
+  score_level: ScoreLevel.TARGET_RANGE,
+  satisfaction_grade: SatisfactionGrade.SATISFACTORY,
   created_at: new Date('2023-01-01T12:00:00Z'),
   updated_at: new Date('2023-01-01T12:00:00Z'),
   project: mockProject,
@@ -128,6 +131,8 @@ export const mockEvaluationResult: EvaluationResult = {
   evaluation_id: 1,
   evaluation_score: 78.5,
   conclusion: 'Test conclusion for evaluation',
+  score_level: ScoreLevel.TARGET_RANGE,
+  satisfaction_grade: SatisfactionGrade.SATISFACTORY,
   created_at: new Date('2023-01-01T11:00:00Z'),
   updated_at: new Date('2023-01-01T11:00:00Z'),
   evaluation: mockEvaluation,
@@ -136,7 +141,7 @@ export const mockEvaluationResult: EvaluationResult = {
 export const mockCriteriaResult: EvaluationCriteriaResult = {
   id: 1,
   eval_criterion_id: 1,
-  final_score: 85.0,
+  final_score: 85,
   created_at: new Date('2023-01-01T11:30:00Z'),
   updated_at: new Date('2023-01-01T11:30:00Z'),
   evaluation_criterion: mockEvaluationCriterion,

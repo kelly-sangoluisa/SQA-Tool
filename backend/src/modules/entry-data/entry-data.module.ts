@@ -11,6 +11,7 @@ import { EvaluationVariableService } from './services/evaluation-variable.servic
 import { FormulaEvaluationService } from './services/formula-evaluation.service';
 import { ThresholdParserService } from './services/threshold-parser.service';
 import { MetricScoringService } from './services/metric-scoring.service';
+import { ScoreClassificationService } from './services/score-classification.service';
 
 // Entities - Entry Data
 import { EvaluationCriteriaResult } from './entities/evaluation_criteria_result.entity';
@@ -54,6 +55,7 @@ import { Metric } from '../parameterization/entities/metric.entity';
     EvaluationCalculationService,
     ThresholdParserService,
     MetricScoringService,
+    ScoreClassificationService,
     // Servicio principal de coordinación
     EntryDataService,
   ],
