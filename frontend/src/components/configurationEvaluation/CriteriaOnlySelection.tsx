@@ -21,10 +21,10 @@ export interface CriteriaWithImportance {
 }
 
 interface CriteriaOnlySelectionProps {
-  standardId: number;
-  initialSelectedIds?: number[];
-  onNext: (criteriaWithImportance: CriteriaWithImportance[]) => void;
-  onBack: () => void;
+  readonly standardId: number;
+  readonly initialSelectedIds?: number[];
+  readonly onNext: (criteriaWithImportance: CriteriaWithImportance[]) => void;
+  readonly onBack: () => void;
 }
 
 export function CriteriaOnlySelection({
@@ -211,23 +211,6 @@ export function CriteriaOnlySelection({
     onNext(criteriaWithImportance);
   };
 
-  const isNextButtonEnabled = (): boolean => {
-    
-    if (selectedIds.size === 0) return false;
-
-    // Verificar que todos los criterios seleccionados tienen porcentaje > 0
-    for (const id of selectedIds) {
-      const importance = criteriaImportance.get(id);
-      if (!importance || importance.importancePercentage <= 0) {
-        return false;
-      }
-    }
-
-    // Verificar que el total es 100%
-    const total = calculateTotalPercentage();
-    return Math.abs(total - 100) < 0.01;
-  };
-
   if (isLoading) {
     return (
       <div className={styles.loadingContainer}>
@@ -266,8 +249,6 @@ export function CriteriaOnlySelection({
       </div>
     );
   }
-
-  const totalPercentage = calculateTotalPercentage();
 
   return (
     <div className={styles.pageWrapper}>
@@ -310,8 +291,8 @@ export function CriteriaOnlySelection({
           return (
             <div
               key={criterion.id}
-              className={`${styles.criterionCard} ${isSelected ? styles.selected : ''} ${!canSelect ? styles.disabled : ''}`}
-              title={!canSelect ? disabledReason : undefined}
+              className={`${styles.criterionCard} ${isSelected ? styles.selected : ''} ${canSelect ? '' : styles.disabled}`}
+              title={canSelect ? undefined : disabledReason}
             >
               <label className={styles.checkboxLabel}>
                 <input
@@ -356,10 +337,11 @@ export function CriteriaOnlySelection({
               {isSelected && (
                 <div className={styles.importanceSection}>
                   <div className={styles.importanceField}>
-                    <label className={styles.importanceLabel}>
+                    <label htmlFor={`importance-level-${criterion.id}`} className={styles.importanceLabel}>
                       Nivel de Importancia <span className={styles.required}>*</span>
                     </label>
                     <select
+                      id={`importance-level-${criterion.id}`}
                       className={styles.importanceSelect}
                       value={importance?.importanceLevel || 'M'}
                       onChange={(e) => handleImportanceLevelChange(criterion.id, e.target.value as ImportanceLevel)}
@@ -371,10 +353,11 @@ export function CriteriaOnlySelection({
                   </div>
 
                   <div className={styles.importanceField}>
-                    <label className={styles.importanceLabel}>
+                    <label htmlFor={`importance-percentage-${criterion.id}`} className={styles.importanceLabel}>
                       Porcentaje de Importancia (%) <span className={styles.required}>*</span>
                     </label>
                     <input
+                      id={`importance-percentage-${criterion.id}`}
                       type="number"
                       className={styles.importanceInput}
                       min="0"

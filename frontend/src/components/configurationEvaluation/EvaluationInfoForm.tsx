@@ -8,9 +8,9 @@ import { configEvaluationApi, Project } from '@/api/config-evaluation/config-eva
 import styles from './EvaluationInfoForm.module.css';
 
 interface EvaluationInfoFormProps {
-  initialData?: EvaluationInfo;
-  onNext: (data: EvaluationInfo, projectId?: number) => void;
-  onCancel?: () => void;
+  readonly initialData?: EvaluationInfo;
+  readonly onNext: (data: EvaluationInfo, projectId?: number) => void;
+  readonly onCancel?: () => void;
 }
 
 export function EvaluationInfoForm({ initialData, onNext, onCancel }: EvaluationInfoFormProps) {
@@ -103,10 +103,10 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      if (projectType === 'existing') {
+      if (projectType === 'existing' && selectedProjectId !== null) {
         // Pasar el ID del proyecto existente
-        onNext(formData, selectedProjectId!);
-      } else {
+        onNext(formData, selectedProjectId);
+      } else if (projectType === 'new') {
         // Crear proyecto nuevo
         onNext(formData);
       }
@@ -124,10 +124,10 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
 
       <form onSubmit={handleSubmit} className={styles.form}>
         {/* Selector de tipo de proyecto */}
-        <div className={styles.projectTypeSelector}>
-          <label className={styles.label}>
+        <fieldset className={styles.projectTypeSelector}>
+          <legend className={styles.label}>
             Tipo de Proyecto <span className={styles.required}>*</span>
-          </label>
+          </legend>
           <div className={styles.radioGroup}>
             <label className={styles.radioLabel}>
               <input
@@ -150,7 +150,7 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
               <span>Usar Proyecto Existente</span>
             </label>
           </div>
-        </div>
+        </fieldset>
 
         {/* Mostrar selector de proyecto existente o formulario de proyecto nuevo */}
         {projectType === 'existing' ? (
@@ -158,9 +158,10 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
             <label htmlFor="project" className={styles.label}>
               Seleccionar Proyecto <span className={styles.required}>*</span>
             </label>
-            {loadingProjects ? (
+            {loadingProjects && (
               <p className={styles.loadingText}>Cargando proyectos...</p>
-            ) : projects.length === 0 ? (
+            )}
+            {!loadingProjects && projects.length === 0 && (
               <div>
                 <p className={styles.loadingText}>
                   No tienes proyectos activos disponibles. Por favor, crea un proyecto nuevo.
@@ -173,7 +174,8 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
                   Crear Proyecto Nuevo
                 </button>
               </div>
-            ) : (
+            )}
+            {!loadingProjects && projects.length > 0 && (
               <select
                 id="project"
                 className={styles.select}
