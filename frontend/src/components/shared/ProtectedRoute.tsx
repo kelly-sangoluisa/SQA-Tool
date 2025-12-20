@@ -4,9 +4,9 @@ import { useAuth } from '../../hooks/auth/useAuth';
 import { useRouter } from 'next/navigation';
 
 interface ProtectedRouteProps {
-  children: ReactNode;
-  requiredRole?: 'admin' | 'evaluator' | 'any';
-  redirectTo?: string;
+  readonly children: ReactNode;
+  readonly requiredRole?: 'admin' | 'evaluator' | 'any';
+  readonly redirectTo?: string;
 }
 
 export function ProtectedRoute({ 
@@ -32,7 +32,7 @@ export function ProtectedRoute({
     }
 
     // Si no hay usuario o rol, redirigir
-    if (!user || !user.role) {
+    if (!user?.role) {
       router.push('/auth/login');
       return;
     }
@@ -44,7 +44,6 @@ export function ProtectedRoute({
         : '/dashboard';
       
       router.push(redirectTo || defaultRedirect);
-      return;
     }
   }, [mounted, isLoading, isAuthenticated, user, requiredRole, redirectTo, router]);
 

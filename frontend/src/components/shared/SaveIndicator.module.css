@@ -3,11 +3,11 @@
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: #3b82f6;
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgb(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgb(78 94 163 / 0.3);
   z-index: 9998;
   display: flex;
   align-items: center;
@@ -17,6 +17,10 @@
 
 .spinner {
   animation: spin 1s linear infinite;
+}
+
+.saveIcon {
+  font-size: 1rem;
 }
 
 @keyframes slide-up {

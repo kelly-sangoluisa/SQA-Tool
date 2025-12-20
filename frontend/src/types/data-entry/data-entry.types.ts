@@ -10,6 +10,8 @@ export interface Variable {
   symbol: string;
   description: string;
   state: string;
+  isFixed?: boolean; // Si la variable tiene valor fijo
+  fixedValue?: number; // Valor fijo de la variable
   [key: string]: unknown;
 }
 
@@ -19,6 +21,8 @@ export interface Metric {
   description: string;
   formula: string;
   code?: string;
+  desired_threshold?: string | null;
+  worst_case?: string | null;
   variables?: Variable[];
 }
 
@@ -43,6 +47,8 @@ export interface EvaluationMetricAPI {
     formula: string;
     code?: string;
     sub_criterion_id?: number;
+    desired_threshold?: string | null;
+    worst_case?: string | null;
     variables?: Array<{
       id: number;
       symbol: string;

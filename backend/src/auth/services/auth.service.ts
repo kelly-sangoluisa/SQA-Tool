@@ -142,7 +142,7 @@ export class AuthService {
       }
 
       // Usar el Admin client para actualizar la contraseña
-      const { data, error } = await this.admin.auth.admin.updateUserById(
+      const { error } = await this.admin.auth.admin.updateUserById(
         payload.sub,
         { password: newPassword }
       );

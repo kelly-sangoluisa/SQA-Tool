@@ -30,9 +30,21 @@ interface MetricPreFillData {
   description: string;
   code: string;
   formula: string;
-  desired_threshold: number | null;
+  desired_threshold: string | null;
+  worst_case: string | null;
   variables: { symbol: string; description: string }[];
 }
+
+// Helper function to render subcriterion metadata
+const renderSubCriterionMeta = (item: SubCriterionSearchResult) => {
+  const metricsText = item.metrics_count === 1 ? 'métrica' : 'métricas';
+  return (
+    <>
+      <span className={styles.badge}>{item.criterion_name}</span>
+      <span>📊 {item.metrics_count} {metricsText}</span>
+    </>
+  );
+};
 
 export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onSave }: SubCriterionFormDrawerProps) {
   const [formData, setFormData] = useState<FormData>({
@@ -72,6 +84,7 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
         code: metric.code || '',
         formula: metric.formula || '',
         desired_threshold: metric.desired_threshold || null,
+        worst_case: metric.worst_case || null,
         variables: metric.variables?.map(v => ({
           symbol: v.symbol,
           description: v.description
@@ -96,6 +109,7 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
       code: metric.code || '',
       formula: metric.formula || '',
       desired_threshold: metric.desired_threshold || null,
+      worst_case: metric.worst_case || null,
       variables: metric.variables?.map(v => ({
         symbol: v.symbol,
         description: v.description
@@ -199,12 +213,7 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
                 searchFunction={parameterizationApi.searchSubCriteria}
                 getItemLabel={(item) => item.name}
                 getItemDescription={(item) => item.description || ''}
-                getItemMeta={(item) => (
-                  <>
-                    <span className={styles.badge}>{item.criterion_name}</span>
-                    <span>📊 {item.metrics_count} métrica{item.metrics_count !== 1 ? 's' : ''}</span>
-                  </>
-                )}
+                getItemMeta={renderSubCriterionMeta}
                 placeholder="Escribe o busca un subcriterio existente..."
                 helperText="💡 Puedes reutilizar un subcriterio existente de cualquier estándar. Si tiene métricas, también podrás seleccionarlas."
                 name="name"
@@ -250,10 +259,10 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
 
           {selectedMetricsForParent.length > 0 && (
             <div className={styles.infoBox}>
-              <strong>✅ {selectedMetricsForParent.length} Métrica{selectedMetricsForParent.length !== 1 ? 's' : ''} seleccionada{selectedMetricsForParent.length !== 1 ? 's' : ''}:</strong>
+              <strong>✅ {selectedMetricsForParent.length} Métrica{selectedMetricsForParent.length === 1 ? '' : 's'} seleccionada{selectedMetricsForParent.length === 1 ? '' : 's'}:</strong>
               <ul style={{ fontSize: '0.875rem', marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
-                {selectedMetricsForParent.map((metric, index) => (
-                  <li key={index}>{metric.name} {metric.code && `(${metric.code})`}</li>
+                {selectedMetricsForParent.map((metric) => (
+                  <li key={`${metric.name}-${metric.code || 'no-code'}`}>{metric.name} {metric.code && `(${metric.code})`}</li>
                 ))}
               </ul>
               <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>

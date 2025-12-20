@@ -20,6 +20,11 @@ interface FormData {
   description: string;
 }
 
+// Helper function to render criterion metadata badge
+const renderCriterionMeta = (item: CriterionSearchResult) => (
+  <span className={styles.badge}>{item.standard_name}</span>
+);
+
 export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: CriterionFormDrawerProps) {
   const [formData, setFormData] = useState<FormData>({
     name: criterion?.name || '',
@@ -132,9 +137,7 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
               searchFunction={parameterizationApi.searchCriteria}
               getItemLabel={(item) => item.name}
               getItemDescription={(item) => item.description || ''}
-              getItemMeta={(item) => (
-                <span className={styles.badge}>{item.standard_name}</span>
-              )}
+              getItemMeta={renderCriterionMeta}
               placeholder="Escribe o busca un criterio existente..."
               helperText="💡 Puedes reutilizar un criterio existente de cualquier estándar"
               name="name"

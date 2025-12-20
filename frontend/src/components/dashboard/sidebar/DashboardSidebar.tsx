@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { HiFolder, HiChartBar, HiSearch, HiLogout, HiCheckCircle } from "react-icons/hi";
+import { HiFolder, HiSearch, HiLogout, HiCheckCircle } from "react-icons/hi";
 
 import { useAuth } from "@/hooks/auth/useAuth";
 import { SidebarToggle } from "./components/SidebarToggle";
@@ -11,7 +11,6 @@ import { BackToHomeButton } from "./components/BackToHomeButton";
 import { SidebarSearch } from "./components/SidebarSearch";
 import { SidebarSection } from "./components/SidebarSection";
 import { ProjectListItem } from "./components/ProjectListItem";
-import { EvaluationListItem } from "./components/EvaluationListItem";
 
 import { useSidebarData } from "./hooks/useSidebarData";
 import { useSidebar } from "./context/SidebarContext";
@@ -30,9 +29,7 @@ export function DashboardSidebar() {
 
   const {
     recentProjects,
-    recentEvaluations,
     loadingProjects,
-    loadingEvaluations,
   } = useSidebarData();
 
   /* ---------------- LOGOUT ---------------- */
@@ -89,7 +86,7 @@ export function DashboardSidebar() {
     <>
       <SidebarToggle isOpen={isOpen} onToggle={toggleSidebar} />
 
-      <aside className={`${styles.sidebar} ${!isOpen ? styles.closed : ""}`}>
+      <aside className={`${styles.sidebar} ${isOpen ? "" : styles.closed}`}>
         {/* Header simplificado: solo lupa - No mostrar para admin */}
         {!isAdmin && (
           <div className={styles.sidebarHeader}>

@@ -1,5 +1,5 @@
-import {Controller,Post,Get,Delete,Body,Param,ParseIntPipe,Query, HttpStatus, } from '@nestjs/common';
-import {ApiTags,ApiOperation,ApiResponse,ApiBearerAuth,ApiParam,ApiQuery,} from '@nestjs/swagger';
+import {Controller,Post,Get,Delete,Body,Param,ParseIntPipe, HttpStatus, } from '@nestjs/common';
+import {ApiTags,ApiOperation,ApiResponse,ApiBearerAuth,ApiParam,} from '@nestjs/swagger';
 import { ROLES } from '../../../common/decorators/roles.decorator';
 
 // DTOs

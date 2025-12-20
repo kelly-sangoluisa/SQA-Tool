@@ -19,6 +19,7 @@ const mockRepository = () => ({
   save: jest.fn(),
   merge: jest.fn(),
   delete: jest.fn(),
+  createQueryBuilder: jest.fn(),
 });
 
 // Mock para DataSource con transacciones
@@ -34,6 +35,19 @@ const mockTransactionManager = () => ({
   delete: jest.fn(),
 });
 
+// Mock para QueryBuilder
+const mockQueryBuilder = () => {
+  const mock = {
+    leftJoinAndSelect: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    skip: jest.fn().mockReturnThis(),
+    take: jest.fn().mockReturnThis(),
+    getMany: jest.fn(),
+  };
+  return mock;
+};
+
 // Tipo explícito para nuestro mock de repositorio
 type MockRepository<T = any> = {
   find: jest.Mock;
@@ -42,6 +56,7 @@ type MockRepository<T = any> = {
   save: jest.Mock;
   merge: jest.Mock;
   delete: jest.Mock;
+  createQueryBuilder: jest.Mock;
 };
 
 type MockDataSource = {
@@ -216,16 +231,22 @@ describe('ParameterizationService', () => {
         { id: 1, name: 'Funcionalidad', standard_id: standardId, state: ItemStatus.ACTIVE }
       ];
 
-      criterionRepo.find.mockResolvedValue(expectedCriteria);
+      const queryBuilder = mockQueryBuilder();
+      queryBuilder.getMany.mockResolvedValue(expectedCriteria);
+      criterionRepo.createQueryBuilder.mockReturnValue(queryBuilder);
 
       const result = await service.findAllCriteria(query, standardId);
-      expect(criterionRepo.find).toHaveBeenCalledWith({
-        where: expect.any(Object),
-        order: { name: 'ASC' },
-        relations: ['sub_criteria', 'sub_criteria.metrics', 'sub_criteria.metrics.variables'],
-        skip: 0,
-        take: 10,
-      });
+      
+      expect(criterionRepo.createQueryBuilder).toHaveBeenCalledWith('criterion');
+      expect(queryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('criterion.sub_criteria', 'sub_criterion', 'sub_criterion.state = :activeState', { activeState: 'active' });
+      expect(queryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('sub_criterion.metrics', 'metric', 'metric.state = :activeState');
+      expect(queryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('metric.variables', 'variable', 'variable.state = :activeState');
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith('criterion.name', 'ASC');
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith('criterion.standard_id = :standard_id', { standard_id: standardId });
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith('criterion.state = :state', { state: ItemStatus.ACTIVE });
+      expect(queryBuilder.skip).toHaveBeenCalledWith(0);
+      expect(queryBuilder.take).toHaveBeenCalledWith(10);
+      expect(queryBuilder.getMany).toHaveBeenCalled();
       expect(result).toEqual(expectedCriteria);
     });
 

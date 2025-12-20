@@ -147,7 +147,7 @@ export function CriterionAccordion({ criterion, index }: Props) {
                   </div>
                   <div className="value-item">
                     <span className="value-label">Umbral Deseado:</span>
-                    <span className="value-number">{metric.desired_threshold?.toFixed(2) || 'N/A'}</span>
+                    <span className="value-number">{metric.desired_threshold ? Number(metric.desired_threshold).toFixed(2) : 'N/A'}</span>
                   </div>
                   <div className="value-item value-item--highlight">
                     <span className="value-label">Valor Ponderado:</span>

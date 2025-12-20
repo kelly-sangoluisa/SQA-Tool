@@ -17,9 +17,21 @@ interface FormData {
   description: string;
   code: string;
   formula: string;
-  desired_threshold: number | null;
+  desired_threshold: string;
+  worst_case: string;
   variables: { id?: number; symbol: string; description: string; tempId?: string }[];
 }
+
+// Helper function to render metric metadata
+const renderMetricMeta = (item: MetricSearchResult) => (
+  <>
+    {item.code && <span className={styles.badge}>{item.code}</span>}
+    {item.formula && <span>📐 Con fórmula</span>}
+    {item.variables && item.variables.length > 0 && (
+      <span>🔢 {item.variables.length} variable{item.variables.length === 1 ? '' : 's'}</span>
+    )}
+  </>
+);
 
 export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: MetricFormDrawerProps) {
   const [formData, setFormData] = useState<FormData>({
@@ -27,7 +39,8 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
     description: '',
     code: '',
     formula: '',
-    desired_threshold: null,
+    desired_threshold: '',
+    worst_case: '',
     variables: []
   });
   const [loading, setLoading] = useState(false);
@@ -45,7 +58,8 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
         description: metric.description || '',
         code: metric.code || '',
         formula: metric.formula || '',
-        desired_threshold: metric.desired_threshold,
+        desired_threshold: metric.desired_threshold || '',
+        worst_case: metric.worst_case || '',
         variables: metric.variables?.map(v => ({
           id: v.id, // Mantener el ID para actualizar en lugar de recrear
           symbol: v.symbol,
@@ -74,7 +88,8 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
       description: selectedMetric.description || '',
       code: selectedMetric.code || '',
       formula: selectedMetric.formula || '',
-      desired_threshold: selectedMetric.desired_threshold || null,
+      desired_threshold: selectedMetric.desired_threshold || '',
+      worst_case: selectedMetric.worst_case || '',
       variables: variablesWithTempIds
     });
 
@@ -127,7 +142,8 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
           description: formData.description || undefined,
           code: formData.code || undefined,
           formula: formData.formula || undefined,
-          desired_threshold: formData.desired_threshold || undefined
+          desired_threshold: formData.desired_threshold || undefined,
+          worst_case: formData.worst_case || undefined
         };
         
         await parameterizationApi.updateMetric(metric.id, updateData);
@@ -138,10 +154,12 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
         // 1. Las variables ya se eliminan inmediatamente cuando el usuario hace clic en X
         
         // 2. Actualizar variables existentes
-        const variablesToUpdate = formData.variables.filter(v => v.id && existingVariableIds.has(v.id));
+        const variablesToUpdate = formData.variables.filter((v): v is typeof v & { id: number } => 
+          typeof v.id === 'number' && existingVariableIds.has(v.id)
+        );
         await Promise.all(
           variablesToUpdate.map(v =>
-            parameterizationApi.updateVariable(v.id!, {
+            parameterizationApi.updateVariable(v.id, {
               symbol: v.symbol,
               description: v.description,
               metric_id: metric.id
@@ -168,6 +186,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
           code: formData.code || undefined,
           formula: formData.formula || undefined,
           desired_threshold: formData.desired_threshold || undefined,
+          worst_case: formData.worst_case || undefined,
           sub_criterion_id: subCriterionId!
         };
         
@@ -307,15 +326,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                       searchFunction={parameterizationApi.searchMetrics}
                       getItemLabel={(item) => item.name}
                       getItemDescription={(item) => item.description || ''}
-                      getItemMeta={(item) => (
-                        <>
-                          {item.code && <span className={styles.badge}>{item.code}</span>}
-                          {item.formula && <span>📐 Con fórmula</span>}
-                          {item.variables && item.variables.length > 0 && (
-                            <span>🔢 {item.variables.length} variable{item.variables.length !== 1 ? 's' : ''}</span>
-                          )}
-                        </>
-                      )}
+                      getItemMeta={renderMetricMeta}
                       placeholder="Escribe o busca una métrica existente..."
                       helperText="💡 Puedes reutilizar una métrica existente de cualquier estándar"
                       name="name"
@@ -327,7 +338,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className={`${styles.input} ${errors.name ? styles.error : ''}`}
+                      className={`${styles.input} ${errors.name ? styles.error : ''}}`}
                       placeholder="Ej: Porcentaje de éxito"
                     />
                   )}
@@ -374,22 +385,42 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
 
               <div className={styles.field}>
                 <label htmlFor="threshold" className={styles.label}>
-                  Umbral Deseado (%)
+                  Umbral Deseado
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   id="threshold"
-                  value={formData.desired_threshold || ''}
+                  value={formData.desired_threshold}
                   onChange={(e) => setFormData(prev => ({ 
                     ...prev, 
-                    desired_threshold: e.target.value ? Number.parseFloat(e.target.value) : null 
+                    desired_threshold: e.target.value
                   }))}
                   className={styles.input}
-                  placeholder="Ej: 95"
-                  min="0"
-                  max="100"
-                  step="0.1"
+                  placeholder="Ej: 0, 1, >=10/3min, 20 min, 0%, 0 seg, 0/1min"
                 />
+                <span className={styles.helpText}>
+                  💡 Ejemplos: numéricos (0, 1), comparadores (&gt;=10/3min), unidades (20 min, 0%, 0 seg)
+                </span>
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="worstCase" className={styles.label}>
+                  Peor Caso
+                </label>
+                <input
+                  type="text"
+                  id="worstCase"
+                  value={formData.worst_case}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    worst_case: e.target.value
+                  }))}
+                  className={styles.input}
+                  placeholder="Ej: 0, 1, 0/3min, >20 min, >=10%, >= 15 seg, >=4"
+                />
+                <span className={styles.helpText}>
+                  💡 Ejemplos: valores mínimos o condiciones no deseables
+                </span>
               </div>
             </div>
 
@@ -432,7 +463,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
 
                 {!metric && !showAutocomplete && formData.variables.length > 0 && (
                   <div className={styles.infoBox} style={{ marginBottom: '1rem' }}>
-                    <strong>✅ Variables importadas:</strong> Se copiaron {formData.variables.length} variable{formData.variables.length !== 1 ? 's' : ''} de la métrica seleccionada.
+                    <strong>✅ Variables importadas:</strong> Se copiaron {formData.variables.length} variable{formData.variables.length === 1 ? '' : 's'} de la métrica seleccionada.
                   </div>
                 )}
 

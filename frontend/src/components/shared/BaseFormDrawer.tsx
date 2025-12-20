@@ -3,16 +3,16 @@ import { Button } from './Button';
 import styles from './FormDrawer.module.css';
 
 interface BaseFormDrawerProps {
-  isVisible: boolean;
-  title: string;
-  subtitle: string;
-  onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
-  loading: boolean;
-  submitLabel: string;
-  submitDisabled: boolean;
-  generalError?: string;
-  children: ReactNode;
+  readonly isVisible: boolean;
+  readonly title: string;
+  readonly subtitle: string;
+  readonly onClose: () => void;
+  readonly onSubmit: (e: React.FormEvent) => void;
+  readonly loading: boolean;
+  readonly submitLabel: string;
+  readonly submitDisabled: boolean;
+  readonly generalError?: string;
+  readonly children: ReactNode;
 }
 
 export function BaseFormDrawer({

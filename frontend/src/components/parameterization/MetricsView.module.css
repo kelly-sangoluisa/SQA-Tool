@@ -258,6 +258,13 @@
   gap: 0.75rem;
 }
 
+.thresholdSection {
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .threshold {
   display: flex;
   align-items: center;

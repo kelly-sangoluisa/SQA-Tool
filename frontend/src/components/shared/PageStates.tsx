@@ -1,5 +1,5 @@
 interface LoadingStateProps {
-  message?: string;
+  readonly message?: string;
 }
 
 export function LoadingState({ message = 'Cargando...' }: LoadingStateProps) {
@@ -8,7 +8,7 @@ export function LoadingState({ message = 'Cargando...' }: LoadingStateProps) {
       <div className="loader"></div>
       <p>{message}</p>
       
-      <style jsx>{`
+      <style>{`
         .loading-state {
           max-width: 600px;
           margin: 4rem auto;
@@ -43,8 +43,8 @@ export function LoadingState({ message = 'Cargando...' }: LoadingStateProps) {
 }
 
 interface ErrorStateProps {
-  message: string;
-  onRetry?: () => void;
+  readonly message: string;
+  readonly onRetry?: () => void;
 }
 
 export function ErrorState({ message, onRetry }: ErrorStateProps) {
@@ -60,7 +60,7 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
         </button>
       )}
       
-      <style jsx>{`
+      <style>{`
         .error-state {
           max-width: 600px;
           margin: 4rem auto;
@@ -104,8 +104,8 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
 }
 
 interface EmptyStateProps {
-  message: string;
-  description?: string;
+  readonly message: string;
+  readonly description?: string;
 }
 
 export function EmptyState({ message, description }: EmptyStateProps) {
@@ -117,7 +117,7 @@ export function EmptyState({ message, description }: EmptyStateProps) {
       <h3>{message}</h3>
       {description && <p>{description}</p>}
       
-      <style jsx>{`
+      <style>{`
         .empty-state {
           max-width: 600px;
           margin: 4rem auto;

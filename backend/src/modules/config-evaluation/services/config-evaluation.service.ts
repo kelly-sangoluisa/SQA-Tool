@@ -16,7 +16,7 @@ import { User } from '../../../users/entities/user.entity';
 import { CreateProjectDto } from '../dto/project.dto';
 import { CreateEvaluationDto } from '../dto/evaluation.dto';
 import { CreateEvaluationCriterionDto, BulkCreateEvaluationCriteriaDto } from '../dto/evaluation-criterion.dto';
-import { CreateEvaluationMetricDto, BulkCreateEvaluationMetricsDto } from '../dto/evaluation-metric.dto';
+import { BulkCreateEvaluationMetricsDto } from '../dto/evaluation-metric.dto';
 
 @Injectable()
 export class ConfigEvaluationService {
@@ -349,18 +349,20 @@ export class ConfigEvaluationService {
    */
   async getMetricsByCriterionId(criterionId: number): Promise<Criterion> {
     this.logger.debug(`Getting metrics for criterion ID: ${criterionId}`);
-    
-    const criterion = await this.criterionRepo.findOne({
-      where: { id: criterionId },
-      relations: ['sub_criteria', 'sub_criteria.metrics'],
-    });
+
+    const criterion = await this.criterionRepo
+      .createQueryBuilder('criterion')
+      .leftJoinAndSelect('criterion.sub_criteria', 'sub_criterion', 'sub_criterion.state = :state', { state: 'active' })
+      .leftJoinAndSelect('sub_criterion.metrics', 'metric', 'metric.state = :state', { state: 'active' })
+      .where('criterion.id = :criterionId', { criterionId })
+      .getOne();
 
     if (!criterion) {
       this.logger.error(`Criterion with ID ${criterionId} not found`);
       throw new NotFoundException(`Criterion with ID ${criterionId} not found`);
     }
 
-    this.logger.debug(`Found criterion: ${criterion.name}, sub_criteria count: ${criterion.sub_criteria?.length || 0}`);
+    this.logger.debug(`Found criterion: ${criterion.name}, active sub_criteria count: ${criterion.sub_criteria?.length || 0}`);
     return criterion;
   }
 

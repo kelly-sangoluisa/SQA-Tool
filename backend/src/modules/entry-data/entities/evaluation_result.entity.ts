@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'ty
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseTimestampEntity } from '../../../common/entities/base.entity';
 import { Evaluation } from '../../config-evaluation/entities/evaluation.entity';
+import { ScoreLevel, SatisfactionGrade } from '../../../common/decorators/score-classification.enum';
 
 /**
  * Entidad para almacenar el resultado final de una evaluación completa
@@ -47,4 +48,28 @@ export class EvaluationResult extends BaseTimestampEntity {
     type: 'text'
   })
   conclusion: string;
+
+  @ApiProperty({
+    description: 'Nivel de puntuación de la evaluación',
+    enum: ScoreLevel,
+    example: ScoreLevel.TARGET_RANGE
+  })
+  @Column({
+    name: 'score_level',
+    type: 'varchar',
+    length: 50
+  })
+  score_level: ScoreLevel;
+
+  @ApiProperty({
+    description: 'Grado de satisfacción de la evaluación',
+    enum: SatisfactionGrade,
+    example: SatisfactionGrade.SATISFACTORY
+  })
+  @Column({
+    name: 'satisfaction_grade',
+    type: 'varchar',
+    length: 50
+  })
+  satisfaction_grade: SatisfactionGrade;
 }
