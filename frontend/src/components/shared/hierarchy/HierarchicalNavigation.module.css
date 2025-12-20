@@ -248,12 +248,22 @@
 }
 
 .editButton {
-  composes: hierarchyactionbutton from './hierarchy-common.module.css';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--hierarchy-gray-600);
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .editButton:hover {
   background: var(--hierarchy-gray-100);
-  border-color: var(--hierarchy-primary);
   color: var(--hierarchy-primary);
 }
 
