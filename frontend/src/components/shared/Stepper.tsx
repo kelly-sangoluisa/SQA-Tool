@@ -1,9 +1,9 @@
 import React from 'react';
 import styles from './Stepper.module.css';
 
-type Props = {
+type Props = Readonly<{
   currentStep: number;
-};
+}>;
 
 export default function Stepper({ currentStep }: Props) {
   const getStepStatus = (step: number): 'in_progress' | 'completed' | 'cancelled' => {
