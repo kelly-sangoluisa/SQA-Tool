@@ -6,9 +6,22 @@ type Props = {
   title?: string;
   message: string;
   onClose: () => void;
+  showCancelButton?: boolean;
+  onCancel?: () => void;
+  confirmText?: string;
+  cancelText?: string;
 };
 
-export default function SuccessModal({ open, title = 'Operación exitosa', message, onClose }: Readonly<Props>) {
+export default function SuccessModal({ 
+  open, 
+  title = 'Operación exitosa', 
+  message, 
+  onClose,
+  showCancelButton = false,
+  onCancel,
+  confirmText = 'Aceptar',
+  cancelText = 'Cancelar'
+}: Readonly<Props>) {
   if (!open) return null;
 
   return (
@@ -22,7 +35,12 @@ export default function SuccessModal({ open, title = 'Operación exitosa', messa
         <h3 className={styles.title}>{title}</h3>
         <p className={styles.message}>{message}</p>
         <div className={styles.actions}>
-          <button onClick={onClose} className={styles.button}>Aceptar</button>
+          {showCancelButton && onCancel && (
+            <button onClick={onCancel} className={styles.cancelButton}>
+              {cancelText}
+            </button>
+          )}
+          <button onClick={onClose} className={styles.button}>{confirmText}</button>
         </div>
       </div>
     </dialog>

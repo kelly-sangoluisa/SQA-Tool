@@ -148,6 +148,66 @@
   font-style: italic;
 }
 
+.emptyState {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  border: 2px dashed #cbd5e1;
+}
+
+.emptyIcon {
+  display: inline-flex;
+  padding: 1rem;
+  background: white;
+  border-radius: 50%;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(148, 163, 184, 0.1);
+}
+
+.emptyMessage {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.emptyHint {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.createProjectButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(78, 94, 163, 0.3);
+}
+
+.createProjectButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(78, 94, 163, 0.4);
+}
+
+.createProjectButton:active {
+  transform: translateY(0);
+}
+
+.createProjectButton svg {
+  flex-shrink: 0;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

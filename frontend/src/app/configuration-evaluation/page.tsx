@@ -188,19 +188,37 @@ const handleStep5Complete = async (selectedMetrics: Map<number, number[]>) => {
         <Stepper currentStep={currentStep} />
 
         {currentStep > 1 && currentStep < 6 && (
-          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
             <button
               onClick={handleCancelEvaluation}
               style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#ef4444',
+                padding: '0.75rem 1.5rem',
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                 color: 'white',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 cursor: 'pointer',
+                fontSize: '0.9375rem',
+                fontWeight: 600,
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                transition: 'all 0.2s ease',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.4)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
               }}
             >
-              ❌ Cancelar y volver al Dashboard
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Cancelar y volver al Dashboard
             </button>
           </div>
         )}
@@ -248,10 +266,14 @@ const handleStep5Complete = async (selectedMetrics: Map<number, number[]>) => {
           open={cancelModalOpen}
           title="Cancelar evaluación"
           message={'¿Estás seguro?\n\nPerderás todos los datos de la evaluación.'}
+          showCancelButton={true}
+          confirmText="Aceptar"
+          cancelText="Cancelar"
           onClose={() => {
             setCancelModalOpen(false);
             router.push('/dashboard');
           }}
+          onCancel={() => setCancelModalOpen(false)}
         />
 
       </div>

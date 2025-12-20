@@ -179,8 +179,8 @@ export function CriteriaOnlySelection({
     if (Math.abs(total - 100) > 0.01) {
       const difference = total - 100;
       const message = difference > 0 
-        ? `La suma de los porcentajes es ${total.toFixed(2)}%. Sobran ${difference.toFixed(2)}%.`
-        : `La suma de los porcentajes es ${total.toFixed(2)}%. Faltan ${Math.abs(difference).toFixed(2)}%.`;
+        ? ` La suma de los porcentajes de importancia es ${total.toFixed(2)}%.\n\nDebe ajustar los porcentajes para que sumen exactamente 100%. Actualmente sobran ${difference.toFixed(2)}%.`
+        : ` La suma de los porcentajes de importancia es ${total.toFixed(2)}%.\n\nDebe ajustar los porcentajes para que sumen exactamente 100%. Actualmente faltan ${Math.abs(difference).toFixed(2)}%.`;
       setAlertMessage(message);
       setAlertType('error');
       return false;
