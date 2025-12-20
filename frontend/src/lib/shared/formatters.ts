@@ -64,7 +64,7 @@ export function getStatusColor(status: string): string {
  * Valida que un número sea válido y retorna 0 si no lo es
  */
 export function validateScore(score: number | null | undefined): number {
-  return typeof score === 'number' && !isNaN(score) ? score : 0;
+    return typeof score === 'number' && !Number.isNaN(score) ? score : 0;
 }
 
 /**
