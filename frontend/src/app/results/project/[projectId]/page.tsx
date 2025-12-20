@@ -43,7 +43,8 @@ function ProjectEvaluationsPage() {
       try {
         const report = await getProjectReport(projectId);
         setProjectReport(report);
-      } catch (reportErr) {
+      } catch (error_) {
+        console.error('Project not completed or no results:', error_);
         // Proyecto aún no completado o sin resultados
       }
     } catch {
@@ -88,7 +89,7 @@ function ProjectEvaluationsPage() {
   return (
     <div className="evaluations-page">
       {/* Widget flotante arriba a la derecha cuando proyecto completado */}
-      {projectReport && projectReport.status === 'completed' && (
+      {projectReport?.status === 'completed' && (
         <div className="project-results-widget">
           <div className="score-circle">
             <svg width="120" height="120" viewBox="0 0 120 120">

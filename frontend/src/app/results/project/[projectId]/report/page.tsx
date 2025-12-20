@@ -58,6 +58,20 @@ function ProjectReportPage() {
     });
   }, [projectId, isValidProjectId]);
 
+  // Manejar cierre del modal con Escape de manera accesible
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showPDFModal) {
+        setShowPDFModal(false);
+      }
+    };
+    
+    if (showPDFModal) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [showPDFModal]);
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -395,17 +409,13 @@ function ProjectReportPage() {
       {showPDFModal && (
         <div 
           className="modal-overlay"
-          tabIndex={-1}
           onClick={() => setShowPDFModal(false)}
-          onKeyDown={(e) => { if (e.key === 'Escape') setShowPDFModal(false); }}
           aria-modal="true"
           aria-labelledby="modal-title"
         >
           <div 
             className="modal-content"
-            tabIndex={0}
             onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
               <h3 id="modal-title">Seleccionar Secciones del Análisis IA para PDF</h3>
