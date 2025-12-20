@@ -7,12 +7,17 @@ type Props = {
   onClose: () => void;
 };
 
-export default function ValidationModal({ open, title = 'Validación requerida', message, onClose }: Props) {
+export default function ValidationModal({ open, title = 'Validación requerida', message, onClose }: Readonly<Props>) {
   if (!open) return null;
 
   return (
-    <div style={overlayStyle} role="dialog" aria-modal="true" onClick={onClose}>
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+    <dialog open style={dialogStyle}>
+      <button 
+        onClick={onClose} 
+        style={overlayButtonStyle}
+        aria-label="Cerrar modal"
+      />
+      <div style={modalStyle}>
         <div style={headerStyle}>
           <h3 style={titleStyle}>{title}</h3>
         </div>
@@ -21,11 +26,11 @@ export default function ValidationModal({ open, title = 'Validación requerida',
           <button onClick={onClose} style={buttonStyle}>Entendido</button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 
-const overlayStyle: React.CSSProperties = {
+const dialogStyle: React.CSSProperties = {
   position: 'fixed',
   top: 0,
   left: 0,
@@ -37,6 +42,24 @@ const overlayStyle: React.CSSProperties = {
   justifyContent: 'center',
   zIndex: 1000,
   animation: 'fadeIn 0.2s ease-out',
+  border: 'none',
+  padding: 0,
+  margin: 0,
+  maxWidth: '100vw',
+  maxHeight: '100vh',
+};
+
+const overlayButtonStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  background: 'transparent',
+  border: 'none',
+  cursor: 'default',
+  padding: 0,
+  zIndex: 1,
 };
 
 const modalStyle: React.CSSProperties = {
@@ -48,6 +71,8 @@ const modalStyle: React.CSSProperties = {
   boxShadow: '0 10px 40px rgba(78, 94, 163, 0.25)',
   animation: 'slideUp 0.3s ease-out',
   border: '2px solid rgba(78, 94, 163, 0.2)',
+  position: 'relative',
+  zIndex: 2,
 };
 
 const headerStyle: React.CSSProperties = {
