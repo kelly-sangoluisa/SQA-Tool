@@ -602,8 +602,14 @@ class ProjectPDFGenerator {
 
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.setFontSize(10);
-      const prioridadColor = rec.prioridad === 'Alta' ? [239, 68, 68] : 
-                             rec.prioridad === 'Media' ? [251, 146, 60] : [34, 197, 94];
+      let prioridadColor: number[];
+      if (rec.prioridad === 'Alta') {
+        prioridadColor = [239, 68, 68];
+      } else if (rec.prioridad === 'Media') {
+        prioridadColor = [251, 146, 60];
+      } else {
+        prioridadColor = [34, 197, 94];
+      }
       this.pdf.setTextColor(prioridadColor[0], prioridadColor[1], prioridadColor[2]);
       this.pdf.text(`[${rec.prioridad}]`, this.margin + 5, this.currentY);
       
