@@ -8,11 +8,11 @@ type Props = {
   onClose: () => void;
 };
 
-export default function SuccessModal({ open, title = 'Operación exitosa', message, onClose }: Props) {
+export default function SuccessModal({ open, title = 'Operación exitosa', message, onClose }: Readonly<Props>) {
   if (!open) return null;
 
   return (
-    <div className={styles.overlay} role="dialog" aria-modal="true">
+    <dialog open className={styles.overlay}>
       <div className={styles.modal}>
         <div className={styles.iconContainer}>
           <svg className={styles.successIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -25,6 +25,6 @@ export default function SuccessModal({ open, title = 'Operación exitosa', messa
           <button onClick={onClose} className={styles.button}>Aceptar</button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
