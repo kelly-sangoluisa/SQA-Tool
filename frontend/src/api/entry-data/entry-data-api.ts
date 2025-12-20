@@ -99,6 +99,8 @@ export async function finalizeEvaluation(evaluationId: number): Promise<void> {
  * Finalizar proyecto completo (Automático última evaluación)
  */
 export async function finalizeProject(projectId: number): Promise<void> {
+  console.log(`📤 Finalizando proyecto ${projectId}...`);
+  
   const response = await fetch(`/api/entry-data/projects/${projectId}/finalize`, {
     method: 'POST',
     headers: {
@@ -110,20 +112,24 @@ export async function finalizeProject(projectId: number): Promise<void> {
     let errorMessage = 'Error al finalizar el proyecto';
     try {
       const error = await response.json();
+      console.error('❌ Error del servidor al finalizar proyecto:', error);
       errorMessage = error && typeof error.message === 'string' ? error.message : errorMessage;
     } catch {
       // Server didn't return JSON
+      console.error('❌ Error sin respuesta JSON del servidor');
     }
     throw new Error(errorMessage);
   }
 
   try {
     const result = await response.json();
-    console.log('✅ Proyecto finalizado:', result);
+    console.log('✅ Proyecto finalizado exitosamente:', result);
     console.log('🎯 Puntaje final del proyecto:', result.final_score);
+    console.log('📊 Score Level:', result.score_level);
+    console.log('⭐ Satisfaction Grade:', result.satisfaction_grade);
     console.log('📅 Finalizado en:', result.finalized_at);
-  } catch {
-    // Response might not have body
+  } catch (parseError) {
+    console.warn('⚠️ No se pudo parsear la respuesta del servidor, pero el proyecto fue finalizado');
   }
 }
 

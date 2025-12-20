@@ -13,6 +13,7 @@ interface Variable {
  * @param variables - Array de variables a ordenar
  * @returns Array de variables ordenadas según su aparición en la fórmula
  */
+
 export function sortVariablesByFormulaOrder<T extends Variable>(
   formula: string,
   variables: T[]
@@ -28,7 +29,7 @@ export function sortVariablesByFormulaOrder<T extends Variable>(
     const symbol = variable.symbol;
     // Buscar la primera aparición del símbolo en la fórmula (case insensitive)
     const regex = new RegExp(symbol, 'i');
-    const match = formula.match(regex);
+    const match = regex.exec(formula);
     
     if (match && match.index !== undefined) {
       symbolPositions.set(symbol, match.index);

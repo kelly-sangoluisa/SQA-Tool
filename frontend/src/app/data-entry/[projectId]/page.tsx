@@ -708,8 +708,52 @@ function DataEntryContent() {
       setFinalizedEvaluations(prev => new Set([...prev, currentEvaluationForModal.id]));
 
       if (isFinalizingProject) {
-        // Finalizar proyecto inmediatamente sin cerrar el modal
+        console.log('🚀 Iniciando finalización del proyecto...');
+        
+        // IMPORTANTE: Finalizar TODAS las evaluaciones que aún no estén finalizadas
+        const pendingEvaluations = evaluations.filter(
+          evaluation => !finalizedEvaluations.has(evaluation.id) && evaluation.id !== currentEvaluationForModal.id
+        );
+        
+        if (pendingEvaluations.length > 0) {
+          console.log(`⚠️ Finalizando ${pendingEvaluations.length} evaluaciones pendientes...`);
+          
+          for (const pendingEval of pendingEvaluations) {
+            try {
+              console.log(`📝 Finalizando evaluación: ${pendingEval.standard?.name || pendingEval.id}`);
+              
+              // Obtener métricas de esta evaluación
+              const pendingEvalMetricIds = getEvaluationMetricIds(pendingEval);
+              
+              // Construir variables a enviar (solo las que pertenecen a esta evaluación)
+              const pendingVariables = buildVariablesToSubmit(
+                variableValues,
+                pendingEvalMetricIds,
+                allMetrics,
+                pendingEval.id
+              );
+              
+              // Enviar datos si hay variables
+              if (pendingVariables.length > 0) {
+                await submitEvaluationData(pendingEval.id, pendingVariables);
+              }
+              
+              // Finalizar evaluación
+              await finalizeEvaluation(pendingEval.id);
+              console.log(`✅ Evaluación ${pendingEval.standard?.name || pendingEval.id} finalizada`);
+            } catch (error) {
+              console.error(`❌ Error al finalizar evaluación ${pendingEval.id}:`, error);
+              throw new Error(`No se pudo finalizar la evaluación ${pendingEval.standard?.name || pendingEval.id}`);
+            }
+          }
+        } else {
+          console.log('✅ Todas las evaluaciones ya están finalizadas');
+        }
+        
+        // Ahora sí, finalizar el proyecto
+        console.log('🏁 Finalizando proyecto...');
         await finalizeProject(projectId);
+        console.log('✅ Proyecto finalizado exitosamente');
         
         localStorage.removeItem(`data-entry-project-${projectId}`);
         
