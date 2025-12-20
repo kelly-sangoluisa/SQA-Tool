@@ -123,7 +123,14 @@ export class PDFGenerator {
     this.pdf.setFont('helvetica', 'normal');
     const isHighScore = report.final_score >= 80;
     const isMediumScore = report.final_score >= 60;
-    const scoreColor = isHighScore ? [16, 185, 129] : (isMediumScore ? [245, 158, 11] : [239, 68, 68]);
+    let scoreColor: number[];
+    if (isHighScore) {
+      scoreColor = [16, 185, 129];
+    } else if (isMediumScore) {
+      scoreColor = [245, 158, 11];
+    } else {
+      scoreColor = [239, 68, 68];
+    }
     this.pdf.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
     this.pdf.setFontSize(24);
     this.pdf.text(`${report.final_score.toFixed(1)}%`, this.margin + 40, this.currentY);
@@ -242,7 +249,14 @@ export class PDFGenerator {
     // Box 3: Score Promedio
     const isHighAvg = stats.average_criteria_score >= 80;
     const isMediumAvg = stats.average_criteria_score >= 60;
-    const avgColor = isHighAvg ? [16, 185, 129] : (isMediumAvg ? [245, 158, 11] : [239, 68, 68]);
+    let avgColor: number[];
+    if (isHighAvg) {
+      avgColor = [16, 185, 129];
+    } else if (isMediumAvg) {
+      avgColor = [245, 158, 11];
+    } else {
+      avgColor = [239, 68, 68];
+    }
     this.pdf.setFillColor(avgColor[0], avgColor[1], avgColor[2]);
     this.pdf.roundedRect(this.margin + 2 * (boxWidth + 5), boxY, boxWidth, boxHeight, 3, 3, 'F');
     this.pdf.setFontSize(24);
@@ -326,7 +340,14 @@ export class PDFGenerator {
       // Score del criterio
       const isCriterionHigh = criterion.final_score >= 80;
       const isCriterionMedium = criterion.final_score >= 60;
-      const scoreColor = isCriterionHigh ? [16, 185, 129] : (isCriterionMedium ? [245, 158, 11] : [239, 68, 68]);
+      let scoreColor: number[];
+      if (isCriterionHigh) {
+        scoreColor = [16, 185, 129];
+      } else if (isCriterionMedium) {
+        scoreColor = [245, 158, 11];
+      } else {
+        scoreColor = [239, 68, 68];
+      }
       this.pdf.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
       this.pdf.text(`${criterion.final_score.toFixed(1)}%`, this.pageWidth - this.margin - 20, this.currentY);
 

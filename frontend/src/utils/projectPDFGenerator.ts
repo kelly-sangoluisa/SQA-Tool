@@ -58,7 +58,7 @@ class ProjectPDFGenerator {
 
     // Análisis de IA (si está disponible y hay secciones seleccionadas)
     if (aiAnalysis && selectedAISections) {
-      const hasSelectedSections = Object.values(selectedAISections).some(selected => selected);
+      const hasSelectedSections = Object.values(selectedAISections).some(Boolean);
       if (hasSelectedSections) {
         this.addNewPage();
         this.addAIAnalysis(aiAnalysis, selectedAISections);
@@ -80,7 +80,7 @@ class ProjectPDFGenerator {
     this.addPageNumbers(shouldIncludeCertificate);
 
     // Descargar
-    const fileName = `Proyecto_${report.project_name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    const fileName = `Proyecto_${report.project_name.replaceAll(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
     this.pdf.save(fileName);
   }
 
@@ -124,8 +124,16 @@ class ProjectPDFGenerator {
     // Score con más separación
     this.currentY += 20;
     this.pdf.setFont('helvetica', 'bold');
-    const scoreColor = report.final_project_score >= 80 ? [16, 185, 129] : 
-                        report.final_project_score >= 60 ? [245, 158, 11] : [239, 68, 68];
+    const isHighProjectScore = report.final_project_score >= 80;
+    const isMediumProjectScore = report.final_project_score >= 60;
+    let scoreColor: number[];
+    if (isHighProjectScore) {
+      scoreColor = [16, 185, 129];
+    } else if (isMediumProjectScore) {
+      scoreColor = [245, 158, 11];
+    } else {
+      scoreColor = [239, 68, 68];
+    }
     this.pdf.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
     this.pdf.setFontSize(32);
     this.pdf.text(`${report.final_project_score.toFixed(1)}%`, this.pageWidth / 2, this.currentY, { align: 'center' });
@@ -207,10 +215,9 @@ class ProjectPDFGenerator {
 
     // Agregar sección de IA si está disponible
     if (aiAnalysis && selectedAISections) {
-      const hasSelectedSections = Object.values(selectedAISections).some(selected => selected);
+      const hasSelectedSections = Object.values(selectedAISections).some(Boolean);
       if (hasSelectedSections) {
-        items.push('3. Análisis de Calidad con IA');
-        items.push('4. Certificado de Cumplimiento (si aplica)');
+        items.push('3. Análisis de Calidad con IA', '4. Certificado de Cumplimiento (si aplica)');
       } else {
         items.push('3. Certificado de Cumplimiento (si aplica)');
       }
@@ -380,8 +387,16 @@ class ProjectPDFGenerator {
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Puntuación:', this.margin + 5, this.currentY);
       this.pdf.setFont('helvetica', 'normal');
-      const scoreColor = evaluation.final_score >= 80 ? [16, 185, 129] : 
-                         evaluation.final_score >= 60 ? [245, 158, 11] : [239, 68, 68];
+      const isHighEvalScore = evaluation.final_score >= 80;
+      const isMediumEvalScore = evaluation.final_score >= 60;
+      let scoreColor: number[];
+      if (isHighEvalScore) {
+        scoreColor = [16, 185, 129];
+      } else if (isMediumEvalScore) {
+        scoreColor = [245, 158, 11];
+      } else {
+        scoreColor = [239, 68, 68];
+      }
       this.pdf.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
       this.pdf.text(`${evaluation.final_score.toFixed(1)}%`, this.margin + 30, this.currentY);
 
