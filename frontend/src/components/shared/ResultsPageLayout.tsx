@@ -21,7 +21,7 @@ export function ResultsPageLayout({
   subtitle,
   backButton,
   stats
-}: ResultsPageLayoutProps) {
+}: Readonly<ResultsPageLayoutProps>) {
   return (
     <div className="results-page">
       <div className="page-header">
@@ -40,8 +40,8 @@ export function ResultsPageLayout({
 
           {stats && stats.length > 0 && (
             <div className="stats-summary">
-              {stats.map((stat, index) => (
-                <div key={index} className={`stat-chip stat-chip--${stat.variant}`}>
+              {stats.map((stat) => (
+                <div key={stat.label} className={`stat-chip stat-chip--${stat.variant}`}>
                   <span className="stat-number">{stat.value}</span>
                   <span className="stat-text">{stat.label}</span>
                 </div>

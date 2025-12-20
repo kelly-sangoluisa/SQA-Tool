@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import styles from './GlobalLayout.module.css';
 
-export function GlobalLayout({ children }: { children: React.ReactNode }) {
+export function GlobalLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { user, isLoading } = useAuth();
   const { isOpen } = useSidebar();
   const pathname = usePathname();
