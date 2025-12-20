@@ -38,7 +38,7 @@ export class EvaluationMetricResult extends BaseTimestampEntity {
     scale: 2,
     transformer: {
       to: (value: number) => value,
-      from: (value: string) => parseFloat(value)
+      from: (value: string) => Number.parseFloat(value)
     }
   })
   calculated_value: number;
@@ -54,7 +54,7 @@ export class EvaluationMetricResult extends BaseTimestampEntity {
     scale: 2,
     transformer: {
       to: (value: number) => value,
-      from: (value: string) => parseFloat(value)
+      from: (value: string) => Number.parseFloat(value)
     }
   })
   weighted_value: number;
