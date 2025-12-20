@@ -85,7 +85,7 @@
   display: flex;
   gap: 1rem;
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: #6b7280;
 }
 
 .project-card-score {
@@ -217,7 +217,7 @@
 
 .btn-view-results--disabled {
   background: #e5e7eb;
-  color: #9ca3af;
+  color: #6b7280;
   cursor: not-allowed;
   box-shadow: none;
 }

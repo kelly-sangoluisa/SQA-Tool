@@ -40,7 +40,7 @@
   background: rgba(59, 130, 246, 0.08);
   border-left: 3px solid rgba(59, 130, 246, 0.4);
   border-radius: 6px;
-  color: #475569;
+  color: #334155;
   font-size: 0.8125rem;
   text-align: left;
   line-height: 1.4;
@@ -84,7 +84,7 @@
   background: #f3f4f6;
   border: none;
   border-radius: 6px;
-  color: #6b7280;
+  color: #4b5563;
   font-size: 1.125rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -97,7 +97,7 @@
 
 .radar-subtitle {
   font-size: 0.8125rem;
-  color: #6b7280;
+  color: #4b5563;
   margin-bottom: 1rem;
 }
 
@@ -118,7 +118,7 @@
   background: white;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #6b7280;
+  color: #4b5563;
   cursor: pointer;
   transition: all 0.2s ease;
 }
