@@ -40,15 +40,16 @@ export function validateForm(
   Object.keys(rules).forEach(field => {
     const fieldValue = formData[field];
     
-    let value = '';
+    let value: string;
     if (typeof fieldValue === 'string') {
       value = fieldValue;
     } else if (fieldValue === null || fieldValue === undefined) {
       value = '';
-    } else if (typeof fieldValue === 'object') {
-      value = JSON.stringify(fieldValue);
-    } else {
+    } else if (typeof fieldValue === 'number' || typeof fieldValue === 'boolean') {
       value = String(fieldValue);
+    } else {
+      // Para objetos u otros tipos, tratarlos como vacíos ya que no son valores válidos para campos de formulario
+      value = '';
     }
     
     const error = validateField(field, value, rules[field]);
