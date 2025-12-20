@@ -4,11 +4,11 @@ import styles from './Toast.module.css';
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 interface ToastProps {
-  message: string;
-  type: ToastType;
-  isVisible: boolean;
-  onClose: () => void;
-  duration?: number;
+  readonly message: string;
+  readonly type: ToastType;
+  readonly isVisible: boolean;
+  readonly onClose: () => void;
+  readonly duration?: number;
 }
 
 export function Toast({ message, type, isVisible, onClose, duration = 3000 }: ToastProps) {

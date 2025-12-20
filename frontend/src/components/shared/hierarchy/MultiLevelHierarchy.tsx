@@ -104,12 +104,15 @@ function renderLevel4Items<TLevel4 extends BaseLevel4Item>(
   level4Items: TLevel4[],
   groupIndex: number,
   globalLevel4IndexRef: { current: number },
-  activeLevel4ItemId: number | undefined,
-  isItemCompleted: ((item: TLevel4) => boolean) | undefined,
-  onLevel4Select: ((groupIndex: number, level4Item: TLevel4) => void) | undefined,
-  styles: Record<string, string>,
-  emptyMessage: string
+  config: {
+    activeLevel4ItemId: number | undefined;
+    isItemCompleted: ((item: TLevel4) => boolean) | undefined;
+    onLevel4Select: ((groupIndex: number, level4Item: TLevel4) => void) | undefined;
+    styles: Record<string, string>;
+    emptyMessage: string;
+  }
 ) {
+  const { activeLevel4ItemId, isItemCompleted, onLevel4Select, styles, emptyMessage } = config;
   if (level4Items.length === 0) {
     return <div className={styles.emptyMessage}>{emptyMessage}</div>;
   }
@@ -143,17 +146,21 @@ function renderLevel3Items<TLevel3 extends BaseLevel3Item, TLevel4 extends BaseL
   level3Items: TLevel3[],
   groupIndex: number,
   globalLevel4IndexRef: { current: number },
-  expandedLevel3: Set<number>,
-  showLevel4: boolean,
-  getLevel4Items: ((level3Item: TLevel3) => TLevel4[]) | undefined,
-  toggleLevel3: (itemId: number) => void,
-  activeLevel4ItemId: number | undefined,
-  isItemCompleted: ((item: TLevel4) => boolean) | undefined,
-  onLevel4Select: ((groupIndex: number, level4Item: TLevel4) => void) | undefined,
-  styles: Record<string, string>,
-  emptyLevel3Message: string,
-  emptyLevel4Message: string
+  config: {
+    expandedLevel3: Set<number>;
+    showLevel4: boolean;
+    getLevel4Items: ((level3Item: TLevel3) => TLevel4[]) | undefined;
+    toggleLevel3: (itemId: number) => void;
+    activeLevel4ItemId: number | undefined;
+    isItemCompleted: ((item: TLevel4) => boolean) | undefined;
+    onLevel4Select: ((groupIndex: number, level4Item: TLevel4) => void) | undefined;
+    styles: Record<string, string>;
+    emptyLevel3Message: string;
+    emptyLevel4Message: string;
+  }
 ) {
+  const { expandedLevel3, showLevel4, getLevel4Items, toggleLevel3, activeLevel4ItemId, 
+          isItemCompleted, onLevel4Select, styles, emptyLevel3Message, emptyLevel4Message } = config;
   if (level3Items.length === 0) {
     return <div className={styles.emptyMessage}>{emptyLevel3Message}</div>;
   }
@@ -161,6 +168,12 @@ function renderLevel3Items<TLevel3 extends BaseLevel3Item, TLevel4 extends BaseL
   return level3Items.map((level3Item) => {
     const isLevel3Expanded = expandedLevel3.has(level3Item.id);
     const level4Items = showLevel4 && getLevel4Items ? getLevel4Items(level3Item) : [];
+    let expandIcon: string;
+    if (showLevel4) {
+      expandIcon = isLevel3Expanded ? '▼' : '▶';
+    } else {
+      expandIcon = '•';
+    }
 
     return (
       <div key={level3Item.id} className={styles.level3Group}>
@@ -169,7 +182,7 @@ function renderLevel3Items<TLevel3 extends BaseLevel3Item, TLevel4 extends BaseL
           onClick={() => showLevel4 && toggleLevel3(level3Item.id)}
         >
           <span className={styles.expandIcon}>
-            {showLevel4 ? (isLevel3Expanded ? '▼' : '▶') : '•'}
+            {expandIcon}
           </span>
           <span className={styles.level3Name}>
             {level3Item.name}
@@ -182,11 +195,13 @@ function renderLevel3Items<TLevel3 extends BaseLevel3Item, TLevel4 extends BaseL
               level4Items,
               groupIndex,
               globalLevel4IndexRef,
-              activeLevel4ItemId,
-              isItemCompleted,
-              onLevel4Select,
-              styles,
-              emptyLevel4Message
+              {
+                activeLevel4ItemId,
+                isItemCompleted,
+                onLevel4Select,
+                styles,
+                emptyMessage: emptyLevel4Message
+              }
             )}
           </div>
         )}
@@ -206,21 +221,26 @@ function renderLevel2Items<
   level2Items: TLevel2[],
   groupIndex: number,
   globalLevel4IndexRef: { current: number },
-  expandedLevel2: Set<number>,
-  expandedLevel3: Set<number>,
-  showLevel4: boolean,
-  getLevel3Items: (level2Item: TLevel2) => TLevel3[],
-  getLevel4Items: ((level3Item: TLevel3) => TLevel4[]) | undefined,
-  toggleLevel2: (itemId: number) => void,
-  toggleLevel3: (itemId: number) => void,
-  activeLevel4ItemId: number | undefined,
-  isItemCompleted: ((item: TLevel4) => boolean) | undefined,
-  onLevel4Select: ((groupIndex: number, level4Item: TLevel4) => void) | undefined,
-  styles: Record<string, string>,
-  emptyLevel2Message: string,
-  emptyLevel3Message: string,
-  emptyLevel4Message: string
+  config: {
+    expandedLevel2: Set<number>;
+    expandedLevel3: Set<number>;
+    showLevel4: boolean;
+    getLevel3Items: (level2Item: TLevel2) => TLevel3[];
+    getLevel4Items: ((level3Item: TLevel3) => TLevel4[]) | undefined;
+    toggleLevel2: (itemId: number) => void;
+    toggleLevel3: (itemId: number) => void;
+    activeLevel4ItemId: number | undefined;
+    isItemCompleted: ((item: TLevel4) => boolean) | undefined;
+    onLevel4Select: ((groupIndex: number, level4Item: TLevel4) => void) | undefined;
+    styles: Record<string, string>;
+    emptyLevel2Message: string;
+    emptyLevel3Message: string;
+    emptyLevel4Message: string;
+  }
 ) {
+  const { expandedLevel2, expandedLevel3, showLevel4, getLevel3Items, getLevel4Items,
+          toggleLevel2, toggleLevel3, activeLevel4ItemId, isItemCompleted, onLevel4Select,
+          styles, emptyLevel2Message, emptyLevel3Message, emptyLevel4Message } = config;
   if (level2Items.length === 0) {
     return <div className={styles.emptyMessage}>{emptyLevel2Message}</div>;
   }
@@ -249,16 +269,18 @@ function renderLevel2Items<
               level3Items,
               groupIndex,
               globalLevel4IndexRef,
-              expandedLevel3,
-              showLevel4,
-              getLevel4Items,
-              toggleLevel3,
-              activeLevel4ItemId,
-              isItemCompleted,
-              onLevel4Select,
-              styles,
-              emptyLevel3Message,
-              emptyLevel4Message
+              {
+                expandedLevel3,
+                showLevel4,
+                getLevel4Items,
+                toggleLevel3,
+                activeLevel4ItemId,
+                isItemCompleted,
+                onLevel4Select,
+                styles,
+                emptyLevel3Message,
+                emptyLevel4Message
+              }
             )}
           </div>
         )}
@@ -287,7 +309,7 @@ export function MultiLevelHierarchy<
   isGroupCompleted,
   labels = {},
   showLevel4 = true
-}: MultiLevelHierarchyProps<TGroup, TLevel2, TLevel3, TLevel4>) {
+}: Readonly<MultiLevelHierarchyProps<TGroup, TLevel2, TLevel3, TLevel4>>) {
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
   const [expandedLevel2, setExpandedLevel2] = useState<Set<number>>(new Set());
   const [expandedLevel3, setExpandedLevel3] = useState<Set<number>>(new Set());
@@ -392,20 +414,22 @@ export function MultiLevelHierarchy<
                     level2Items,
                     groupIndex,
                     globalLevel4IndexRef,
-                    expandedLevel2,
-                    expandedLevel3,
-                    showLevel4,
-                    getLevel3Items,
-                    getLevel4Items,
-                    toggleLevel2,
-                    toggleLevel3,
-                    activeLevel4ItemId,
-                    isItemCompleted,
-                    onLevel4Select,
-                    styles,
-                    defaultLabels.emptyLevel2,
-                    defaultLabels.emptyLevel3,
-                    defaultLabels.emptyLevel4
+                    {
+                      expandedLevel2,
+                      expandedLevel3,
+                      showLevel4,
+                      getLevel3Items,
+                      getLevel4Items,
+                      toggleLevel2,
+                      toggleLevel3,
+                      activeLevel4ItemId,
+                      isItemCompleted,
+                      onLevel4Select,
+                      styles,
+                      emptyLevel2Message: defaultLabels.emptyLevel2,
+                      emptyLevel3Message: defaultLabels.emptyLevel3,
+                      emptyLevel4Message: defaultLabels.emptyLevel4
+                    }
                   )}
                 </div>
               )}
