@@ -15,7 +15,7 @@ export default function HomePage() {
     // Si el usuario está autenticado, redirigir a su dashboard correspondiente
     if (!isLoading && isAuthenticated && user) {
       // Redirigir según el rol del usuario
-      switch (user.role) {
+      switch (user.role.name) {
         case 'admin':
           router.push('/dashboard');
           break;
