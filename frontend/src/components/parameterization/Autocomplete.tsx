@@ -139,7 +139,7 @@ export function Autocomplete<T>({
 
   return (
     <div className={styles.autocompleteWrapper} ref={wrapperRef}>
-      <input
+      <input // NOSONAR typescript:S6819 - ARIA combobox pattern required for accessible autocomplete
         ref={inputRef}
         type="text"
         name={name}
@@ -153,17 +153,35 @@ export function Autocomplete<T>({
           showResults && results.length > 0 ? styles.hasResults : ''
         }`}
         autoComplete="off"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={showResults && results.length > 0}
+        aria-controls={showResults && results.length > 0 ? 'autocomplete-results' : undefined}
       />
 
       {showResults && (
-        <ul className={styles.resultsList}>
+        <div // NOSONAR typescript:S6819 - ARIA listbox pattern required for accessible autocomplete with dynamic results
+          className={styles.resultsList}
+          role="listbox"
+          id="autocomplete-results"
+        >
           {(() => {
             if (isLoading) {
-              return <li className={styles.loading}>Buscando...</li>;
+              return (
+                <div className={styles.statusItem}>
+                  <div className={styles.loading}>Buscando...</div>
+                </div>
+              );
             }
             
             if (results.length === 0) {
-              return <li className={styles.noResults}>No se encontraron resultados</li>;
+              return (
+                <div className={styles.statusItem}>
+                  <div className={styles.noResults}>
+                    No se encontraron resultados para "{value}"
+                  </div>
+                </div>
+              );
             }
             
             return results.map((item, index) => {
@@ -171,34 +189,41 @@ export function Autocomplete<T>({
               const isHighlighted = index === highlightedIndex;
               
               return (
-                <li key={itemKey}>
-                  <button
-                    type="button"
-                    className={`${styles.resultItem} ${
-                      isHighlighted ? styles.highlighted : ''
-                    }`}
-                    onClick={() => handleSelect(item)}
-                    onMouseEnter={() => setHighlightedIndex(index)}
-                  >
-                    <div className={styles.resultItemName}>
-                      {getItemLabel(item)}
+                <div // NOSONAR typescript:S6819 - ARIA option role required for listbox pattern
+                  key={itemKey}
+                  role="option"
+                  aria-selected={isHighlighted}
+                  className={`${styles.resultItem} ${
+                    isHighlighted ? styles.highlighted : ''
+                  }`}
+                  onClick={() => handleSelect(item)}
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSelect(item);
+                    }
+                  }}
+                  tabIndex={-1}
+                >
+                  <div className={styles.resultItemName}>
+                    {getItemLabel(item)}
+                  </div>
+                  {getItemMeta && (
+                    <div className={styles.resultItemMeta}>
+                      {getItemMeta(item)}
                     </div>
-                    {getItemMeta && (
-                      <div className={styles.resultItemMeta}>
-                        {getItemMeta(item)}
-                      </div>
-                    )}
-                    {getItemDescription && (
-                      <div className={styles.resultItemDescription}>
-                        {getItemDescription(item)}
-                      </div>
-                    )}
-                  </button>
-                </li>
+                  )}
+                  {getItemDescription && (
+                    <div className={styles.resultItemDescription}>
+                      {getItemDescription(item)}
+                    </div>
+                  )}
+                </div>
               );
             });
           })()}
-        </ul>
+        </div>
       )}
 
       {helperText && !showResults && (
