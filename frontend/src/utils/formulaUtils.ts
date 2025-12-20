@@ -31,11 +31,11 @@ export function sortVariablesByFormulaOrder<T extends Variable>(
     const regex = new RegExp(symbol, 'i');
     const match = regex.exec(formula);
     
-    if (match && match.index !== undefined) {
-      symbolPositions.set(symbol, match.index);
-    } else {
+    if (match?.index === undefined) {
       // Si no se encuentra en la fórmula, ponerlo al final
       symbolPositions.set(symbol, Infinity);
+    } else {
+      symbolPositions.set(symbol, match.index);
     }
   });
 

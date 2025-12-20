@@ -22,16 +22,6 @@ export async function submitEvaluationData(
   evaluationId: number,
   variables: Array<{ eval_metric_id?: number; metric_id?: number; variable_id: number; symbol: string; value: number | string }>
 ): Promise<void> {
-  console.log('📤 Enviando datos:', {
-    evaluationId,
-    variables: variables.map(v => ({
-      eval_metric_id: v.eval_metric_id || v.metric_id,
-      variable_id: v.variable_id,
-      symbol: v.symbol,
-      value: v.value // Mostrar el valor directamente (número o string)
-    }))
-  });
-
   const response = await fetch(`/api/entry-data/evaluations/${evaluationId}/submit-data`, {
     method: 'POST',
     headers: {
@@ -55,8 +45,7 @@ export async function submitEvaluationData(
   }
 
   try {
-    const result = await response.json();
-    console.log('✅ Datos guardados:', result);
+    await response.json();
   } catch {
     // Response might not have body
   }
@@ -85,11 +74,7 @@ export async function finalizeEvaluation(evaluationId: number): Promise<void> {
   }
 
   try {
-    const result = await response.json();
-    console.log('✅ Evaluación finalizada:', result);
-    console.log('📊 Resultados de métricas:', result.metric_results);
-    console.log('📈 Resultados de criterios:', result.criteria_results);
-    console.log('🎯 Puntaje final:', result.final_score);
+    await response.json();
   } catch {
     // Response might not have body
   }
@@ -99,8 +84,6 @@ export async function finalizeEvaluation(evaluationId: number): Promise<void> {
  * Finalizar proyecto completo (Automático última evaluación)
  */
 export async function finalizeProject(projectId: number): Promise<void> {
-  console.log(`📤 Finalizando proyecto ${projectId}...`);
-  
   const response = await fetch(`/api/entry-data/projects/${projectId}/finalize`, {
     method: 'POST',
     headers: {
@@ -122,14 +105,9 @@ export async function finalizeProject(projectId: number): Promise<void> {
   }
 
   try {
-    const result = await response.json();
-    console.log('✅ Proyecto finalizado exitosamente:', result);
-    console.log('🎯 Puntaje final del proyecto:', result.final_score);
-    console.log('📊 Score Level:', result.score_level);
-    console.log('⭐ Satisfaction Grade:', result.satisfaction_grade);
-    console.log('📅 Finalizado en:', result.finalized_at);
-  } catch (parseError) {
-    console.warn('⚠️ No se pudo parsear la respuesta del servidor, pero el proyecto fue finalizado');
+    await response.json();
+  } catch {
+    // Response might not have body
   }
 }
 
