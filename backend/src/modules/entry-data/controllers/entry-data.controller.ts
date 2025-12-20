@@ -93,6 +93,8 @@ export class EntryDataController {
         message: 'Project finalized successfully',
         project_id: 1,
         final_score: 88.23,
+        score_level: 'target_range',
+        satisfaction_grade: 'satisfactory',
         finalized_at: '2024-01-15T10:35:00Z'
       }
     }

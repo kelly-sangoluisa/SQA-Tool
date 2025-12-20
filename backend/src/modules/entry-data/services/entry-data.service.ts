@@ -105,6 +105,8 @@ export class EntryDataService {
       message: 'Project finalized successfully',
       project_id: projectId,
       final_score: projectResult.final_project_score,
+      score_level: projectResult.score_level,
+      satisfaction_grade: projectResult.satisfaction_grade,
       finalized_at: projectResult.created_at
     };
   }
