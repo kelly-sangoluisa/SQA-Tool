@@ -23,15 +23,15 @@
   box-shadow: 0 4px 6px rgba(78, 94, 163, 0.2);
 }
 
-.radar-toggle-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(78, 94, 163, 0.3);
-}
-
 .radar-toggle-btn:disabled {
   background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.radar-toggle-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(78, 94, 163, 0.3);
 }
 
 .radar-info-message {
