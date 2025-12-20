@@ -62,7 +62,16 @@ export function Autocomplete<T>({
         setShowResults(true);
         setHighlightedIndex(-1);
       } catch (error) {
-        console.error('Error searching:', error);
+        // Si es error de autenticación, el sistema redirigirá automáticamente
+        const isAuthError = error instanceof Error && 
+          (error.message.includes('401') || 
+           error.message.includes('403') || 
+           error.message.includes('No token provided') ||
+           error.message.includes('Unauthorized'));
+        
+        if (!isAuthError) {
+          console.error('Error searching:', error);
+        }
         setResults([]);
       } finally {
         setIsLoading(false);

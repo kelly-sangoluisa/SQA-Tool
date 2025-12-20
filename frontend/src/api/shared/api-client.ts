@@ -1,10 +1,19 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
+// Evento global para notificar cuando la sesión expira
+export const AUTH_EXPIRED_EVENT = 'auth:expired';
+
 export class ApiClient {
-  private baseURL: string;
+  private readonly baseURL: string;
 
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = baseURL;
+  }
+
+  private notifyAuthExpired(): void {
+    if (globalThis.window !== undefined) {
+      globalThis.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
+    }
   }
 
   private getToken(): string | null {
@@ -38,6 +47,11 @@ export class ApiClient {
   private async handleErrorResponse(response: Response, endpoint: string): Promise<never> {
     const errorData = await response.json().catch(() => ({}));
     const errorMessage = errorData.message || `Error ${response.status}: ${response.statusText}`;
+
+    // Si es error de autenticación (401/403), notificar para redirigir al login
+    if (response.status === 401 || response.status === 403) {
+      this.notifyAuthExpired();
+    }
 
     if (this.shouldLogError(endpoint, errorMessage, response.status)) {
       console.error('API Error:', errorMessage);
@@ -87,6 +101,11 @@ export class ApiClient {
 
       return await this.parseResponse<T>(response);
     } catch (error) {
+      // Si es error de autenticación por excepción, notificar también
+      if (this.isAuthError(error)) {
+        this.notifyAuthExpired();
+      }
+
       if (this.shouldLogError(endpoint, error)) {
         console.error('API Error:', error);
       }

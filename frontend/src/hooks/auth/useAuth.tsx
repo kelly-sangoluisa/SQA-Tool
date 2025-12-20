@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { authApi } from '../../api/auth/auth-api';
+import { AUTH_EXPIRED_EVENT } from '../../api/shared/api-client';
 import { SignInData, SignUpData, ForgotPasswordData, ResetPasswordData, AuthState, AuthContextType, User } from '../../types/auth.types';
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -11,7 +13,7 @@ interface AuthProviderProps {
 
 // Helpers para localStorage SEGURO
 const getUserFromStorage = () => {
-  if (typeof window === 'undefined') return null;
+  if (globalThis.window === undefined) return null;
   try {
     const stored = localStorage.getItem('user_profile'); // Solo perfil, NO token
     if (!stored) return null;
@@ -24,7 +26,7 @@ const getUserFromStorage = () => {
 };
 
 const saveUserToStorage = (user: User) => {
-  if (typeof window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   // IMPORTANTE: Solo guardar datos NO sensibles
   const safeUser = {
     id: user.id,
@@ -37,11 +39,12 @@ const saveUserToStorage = (user: User) => {
 };
 
 const clearUserFromStorage = () => {
-  if (typeof window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   localStorage.removeItem('user_profile');
 };
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
+  const router = useRouter();
   const [hasLoggedOut, setHasLoggedOut] = useState(false);
   const [isClient, setIsClient] = useState(false);
   
@@ -115,7 +118,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
            error.message.includes('Unauthorized'));
         
         if (isAuthError) {
-          // Cookie expiró, limpiar todo
           setState(prev => ({
             ...prev,
             user: null,
@@ -275,6 +277,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isClient]); // SOLO isClient - quitar checkAuth para evitar bucle
+
+  // Listener para detectar cuando la sesión expira
+  useEffect(() => {
+    if (!isClient) return;
+
+    const handleAuthExpired = () => {
+      console.log('🔴 Sesión expirada, redirigiendo al login...');
+      
+      // Limpiar estado y storage
+      setState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null
+      });
+      clearUserFromStorage();
+      setHasLoggedOut(true);
+      
+      // Redirigir al login
+      router.push('/auth/signin');
+    };
+
+    globalThis.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+    
+    return () => {
+      globalThis.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+    };
+  }, [isClient, router]);
 
   const contextValue: AuthContextType = useMemo(() => ({
     ...state,
