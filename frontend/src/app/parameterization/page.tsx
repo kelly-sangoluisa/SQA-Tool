@@ -2,13 +2,19 @@
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { AdminParameterization } from '../../components/parameterization';
 import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
+import { useSidebar } from '@/components/dashboard/sidebar/context/SidebarContext';
 import '../../styles/admin/admin.css';
+import styles from './parameterization.module.css';
 
 function ParameterizationContent() {
+  const { isOpen } = useSidebar();
+  
   return (
-    <DashboardLayout>
-      <AdminParameterization />
-    </DashboardLayout>
+    <div className={`${styles.parameterizationWrapper} ${isOpen ? styles.sidebarOpen : ''}`}>
+      <DashboardLayout>
+        <AdminParameterization />
+      </DashboardLayout>
+    </div>
   );
 }
 

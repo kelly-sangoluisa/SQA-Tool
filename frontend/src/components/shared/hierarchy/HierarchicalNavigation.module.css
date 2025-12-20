@@ -186,15 +186,16 @@
 .criterionClickArea {
   flex: 1;
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+  padding: 0;
+  background: transparent;
+  border: none;
+  text-align: left;
   min-width: 0;
   overflow: hidden;
 }
 
 .criterionClickArea:hover {
-  background: var(--hierarchy-gray-100);
+  background: transparent;
 }
 
 .criterionName {
@@ -520,15 +521,15 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
-  background: rgb(249, 250, 251, 0.5);
+  background: transparent;
   transition: all 0.2s ease;
-  border-top: 1px solid rgb(229, 231, 235, 0.3);
+  border-top: 1px solid rgb(229, 231, 235, 0.2);
   min-height: 44px;
   position: relative;
 }
 
 .subCriterionItem:hover {
-  background: var(--hierarchy-gray-100);
+  background: rgb(243, 244, 246, 0.5);
 }
 
 .subCriterionIcon {
