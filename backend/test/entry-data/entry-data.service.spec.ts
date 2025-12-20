@@ -184,6 +184,8 @@ describe('EntryDataService', () => {
         message: 'Project finalized successfully',
         project_id: projectId,
         final_score: mockProjectResult.final_project_score,
+        score_level: mockProjectResult.score_level,
+        satisfaction_grade: mockProjectResult.satisfaction_grade,
         finalized_at: mockProjectResult.created_at
       });
       expect(evaluationCalculationService.updateProjectStatus)
