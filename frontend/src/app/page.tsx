@@ -1,10 +1,61 @@
 'use client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '../hooks/auth/useAuth';
 import '../styles/home.css';
 import '../styles/components.css';
 
 export default function HomePage() {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Si el usuario está autenticado, redirigir a su dashboard correspondiente
+    if (!isLoading && isAuthenticated && user) {
+      // Redirigir según el rol del usuario
+      switch (user.role) {
+        case 'admin':
+          router.push('/dashboard');
+          break;
+        case 'evaluator':
+          router.push('/dashboard');
+          break;
+        case 'viewer':
+          router.push('/results');
+          break;
+        default:
+          router.push('/dashboard');
+      }
+    }
+  }, [isAuthenticated, isLoading, user, router]);
+
+  // Mostrar un loader mientras se verifica la autenticación
+  if (isLoading) {
+    return (
+      <div className="home-root">
+        <div className="home-container home-center">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <Image 
+              src="/logo-SQATool.png" 
+              alt="SQA Tool Logo" 
+              width={120} 
+              height={120}
+              priority
+              style={{ filter: 'drop-shadow(0 8px 24px rgba(78, 94, 163, 0.3))' }}
+            />
+            <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Cargando...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si el usuario ya está autenticado, no mostrar nada (está redirigiendo)
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="home-root">
