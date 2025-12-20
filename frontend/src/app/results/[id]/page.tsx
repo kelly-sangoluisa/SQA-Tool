@@ -28,7 +28,6 @@ function EvaluationDetailPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'stats'>('overview');
   const [showAllCriteria, setShowAllCriteria] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [includeCertificate, setIncludeCertificate] = useState(true);
 
   useEffect(() => {
     if (!isValidEvaluationId) {
@@ -82,7 +81,7 @@ function EvaluationDetailPage() {
           useCORS: true,
           backgroundColor: '#ffffff',
         });
-        radarImageData = radarCanvas.toDataURL('image/png', 1.0);
+        radarImageData = radarCanvas.toDataURL('image/png', 1);
       }
       
       // Cambiar a overview para que los gráficos se rendericen
@@ -92,7 +91,7 @@ function EvaluationDetailPage() {
         await new Promise(resolve => setTimeout(resolve, 400));
       }
       
-      await generateEvaluationPDF({ report, stats, radarImageData, includeCertificate });
+      await generateEvaluationPDF({ report, stats, radarImageData });
     } catch {
       alert('Error al generar el PDF. Por favor intente nuevamente.');
     } finally {
@@ -265,8 +264,8 @@ function EvaluationDetailPage() {
             <div className="criteria-section">
               <h3 className="section-title">Resultados por Criterio</h3>
               <div className="criteria-grid">
-                {(showAllCriteria ? report.criteria_results : report.criteria_results.slice(0, 3)).map((criterion, index) => (
-                  <CriterionCard key={index} criterion={criterion} />
+                {(showAllCriteria ? report.criteria_results : report.criteria_results.slice(0, 3)).map((criterion) => (
+                  <CriterionCard key={criterion.criterion_id} criterion={criterion} />
                 ))}
               </div>
               
@@ -325,7 +324,7 @@ function EvaluationDetailPage() {
               <p className="section-subtitle">Expandir cada criterio para ver el detalle de sus métricas, variables y cálculos</p>
               <div className="accordion-list">
                 {report.criteria_results.map((criterion, index) => (
-                  <CriterionAccordion key={index} criterion={criterion} index={index} />
+                  <CriterionAccordion key={criterion.criterion_id} criterion={criterion} index={index} />
                 ))}
               </div>
             </div>

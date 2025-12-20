@@ -71,6 +71,7 @@ function ProjectReportPage() {
       setReport(reportData);
       setStats(statsData);
     } catch (err) {
+      console.error('Error loading project data:', err);
       setError('Error al cargar los resultados del proyecto. Por favor intenta de nuevo.');
     } finally {
       setLoading(false);
@@ -254,7 +255,7 @@ function ProjectReportPage() {
             
             <div className="header-score">
               <ScoreGauge 
-                score={typeof report.final_project_score === 'number' && !isNaN(report.final_project_score) ? report.final_project_score : 0} 
+                score={typeof report.final_project_score === 'number' && !Number.isNaN(report.final_project_score) ? report.final_project_score : 0} 
                 size="medium"
                 threshold={report.minimum_threshold}
               />
@@ -297,7 +298,7 @@ function ProjectReportPage() {
           </div>
           <div>
             <div className="stat-value">
-              {typeof stats.average_evaluation_score === 'number' && !isNaN(stats.average_evaluation_score) 
+              {typeof stats.average_evaluation_score === 'number' && !Number.isNaN(stats.average_evaluation_score) 
                 ? stats.average_evaluation_score.toFixed(1) 
                 : '0.0'}
             </div>
@@ -393,18 +394,18 @@ function ProjectReportPage() {
       {/* Modal para seleccionar secciones del análisis IA */}
       {showPDFModal && (
         <div 
-          className="modal-overlay" 
+          className="modal-overlay"
+          tabIndex={-1}
           onClick={() => setShowPDFModal(false)}
           onKeyDown={(e) => { if (e.key === 'Escape') setShowPDFModal(false); }}
-          role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
         >
           <div 
-            className="modal-content" 
+            className="modal-content"
+            tabIndex={0}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
-            role="document"
           >
             <div className="modal-header">
               <h3 id="modal-title">Seleccionar Secciones del Análisis IA para PDF</h3>
