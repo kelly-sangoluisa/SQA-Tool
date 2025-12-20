@@ -295,8 +295,8 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
       clearUserFromStorage();
       setHasLoggedOut(true);
       
-      // Redirigir al login
-      router.push('/auth/signin');
+      // Redirigir a la página de inicio
+      router.push('/');
     };
 
     globalThis.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
