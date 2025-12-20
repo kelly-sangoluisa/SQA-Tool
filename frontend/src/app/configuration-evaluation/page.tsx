@@ -210,7 +210,15 @@ const handleStep5Complete = async (selectedMetrics: Map<number, number[]>) => {
                 e.currentTarget.style.transform = 'translateY(-2px)';
                 e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.4)';
               }}
+              onFocus={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.4)';
+              }}
               onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+              }}
+              onBlur={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
               }}
