@@ -7,10 +7,6 @@ export function middleware(request: NextRequest) {
   // Obtener el token de autenticación de las cookies
   const token = request.cookies.get('auth_token')?.value;
   
-  // Rutas públicas que no requieren autenticación
-  const publicRoutes = ['/', '/auth/login', '/auth/signup', '/auth/forgot-password', '/auth/reset-password'];
-  const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith('/auth/'));
-  
   // Rutas protegidas que requieren autenticación
   const protectedRoutes = ['/dashboard', '/configuration-evaluation', '/data-entry', '/parameterization', '/results'];
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
