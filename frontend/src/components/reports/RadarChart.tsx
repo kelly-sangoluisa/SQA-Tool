@@ -181,7 +181,7 @@ export function RadarChart({ report }: Readonly<Props>) {
           ))}
           
           {/* Labels */}
-          {radarPoints.map((point, index) => {
+          {radarPoints.map((point) => {
             const labelRadius = 85;
             const labelX = 100 + labelRadius * Math.cos(point.angle);
             const labelY = 100 + labelRadius * Math.sin(point.angle);

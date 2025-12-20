@@ -57,7 +57,7 @@ useEffect(() => {
 
     setSelectedSubCriteria(defaultMap);
   }
-}, [selectedCriteria]); 
+}, [selectedCriteria, initialSelected, selectedSubCriteria.size]); 
 
 
   const handleSubCriterionToggle = (criterionId: number, subCriterionId: number) => {

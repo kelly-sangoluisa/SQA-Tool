@@ -182,7 +182,7 @@ export function Autocomplete<T>({
               return (
                 <div className={styles.statusItem}>
                   <div className={styles.noResults}>
-                    No se encontraron resultados para "{value}"
+                    No se encontraron resultados para &quot;{value}&quot;
                   </div>
                 </div>
               );

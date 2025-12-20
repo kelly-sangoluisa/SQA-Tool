@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
@@ -47,32 +47,7 @@ function ProjectReportPage() {
   // AI Analysis
   const { analysis, loading: aiLoading, error: aiError, analyzeProject, clearAnalysis } = useAIAnalysis();
 
-  useEffect(() => {
-    if (!isValidProjectId) {
-      setError('ID de proyecto inválido');
-      setLoading(false);
-      return;
-    }
-    loadData().catch(() => {
-      // Error handled in loadData
-    });
-  }, [projectId, isValidProjectId]);
-
-  // Manejar cierre del modal con Escape de manera accesible
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showPDFModal) {
-        setShowPDFModal(false);
-      }
-    };
-    
-    if (showPDFModal) {
-      document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
-    }
-  }, [showPDFModal]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -90,7 +65,32 @@ function ProjectReportPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    if (!isValidProjectId) {
+      setError('ID de proyecto inválido');
+      setLoading(false);
+      return;
+    }
+    loadData().catch(() => {
+      // Error handled in loadData
+    });
+  }, [projectId, isValidProjectId, loadData]);
+
+  // Manejar cierre del modal con Escape de manera accesible
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showPDFModal) {
+        setShowPDFModal(false);
+      }
+    };
+    
+    if (showPDFModal) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [showPDFModal]);
 
   const handleExportPDF = async () => {
     if (!report || !stats) return;
@@ -410,8 +410,6 @@ function ProjectReportPage() {
         <div 
           className="modal-overlay"
           onClick={() => setShowPDFModal(false)}
-          aria-modal="true"
-          aria-labelledby="modal-title"
         >
           <div 
             className="modal-content"

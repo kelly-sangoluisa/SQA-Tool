@@ -133,7 +133,7 @@ export function ChartsSection({ report }: Readonly<Props>) {
                 
                 // Filtrar niveles con peso > 0
                 const filteredWeights = Object.entries(importanceWeights)
-                  .filter(([_, weight]) => weight > 0)
+                  .filter(([, weight]) => weight > 0)
                   .map(([level, weight]) => ({
                     level,
                     weight,
@@ -169,7 +169,7 @@ export function ChartsSection({ report }: Readonly<Props>) {
 
                 let currentAngle = -90; // Empezar desde arriba
                 
-                return filteredWeights.map((item, index) => {
+                return filteredWeights.map((item) => {
                   const angle = (item.percentage / 100) * 360;
                   const startAngle = currentAngle;
                   const endAngle = currentAngle + angle;
@@ -229,7 +229,7 @@ export function ChartsSection({ report }: Readonly<Props>) {
             {/* Leyenda */}
             <div className="donut-legend">
               {Object.entries(importanceWeights)
-                .filter(([_, weight]) => weight > 0)
+                .filter(([, weight]) => weight > 0)
                 .map(([level, weight]) => {
                 const levelLabel = getImportanceLabel(level);
                 const avgScore = importanceScores[level] ? importanceScores[level].totalScore / importanceScores[level].count : 0;

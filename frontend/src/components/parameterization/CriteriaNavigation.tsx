@@ -64,7 +64,7 @@ export function CriteriaNavigation({
   }, [standardId, loadCriteria]);
 
   // Function to load sub-criteria
-  const loadSubCriteria = async (criterionId: number, forceRefresh?: boolean): Promise<SubCriterion[]> => {
+  const loadSubCriteria = async (criterionId: number): Promise<SubCriterion[]> => {
     try {
       const subCriteriaData = await parameterizationApi.getSubCriteriaByCriterion(criterionId, { state: 'all' });
       return subCriteriaData;
@@ -156,8 +156,8 @@ export function CriteriaNavigation({
   };
 
   // Handler for sub-criterion saved
-  const handleSubCriterionSaved = async (savedSubCriterion?: SubCriterion) => {
-    // Refresh sub-criteria for the parent criterion with forceRefresh=true
+  const handleSubCriterionSaved = async () => {
+    // Refresh sub-criteria for the parent criterion
     if (parentCriterion && refreshSubCriteriaFnRef.current) {
       // Force refresh to ensure the new sub-criterion appears immediately
       await refreshSubCriteriaFnRef.current(parentCriterion.id);

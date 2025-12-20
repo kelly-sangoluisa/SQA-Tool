@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { HiSearch } from 'react-icons/hi';
 import styles from '../DashboardSidebar.module.css';
 
@@ -8,23 +8,7 @@ interface SidebarSearchProps {
   onSearchToggle: (searching: boolean) => void;
 }
 
-export function SidebarSearch({ onSearchChange, isSearching, onSearchToggle }: Readonly<SidebarSearchProps>) {
-  const [query, setQuery] = useState('');
-
-  useEffect(() => {
-    const debounceTimeout = setTimeout(() => {
-      onSearchChange(query);
-    }, 300);
-
-    return () => clearTimeout(debounceTimeout);
-  }, [query, onSearchChange]);
-
-  const _handleClose = () => {
-    setQuery('');
-    onSearchChange('');
-    onSearchToggle(false);
-  };
-
+export function SidebarSearch({ onSearchToggle, isSearching }: Readonly<SidebarSearchProps>) {
   return (
     <>
       {/* Botón lupa en el header */}

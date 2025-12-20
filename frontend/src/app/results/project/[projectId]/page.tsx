@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 import { EvaluationCard } from '@/components/reports/EvaluationCard';
@@ -21,18 +21,7 @@ function ProjectEvaluationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
 
-  useEffect(() => {
-    if (!isValidProjectId) {
-      setError('ID de proyecto inválido');
-      setLoading(false);
-      return;
-    }
-    loadEvaluations().catch(() => {
-      // Error handled in loadEvaluations
-    });
-  }, [projectId, isValidProjectId]);
-
-  const loadEvaluations = async () => {
+  const loadEvaluations = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -52,7 +41,18 @@ function ProjectEvaluationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    if (!isValidProjectId) {
+      setError('ID de proyecto inválido');
+      setLoading(false);
+      return;
+    }
+    loadEvaluations().catch(() => {
+      // Error handled in loadEvaluations
+    });
+  }, [projectId, isValidProjectId, loadEvaluations]);
 
   const filteredEvaluations = (evaluations || []).filter(evaluation => {
     if (filter === 'all') return true;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { EvaluationInfo, ValidationErrors } from '@/types/configurationEvaluation.types';
 import { Input, Button } from '../shared';
@@ -32,14 +32,7 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
 
   const [errors, setErrors] = useState<ValidationErrors>({});
 
-  // Load projects when user selects existing project
-  useEffect(() => {
-    if (projectType === 'existing') {
-      loadProjects();
-    }
-  }, [projectType]);
-
-  const loadProjects = async () => {
+  const loadProjects = useCallback(async () => {
     try {
       setLoadingProjects(true);
       const projectsList = await configEvaluationApi.getAllProjects();
@@ -59,7 +52,14 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
     } finally {
       setLoadingProjects(false);
     }
-  };
+  }, [user]);
+
+  // Load projects when user selects existing project
+  useEffect(() => {
+    if (projectType === 'existing') {
+      loadProjects();
+    }
+  }, [projectType, loadProjects]);
 
   const handleChange = (field: keyof EvaluationInfo, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

@@ -279,8 +279,7 @@ function findVariableId(allMetrics: Metric[], metricId: number, symbol: string):
 function buildVariablesToSubmit(
   variableValues: Record<string, string>,
   currentEvalMetricIds: Set<number>,
-  allMetrics: Metric[],
-  evaluationId: number
+  allMetrics: Metric[]
 ) {
   return Object.entries(variableValues)
     .filter(([key]) => key.startsWith('metric-'))
@@ -357,8 +356,7 @@ async function finalizePendingEvaluation(
   const variables = buildVariablesToSubmit(
     variableValues,
     evalMetricIds,
-    allMetrics,
-    evaluation.id
+    allMetrics
   );
   
   if (variables.length > 0) {
@@ -730,8 +728,7 @@ function DataEntryContent() {
     const variablesToSubmit = buildVariablesToSubmit(
       variableValues,
       currentEvalMetricIds,
-      allMetrics,
-      currentEvaluationForModal.id
+      allMetrics
     );
 
     await submitEvaluationData(currentEvaluationForModal.id, variablesToSubmit);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
@@ -29,18 +29,7 @@ function EvaluationDetailPage() {
   const [showAllCriteria, setShowAllCriteria] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  useEffect(() => {
-    if (!isValidEvaluationId) {
-      setError('ID de evaluación inválido');
-      setLoading(false);
-      return;
-    }
-    loadData().catch(() => {
-      // Error handled in loadData
-    });
-  }, [evaluationId, isValidEvaluationId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -57,7 +46,18 @@ function EvaluationDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [evaluationId]);
+
+  useEffect(() => {
+    if (!isValidEvaluationId) {
+      setError('ID de evaluación inválido');
+      setLoading(false);
+      return;
+    }
+    loadData().catch(() => {
+      // Error handled in loadData
+    });
+  }, [evaluationId, isValidEvaluationId, loadData]);
 
   const handleExportPDF = async () => {
     if (!report || !stats) return;
