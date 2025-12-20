@@ -47,7 +47,18 @@ export function StatsOverview({ stats, report }: Readonly<StatsOverviewProps>) {
       </div>
 
       {/* Mejor y Peor Criterio - Solo mostrar si son diferentes */}
-      {stats.best_criterion.name === stats.worst_criterion.name ? null : (
+      {stats.best_criterion.name === stats.worst_criterion.name ? (
+        <div className="comparison-grid">
+          <div className="comparison-card comparison-card--single">
+            <div className="comparison-header">
+              <FaStar size={20} />
+              <h4>Criterio Evaluado</h4>
+            </div>
+            <p className="comparison-name">{stats.best_criterion?.name || 'N/A'}</p>
+            <div className="comparison-score">{stats.best_criterion?.score?.toFixed(1) || '0.0'}</div>
+          </div>
+        </div>
+      ) : (
         <div className="comparison-grid">
           <div className="comparison-card comparison-card--best">
             <div className="comparison-header">
@@ -65,17 +76,6 @@ export function StatsOverview({ stats, report }: Readonly<StatsOverviewProps>) {
             </div>
             <p className="comparison-name">{stats.worst_criterion?.name || 'N/A'}</p>
             <div className="comparison-score">{stats.worst_criterion?.score?.toFixed(1) || '0.0'}</div>
-          </div>
-        </div>
-      ) : (
-        <div className="comparison-grid">
-          <div className="comparison-card comparison-card--single">
-            <div className="comparison-header">
-              <FaStar size={20} />
-              <h4>Criterio Evaluado</h4>
-            </div>
-            <p className="comparison-name">{stats.best_criterion?.name || 'N/A'}</p>
-            <div className="comparison-score">{stats.best_criterion?.score?.toFixed(1) || '0.0'}</div>
           </div>
         </div>
       )}
