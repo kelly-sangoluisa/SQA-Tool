@@ -9,10 +9,10 @@ interface ScoreGaugeProps {
   threshold?: number | null; // Umbral opcional para mostrar la línea
 }
 
-export function ScoreGauge({ score, size = 'medium', showLabel = true, threshold = null }: ScoreGaugeProps) {
+export function ScoreGauge({ score, size = 'medium', showLabel = true, threshold = null }: Readonly<ScoreGaugeProps>) {
   // Validar que score sea un número válido
-  const validScore = typeof score === 'number' && !isNaN(score) ? score : 0;
-  const validThreshold = threshold !== null && typeof threshold === 'number' && !isNaN(threshold) ? threshold : null;
+  const validScore = typeof score === 'number' && !Number.isNaN(score) ? score : 0;
+  const validThreshold = threshold !== null && typeof threshold === 'number' && !Number.isNaN(threshold) ? threshold : null;
   
   const getColor = (value: number) => {
     if (value >= 80) return '#10b981';
@@ -39,8 +39,8 @@ export function ScoreGauge({ score, size = 'medium', showLabel = true, threshold
   const color = getColor(validScore);
 
   // Calcular posición de la línea del umbral si existe
-  const thresholdAngle = validThreshold !== null ? (validThreshold / 100) * 360 - 90 : null;
-  const thresholdRadians = thresholdAngle !== null ? (thresholdAngle * Math.PI) / 180 : null;
+  const thresholdAngle = validThreshold === null ? null : (validThreshold / 100) * 360 - 90;
+  const thresholdRadians = thresholdAngle === null ? null : (thresholdAngle * Math.PI) / 180;
   
   // Coordenadas para la línea del umbral (desde el borde interno hasta el externo)
   const innerRadius = radius - config.stroke / 2;

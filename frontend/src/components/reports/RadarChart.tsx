@@ -9,7 +9,7 @@ interface Props {
   report: EvaluationReport;
 }
 
-export function RadarChart({ report }: Props) {
+export function RadarChart({ report }: Readonly<Props>) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedCriteriaForRadar, setSelectedCriteriaForRadar] = useState<number[]>(
     report.criteria_results.slice(0, Math.min(5, report.criteria_results.length)).map((_, idx) => idx)
@@ -65,7 +65,7 @@ export function RadarChart({ report }: Props) {
           className="radar-toggle-btn"
           onClick={() => hasMinimumCriteria && setIsExpanded(true)}
           disabled={!hasMinimumCriteria}
-          title={!hasMinimumCriteria ? 'Se requieren al menos 3 criterios para generar el gráfico de radar' : ''}
+          title={hasMinimumCriteria ? '' : 'Se requieren al menos 3 criterios para generar el gráfico de radar'}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -107,13 +107,20 @@ export function RadarChart({ report }: Props) {
           const isDisabled = !isSelected && selectedCriteriaForRadar.length >= 6;
           const cannotDeselect = isSelected && selectedCriteriaForRadar.length <= 3;
           
+          let buttonTitle = '';
+          if (cannotDeselect) {
+            buttonTitle = 'Mínimo 3 criterios';
+          } else if (isDisabled) {
+            buttonTitle = 'Máximo 6 criterios';
+          }
+          
           return (
             <button
-              key={index}
+              key={criterion.criterion_name}
               onClick={() => toggleCriterionForRadar(index)}
               disabled={isDisabled || cannotDeselect}
               className={`criterion-chip ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-              title={cannotDeselect ? 'Mínimo 3 criterios' : isDisabled ? 'Máximo 6 criterios' : ''}
+              title={buttonTitle}
             >
               {criterion.criterion_name}
             </button>
@@ -125,9 +132,9 @@ export function RadarChart({ report }: Props) {
       <div className="radar-content">
         <svg viewBox="0 0 200 200" className="radar-svg">
           {/* Grid circles */}
-          {[20, 40, 60, 80, 100].map((percentage, idx) => (
+          {[20, 40, 60, 80, 100].map((percentage) => (
             <circle
-              key={`grid-${idx}`}
+              key={`grid-${percentage}`}
               cx="100"
               cy="100"
               r={(70 * percentage) / 100}
@@ -138,9 +145,9 @@ export function RadarChart({ report }: Props) {
           ))}
           
           {/* Axes lines */}
-          {radarPoints.map((point, index) => (
+          {radarPoints.map((point) => (
             <line
-              key={`axis-${index}`}
+              key={`axis-${point.label}`}
               x1="100"
               y1="100"
               x2={100 + 70 * Math.cos(point.angle)}
@@ -159,8 +166,8 @@ export function RadarChart({ report }: Props) {
           />
           
           {/* Data points */}
-          {radarPoints.map((point, index) => (
-            <g key={`point-${index}`}>
+          {radarPoints.map((point) => (
+            <g key={`point-${point.label}`}>
               <circle
                 cx={point.x}
                 cy={point.y}
@@ -178,11 +185,19 @@ export function RadarChart({ report }: Props) {
             const labelRadius = 85;
             const labelX = 100 + labelRadius * Math.cos(point.angle);
             const labelY = 100 + labelRadius * Math.sin(point.angle);
-            const textAnchor = labelX > 100 ? 'start' : labelX < 100 ? 'end' : 'middle';
+            
+            let textAnchor: 'start' | 'middle' | 'end';
+            if (labelX > 100) {
+              textAnchor = 'start';
+            } else if (labelX < 100) {
+              textAnchor = 'end';
+            } else {
+              textAnchor = 'middle';
+            }
             
             return (
               <text
-                key={`label-${index}`}
+                key={`label-${point.label}`}
                 x={labelX}
                 y={labelY}
                 textAnchor={textAnchor}

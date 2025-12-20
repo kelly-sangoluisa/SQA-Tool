@@ -10,7 +10,7 @@ interface StatsOverviewProps {
   report: EvaluationReport;
 }
 
-export function StatsOverview({ stats, report }: StatsOverviewProps) {
+export function StatsOverview({ stats, report }: Readonly<StatsOverviewProps>) {
   return (
     <div className="stats-overview">
       {/* Tarjetas de estadísticas principales */}
@@ -47,7 +47,7 @@ export function StatsOverview({ stats, report }: StatsOverviewProps) {
       </div>
 
       {/* Mejor y Peor Criterio - Solo mostrar si son diferentes */}
-      {stats.best_criterion.name !== stats.worst_criterion.name ? (
+      {stats.best_criterion.name === stats.worst_criterion.name ? null : (
         <div className="comparison-grid">
           <div className="comparison-card comparison-card--best">
             <div className="comparison-header">
