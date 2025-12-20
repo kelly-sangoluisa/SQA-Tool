@@ -10,13 +10,13 @@ interface PDFGenerationOptions {
 }
 
 export class PDFGenerator {
-  private pdf: jsPDF;
-  private pageWidth: number;
-  private pageHeight: number;
-  private margin: number;
+  private readonly pdf: jsPDF;
+  private readonly pageWidth: number;
+  private readonly pageHeight: number;
+  private readonly margin: number;
   private currentY: number;
-  private primaryColor = [78, 94, 163]; // #4E5EA3
-  private secondaryColor = [89, 70, 154]; // #59469A
+  private readonly primaryColor = [78, 94, 163]; // #4E5EA3
+  private readonly secondaryColor = [89, 70, 154]; // #59469A
 
   constructor() {
     this.pdf = new jsPDF('p', 'mm', 'a4');
@@ -68,7 +68,7 @@ export class PDFGenerator {
     this.addPageNumbers(false);
 
     // Descargar
-    const fileName = `Evaluacion_${report.project_name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    const fileName = `Evaluacion_${report.project_name.replaceAll(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
     this.pdf.save(fileName);
   }
 
@@ -121,8 +121,9 @@ export class PDFGenerator {
     
     // Score con más separación
     this.pdf.setFont('helvetica', 'normal');
-    const scoreColor = report.final_score >= 80 ? [16, 185, 129] : 
-                        report.final_score >= 60 ? [245, 158, 11] : [239, 68, 68];
+    const isHighScore = report.final_score >= 80;
+    const isMediumScore = report.final_score >= 60;
+    const scoreColor = isHighScore ? [16, 185, 129] : (isMediumScore ? [245, 158, 11] : [239, 68, 68]);
     this.pdf.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
     this.pdf.setFontSize(24);
     this.pdf.text(`${report.final_score.toFixed(1)}%`, this.margin + 40, this.currentY);
@@ -239,8 +240,9 @@ export class PDFGenerator {
     this.pdf.text('Métricas', this.margin + boxWidth + 5 + boxWidth / 2, boxY + 20, { align: 'center' });
 
     // Box 3: Score Promedio
-    const avgColor = stats.average_criteria_score >= 80 ? [16, 185, 129] : 
-                      stats.average_criteria_score >= 60 ? [245, 158, 11] : [239, 68, 68];
+    const isHighAvg = stats.average_criteria_score >= 80;
+    const isMediumAvg = stats.average_criteria_score >= 60;
+    const avgColor = isHighAvg ? [16, 185, 129] : (isMediumAvg ? [245, 158, 11] : [239, 68, 68]);
     this.pdf.setFillColor(avgColor[0], avgColor[1], avgColor[2]);
     this.pdf.roundedRect(this.margin + 2 * (boxWidth + 5), boxY, boxWidth, boxHeight, 3, 3, 'F');
     this.pdf.setFontSize(24);
@@ -322,8 +324,9 @@ export class PDFGenerator {
       this.pdf.text(`${index + 1}. ${criterion.criterion_name}`, this.margin, this.currentY);
       
       // Score del criterio
-      const scoreColor = criterion.final_score >= 80 ? [16, 185, 129] : 
-                          criterion.final_score >= 60 ? [245, 158, 11] : [239, 68, 68];
+      const isCriterionHigh = criterion.final_score >= 80;
+      const isCriterionMedium = criterion.final_score >= 60;
+      const scoreColor = isCriterionHigh ? [16, 185, 129] : (isCriterionMedium ? [245, 158, 11] : [239, 68, 68]);
       this.pdf.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
       this.pdf.text(`${criterion.final_score.toFixed(1)}%`, this.pageWidth - this.margin - 20, this.currentY);
 
@@ -333,9 +336,10 @@ export class PDFGenerator {
       this.pdf.setTextColor(100, 100, 100);
       this.pdf.setFont('helvetica', 'normal');
       this.pdf.setFontSize(9);
-      const importanceLabel = criterion.importance_level === 'A' ? 'Alta' : 
-                               criterion.importance_level === 'M' ? 'Media' : 
-                               criterion.importance_level === 'B' ? 'Baja' : 'N/A';
+      let importanceLabel = 'N/A';
+      if (criterion.importance_level === 'A') importanceLabel = 'Alta';
+      else if (criterion.importance_level === 'M') importanceLabel = 'Media';
+      else if (criterion.importance_level === 'B') importanceLabel = 'Baja';
       this.pdf.text(`Importancia: ${importanceLabel} (${criterion.importance_percentage}%)`, this.margin + 5, this.currentY);
 
       this.currentY += 6;
@@ -428,7 +432,7 @@ export class PDFGenerator {
           backgroundColor: '#ffffff',
         });
         
-        const imgData = canvas.toDataURL('image/png', 1.0);
+        const imgData = canvas.toDataURL('image/png', 1);
         // Mantener márgenes consistentes
         const imgWidth = this.pageWidth - 2 * this.margin;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
