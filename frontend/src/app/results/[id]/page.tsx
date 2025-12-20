@@ -265,7 +265,7 @@ function EvaluationDetailPage() {
               <h3 className="section-title">Resultados por Criterio</h3>
               <div className="criteria-grid">
                 {(showAllCriteria ? report.criteria_results : report.criteria_results.slice(0, 3)).map((criterion) => (
-                  <CriterionCard key={criterion.criterion_id} criterion={criterion} />
+                  <CriterionCard key={criterion.criterion_name} criterion={criterion} />
                 ))}
               </div>
               
@@ -324,7 +324,7 @@ function EvaluationDetailPage() {
               <p className="section-subtitle">Expandir cada criterio para ver el detalle de sus métricas, variables y cálculos</p>
               <div className="accordion-list">
                 {report.criteria_results.map((criterion, index) => (
-                  <CriterionAccordion key={criterion.criterion_id} criterion={criterion} index={index} />
+                  <CriterionAccordion key={criterion.criterion_name} criterion={criterion} index={index} />
                 ))}
               </div>
             </div>
