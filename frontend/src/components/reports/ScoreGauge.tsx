@@ -1,5 +1,7 @@
 'use client';
 
+import '@/styles/reports/score-gauge.css';
+
 interface ScoreGaugeProps {
   score: number;
   size?: 'small' | 'medium' | 'large';
@@ -106,50 +108,6 @@ export function ScoreGauge({ score, size = 'medium', showLabel = true, threshold
           {getLabel(validScore)}
         </p>
       )}
-
-      <style jsx>{`
-        .score-gauge {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .gauge-svg {
-          filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
-        }
-
-        .gauge-progress {
-          transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .threshold-marker {
-          filter: drop-shadow(0 2px 6px rgba(220, 38, 38, 0.6));
-          animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.8;
-          }
-        }
-
-        .gauge-text {
-          font-weight: 800;
-          fill: var(--color-primary-dark);
-        }
-
-        .gauge-label {
-          font-weight: 700;
-          color: var(--color-primary);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin: 0;
-        }
-      `}</style>
     </div>
   );
 }
