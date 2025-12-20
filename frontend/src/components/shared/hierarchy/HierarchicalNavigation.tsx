@@ -7,9 +7,9 @@ import styles from './HierarchicalNavigation.module.css';
  * Props for EmptySubCriteria component
  */
 interface EmptySubCriteriaProps {
-  message: string;
-  allowEdit: boolean;
-  onCreateClick: (e: React.MouseEvent) => void;
+  readonly message: string;
+  readonly allowEdit: boolean;
+  readonly onCreateClick: (e: React.MouseEvent) => void;
 }
 
 /**
@@ -44,29 +44,29 @@ function EmptySubCriteria({ message, allowEdit, onCreateClick }: EmptySubCriteri
  * Props for SubCriterionItem component
  */
 interface SubCriterionItemProps<C extends BaseCriterion, S extends BaseSubCriterion> {
-  subCriterion: S;
-  criterion: C;
-  allowEdit: boolean;
-  showStateToggles: boolean;
-  toggleLoading: Set<string>;
-  onSubCriterionClick: (criterion: C, subCriterion: S) => void;
-  onEditClick: (criterion: C, subCriterion: S, e: React.MouseEvent) => void;
-  onToggleState: (subCriterion: S, e: React.MouseEvent) => void;
+  readonly subCriterion: S;
+  readonly criterion: C;
+  readonly allowEdit: boolean;
+  readonly showStateToggles: boolean;
+  readonly toggleLoading: Set<string>;
+  readonly onSubCriterionClick: (criterion: C, subCriterion: S) => void;
+  readonly onEditClick: (criterion: C, subCriterion: S, e: React.MouseEvent) => void;
+  readonly onToggleState: (subCriterion: S, e: React.MouseEvent) => void;
 }
 
 /**
  * Props for CriterionHeader component
  */
 interface CriterionHeaderProps<C extends BaseCriterion> {
-  criterion: C;
-  isExpanded: boolean;
-  allowEdit: boolean;
-  showStateToggles: boolean;
-  isToggling: boolean;
-  onToggleExpansion: (criterion: C) => void;
-  onCriterionSelect?: (criterion: C) => void;
-  onEditClick: (criterion: C, e: React.MouseEvent) => void;
-  onToggleState: (criterion: C, e: React.MouseEvent) => void;
+  readonly criterion: C;
+  readonly isExpanded: boolean;
+  readonly allowEdit: boolean;
+  readonly showStateToggles: boolean;
+  readonly isToggling: boolean;
+  readonly onToggleExpansion: (criterion: C) => void;
+  readonly onCriterionSelect?: (criterion: C) => void;
+  readonly onEditClick: (criterion: C, e: React.MouseEvent) => void;
+  readonly onToggleState: (criterion: C, e: React.MouseEvent) => void;
 }
 
 /**
@@ -117,15 +117,14 @@ function CriterionHeader<C extends BaseCriterion>({
         </svg>
       </button>
 
-      <div
+      <button
+        type="button"
         className={styles.criterionClickArea}
         onClick={() => onCriterionSelect?.(criterion)}
-        role="button"
-        tabIndex={0}
         onKeyDown={handleKeyDown}
       >
         <span className={styles.criterionName}>{criterion.name}</span>
-      </div>
+      </button>
 
       {allowEdit && (
         <button
@@ -172,18 +171,18 @@ function CriterionHeader<C extends BaseCriterion>({
  * Props for SubCriteriaContainer component  
  */
 interface SubCriteriaContainerProps<C extends BaseCriterion, S extends BaseSubCriterion> {
-  criterion: C;
-  isLoadingSubCriteria: boolean;
-  subCriteria: S[];
-  allowEdit: boolean;
-  showStateToggles: boolean;
-  toggleLoading: Set<string>;
-  emptySubCriteriaMessage: string;
-  subCriteriaTitle: string;
-  onSubCriterionClick: (criterion: C, subCriterion: S) => void;
-  onEditClick: (criterion: C, subCriterion: S, e: React.MouseEvent) => void;
-  onToggleState: (subCriterion: S, e: React.MouseEvent) => void;
-  onCreateClick: (criterion: C, e: React.MouseEvent) => void;
+  readonly criterion: C;
+  readonly isLoadingSubCriteria: boolean;
+  readonly subCriteria: S[];
+  readonly allowEdit: boolean;
+  readonly showStateToggles: boolean;
+  readonly toggleLoading: Set<string>;
+  readonly emptySubCriteriaMessage: string;
+  readonly subCriteriaTitle: string;
+  readonly onSubCriterionClick: (criterion: C, subCriterion: S) => void;
+  readonly onEditClick: (criterion: C, subCriterion: S, e: React.MouseEvent) => void;
+  readonly onToggleState: (subCriterion: S, e: React.MouseEvent) => void;
+  readonly onCreateClick: (criterion: C, e: React.MouseEvent) => void;
 }
 
 /**
@@ -248,16 +247,16 @@ function SubCriteriaContainer<C extends BaseCriterion, S extends BaseSubCriterio
  * Props for SubCriteriaList component
  */
 interface SubCriteriaListProps<C extends BaseCriterion, S extends BaseSubCriterion> {
-  criterion: C;
-  subCriteria: S[];
-  allowEdit: boolean;
-  showStateToggles: boolean;
-  toggleLoading: Set<string>;
-  subCriteriaTitle: string;
-  onSubCriterionClick: (criterion: C, subCriterion: S) => void;
-  onEditClick: (criterion: C, subCriterion: S, e: React.MouseEvent) => void;
-  onToggleState: (subCriterion: S, e: React.MouseEvent) => void;
-  onCreateClick: (criterion: C, e: React.MouseEvent) => void;
+  readonly criterion: C;
+  readonly subCriteria: S[];
+  readonly allowEdit: boolean;
+  readonly showStateToggles: boolean;
+  readonly toggleLoading: Set<string>;
+  readonly subCriteriaTitle: string;
+  readonly onSubCriterionClick: (criterion: C, subCriterion: S) => void;
+  readonly onEditClick: (criterion: C, subCriterion: S, e: React.MouseEvent) => void;
+  readonly onToggleState: (subCriterion: S, e: React.MouseEvent) => void;
+  readonly onCreateClick: (criterion: C, e: React.MouseEvent) => void;
 }
 
 /**
@@ -364,15 +363,14 @@ function SubCriterionItem<C extends BaseCriterion, S extends BaseSubCriterion>({
         <div className={styles.subCriterionDot}></div>
       </div>
 
-      <div
+      <button
+        type="button"
         className={styles.subCriterionClickArea}
         onClick={handleClick}
-        role="button"
-        tabIndex={0}
         onKeyDown={handleKeyDown}
       >
         <span className={styles.subCriterionName}>{subCriterion.name}</span>
-      </div>
+      </button>
 
       {allowEdit && (
         <button
