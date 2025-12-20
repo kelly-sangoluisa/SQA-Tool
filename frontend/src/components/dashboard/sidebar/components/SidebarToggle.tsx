@@ -7,10 +7,10 @@ interface SidebarToggleProps {
   onToggle: () => void;
 }
 
-export function SidebarToggle({ isOpen, onToggle }: SidebarToggleProps) {
+export function SidebarToggle({ isOpen, onToggle }: Readonly<SidebarToggleProps>) {
   return (
     <button 
-      className={`${styles.toggleButton} ${!isOpen ? styles.closed : ''}`}
+      className={`${styles.toggleButton} ${isOpen ? '' : styles.closed}`}
       onClick={onToggle}
       aria-label={isOpen ? "Cerrar sidebar" : "Abrir sidebar"}
       aria-expanded={isOpen}

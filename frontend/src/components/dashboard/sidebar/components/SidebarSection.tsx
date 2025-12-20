@@ -23,7 +23,7 @@ export function SidebarSection({
   isEmpty = false,
   emptyMessage = 'No hay elementos',
   children
-}: SidebarSectionProps) {
+}: Readonly<SidebarSectionProps>) {
   return (
     <section className={styles.section}>
       <h3 className={styles.sectionTitle}>

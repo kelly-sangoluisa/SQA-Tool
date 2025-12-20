@@ -8,7 +8,7 @@ interface SidebarSearchProps {
   onSearchToggle: (searching: boolean) => void;
 }
 
-export function SidebarSearch({ onSearchChange, isSearching, onSearchToggle }: SidebarSearchProps) {
+export function SidebarSearch({ onSearchChange, isSearching, onSearchToggle }: Readonly<SidebarSearchProps>) {
   const [query, setQuery] = useState('');
 
   useEffect(() => {
