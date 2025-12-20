@@ -38,7 +38,7 @@ useEffect(() => {
     return;
   }
 
-  // 2. Si no hay selección previa, seleccionar todo por defecto SOLO una vez
+  // Initialize with all subcriteria selected by default when no previous selection exists
   if (selectedCriteria.length > 0 && selectedSubCriteria.size === 0) {
     const defaultMap = new Map<number, Set<number>>();
 

@@ -9,7 +9,7 @@ interface ProjectListItemProps {
   linkTo?: string;
 }
 
-export function ProjectListItem({ project, linkTo }: ProjectListItemProps) {
+export function ProjectListItem({ project, linkTo }: Readonly<ProjectListItemProps>) {
   const getStatusInfo = () => {
     if (project.final_project_score === null) {
       return { label: 'En progreso', className: styles.statusInProgress };

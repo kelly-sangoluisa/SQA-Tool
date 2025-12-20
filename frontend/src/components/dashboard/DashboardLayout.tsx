@@ -11,7 +11,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
   const { user } = useAuth();
-  const { toggleSidebar, isOpen } = useSidebar();
+  const { isOpen } = useSidebar();
 
   const getUserInitials = (name: string) => {
     if (!name) return 'U';

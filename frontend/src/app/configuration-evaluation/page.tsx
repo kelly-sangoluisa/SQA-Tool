@@ -55,7 +55,7 @@ useEffect(() => {
   const handleBeforeUnload = (e: BeforeUnloadEvent) => {
     // SOLO cuando realmente se está saliendo de la página
     if (currentStep > 1 && currentStep < 6) {
-      e.returnValue = ' ';
+      e.preventDefault();
     }
   };
 
