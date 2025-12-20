@@ -10,7 +10,7 @@ interface AIAnalysisDisplayProps {
   onClose?: () => void;
 }
 
-export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps) {
+export function AIAnalysisDisplay({ analysis, onClose }: Readonly<AIAnalysisDisplayProps>) {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     general: true,
     strengths: false,
@@ -167,8 +167,8 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
           {expandedSections.strengths && (
             <div className="section-content">
               <ul className="list-items strengths-list">
-                {(analysis.fortalezas || []).map((fortaleza, index) => (
-                  <li key={index}>{fortaleza}</li>
+                {(analysis.fortalezas || []).map((fortaleza) => (
+                  <li key={fortaleza}>{fortaleza}</li>
                 ))}
               </ul>
             </div>
@@ -201,8 +201,8 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
           {expandedSections.weaknesses && (
             <div className="section-content">
               <ul className="list-items weaknesses-list">
-                {(analysis.debilidades || []).map((debilidad, index) => (
-                  <li key={index}>{debilidad}</li>
+                {(analysis.debilidades || []).map((debilidad) => (
+                  <li key={debilidad}>{debilidad}</li>
                 ))}
               </ul>
             </div>
@@ -235,8 +235,8 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
           {expandedSections.recommendations && (
             <div className="section-content">
               <div className="recommendations-grid">
-                {(analysis.recomendaciones || []).map((rec, index) => (
-                  <div key={index} className="recommendation-card">
+                {(analysis.recomendaciones || []).map((rec) => (
+                  <div key={rec.titulo} className="recommendation-card">
                     <div className="recommendation-header">
                       <span 
                         className="priority-badge"
@@ -290,8 +290,8 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
           {expandedSections.risks && (
             <div className="section-content">
               <ul className="list-items risks-list">
-                {(analysis.riesgos || []).map((riesgo, index) => (
-                  <li key={index}>{riesgo}</li>
+                {(analysis.riesgos || []).map((riesgo) => (
+                  <li key={riesgo}>{riesgo}</li>
                 ))}
               </ul>
             </div>
@@ -325,7 +325,7 @@ export function AIAnalysisDisplay({ analysis, onClose }: AIAnalysisDisplayProps)
             <div className="section-content">
               <ol className="next-steps-list">
                 {analysis.proximos_pasos.map((paso, index) => (
-                  <li key={index}>
+                  <li key={paso}>
                     <span className="step-number">{index + 1}</span>
                     <span className="step-text">{paso}</span>
                   </li>

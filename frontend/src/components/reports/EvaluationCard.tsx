@@ -9,7 +9,7 @@ interface EvaluationCardProps {
   evaluation: EvaluationListItem;
 }
 
-export function EvaluationCard({ evaluation }: EvaluationCardProps) {
+export function EvaluationCard({ evaluation }: Readonly<EvaluationCardProps>) {
 
   return (
     <div className="evaluation-card">

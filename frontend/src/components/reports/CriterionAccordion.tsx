@@ -10,7 +10,7 @@ interface Props {
   index: number;
 }
 
-export function CriterionAccordion({ criterion, index }: Props) {
+export function CriterionAccordion({ criterion, index }: Readonly<Props>) {
   const [isOpen, setIsOpen] = useState(false); // Todos cerrados por defecto
 
   const getImportanceLabel = (level: string) => {
@@ -89,8 +89,8 @@ export function CriterionAccordion({ criterion, index }: Props) {
       {isOpen && (
         <div className="accordion-content">
           <div className="metrics-grid">
-            {criterion.metrics.map((metric, metricIndex) => (
-              <div key={metricIndex} className="metric-card">
+            {criterion.metrics.map((metric) => (
+              <div key={metric.metric_code} className="metric-card">
                 {/* Metric Header */}
                 <div className="metric-header">
                   <div className="metric-title-row">
@@ -127,8 +127,8 @@ export function CriterionAccordion({ criterion, index }: Props) {
                   <div className="variables-section">
                     <span className="section-label">Variables:</span>
                     <div className="variables-list">
-                      {metric.variables.map((variable, varIndex) => (
-                        <div key={varIndex} className="variable-row">
+                      {metric.variables.map((variable) => (
+                        <div key={variable.symbol} className="variable-row">
                           <div className="variable-symbol">{variable.symbol}</div>
                           <div className="variable-info">
                             <span className="variable-desc">{variable.description}</span>

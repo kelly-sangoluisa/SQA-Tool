@@ -8,7 +8,7 @@ interface ProjectCardProps {
   project: ProjectSummary;
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project }: Readonly<ProjectCardProps>) {
 
   const hasScore = project.final_project_score !== null;
   const hasThreshold = project.minimum_threshold !== null;

@@ -8,7 +8,7 @@ interface CriterionCardProps {
   criterion: CriterionResult;
 }
 
-export function CriterionCard({ criterion }: CriterionCardProps) {
+export function CriterionCard({ criterion }: Readonly<CriterionCardProps>) {
   const getImportanceColor = (level: string) => {
     switch (level) {
       case 'A': return '#ef4444'; // Alta
@@ -61,8 +61,8 @@ export function CriterionCard({ criterion }: CriterionCardProps) {
         <div className="metrics-section">
           <h5 className="metrics-title">Métricas ({criterion.metrics.length})</h5>
           <div className="metrics-grid">
-            {criterion.metrics.map((metric, index) => (
-              <div key={index} className="metric-item">
+            {criterion.metrics.map((metric) => (
+              <div key={metric.metric_code} className="metric-item">
                 <div className="metric-name">{metric.metric_name}</div>
                 <div className="metric-values">
                   <div className="metric-value">

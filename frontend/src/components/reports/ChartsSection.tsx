@@ -9,8 +9,16 @@ interface Props {
   report: EvaluationReport;
 }
 
-export function ChartsSection({ report }: Props) {
+export function ChartsSection({ report }: Readonly<Props>) {
   const [showAllCriteria, setShowAllCriteria] = useState(false);
+  
+  // Helper function to get importance label
+  const getImportanceLabel = (level: string): string => {
+    if (level === 'A') return 'Alta';
+    if (level === 'M') return 'Media';
+    if (level === 'B') return 'Baja';
+    return 'N/A';
+  };
   
   // Calcular datos para gráficos
   const criteriaScores = report.criteria_results.map(c => ({
@@ -64,8 +72,8 @@ export function ChartsSection({ report }: Props) {
             <p className="chart-subtitle">Comparación de todos los criterios evaluados</p>
           </div>
           <div className="horizontal-bar-chart">
-            {displayedCriteria.map((criterion, index) => (
-              <div key={index} className="bar-row">
+            {displayedCriteria.map((criterion) => (
+              <div key={criterion.name} className="bar-row">
                 <div className="bar-label">
                   <span className="bar-name">{criterion.name}</span>
                   <span className="bar-score">{criterion.score.toFixed(1)}</span>
@@ -131,7 +139,7 @@ export function ChartsSection({ report }: Props) {
                     weight,
                     percentage: weight,
                     color: getImportanceColor(level),
-                    label: level === 'A' ? 'Alta' : level === 'M' ? 'Media' : level === 'B' ? 'Baja' : 'N/A',
+                    label: getImportanceLabel(level),
                     score: importanceScores[level] ? importanceScores[level].totalScore / importanceScores[level].count : 0
                   }));
 
@@ -195,7 +203,7 @@ export function ChartsSection({ report }: Props) {
                   currentAngle = endAngle;
                   
                   return (
-                    <g key={index}>
+                    <g key={item.label}>
                       <path
                         d={pathData}
                         fill={item.color}
@@ -223,7 +231,7 @@ export function ChartsSection({ report }: Props) {
               {Object.entries(importanceWeights)
                 .filter(([_, weight]) => weight > 0)
                 .map(([level, weight]) => {
-                const levelLabel = level === 'A' ? 'Alta' : level === 'M' ? 'Media' : level === 'B' ? 'Baja' : 'N/A';
+                const levelLabel = getImportanceLabel(level);
                 const avgScore = importanceScores[level] ? importanceScores[level].totalScore / importanceScores[level].count : 0;
                 
                 return (
