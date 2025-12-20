@@ -54,7 +54,11 @@ export function Autocomplete<T>({
       setIsLoading(true);
       try {
         const data = await searchFunction(query);
-        setResults(data);
+        // Eliminar duplicados basados en el label del item
+        const uniqueResults = data.filter((item, index, self) => 
+          index === self.findIndex((t) => getItemLabel(t) === getItemLabel(item))
+        );
+        setResults(uniqueResults);
         setShowResults(true);
         setHighlightedIndex(-1);
       } catch (error) {
@@ -64,7 +68,7 @@ export function Autocomplete<T>({
         setIsLoading(false);
       }
     },
-    [searchFunction, minChars]
+    [searchFunction, minChars, getItemLabel]
   );
 
   // Debounced search
