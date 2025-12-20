@@ -39,7 +39,9 @@ export function validateForm(
 
   Object.keys(rules).forEach(field => {
     const fieldValue = formData[field];
-    const value = typeof fieldValue === 'string' ? fieldValue : (fieldValue ?? '').toString();
+    const value = typeof fieldValue === 'string' 
+      ? fieldValue 
+      : (fieldValue != null ? String(fieldValue) : '');
     const error = validateField(field, value, rules[field]);
     if (error) {
       errors[field] = error;
