@@ -1,0 +1,1176 @@
+/* ==========================================
+   ESTILOS PARA DATA ENTRY - LAYOUT NUEVO
+   ========================================== */
+
+/* Layout principal con stepper arriba y contenido abajo */
+.enterDataLayout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #F1F1F1 0%, #e8e9f3 50%, #d8dae8 100%);
+}
+
+/* Stepper de evaluaciones en la parte superior */
+.evaluationStepper {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin: 1rem 1.5rem 0 1.5rem;
+  box-shadow: 0 2px 12px rgb(78 94 163 / 0.06);
+  animation: fade-in-down 0.5s ease-out;
+  flex-shrink: 0;
+}
+
+.stepperInner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.stepperFragment {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stepItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  transition: transform 0.3s ease;
+}
+
+.stepItem:hover {
+  transform: translateY(-2px);
+}
+
+.stepCircle {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.stepCircle.pending {
+  background: #e5e7eb;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
+
+.stepCircle.active {
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: #ffffff;
+  border-color: #4E5EA3;
+  box-shadow: 0 4px 12px rgb(78 94 163 / 0.3);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.stepCircle.completed {
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: #ffffff;
+  border-color: #4E5EA3;
+}
+
+.checkIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.stepContent {
+  text-align: center;
+}
+
+.stepLabel {
+  font-size: 0.875rem;
+  color: #4E5EA3;
+  margin: 0;
+  font-weight: 600;
+}
+
+.stepTitle {
+  font-size: 0.75rem;
+  color: #7462AA;
+  margin: 0.25rem 0 0 0;
+  font-weight: 500;
+}
+
+.stepProgress {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0.25rem 0 0 0;
+  font-weight: 600;
+}
+
+.stepDivider {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+  min-width: 2rem;
+  max-width: 4rem;
+}
+
+.stepDivider.completed {
+  background: linear-gradient(90deg, #4E5EA3 0%, #59469A 100%);
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgb(78 94 163 / 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgb(78 94 163 / 0.5);
+  }
+}
+
+/* Header superior con progreso */
+.topHeader {
+  background: white;
+  border-bottom: 2px solid rgb(78 94 163 / 0.15);
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 8px rgb(78 94 163 / 0.08);
+  flex-shrink: 0;
+}
+
+.projectHeader {
+  margin-bottom: 1rem;
+}
+
+.evaluationTitle {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.projectDescription {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Contenedor de progreso */
+.progressContainer {
+  max-width: 100%;
+}
+
+.progressStats {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.progressStat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4E5EA3;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: #7462AA;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.progressBarContainer {
+  height: 10px;
+  background: rgb(229 231 235);
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.1);
+}
+
+.progressBarFill {
+  height: 100%;
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  border-radius: 5px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgb(78 94 163 / 0.4);
+}
+
+/* Contenido principal - Grid con sidebar y contenido */
+.mainContent {
+  flex: 1;
+  height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  position: relative;
+  gap: 0;
+  margin: 1.5rem;
+}
+
+/* Sidebar wrapper - controla el ancho del sidebar */
+.sidebarWrapper {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.content {
+  flex: 1;
+  padding: 0 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.currentStandardHeader {
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: white;
+  padding: 1rem 0;
+  box-shadow: 0 2px 8px rgb(78 94 163 / 0.15);
+  text-align: center;
+  animation: fade-in-up 0.3s ease;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+
+.metricContainer {
+  flex: 1;
+  animation: fade-in-up 0.4s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgb(78 94 163 / 0.08);
+}
+
+.emptyState h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #4E5EA3;
+  margin: 0 0 0.5rem 0;
+}
+
+.emptyState p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Animaciones */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ==========================================
+   ESTILOS LEGACY (para compatibilidad)
+   ========================================== */
+
+.data-entry {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+/* Duplicate .content removed - already defined at line 249 */
+
+.header {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.project-info h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.project-info p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Progress Section */
+.progress-section {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1.5rem 2rem;
+}
+
+.progress-info {
+  max-width: 1200px;
+  margin: 0 auto;
+  margin-bottom: 1rem;
+}
+
+.progress-info h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+}
+
+.progress-stats {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #3b82f6;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1;
+}
+
+.progress-bar {
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  display: flex;
+  padding: 2rem;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.form-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-section {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+/* Estados de carga y error */
+.loading-container,
+.error-container,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-container p {
+  font-size: 1.125rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.error-container {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.error-container h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+}
+
+.error-container p {
+  font-size: 1rem;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.5;
+}
+
+.error-container button,
+.empty-state button {
+  padding: 0.75rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.error-container button:hover,
+.empty-state button:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.empty-state {
+  background: white;
+  border-radius: 1rem;
+  padding: 3rem;
+  box-shadow: 0 4px 6px -1px rgb(0, 0, 0, 0.1);
+}
+
+.empty-state h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #374151;
+  margin: 0 0 1rem 0;
+}
+
+.empty-state p {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0 0 2rem 0;
+  line-height: 1.5;
+}
+
+/* ==========================================
+   ESTILOS PARA EVALUATION SIDEBAR
+   ========================================== */
+
+.evaluation-sidebar {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgb(0, 0, 0, 0.1);
+  overflow: hidden;
+  height: fit-content;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.sidebar-header h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.sidebar-header p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.sidebar-content {
+  padding: 0;
+}
+
+/* Grupos de evaluación */
+.evaluation-group {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.evaluation-button {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.evaluation-button:hover {
+  background: #f8fafc;
+}
+
+.evaluation-button.expanded {
+  background: #f1f5f9;
+}
+
+.expand-icon {
+  font-size: 0.75rem;
+  color: #64748b;
+  width: 12px;
+  display: inline-block;
+}
+
+.evaluation-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.evaluation-title {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  width: fit-content;
+}
+
+.status-badge.completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.in-progress {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.cancelled {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.status-badge.unknown {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Containers de criterios */
+.criteria-container {
+  padding-left: 1rem;
+}
+
+.criterion-group {
+  border-bottom: 1px solid #f8fafc;
+}
+
+.criterion-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.criterion-button:hover {
+  background: #f8fafc;
+}
+
+.criterion-button.expanded {
+  background: #f1f5f9;
+}
+
+.criterion-info {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.criterion-name {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.importance-percentage {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+/* Containers de subcriterios */
+.subcriteria-container {
+  padding-left: 1rem;
+}
+
+.subcriterion-group {
+  border-bottom: 1px solid #f8fafc;
+}
+
+.subcriterion-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.subcriterion-button:hover {
+  background: #f8fafc;
+}
+
+.subcriterion-button.expanded {
+  background: #f1f5f9;
+}
+
+.subcriterion-info {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.subcriterion-name {
+  font-weight: 500;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.metrics-count {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Container de métricas */
+.metrics-container {
+  padding-left: 1rem;
+}
+
+.metric-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.metric-button:hover {
+  background: #f8fafc;
+  border-left-color: #cbd5e1;
+}
+
+.metric-button.active {
+  background: #eff6ff;
+  border-left-color: #3b82f6;
+}
+
+.metric-button.completed {
+  background: #f0fdf4;
+  border-left-color: #22c55e;
+}
+
+.metric-button.active.completed {
+  background: #ecfdf5;
+  border-left-color: #16a34a;
+}
+
+.metric-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.metric-name {
+  font-weight: 500;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.metric-button.active .metric-name {
+  color: #1e40af;
+}
+
+.metric-button.completed .metric-name {
+  color: #166534;
+}
+
+.metric-status {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.metric-button .metric-status {
+  color: #9ca3af;
+}
+
+.metric-button.completed .metric-status {
+  color: #16a34a;
+}
+
+.metric-button.active .metric-status {
+  color: #3b82f6;
+}
+
+/* ==========================================
+   ESTILOS PARA METRIC FORM
+   ========================================== */
+
+.metric-form {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgb(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.metric-header {
+  padding: 2rem 2rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.metric-header h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0 0 0.5rem 0;
+}
+
+.metric-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+}
+
+.metric-description {
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+.metric-formula {
+  font-size: 0.875rem;
+  color: #374151;
+  background: #f8fafc;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid #3b82f6;
+  margin: 0;
+}
+
+.metric-formula strong {
+  color: #1e293b;
+}
+
+.variables-section {
+  padding: 2rem;
+}
+
+.variables-section h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1.5rem 0;
+}
+
+.variable-input {
+  margin-bottom: 1.5rem;
+}
+
+.variable-input label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+.variable-input strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.variable-input input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.variable-input input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgb(59, 130, 246, 0.1);
+}
+
+.variable-input input:invalid {
+  border-color: #ef4444;
+}
+
+.metric-navigation {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.nav-button {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  color: #374151;
+}
+
+.nav-button:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.nav-button:hover:not(:disabled) {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.nav-button.next {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.nav-button.next:disabled {
+  background: #9ca3af;
+  border-color: #9ca3af;
+  color: #e5e7eb;
+}
+
+.nav-button.next:hover:not(:disabled) {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+/* Responsive Design */
+
+/* Duplicate .mainContent removed - already defined at line 229 */
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4E5EA3;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+.backButton:hover {
+  transform: translateX(-4px);
+  color: #59469A;
+  background: rgb(78 94 163 / 0.08);
+}
+
+/* Duplicate .evaluationTitle removed - already defined at line 163 */
+
+.navigation {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Duplicate .currentStandardHeader removed - already defined at line 258 */
+
+.standardTitle {
+  font-size: 1.15rem; /* Tamaño más pequeño */
+  font-weight: 600;
+  margin: 0;
+  color: white;
+  letter-spacing: 0.5px;
+}
+
+/* Duplicate .metricContainer removed - already defined at line 270 */
+
+/* Responsive design */
+
+/* Animaciones */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilos legacy mantenidos por compatibilidad */
+.enterDataContainer {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #F1F1F1 0%, #e8e9f3 50%, #d8dae8 100%);
+  padding: 2rem 1rem;
+}
+
+.evaluationCard {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgb(78 94 163 / 0.08);
+  border: 1px solid rgb(78 94 163 / 0.1);
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+}
+
+.evaluationCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgb(78 94 163 / 0.12);
+}
+
+.standardSection {
+  margin-bottom: 2.5rem;
+}
+
+.standardSection:last-child {
+  margin-bottom: 0;
+}
+
+.standardHeader {
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+  box-shadow: 0 4px 12px rgb(78 94 163 / 0.15);
+}
+
+.metricsGrid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.metricItem {
+  background: #f8f9ff;
+  border: 2px solid rgb(78 94 163 / 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.metricItem:hover {
+  border-color: #4E5EA3;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgb(78 94 163 / 0.1);
+}
+
+.metricHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.metricNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: white;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.metricName {
+  font-weight: 600;
+  color: #1a1a2e;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.metricContent {
+  margin-top: 1rem;
+}
+
+.metricDescription {
+  color: #6b7280;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.formulaSection {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 1rem;
+}
+
+.formulaTitle {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.formula {
+  font-family: 'Courier New', monospace;
+  background: #f8f9ff;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  color: #4E5EA3;
+  font-weight: 600;
+}
+
+.variablesSection {
+  margin-top: 1rem;
+}
+
+.variablesTitle {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.variableItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background: #f8f9ff;
+  border-radius: 6px;
+}
+
+.variableSymbol {
+  font-weight: 700;
+  color: #4E5EA3;
+  min-width: 1.5rem;
+}
+
+.variableDescription {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+

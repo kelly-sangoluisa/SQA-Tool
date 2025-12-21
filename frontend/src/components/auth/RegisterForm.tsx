@@ -2,33 +2,36 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/auth/useAuth';
-import { Button } from '../shared/Button';
-import { Input } from '../shared/Input';
+import { Button, Input } from '../shared';
+import Link from 'next/link';
+import styles from './RegisterForm.module.css';
 
 export function RegisterForm() {
   const router = useRouter();
-  const { signUp, isLoading, error, clearError } = useAuth();
+  const { signUp, isLoading, error: contextError, clearError } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
-  const [validationError, setValidationError] = useState('');
+  const [localError, setLocalError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-    setValidationError('');
+    setLocalError('');
+    setSuccess('');
 
     // Validar contraseñas
     if (formData.password !== formData.confirmPassword) {
-      setValidationError('Las contraseñas no coinciden');
+      setLocalError('Las contraseñas no coinciden');
       return;
     }
 
     if (formData.password.length < 6) {
-      setValidationError('La contraseña debe tener al menos 6 caracteres');
+      setLocalError('La contraseña debe tener al menos 6 caracteres');
       return;
     }
     
@@ -37,14 +40,14 @@ export function RegisterForm() {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        redirectTo: `${window.location.origin}/auth/callback`
       });
       
-      // Mostrar mensaje de éxito y redirigir al login
-      alert('Cuenta creada exitosamente. Por favor, verifica tu email.');
-      router.push('/auth/login');
-    } catch (error) {
-      console.error('Error en registro:', error);
+      setSuccess('Registro exitoso. Redirigiendo al dashboard...');
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
+    } catch (err: unknown) {
+      console.error('Error en registro:', err);
     }
   };
 
@@ -55,20 +58,23 @@ export function RegisterForm() {
     }));
   };
 
+  const displayError = localError || contextError;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Crear cuenta
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Regístrate como evaluador
+    <div className={styles.root}>
+      <div className={styles.card}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Crea tu cuenta</h2>
+          <p className={styles.subtitle}>
+            ¿Ya tienes una cuenta?{' '}
+            <Link href="/auth/login" className={styles.link}>
+              Inicia sesión aquí
+            </Link>
           </p>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div className={styles.fields}>
             <Input
               label="Nombre completo"
               name="name"
@@ -76,7 +82,7 @@ export function RegisterForm() {
               value={formData.name}
               onChange={handleChange}
               required
-              placeholder="Juan Pérez"
+              placeholder="Ingresa tu nombre completo"
               autoComplete="name"
             />
 
@@ -98,8 +104,7 @@ export function RegisterForm() {
               value={formData.password}
               onChange={handleChange}
               required
-              placeholder="••••••••"
-              helperText="Mínimo 6 caracteres"
+              placeholder="Mínimo 6 caracteres"
               autoComplete="new-password"
             />
 
@@ -110,39 +115,39 @@ export function RegisterForm() {
               value={formData.confirmPassword}
               onChange={handleChange}
               required
-              placeholder="••••••••"
+              placeholder="Repite tu contraseña"
               autoComplete="new-password"
             />
           </div>
 
-          {(error || validationError) && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error || validationError}
+          {displayError && (
+            <div className={styles.errorBox}>
+              {displayError}
             </div>
           )}
 
-          <div>
+          {success && (
+            <div className={styles.successBox}>
+              {success}
+            </div>
+          )}
+
+          <div className={styles.buttonWrapper}>
             <Button
               type="submit"
               isLoading={isLoading}
-              className="w-full"
+              className={styles.fullWidth}
               size="lg"
               variant="primary"
             >
-              {isLoading ? 'Creando cuenta...' : 'Crear cuenta'}
+              Crear Cuenta
             </Button>
           </div>
 
-          <div className="text-center">
-            <span className="text-sm text-gray-600">
-              ¿Ya tienes cuenta?{' '}
-              <a
-                href="/auth/login"
-                className="text-blue-600 hover:text-blue-500 font-medium"
-              >
-                Inicia sesión aquí
-              </a>
-            </span>
+          <div className={styles.textCenter}>
+            <Link href="/auth/login" className={styles.link}>
+              ¿Ya tienes cuenta? Inicia sesión aquí
+            </Link>
           </div>
         </form>
       </div>

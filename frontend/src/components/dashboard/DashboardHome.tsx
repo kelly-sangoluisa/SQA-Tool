@@ -1,140 +1,217 @@
-'use client';
+"use client";
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '../../hooks/auth/useAuth';
+import styles from './DashboardHome.module.css';
+
+interface Project {
+  id: number;
+  name: string;
+  description?: string;
+  creator_user_id: number;
+  status: 'in_progress' | 'completed' | 'cancelled';
+  final_project_score?: number;
+  created_at: string;
+  updated_at: string;
+  evaluations?: Evaluation[];
+  creator?: {
+    name: string;
+  };
+}
+
+interface Evaluation {
+  id: number;
+  project_id: number;
+  standard_id: number;
+  creation_date: string;
+  status: 'in_progress' | 'completed' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+}
+
+const getProjectIcon = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return {
+        icon: (
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        ),
+        bg: 'linear-gradient(135deg, rgba(78, 94, 163, 0.1) 0%, rgba(89, 70, 154, 0.1) 100%)'
+      };
+    case 'in_progress':
+      return {
+        icon: (
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4E5EA3" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        ),
+        bg: 'linear-gradient(135deg, rgba(78, 94, 163, 0.1) 0%, rgba(89, 70, 154, 0.1) 100%)'
+      };
+    case 'cancelled':
+      return {
+        icon: (
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        ),
+        bg: 'linear-gradient(135deg, rgba(78, 94, 163, 0.1) 0%, rgba(89, 70, 154, 0.1) 100%)'
+      };
+    default:
+      return {
+        icon: (
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4E5EA3" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        ),
+        bg: 'linear-gradient(135deg, rgba(78, 94, 163, 0.1) 0%, rgba(89, 70, 154, 0.1) 100%)'
+      };
+  }
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
 
 export function DashboardHome() {
   const { user } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const modules = [
-    {
-      name: 'Configuración de Evaluación',
-      description: 'Configura criterios y parámetros de evaluación de calidad',
-      href: '/modules/config-evaluation',
-      icon: '⚙️',
-      bgColor: 'bg-blue-50',
-      iconBg: 'bg-blue-100',
-      textColor: 'text-blue-600'
-    },
-    {
-      name: 'Entrada de Datos',
-      description: 'Ingresa datos del proyecto para evaluación',
-      href: '/modules/entry-data',
-      icon: '📝',
-      bgColor: 'bg-green-50',
-      iconBg: 'bg-green-100',
-      textColor: 'text-green-600'
-    },
-    {
-      name: 'Parametrización',
-      description: 'Configura parámetros avanzados del sistema',
-      href: '/modules/parameterization',
-      icon: '🎛️',
-      bgColor: 'bg-purple-50',
-      iconBg: 'bg-purple-100',
-      textColor: 'text-purple-600'
-    },
-    {
-      name: 'Reportes',
-      description: 'Genera y visualiza reportes de evaluación',
-      href: '/modules/reports',
-      icon: '📊',
-      bgColor: 'bg-yellow-50',
-      iconBg: 'bg-yellow-100',
-      textColor: 'text-yellow-600'
-    },
-  ];
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        // Cargar todos los proyectos
+        const response = await fetch('/api/config-evaluation/projects');
+        if (response.ok) {
+          const data = await response.json();
+          if (mounted && Array.isArray(data)) {
+            // Filtrar: solo proyectos del usuario logueado y en estado "in_progress"
+            const filteredProjects = data.filter(
+              (project) =>
+                project.creator_user_id === user?.id &&
+                project.status === 'in_progress'
+            );
+            // Ordenar por fecha de actualización
+            const sortedProjects = filteredProjects.toSorted((a, b) =>
+              new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+            );
+            setProjects(sortedProjects);
+          }
+        }
+      } catch {
+        if (mounted) {
+          setProjects([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load().catch(err => console.error('Failed to load dashboard data:', err));
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id]);
+
+  // Separar proyectos recientes (últimos 3) y todos los proyectos
+  const recentProjects = projects.slice(0, 3);
+  const allProjects = projects;
 
   return (
-    <div className="space-y-6">
+    <div className={styles.root}>
       {/* Welcome Section */}
-      <div>
-        <h2 className="text-3xl font-bold text-gray-900">
-          Bienvenido, {user?.name}
-        </h2>
-        <p className="mt-2 text-gray-600">
-          Selecciona un módulo para comenzar con la evaluación de calidad de software
-        </p>
-      </div>
+      <header className={styles.greeting}>
+        <h2>Hola, {user?.name ?? 'Usuario'}</h2>
+        <Link href="/configuration-evaluation" className={styles.newEvaluationBtn}>
+          + Nueva Evaluación
+        </Link>
+      </header>
 
-      {/* Modules Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {modules.map((module) => (
-          <a
-            key={module.name}
-            href={module.href}
-            className={`${module.bgColor} rounded-lg p-6 hover:shadow-md transition-all duration-200 hover:-translate-y-1 border border-gray-200`}
-          >
-            <div className={`${module.iconBg} w-12 h-12 rounded-lg flex items-center justify-center mb-4`}>
-              <span className="text-2xl">{module.icon}</span>
+      {/* Proyectos Recientes - TARJETAS GRANDES */}
+      <div className={styles.dashedContainer}>
+        <section className={styles.sectionWrapper}>
+          <div className={styles.sectionHeader}>
+            <h3 className={styles.sectionTitle}>Proyectos recientes</h3>
+          </div>
+
+          {loading && <p className={styles.loadingText}>Cargando...</p>}
+
+          {!loading && (
+            <div className={styles.recentGridLarge}>
+              {recentProjects.length === 0 && <p className={styles.emptyText}>No tienes proyectos recientes.</p>}
+
+              {recentProjects.map((project) => {
+                const latestEvaluation = project.evaluations?.[0];
+                const { icon, bg } = getProjectIcon(latestEvaluation?.status || '');
+
+                return (
+                  <article key={project.id} className={styles.recentCardLarge}>
+                    <div className={styles.cardIcon} style={{ background: bg }}>
+                      <div className={styles.cardIconEmoji}>{icon}</div>
+                    </div>
+                    <div className={styles.cardContent}>
+                      <h4 className={styles.cardTitle}>{project.name}</h4>
+                      <p className={styles.cardDesc}>{project.description || 'Sin descripción'}</p>
+                      <div className={styles.cardFooter}>
+                        <time className={styles.cardDate}>
+                          Actualizado: {formatDate(project.updated_at)}
+                        </time>
+                        <Link href={`/data-entry/${project.id}`} className={styles.viewBtn}>
+                          Abrir
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
-            <h3 className={`text-lg font-semibold ${module.textColor} mb-2`}>
-              {module.name}
-            </h3>
-            <p className="text-gray-600 text-sm">{module.description}</p>
-          </a>
-        ))}
+          )}
+        </section>
       </div>
 
-      {/* User Info Card */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Información del usuario</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <p className="text-sm font-medium text-gray-500">Nombre</p>
-            <p className="text-gray-900">{user?.name}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Email</p>
-            <p className="text-gray-900">{user?.email}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Rol</p>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              user?.role.name === 'admin' 
-                ? 'bg-red-100 text-red-800' 
-                : 'bg-blue-100 text-blue-800'
-            }`}>
-              {user?.role.name === 'admin' ? 'Administrador' : 'Evaluador'}
-            </span>
-          </div>
+      {/* Todos los Proyectos - TARJETAS PEQUEÑAS */}
+      <section className={styles.sectionWrapper}>
+        <div className={styles.sectionHeader}>
+          <h3 className={styles.sectionTitle}>Todos los proyectos</h3>
         </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Acciones rápidas</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a
-            href="/shared/profile"
-            className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-          >
-            <span className="text-2xl mr-3">👤</span>
-            <div>
-              <p className="font-medium">Mi Perfil</p>
-              <p className="text-sm text-gray-500">Configurar información personal</p>
-            </div>
-          </a>
-          <a
-            href="/shared/settings"
-            className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-          >
-            <span className="text-2xl mr-3">⚙️</span>
-            <div>
-              <p className="font-medium">Configuración</p>
-              <p className="text-sm text-gray-500">Ajustes del sistema</p>
-            </div>
-          </a>
-          <a
-            href="/shared/notifications"
-            className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-          >
-            <span className="text-2xl mr-3">🔔</span>
-            <div>
-              <p className="font-medium">Notificaciones</p>
-              <p className="text-sm text-gray-500">Ver alertas y mensajes</p>
-            </div>
-          </a>
-        </div>
-      </div>
+        {!loading && (
+          <div className={styles.allGridSmall}>
+            {allProjects.length === 0 && <p className={styles.emptyText}>No hay proyectos disponibles.</p>}
+
+            {allProjects.map((project) => {
+              const latestEvaluation = project.evaluations?.[0];
+              const { icon, bg } = getProjectIcon(latestEvaluation?.status || '');
+
+              return (
+                <article key={project.id} className={styles.allCardSmall}>
+                  <div className={styles.smallCardIcon} style={{ background: bg }}>
+                    <div className={styles.smallCardIconEmoji}>{icon}</div>
+                  </div>
+                  <div className={styles.smallCardContent}>
+                    <h4 className={styles.smallCardTitle}>{project.name}</h4>
+                    <p className={styles.smallCardDesc}>
+                      {project.description || 'Sin descripción'}
+                    </p>
+                  </div>
+                  <div className={styles.smallCardFooter}>
+                    <Link href={`/data-entry/${project.id}`} className={styles.smallViewBtn}>
+                      Abrir
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

@@ -1,0 +1,147 @@
+.base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.base::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.base:hover::before {
+  left: 100%;
+}
+
+.primary {
+  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgb(78 94 163 / 0.25);
+}
+
+.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgb(78 94 163 / 0.35);
+}
+
+.primary:active {
+  transform: translateY(0);
+}
+
+.secondary {
+  background: linear-gradient(135deg, #3D6BA6 0%, #4971AB 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgb(61 107 166 / 0.25);
+}
+
+.secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgb(61, 107, 166, 0.35);
+}
+
+.success {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgb(22, 163, 74, 0.25);
+}
+
+.success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgb(22, 163, 74, 0.35);
+}
+
+.warning {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgb(217, 119, 6, 0.25);
+}
+
+.warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgb(217, 119, 6, 0.35);
+}
+
+.danger {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgb(220, 38, 38, 0.25);
+}
+
+.danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgb(220, 38, 38, 0.35);
+}
+
+.outline {
+  background: transparent;
+  color: #4E5EA3;
+  border: 2px solid #4E5EA3;
+  box-shadow: none;
+}
+
+.outline:hover {
+  background: #4E5EA3;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgb(78 94 163 / 0.25);
+}
+
+.outline:active {
+  transform: translateY(0);
+}
+
+.sm {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+}
+
+.md {
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
+.lg {
+  padding: 14px 28px;
+  font-size: 1.0625rem;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+  border: 2px solid rgb(255, 255, 255, 0.3);
+  border-top-color: rgb(255, 255, 255, 0.9);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.full {
+  width: 100%;
+  display: inline-flex;
+}

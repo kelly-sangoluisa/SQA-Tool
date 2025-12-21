@@ -1,6 +1,7 @@
 'use client';
 
 import { AuthProvider } from '../hooks/auth/useAuth';
+import { SidebarProvider } from '../components/dashboard/sidebar';
 
 export function ClientProviders({
   children,
@@ -9,7 +10,9 @@ export function ClientProviders({
 }) {
   return (
     <AuthProvider>
-      {children}
+      <SidebarProvider>
+        {children}
+      </SidebarProvider>
     </AuthProvider>
   );
 }

@@ -1,28 +1,39 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/auth/useAuth';
-import { Button } from '../shared/Button';
-import { Input } from '../shared/Input';
+import { Button, Input } from '../shared';
+import Link from 'next/link';
+import styles from './LoginForm.module.css';
+import buttonStyles from '../shared/Button.module.css';
+import Image from 'next/image';
 
 export function LoginForm() {
   const router = useRouter();
-  const { signIn, isLoading, error, clearError } = useAuth();
+  const { signIn, isLoading, error, clearError, user, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
   });
+
+  // Si ya está autenticado, redirigir al dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user) {
+      router.replace('/dashboard');
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
+    if (isLoading) return;
     
+    clearError();
+
     try {
       await signIn(formData);
-      router.push('/dashboard'); // Redirigir al dashboard después del login
-    } catch (error) {
-      // El error ya se maneja en el hook useAuth
-      console.error('Error en login:', error);
+      // El useEffect se encarga de la redirección cuando isAuthenticated cambie
+    } catch (err: unknown) {
+      console.error('Error en login:', err);
     }
   };
 
@@ -33,20 +44,23 @@ export function LoginForm() {
     }));
   };
 
+  // No mostrar nada mientras verifica o redirige, solo el formulario normal
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Iniciar sesión
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            {process.env.NEXT_PUBLIC_APP_NAME || 'Sistema de Evaluación SQA'}
+    <div className={styles.root}>
+      <div className={styles.card}>
+        <div className={styles.header}>
+          <Image src="/logo-SQATool.png" alt="SQA Tool" width={75} height={75} />
+          <h2>Inicia sesión en tu cuenta</h2>
+          <p className={styles.subtitle}>
+            ¿No tienes una cuenta?{' '}
+            <Link href="/auth/signup" className={styles.link}>
+              Regístrate aquí
+            </Link>
           </p>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div className={styles.fields}>
             <Input
               label="Email"
               name="email"
@@ -56,8 +70,9 @@ export function LoginForm() {
               required
               placeholder="tu@email.com"
               autoComplete="email"
+              disabled={isLoading}
             />
-            
+
             <Input
               label="Contraseña"
               name="password"
@@ -65,46 +80,34 @@ export function LoginForm() {
               value={formData.password}
               onChange={handleChange}
               required
-              placeholder="••••••••"
+              placeholder="Ingresa tu contraseña"
               autoComplete="current-password"
+              disabled={isLoading}
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className={styles.error}>
               {error}
             </div>
           )}
 
-          <div>
+          <div className={styles.actions}>
             <Button
               type="submit"
               isLoading={isLoading}
-              className="w-full"
+              className={buttonStyles.full}
               size="lg"
               variant="primary"
             >
-              {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </div>
 
-          <div className="text-center space-y-2">
-            <a
-              href="/auth/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-500"
-            >
+          <div className={styles.links}>
+            <Link href="/auth/forgot-password" className={styles.link}>
               ¿Olvidaste tu contraseña?
-            </a>
-            <br />
-            <span className="text-sm text-gray-600">
-              ¿No tienes cuenta?{' '}
-              <a
-                href="/auth/register"
-                className="text-blue-600 hover:text-blue-500 font-medium"
-              >
-                Regístrate aquí
-              </a>
-            </span>
+            </Link>
           </div>
         </form>
       </div>

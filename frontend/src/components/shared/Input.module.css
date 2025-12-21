@@ -1,0 +1,110 @@
+.root {
+  display: block;
+}
+
+.label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.inputWrapper {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #ffffff;
+  color: #1a1a2e;
+}
+
+.inputWithIcon {
+  padding-right: 3rem;
+}
+
+.input::placeholder {
+  color: #9ca3af;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #4E5EA3;
+  box-shadow: 0 0 0 4px rgb(78, 94, 163, 0.1);
+  background: #ffffff;
+}
+
+.input:hover:not(:focus) {
+  border-color: #cbd5e1;
+}
+
+.toggleButton {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: color 0.2s ease;
+  border-radius: 6px;
+}
+
+.toggleButton:hover {
+  color: #4E5EA3;
+  background: rgb(78, 94, 163, 0.1);
+}
+
+.toggleButton:focus {
+  outline: none;
+  color: #4E5EA3;
+}
+
+.toggleButton svg {
+  display: block;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.error::before {
+  content: '⚠';
+  font-size: 1rem;
+}
+
+.helper {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.errorInput {
+  border-color: #dc2626;
+  background: #fff5f5;
+}
+
+.errorInput:focus {
+  box-shadow: 0 0 0 4px rgb(220, 38, 38, 0.1);
+  border-color: #dc2626;
+}

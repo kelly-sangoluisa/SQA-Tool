@@ -1,82 +1,137 @@
 'use client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useAuth } from '../hooks/auth/useAuth';
+import '../styles/home.css';
+import '../styles/components.css';
 
 export default function HomePage() {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Si el usuario está autenticado, redirigir a su dashboard correspondiente
+    if (!isLoading && isAuthenticated && user) {
+      // Redirigir según el rol del usuario
+      switch (user.role.name) {
+        case 'admin':
+          router.push('/dashboard');
+          break;
+        case 'evaluator':
+          router.push('/dashboard');
+          break;
+        case 'viewer':
+          router.push('/results');
+          break;
+        default:
+          router.push('/dashboard');
+      }
+    }
+  }, [isAuthenticated, isLoading, user, router]);
+
+  // Mostrar un loader mientras se verifica la autenticación
+  if (isLoading) {
+    return (
+      <div className="home-root">
+        <div className="home-container home-center">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <Image 
+              src="/logo-SQATool.png" 
+              alt="SQA Tool Logo" 
+              width={120} 
+              height={120}
+              priority
+              style={{ filter: 'drop-shadow(0 8px 24px rgba(78, 94, 163, 0.3))' }}
+            />
+            <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Cargando...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si el usuario ya está autenticado, no mostrar nada (está redirigiendo)
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center">
-          {/* Header */}
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            SQA Tool
-          </h1>
-          <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
-            Herramienta para la evaluación y aseguramiento de la calidad de software. 
-            Administra criterios de evaluación, parametriza procesos y genera reportes detallados.
-          </p>
+    <div className="home-root">
+      <div className="home-container home-center">
+        {/* Header */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+          <Image 
+            src="/logo-SQATool.png" 
+            alt="SQA Tool Logo" 
+            width={120} 
+            height={120}
+            priority
+            style={{ filter: 'drop-shadow(0 8px 24px rgba(78, 94, 163, 0.3))' }}
+          />
+          <h1 className="home-title">SQA Tool</h1>
+        </div>
+        <p className="home-subtitle">
+          Herramienta profesional para la evaluación y aseguramiento de la calidad de software. 
+          Administra criterios de evaluación, parametriza procesos y genera reportes detallados 
+          basados en estándares de la industria.
+        </p>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Link
-              href="/auth/login"
-              className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Iniciar Sesión
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-colors"
-            >
-              Registrarse
-            </Link>
+        {/* Action Buttons */}
+        <div className="actions">
+          <Link href="/auth/login" className="btn btn-primary">
+            Iniciar Sesión
+          </Link>
+          <Link href="/auth/signup" className="btn btn-outline">
+            Registrarse
+          </Link>
+        </div>
+
+        {/* Features */}
+        <div className="features-grid">
+          <div className="feature-card">
+            <div className="feature-emoji">⚙️</div>
+            <h3 className="feature-title">Configuración</h3>
+            <p className="feature-desc">
+              Define criterios y parámetros de evaluación personalizados adaptados a tus necesidades
+            </p>
           </div>
 
-          {/* Features */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            <div className="bg-white rounded-lg p-6 shadow-lg">
-              <div className="text-blue-600 text-4xl mb-4">⚙️</div>
-              <h3 className="text-xl font-semibold mb-2">Configuración</h3>
-              <p className="text-gray-600">
-                Define criterios y parámetros de evaluación personalizados
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-lg">
-              <div className="text-green-600 text-4xl mb-4">📝</div>
-              <h3 className="text-xl font-semibold mb-2">Entrada de Datos</h3>
-              <p className="text-gray-600">
-                Registra información detallada de tus proyectos de software
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-lg">
-              <div className="text-purple-600 text-4xl mb-4">🎛️</div>
-              <h3 className="text-xl font-semibold mb-2">Parametrización</h3>
-              <p className="text-gray-600">
-                Configura parámetros avanzados para evaluaciones precisas
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-lg">
-              <div className="text-yellow-600 text-4xl mb-4">📊</div>
-              <h3 className="text-xl font-semibold mb-2">Reportes</h3>
-              <p className="text-gray-600">
-                Genera reportes comprensivos de calidad de software
-              </p>
-            </div>
+          <div className="feature-card">
+            <div className="feature-emoji">📝</div>
+            <h3 className="feature-title">Entrada de Datos</h3>
+            <p className="feature-desc">
+              Registra información detallada de tus proyectos de software de forma estructurada
+            </p>
           </div>
 
-          {/* Tech Stack */}
-          <div className="mt-16 pt-8 border-t border-gray-200">
-            <p className="text-gray-500 mb-4">Construido con</p>
-            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
-              <span className="bg-white px-3 py-1 rounded-full shadow">Next.js 14</span>
-              <span className="bg-white px-3 py-1 rounded-full shadow">NestJS</span>
-              <span className="bg-white px-3 py-1 rounded-full shadow">TypeScript</span>
-              <span className="bg-white px-3 py-1 rounded-full shadow">Tailwind CSS</span>
-              <span className="bg-white px-3 py-1 rounded-full shadow">Supabase</span>
-            </div>
+          <div className="feature-card">
+            <div className="feature-emoji">🎛️</div>
+            <h3 className="feature-title">Parametrización</h3>
+            <p className="feature-desc">
+              Configura parámetros avanzados para evaluaciones precisas y métricas personalizadas
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-emoji">📊</div>
+            <h3 className="feature-title">Reportes</h3>
+            <p className="feature-desc">
+              Genera reportes comprensivos de calidad con análisis detallados y visualizaciones
+            </p>
+          </div>
+        </div>
+
+        {/* Tech Stack */}
+        <div className="tech-bar">
+          <p className="tech-label">Construido con tecnologías modernas</p>
+          <div className="tech-list">
+            <span className="tech-pill">Next.js 15</span>
+            <span className="tech-pill">NestJS 11</span>
+            <span className="tech-pill">TypeScript</span>
+            <span className="tech-pill">PostgreSQL</span>
+            <span className="tech-pill">Supabase</span>
           </div>
         </div>
       </div>

@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { authApi } from '../../api/auth/auth-api';
+import { AUTH_EXPIRED_EVENT } from '../../api/shared/api-client';
 import { SignInData, SignUpData, ForgotPasswordData, ResetPasswordData, AuthState, AuthContextType, User } from '../../types/auth.types';
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -11,20 +13,23 @@ interface AuthProviderProps {
 
 // Helpers para localStorage SEGURO
 const getUserFromStorage = () => {
-  if (typeof window === 'undefined') return null;
+  if (globalThis.window === undefined) return null;
   try {
     const stored = localStorage.getItem('user_profile'); // Solo perfil, NO token
-    return stored ? JSON.parse(stored) : null;
+    if (!stored) return null;
+
+    const user = JSON.parse(stored);
+    return user;
   } catch {
     return null;
   }
 };
 
 const saveUserToStorage = (user: User) => {
-  if (typeof window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   // IMPORTANTE: Solo guardar datos NO sensibles
   const safeUser = {
-    id: user.user_id,
+    id: user.id,
     email: user.email,
     name: user.name,
     role: user.role,
@@ -34,28 +39,37 @@ const saveUserToStorage = (user: User) => {
 };
 
 const clearUserFromStorage = () => {
-  if (typeof window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   localStorage.removeItem('user_profile');
 };
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [state, setState] = useState<AuthState>(() => {
-    // Inicialización optimista SEGURA
-    const storedUser = getUserFromStorage();
-    return {
-      user: storedUser, // Solo datos no sensibles del localStorage
-      isLoading: !storedUser, // Si hay usuario en cache, no loading
-      isAuthenticated: !!storedUser, // Asumir autenticado si hay cache
-      error: null
-    };
-  });
-
+export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
+  const router = useRouter();
   const [hasLoggedOut, setHasLoggedOut] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  
+  // Estado inicial siempre igual para evitar hydration mismatch
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    isLoading: true,
+    isAuthenticated: false,
+    error: null
+  });
 
-  // Detectar cuando estamos en el cliente
+  // Detectar cuando estamos en el cliente y cargar cache
   useEffect(() => {
     setIsClient(true);
+    
+    // Cargar cache SOLO después de montar en cliente
+    const cachedUser = getUserFromStorage();
+    if (cachedUser) {
+      setState({
+        user: cachedUser,
+        isLoading: true,
+        isAuthenticated: true,
+        error: null
+      });
+    }
   }, []);
 
   const checkAuth = useCallback(async () => {
@@ -70,8 +84,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
-    // Si hay usuario en cache, verificar en background sin loading
-    if (state.user) {
+    // Verificar si ya hay un usuario cargado (cache)
+    const cachedUser = getUserFromStorage();
+    
+    // Si hay usuario en cache, usarlo inmediatamente y verificar en background
+    // No podemos verificar cookies HttpOnly desde JS, así que confiamos en el cache
+    if (cachedUser) {
+      // Establecer usuario de cache inmediatamente (sin loading)
+      setState(prev => ({
+        ...prev,
+        user: cachedUser,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null
+      }));
+
+      // Verificar en background para actualizar si cambió algo
       try {
         const user = await authApi.getMe();
         setState(prev => ({
@@ -80,25 +108,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
           isAuthenticated: true,
           error: null
         }));
-        saveUserToStorage(user); // Actualizar cache seguro
-      } catch {
+        saveUserToStorage(user);
+      } catch (error) {
         // Token expiró o es inválido
-        setState(prev => ({
-          ...prev,
-          user: null,
-          isAuthenticated: false,
-          error: null
-        }));
-        clearUserFromStorage();
+        const isAuthError = error instanceof Error && 
+          (error.message.includes('401') || 
+           error.message.includes('403') || 
+           error.message.includes('No token provided') ||
+           error.message.includes('Unauthorized'));
+        
+        if (isAuthError) {
+          setState(prev => ({
+            ...prev,
+            user: null,
+            isAuthenticated: false,
+            error: null
+          }));
+          clearUserFromStorage();
+        }
       }
       return;
     }
 
-    // Solo mostrar loading si NO hay cache
+    // No hay cache, intentar obtener usuario desde el servidor
+    // Si hay cookie HttpOnly válida, esto funcionará
     setState(prev => ({ ...prev, isLoading: true }));
     
     try {
       const user = await authApi.getMe();
+      // Cookie válida encontrada!
       setState(prev => ({
         ...prev,
         user,
@@ -106,7 +144,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isLoading: false,
         error: null
       }));
-      saveUserToStorage(user); // Guardar de forma segura
+      saveUserToStorage(user);
     } catch (error) {
       const isAuthError = error instanceof Error && 
         (error.message.includes('401') || 
@@ -114,6 +152,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
          error.message.includes('No token provided') ||
          error.message.includes('Unauthorized'));
       
+      // No hay sesión válida
       setState(prev => ({
         ...prev,
         user: null,
@@ -128,7 +167,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error('Error inesperado en checkAuth:', error);
       }
     }
-  }, [isClient, hasLoggedOut]); // ELIMINADO state.user para evitar bucle
+  }, [isClient, hasLoggedOut]);
 
   const signIn = useCallback(async (data: SignInData) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -136,17 +175,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setHasLoggedOut(false);
       await authApi.signIn(data);
-      await new Promise(resolve => setTimeout(resolve, 200));
-      await checkAuth();
+      // Obtener el usuario inmediatamente después del login
+      const user = await authApi.getMe();
+      setState({
+        user,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null
+      });
+      saveUserToStorage(user);
     } catch (error) {
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Error al iniciar sesión',
         isLoading: false
       }));
-      throw error;
+      throw error instanceof Error ? error : new Error('Error al iniciar sesión');
     }
-  }, [checkAuth]);
+  }, []);
 
   const signOut = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true }));
@@ -185,7 +231,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         error: error instanceof Error ? error.message : 'Error al registrarse',
         isLoading: false
       }));
-      throw error;
+      throw error instanceof Error ? error : new Error('Error al registrarse');
     }
   }, []);
 
@@ -201,7 +247,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         error: error instanceof Error ? error.message : 'Error al enviar email',
         isLoading: false
       }));
-      throw error;
+      throw error instanceof Error ? error : new Error('Error al enviar email');
     }
   }, []);
 
@@ -217,7 +263,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         error: error instanceof Error ? error.message : 'Error al resetear contraseña',
         isLoading: false
       }));
-      throw error;
+      throw error instanceof Error ? error : new Error('Error al resetear contraseña');
     }
   }, []);
 
@@ -229,7 +275,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (isClient) {
       checkAuth();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isClient]); // SOLO isClient - quitar checkAuth para evitar bucle
+
+  // Listener para detectar cuando la sesión expira
+  useEffect(() => {
+    if (!isClient) return;
+
+    const handleAuthExpired = () => {
+      console.log('🔴 Sesión expirada, redirigiendo al login...');
+      
+      // Limpiar estado y storage
+      setState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null
+      });
+      clearUserFromStorage();
+      setHasLoggedOut(true);
+      
+      // Redirigir a la página de inicio
+      router.push('/');
+    };
+
+    globalThis.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+    
+    return () => {
+      globalThis.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+    };
+  }, [isClient, router]);
 
   const contextValue: AuthContextType = useMemo(() => ({
     ...state,

@@ -32,7 +32,10 @@ export class AuthService {
   }
 
   private handleError(error: any, ExceptionType: any = BadRequestException) {
-    if (error) throw new ExceptionType(error.message);
+    if (error) {
+      const message = error?.message || String(error);
+      throw new ExceptionType(message);
+    }
   }
 
   constructor(
@@ -80,16 +83,19 @@ export class AuthService {
   async signIn(email: string, password: string): Promise<Tokens> {
     const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      const msg = (error.message || '').toLowerCase();
+      const msg = (error?.message || '').toLowerCase();
       if (msg.includes('email not confirmed')) {
         throw new UnauthorizedException('Email not confirmed');
       }
       this.handleError(error, UnauthorizedException);
     }
+    if (!data.session) {
+      throw new UnauthorizedException('No session created');
+    }
     await this.ensureUser(email);
     return {
-      access_token: data.session!.access_token,
-      refresh_token: data.session!.refresh_token!,
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
     };
   }
 
@@ -105,16 +111,56 @@ export class AuthService {
   async refresh(refresh_token: string): Promise<Tokens> {
     const { data, error } = await this.supabase.auth.refreshSession({ refresh_token });
     this.handleError(error, UnauthorizedException);
+    
+    if (!data.session) {
+      throw new UnauthorizedException('Failed to refresh session');
+    }
+
     return {
-      access_token: data.session!.access_token,
-      refresh_token: data.session!.refresh_token!,
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
     };
   }
 
   async resetPasswordWithAccessToken(accessToken: string, newPassword: string) {
-    const client = this.createSupabaseClientWithToken(accessToken);
-    const { error } = await client.auth.updateUser({ password: newPassword });
-    this.handleError(error);
+        
+    // Verificar el token y extraer el user_id
+    const secret = this.config.get<string>('SUPABASE_JWT_SECRET');
+    if (!secret) {
+      throw new BadRequestException('JWT secret not configured');
+    }
+
+    try {
+      const jwt = require('jsonwebtoken');
+      const payload = jwt.verify(accessToken, secret, { algorithms: ['HS256'] }) as any;
+      
+      // Token verificado, user_id:
+      
+      // Verificar que sea un token de tipo recovery
+      if (payload.aud !== 'authenticated') {
+        throw new BadRequestException('Invalid token type');
+      }
+
+      // Usar el Admin client para actualizar la contraseña
+      const { error } = await this.admin.auth.admin.updateUserById(
+        payload.sub,
+        { password: newPassword }
+      );
+
+      if (error) {
+        console.error('[Reset Password] Error en updateUserById:', error);
+        const errorMessage = error?.message || 'Failed to update password';
+        throw new BadRequestException(errorMessage);
+      }
+
+      // Contraseña actualizada exitosamente
+    } catch (err: any) {
+      if (err && typeof err === 'object' && 'name' in err && (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError')) {
+        throw new BadRequestException('Invalid or expired recovery token');
+      }
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      throw new Error(errorMessage);
+    }
   }
 
   async signOut(accessToken: string) {
