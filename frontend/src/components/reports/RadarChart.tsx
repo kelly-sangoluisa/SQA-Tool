@@ -42,9 +42,9 @@ export function RadarChart({ report }: Readonly<Props>) {
 
   // Calcular puntos del polígono para SVG
   const calculateRadarPoints = () => {
-    const centerX = 100;
-    const centerY = 100;
-    const radius = 70;
+    const centerX = 120;
+    const centerY = 120;
+    const radius = 80;
     const angleStep = (Math.PI * 2) / radarData.length;
     
     return radarData.map((item, index) => {
@@ -130,14 +130,14 @@ export function RadarChart({ report }: Readonly<Props>) {
 
       {/* SVG Radar Chart */}
       <div className="radar-content">
-        <svg viewBox="0 0 200 200" className="radar-svg">
+        <svg viewBox="0 0 240 240" className="radar-svg">
           {/* Grid circles */}
           {[20, 40, 60, 80, 100].map((percentage) => (
             <circle
               key={`grid-${percentage}`}
-              cx="100"
-              cy="100"
-              r={(70 * percentage) / 100}
+              cx="120"
+              cy="120"
+              r={(80 * percentage) / 100}
               fill="none"
               stroke="#e5e7eb"
               strokeWidth="1"
@@ -148,10 +148,10 @@ export function RadarChart({ report }: Readonly<Props>) {
           {radarPoints.map((point) => (
             <line
               key={`axis-${point.label}`}
-              x1="100"
-              y1="100"
-              x2={100 + 70 * Math.cos(point.angle)}
-              y2={100 + 70 * Math.sin(point.angle)}
+              x1="120"
+              y1="120"
+              x2={120 + 80 * Math.cos(point.angle)}
+              y2={120 + 80 * Math.sin(point.angle)}
               stroke="#d1d5db"
               strokeWidth="1"
             />
@@ -182,18 +182,35 @@ export function RadarChart({ report }: Readonly<Props>) {
           
           {/* Labels */}
           {radarPoints.map((point) => {
-            const labelRadius = 85;
-            const labelX = 100 + labelRadius * Math.cos(point.angle);
-            const labelY = 100 + labelRadius * Math.sin(point.angle);
+            const labelRadius = 95;
+            const labelX = 120 + labelRadius * Math.cos(point.angle);
+            const labelY = 120 + labelRadius * Math.sin(point.angle);
             
             let textAnchor: 'start' | 'middle' | 'end';
-            if (labelX > 100) {
+            if (labelX > 120) {
               textAnchor = 'start';
-            } else if (labelX < 100) {
+            } else if (labelX < 120) {
               textAnchor = 'end';
             } else {
               textAnchor = 'middle';
             }
+            
+            // Dividir texto largo en múltiples líneas si es necesario
+            const maxCharsPerLine = 20;
+            const words = point.label.split(' ');
+            const lines: string[] = [];
+            let currentLine = '';
+            
+            words.forEach(word => {
+              const testLine = currentLine ? `${currentLine} ${word}` : word;
+              if (testLine.length <= maxCharsPerLine) {
+                currentLine = testLine;
+              } else {
+                if (currentLine) lines.push(currentLine);
+                currentLine = word;
+              }
+            });
+            if (currentLine) lines.push(currentLine);
             
             return (
               <text
@@ -201,11 +218,20 @@ export function RadarChart({ report }: Readonly<Props>) {
                 x={labelX}
                 y={labelY}
                 textAnchor={textAnchor}
-                fontSize="7"
-                fill="#4b5563"
-                fontWeight="500"
+                fontSize="9"
+                fill="#374151"
+                fontWeight="600"
+                className="radar-label"
               >
-                {point.label.length > 18 ? point.label.substring(0, 15) + '...' : point.label}
+                {lines.map((line, i) => (
+                  <tspan
+                    key={i}
+                    x={labelX}
+                    dy={i === 0 ? 0 : 10}
+                  >
+                    {line}
+                  </tspan>
+                ))}
               </text>
             );
           })}
