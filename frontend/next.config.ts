@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}/:path*`,
+        destination: "https://sqa-tool-production.up.railway.app/api/:path*",
       },
     ];
   },
