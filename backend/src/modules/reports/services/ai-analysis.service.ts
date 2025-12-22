@@ -198,34 +198,47 @@ IMPORTANTE:
 
   private parseGeminiResponse(text: string): Partial<AIAnalysisResponse> {
     try {
-      // Intentar extraer JSON de la respuesta
-      // Gemini a veces envuelve el JSON en ```json ... ```
-      const codeBlockStart = text.indexOf('```json');
-      const codeBlockEnd = text.indexOf('```', codeBlockStart + 7);
+      this.logger.debug(`Parsing Gemini response (length: ${text.length})`);
       
-      let jsonText: string;
-      if (codeBlockStart !== -1 && codeBlockEnd !== -1) {
-        jsonText = text.substring(codeBlockStart + 7, codeBlockEnd).trim();
-      } else {
-        const firstBrace = text.indexOf('{');
-        const lastBrace = text.lastIndexOf('}');
-        if (firstBrace === -1 || lastBrace === -1) {
-          throw new Error('No JSON found in Gemini response');
-        }
-        jsonText = text.substring(firstBrace, lastBrace + 1);
+      // Limpiar el texto: remover todos los bloques de código markdown
+      let cleanText = text;
+      
+      // Remover bloques ```json ... ```
+      cleanText = cleanText.replace(/```json\s*/g, '');
+      cleanText = cleanText.replace(/```\s*/g, '');
+      
+      // Buscar el JSON válido completo
+      const firstBrace = cleanText.indexOf('{');
+      const lastBrace = cleanText.lastIndexOf('}');
+      
+      if (firstBrace === -1 || lastBrace === -1) {
+        throw new Error('No JSON object found in Gemini response');
       }
-
+      
+      const jsonText = cleanText.substring(firstBrace, lastBrace + 1).trim();
+      this.logger.debug(`Extracted JSON text (length: ${jsonText.length})`);
+      
+      // Parsear JSON
       const parsed = JSON.parse(jsonText);
 
       // Validar estructura básica
-      if (!parsed.analisis_general || !parsed.fortalezas || !parsed.recomendaciones) {
-        throw new Error('Invalid JSON structure from Gemini');
+      if (!parsed.analisis_general) {
+        throw new Error('Missing analisis_general in response');
       }
+      
+      // Asegurar que todos los arrays existan
+      parsed.fortalezas = parsed.fortalezas || [];
+      parsed.debilidades = parsed.debilidades || [];
+      parsed.recomendaciones = parsed.recomendaciones || [];
+      parsed.riesgos = parsed.riesgos || [];
+      parsed.proximos_pasos = parsed.proximos_pasos || [];
 
+      this.logger.debug(`Successfully parsed response with ${parsed.recomendaciones.length} recommendations`);
       return parsed;
+      
     } catch (error) {
       this.logger.error('Error parsing Gemini response:', error);
-      this.logger.debug('Raw response:', text);
+      this.logger.debug('Raw response:', text.substring(0, 500));
       
       // Retornar análisis de fallback
       return {
@@ -237,6 +250,7 @@ IMPORTANTE:
           titulo: 'Error al generar análisis',
           descripcion: 'Hubo un problema al procesar la respuesta de IA.',
           impacto: 'N/A',
+          categoria: 'Error',
         }],
         riesgos: ['Análisis no disponible'],
         proximos_pasos: ['Reintentar análisis'],
