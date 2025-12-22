@@ -4,9 +4,17 @@ const nextConfig: NextConfig = {
   // ⚡ Habilitar standalone para Docker optimizado
   output: 'standalone',
   
-  // ❌ REWRITES ELIMINADOS: En producción cross-domain (Vercel -> Railway),
-  // los rewrites causan problemas con las cookies porque el navegador no sabe
-  // el origen real. Mejor hacer peticiones directas a Railway.
+  // ✅ REWRITES para evitar cookies de terceros
+  // En producción, el frontend en Vercel hace proxy al backend de Railway
+  // De esta forma, las cookies se guardan bajo el dominio de Vercel
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}/:path*`,
+      },
+    ];
+  },
   
   reactStrictMode: true,
 

@@ -1,4 +1,8 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+// En producción usa rutas relativas (/api) para aprovechar rewrites de Next.js
+// En desarrollo usa la URL completa para conectar al backend local
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? '/api' 
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api');
 
 // Evento global para notificar cuando la sesión expira
 export const AUTH_EXPIRED_EVENT = 'auth:expired';
