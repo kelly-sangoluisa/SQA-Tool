@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Obtener el token de autenticación de las cookies
-  const token = request.cookies.get('auth_token')?.value;
+  const token = request.cookies.get('sb-access-token')?.value;
   
   // Rutas protegidas que requieren autenticación
   const protectedRoutes = ['/dashboard', '/configuration-evaluation', '/data-entry', '/parameterization', '/results'];
