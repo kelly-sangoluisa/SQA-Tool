@@ -42,9 +42,9 @@ export function RadarChart({ report }: Readonly<Props>) {
 
   // Calcular puntos del polígono para SVG
   const calculateRadarPoints = () => {
-    const centerX = 140;
-    const centerY = 140;
-    const radius = 90;
+    const centerX = 120;
+    const centerY = 120;
+    const radius = 80;
     const angleStep = (Math.PI * 2) / radarData.length;
     
     return radarData.map((item, index) => {
@@ -130,14 +130,14 @@ export function RadarChart({ report }: Readonly<Props>) {
 
       {/* SVG Radar Chart */}
       <div className="radar-content">
-        <svg viewBox="0 0 280 280" className="radar-svg">
+        <svg viewBox="0 0 240 240" className="radar-svg">
           {/* Grid circles */}
           {[20, 40, 60, 80, 100].map((percentage) => (
             <circle
               key={`grid-${percentage}`}
-              cx="140"
-              cy="140"
-              r={(90 * percentage) / 100}
+              cx="120"
+              cy="120"
+              r={(80 * percentage) / 100}
               fill="none"
               stroke="#e5e7eb"
               strokeWidth="1"
@@ -148,10 +148,10 @@ export function RadarChart({ report }: Readonly<Props>) {
           {radarPoints.map((point) => (
             <line
               key={`axis-${point.label}`}
-              x1="140"
-              y1="140"
-              x2={140 + 90 * Math.cos(point.angle)}
-              y2={140 + 90 * Math.sin(point.angle)}
+              x1="120"
+              y1="120"
+              x2={120 + 80 * Math.cos(point.angle)}
+              y2={120 + 80 * Math.sin(point.angle)}
               stroke="#d1d5db"
               strokeWidth="1"
             />
@@ -171,7 +171,7 @@ export function RadarChart({ report }: Readonly<Props>) {
               <circle
                 cx={point.x}
                 cy={point.y}
-                r="4"
+                r="3"
                 fill="#4E5EA3"
                 stroke="white"
                 strokeWidth="2"
@@ -182,51 +182,44 @@ export function RadarChart({ report }: Readonly<Props>) {
           
           {/* Labels */}
           {radarPoints.map((point) => {
-            const labelRadius = 115;
-            const labelX = 140 + labelRadius * Math.cos(point.angle);
-            const labelY = 140 + labelRadius * Math.sin(point.angle);
+            const labelRadius = 95;
+            const labelX = 120 + labelRadius * Math.cos(point.angle);
+            const labelY = 120 + labelRadius * Math.sin(point.angle);
             
             let textAnchor: 'start' | 'middle' | 'end';
-            if (Math.abs(labelX - 140) < 5) {
-              textAnchor = 'middle';
-            } else if (labelX > 140) {
+            if (labelX > 120) {
               textAnchor = 'start';
-            } else {
+            } else if (labelX < 120) {
               textAnchor = 'end';
+            } else {
+              textAnchor = 'middle';
             }
             
-            // Dividir en palabras para multi-línea
+            // Dividir texto largo en múltiples líneas si es necesario
+            const maxCharsPerLine = 20;
             const words = point.label.split(' ');
             const lines: string[] = [];
             let currentLine = '';
             
-            words.forEach((word, idx) => {
-              if (idx === 0) {
-                currentLine = word;
+            words.forEach(word => {
+              const testLine = currentLine ? `${currentLine} ${word}` : word;
+              if (testLine.length <= maxCharsPerLine) {
+                currentLine = testLine;
               } else {
-                const testLine = `${currentLine} ${word}`;
-                // Máximo 15 caracteres por línea
-                if (testLine.length <= 15) {
-                  currentLine = testLine;
-                } else {
-                  lines.push(currentLine);
-                  currentLine = word;
-                }
+                if (currentLine) lines.push(currentLine);
+                currentLine = word;
               }
             });
             if (currentLine) lines.push(currentLine);
             
-            // Ajustar posición Y para centrar texto multi-línea
-            const lineHeight = 11;
-            const totalHeight = lines.length * lineHeight;
-            const startY = labelY - (totalHeight / 2) + (lineHeight / 2);
-            
             return (
               <text
                 key={`label-${point.label}`}
+                x={labelX}
+                y={labelY}
                 textAnchor={textAnchor}
-                fontSize="10"
-                fill="#1f2937"
+                fontSize="9"
+                fill="#374151"
                 fontWeight="600"
                 className="radar-label"
               >
@@ -234,7 +227,7 @@ export function RadarChart({ report }: Readonly<Props>) {
                   <tspan
                     key={i}
                     x={labelX}
-                    y={startY + (i * lineHeight)}
+                    dy={i === 0 ? 0 : 10}
                   >
                     {line}
                   </tspan>
