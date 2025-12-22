@@ -205,19 +205,21 @@ export function RadarChart({ report }: Readonly<Props>) {
                 currentLine = word;
               } else {
                 const testLine = `${currentLine} ${word}`;
-                // Máximo 15 caracteres por línea
-                if (testLine.length <= 15) {
+                // Solo dividir si hay más de una palabra y supera 18 caracteres
+                if (testLine.length <= 18) {
                   currentLine = testLine;
                 } else {
+                  // Guardar línea actual y empezar nueva
                   lines.push(currentLine);
                   currentLine = word;
                 }
               }
             });
+            // Siempre agregar la última línea
             if (currentLine) lines.push(currentLine);
             
             // Ajustar posición Y para centrar texto multi-línea
-            const lineHeight = 11;
+            const lineHeight = 12;
             const totalHeight = lines.length * lineHeight;
             const startY = labelY - (totalHeight / 2) + (lineHeight / 2);
             
