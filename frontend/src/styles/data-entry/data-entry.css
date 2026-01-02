@@ -11,6 +11,13 @@
   background: linear-gradient(135deg, #F1F1F1 0%, #e8e9f3 50%, #d8dae8 100%);
 }
 
+/* Breadcrumb sin contenedor blanco */
+.breadcrumb-container {
+  padding: 1.5rem 0rem 0rem 0rem;
+  margin: 0;
+  flex-shrink: 0;
+}
+
 /* Stepper de evaluaciones en la parte superior */
 .evaluationStepper {
   background: white;

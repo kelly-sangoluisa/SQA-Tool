@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import '@/styles/data-entry/data-entry.css';
 import { DataEntryHierarchy } from '@/components/data-entry/DataEntryHierarchy';
 import { MetricCard, type PrimaryButtonAction } from '@/components/data-entry/MetricCard';
@@ -932,6 +933,14 @@ function DataEntryContent() {
       <div className="mainContent">
         {/* Sidebar izquierdo con wrapper */}
         <div className="sidebarWrapper">
+          {/* Breadcrumb directo sin contenedor */}
+            <div className="breadcrumb-container">
+              <Breadcrumbs
+                items={[
+                  { label: '◁ Dashboard', onClick: () => router.push('/dashboard') }
+                ]}
+              />
+            </div>
           <DataEntryHierarchy
             evaluations={evaluations}
             currentMetricIndex={currentMetricIndex}
@@ -939,6 +948,7 @@ function DataEntryContent() {
             variableValues={variableValues}
             onMetricSelect={handleMetricSelect}
             finalizedEvaluations={finalizedEvaluations}
+            projectName={project.name}
           />
         </div>
 

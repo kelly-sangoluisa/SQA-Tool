@@ -16,6 +16,7 @@ interface DataEntryHierarchyProps {
   variableValues: Record<string, string>;
   onMetricSelect: (evaluationIndex: number, metricGlobalIndex: number) => void;
   finalizedEvaluations?: Set<number>;
+  projectName?: string;
 }
 
 /**
@@ -27,7 +28,8 @@ export function DataEntryHierarchy({
   allMetrics,
   variableValues,
   onMetricSelect,
-  finalizedEvaluations = new Set()
+  finalizedEvaluations = new Set(),
+  projectName
 }: Readonly<DataEntryHierarchyProps>) {
   
   // Convertir evaluations a grupos
@@ -189,7 +191,7 @@ export function DataEntryHierarchy({
       getGroupProgress={getGroupProgress}
       isGroupCompleted={isGroupCompleted}
       labels={{
-        header: 'Evaluaciones',
+        header: projectName ? `Evaluaciones de ${projectName}` : 'Evaluaciones',
         level1: 'Evaluación',
         level2: 'Criterio',
         level3: 'Subcriterio',
