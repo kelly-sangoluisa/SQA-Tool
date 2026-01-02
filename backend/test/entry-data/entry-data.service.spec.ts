@@ -14,7 +14,6 @@ import { EvaluationResult } from '../../src/modules/entry-data/entities/evaluati
 import { ProjectResult } from '../../src/modules/entry-data/entities/project_result.entity';
 
 import { 
-  mockEvaluationVariable,
   mockMetricResult,
   mockCriteriaResult,
   mockEvaluationResult,
