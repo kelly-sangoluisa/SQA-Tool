@@ -84,9 +84,47 @@ export class AIAnalysisService {
       this.logger.log(`AI analysis completed successfully for project ${projectId}`);
       return enrichedAnalysis;
 
-    } catch (error) {
+    } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error(`Error generating AI analysis for project ${projectId}:`, error);
+      
+      // Si el servicio de IA está sobrecargado, devolver un mensaje amigable
+      const isOverloaded = error?.status === 503 || errorMessage.includes('overloaded');
+      const isRateLimited = error?.status === 429 || errorMessage.includes('rate limit');
+      
+      if (isOverloaded || isRateLimited) {
+        const report = await this.reportsService.getProjectReport(projectId);
+        const stats = await this.reportsService.getProjectStats(projectId);
+        
+        return {
+          projectId,
+          projectName: report.project_name,
+          analisis_general: '⚠️ El servicio de análisis con IA de Google Gemini no está disponible en este momento debido a alta demanda. Por favor, intente nuevamente en unos minutos. Los resultados de su evaluación están disponibles en las secciones anteriores.',
+          fortalezas: ['Análisis con IA temporalmente no disponible'],
+          debilidades: ['Análisis con IA temporalmente no disponible'],
+          recomendaciones: [{
+            prioridad: 'Media',
+            titulo: 'Servicio de IA temporalmente no disponible',
+            descripcion: 'El análisis automatizado con inteligencia artificial no pudo completarse debido a que el servicio de Google Gemini está experimentando alta demanda. Sus datos de evaluación han sido guardados correctamente y puede intentar generar el análisis nuevamente en unos minutos.',
+            impacto: 'Sin impacto en sus evaluaciones - solo el análisis automático está temporalmente no disponible',
+            categoria: 'Sistema',
+          }],
+          riesgos: ['Análisis con IA temporalmente no disponible'],
+          proximos_pasos: [
+            'Espere unos minutos y haga clic nuevamente en "Analizar con IA"',
+            'Revise los resultados numéricos de su evaluación en las secciones anteriores',
+            'Contacte al administrador si el problema persiste por más de 15 minutos'
+          ],
+          generatedAt: new Date(),
+          metadata: {
+            score: report.final_project_score,
+            threshold: report.minimum_threshold,
+            meetsThreshold: report.meets_threshold,
+            totalEvaluations: stats.total_evaluations,
+          },
+        };
+      }
+      
       throw new Error(`Failed to generate AI analysis: ${errorMessage}`);
     }
   }
@@ -198,34 +236,47 @@ IMPORTANTE:
 
   private parseGeminiResponse(text: string): Partial<AIAnalysisResponse> {
     try {
-      // Intentar extraer JSON de la respuesta
-      // Gemini a veces envuelve el JSON en ```json ... ```
-      const codeBlockStart = text.indexOf('```json');
-      const codeBlockEnd = text.indexOf('```', codeBlockStart + 7);
+      this.logger.debug(`Parsing Gemini response (length: ${text.length})`);
       
-      let jsonText: string;
-      if (codeBlockStart !== -1 && codeBlockEnd !== -1) {
-        jsonText = text.substring(codeBlockStart + 7, codeBlockEnd).trim();
-      } else {
-        const firstBrace = text.indexOf('{');
-        const lastBrace = text.lastIndexOf('}');
-        if (firstBrace === -1 || lastBrace === -1) {
-          throw new Error('No JSON found in Gemini response');
-        }
-        jsonText = text.substring(firstBrace, lastBrace + 1);
+      // Limpiar el texto: remover todos los bloques de código markdown
+      let cleanText = text;
+      
+      // Remover bloques ```json ... ```
+      cleanText = cleanText.replace(/```json\s*/g, '');
+      cleanText = cleanText.replace(/```\s*/g, '');
+      
+      // Buscar el JSON válido completo
+      const firstBrace = cleanText.indexOf('{');
+      const lastBrace = cleanText.lastIndexOf('}');
+      
+      if (firstBrace === -1 || lastBrace === -1) {
+        throw new Error('No JSON object found in Gemini response');
       }
-
+      
+      const jsonText = cleanText.substring(firstBrace, lastBrace + 1).trim();
+      this.logger.debug(`Extracted JSON text (length: ${jsonText.length})`);
+      
+      // Parsear JSON
       const parsed = JSON.parse(jsonText);
 
       // Validar estructura básica
-      if (!parsed.analisis_general || !parsed.fortalezas || !parsed.recomendaciones) {
-        throw new Error('Invalid JSON structure from Gemini');
+      if (!parsed.analisis_general) {
+        throw new Error('Missing analisis_general in response');
       }
+      
+      // Asegurar que todos los arrays existan
+      parsed.fortalezas = parsed.fortalezas || [];
+      parsed.debilidades = parsed.debilidades || [];
+      parsed.recomendaciones = parsed.recomendaciones || [];
+      parsed.riesgos = parsed.riesgos || [];
+      parsed.proximos_pasos = parsed.proximos_pasos || [];
 
+      this.logger.debug(`Successfully parsed response with ${parsed.recomendaciones.length} recommendations`);
       return parsed;
+      
     } catch (error) {
       this.logger.error('Error parsing Gemini response:', error);
-      this.logger.debug('Raw response:', text);
+      this.logger.debug('Raw response:', text.substring(0, 500));
       
       // Retornar análisis de fallback
       return {
@@ -237,6 +288,7 @@ IMPORTANTE:
           titulo: 'Error al generar análisis',
           descripcion: 'Hubo un problema al procesar la respuesta de IA.',
           impacto: 'N/A',
+          categoria: 'Error',
         }],
         riesgos: ['Análisis no disponible'],
         proximos_pasos: ['Reintentar análisis'],
