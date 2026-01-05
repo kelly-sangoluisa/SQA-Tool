@@ -935,7 +935,10 @@ function DataEntryContent() {
     <div className="enterDataLayout">
       {/* Contenido principal en grid */}
       <div className="mainContent">
-        {/* Breadcrumb directo sin contenedor */}
+        
+        {/* Sidebar izquierdo con wrapper */}
+        <div className="sidebarWrapper">
+          {/* Breadcrumb directo sin contenedor */}
         <div className="breadcrumb-container">
           <Breadcrumbs
              items={[
@@ -943,8 +946,6 @@ function DataEntryContent() {
              ]}
            />
         </div>
-        {/* Sidebar izquierdo con wrapper */}
-        <div className="sidebarWrapper">
           <DataEntryHierarchy
             evaluations={evaluations}
             currentMetricIndex={currentMetricIndex}
