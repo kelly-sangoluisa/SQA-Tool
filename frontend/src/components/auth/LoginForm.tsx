@@ -49,6 +49,7 @@ export function LoginForm() {
     <div className={styles.root}>
       <div className={styles.card}>
         <div className={styles.header}>
+          <h2>SQA-Tool</h2>
           <Image src="/logo-SQATool.png" alt="SQA Tool" width={75} height={75} />
           <h2>Inicia sesión en tu cuenta</h2>
           <p className={styles.subtitle}>
