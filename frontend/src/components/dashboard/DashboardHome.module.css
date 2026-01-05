@@ -52,7 +52,7 @@
   font-size: 1rem;
   font-weight: 600;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(78, 94, 163, 0.2);
+  box-shadow: 0 2px 8px rgb(78, 94, 163, 0.2);
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -63,7 +63,7 @@
 
 .newEvaluationBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(78, 94, 163, 0.3);
+  box-shadow: 0 4px 12px rgb(78, 94, 163, 0.3);
   background: #59469A;
 }
 
@@ -73,12 +73,12 @@
 
 /* contenedor con borde moderno */
 .dashedContainer {
-  border: 2px solid rgba(78, 94, 163, 0.1);
+  border: 2px solid rgb(78, 94, 163, 0.1);
   border-radius: 16px;
   padding: 2rem;
   background: white;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(78, 94, 163, 0.06);
+  box-shadow: 0 2px 8px rgb(78, 94, 163, 0.06);
   /* Altura mínima para prevenir Layout Shift */
   min-height: 300px;
 }
@@ -197,12 +197,12 @@
 
 .recentCardLarge {
   background: #fff;
-  border: 1px solid rgba(78, 94, 163, 0.1);
+  border: 1px solid rgb(78, 94, 163, 0.1);
   border-radius: 16px;
   padding: 0;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 8px rgba(78, 94, 163, 0.06);
+  box-shadow: 0 2px 8px rgb(78, 94, 163, 0.06);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
   overflow: hidden;
   /* Altura fija para prevenir layout shift */
@@ -210,7 +210,7 @@
 }
 
 .recentCardLarge:hover {
-  box-shadow: 0 4px 12px rgba(78, 94, 163, 0.12);
+  box-shadow: 0 4px 12px rgb(78, 94, 163, 0.12);
   transform: translateY(-2px);
 }
 
@@ -220,8 +220,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid rgba(78, 94, 163, 0.1);
-  background: rgba(78, 94, 163, 0.03);
+  border-bottom: 1px solid rgb(78, 94, 163, 0.1);
+  background: rgb(78, 94, 163, 0.03);
 }
 
 .cardIconEmoji { 
@@ -268,13 +268,13 @@
   font-size: 1rem;
   font-weight: 600;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  box-shadow: 0 2px 6px rgba(78, 94, 163, 0.2);
+  box-shadow: 0 2px 6px rgb(78, 94, 163, 0.2);
   will-change: transform;
 }
 
 .viewBtn:hover { 
   transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(78, 94, 163, 0.3);
+  box-shadow: 0 3px 10px rgb(78, 94, 163, 0.3);
   background: #59469A;
 }
 
@@ -296,19 +296,19 @@
 
 .allCardSmall {
   background: #fff;
-  border: 1px solid rgba(78, 94, 163, 0.1);
+  border: 1px solid rgb(78, 94, 163, 0.1);
   border-radius: 12px;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  box-shadow: 0 2px 8px rgba(78, 94, 163, 0.06);
+  box-shadow: 0 2px 8px rgb(78, 94, 163, 0.06);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
   min-height: 140px;
 }
 
 .allCardSmall:hover {
-  box-shadow: 0 4px 12px rgba(78, 94, 163, 0.12);
+  box-shadow: 0 4px 12px rgb(78, 94, 163, 0.12);
   transform: translateY(-2px);
 }
 
@@ -367,5 +367,5 @@
   background: #4E5EA3;
   color: #fff;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(78, 94, 163, 0.2);
+  box-shadow: 0 2px 8px rgb(78, 94, 163, 0.2);
 }

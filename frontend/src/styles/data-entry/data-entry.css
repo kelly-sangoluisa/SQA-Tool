@@ -15,7 +15,7 @@
 
 /* Breadcrumb sin contenedor blanco */
 .breadcrumb-container {
-  padding: 1.5rem 0rem 0rem 0rem;
+  padding: 1.5rem 0 0 0;
   margin: 0;
   flex-shrink: 0;
 }

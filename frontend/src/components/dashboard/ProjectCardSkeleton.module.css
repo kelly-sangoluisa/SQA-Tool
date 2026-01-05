@@ -12,7 +12,7 @@
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border-width: 0;
 }
@@ -20,7 +20,7 @@
 .skeletonBase {
   background: linear-gradient(
     90deg,
-    #f0f0f0 0px,
+    #f0f0f0 0,
     #f8f8f8 40px,
     #f0f0f0 80px
   );
@@ -42,7 +42,7 @@
 }
 
 .skeletonIcon {
-  composes: skeletonBase;
+  composes: skeletonbase;
   width: 80px;
   height: 80px;
   border-radius: 12px;
@@ -57,13 +57,13 @@
 }
 
 .skeletonTitle {
-  composes: skeletonBase;
+  composes: skeletonbase;
   height: 24px;
   width: 60%;
 }
 
 .skeletonDesc {
-  composes: skeletonBase;
+  composes: skeletonbase;
   height: 18px;
   width: 85%;
 }
@@ -76,13 +76,13 @@
 }
 
 .skeletonDate {
-  composes: skeletonBase;
+  composes: skeletonbase;
   height: 16px;
   width: 150px;
 }
 
 .skeletonButton {
-  composes: skeletonBase;
+  composes: skeletonbase;
   height: 36px;
   width: 80px;
 }
@@ -100,7 +100,7 @@
 }
 
 .skeletonIconSmall {
-  composes: skeletonBase;
+  composes: skeletonbase;
   width: 48px;
   height: 48px;
   border-radius: 8px;
@@ -115,19 +115,19 @@
 }
 
 .skeletonTitleSmall {
-  composes: skeletonBase;
+  composes: skeletonbase;
   height: 18px;
   width: 50%;
 }
 
 .skeletonDescSmall {
-  composes: skeletonBase;
+  composes: skeletonbase;
   height: 14px;
   width: 70%;
 }
 
 .skeletonButtonSmall {
-  composes: skeletonBase;
+  composes: skeletonbase;
   height: 32px;
   width: 60px;
   flex-shrink: 0;

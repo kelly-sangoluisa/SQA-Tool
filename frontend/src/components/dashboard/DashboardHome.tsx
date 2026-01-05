@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../hooks/auth/useAuth';
 import { ProjectCardSkeleton, ProjectCardSkeletonSmall } from './ProjectCardSkeleton';
