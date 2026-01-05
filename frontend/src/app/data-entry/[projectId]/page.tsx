@@ -9,6 +9,7 @@ import '@/styles/data-entry/data-entry.css';
 import { DataEntryHierarchy } from '@/components/data-entry/DataEntryHierarchy';
 import { MetricCard, type PrimaryButtonAction } from '@/components/data-entry/MetricCard';
 import type { ToastType } from '@/components/shared/Toast';
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { submitEvaluationData, finalizeEvaluation, finalizeProject } from '@/api/entry-data/entry-data-api';
 import type {Metric,SubcriterionInput,EvaluationCriterionAPI,EvaluationDataAPI,  Evaluation,Project} from '@/types/data-entry/data-entry.types';
 
@@ -934,6 +935,14 @@ function DataEntryContent() {
     <div className="enterDataLayout">
       {/* Contenido principal en grid */}
       <div className="mainContent">
+        {/* Breadcrumb directo sin contenedor */}
+        <div className="breadcrumb-container">
+          <Breadcrumbs
+             items={[
+               { label: '◁ Dashboard', onClick: () => router.push('/dashboard') }
+             ]}
+           />
+        </div>
         {/* Sidebar izquierdo con wrapper */}
         <div className="sidebarWrapper">
           <DataEntryHierarchy
