@@ -295,11 +295,6 @@ export class EvaluationCalculationService {
   // MÉTODOS PRIVADOS DE CÁLCULO
   // =========================================================================
 
-  //private calculateWeightedValue(value: number, evaluationMetric: EvaluationMetric): number {
-    // Por ahora retornamos el valor calculado directamente
-   // return Math.max(0, value);
-  //}
-
   private calculateSimpleAverage(scores: number[]): number {
     return scores.length > 0 ? scores.reduce((sum, score) => sum + score, 0) / scores.length : 0;
   }

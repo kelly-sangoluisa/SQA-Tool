@@ -371,16 +371,6 @@ export class EntryDataService {
     return result;
   }
 
-  private async getEvaluationMetrics(evaluationId: number) {
-    return await this.evaluationMetricResultRepo
-      .createQueryBuilder('emr')
-      .innerJoin('emr.evaluation_metric', 'em')
-      .innerJoin('em.evaluation_criterion', 'ec')
-      .where('ec.evaluation_id = :evaluationId', { evaluationId })
-      .select('emr.eval_metric_id', 'id')
-      .getRawMany();
-  }
-
   /**
    * Obtiene total de variables esperadas para una evaluación
    */
