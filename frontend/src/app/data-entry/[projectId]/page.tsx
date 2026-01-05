@@ -1,21 +1,25 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { ProtectedRoute } from '@/components/shared/ProtectedRoute';
 import '@/styles/data-entry/data-entry.css';
 import { DataEntryHierarchy } from '@/components/data-entry/DataEntryHierarchy';
 import { MetricCard, type PrimaryButtonAction } from '@/components/data-entry/MetricCard';
-import { EvaluationCompleteModal } from '@/components/data-entry/EvaluationCompleteModal';
-import { FinalizedEvaluationModal } from '@/components/data-entry/FinalizedEvaluationModal';
-import { NextEvaluationModal } from '@/components/data-entry/NextEvaluationModal';
-import AlertBanner from '@/components/shared/AlertBanner';
-import { Toast, type ToastType } from '@/components/shared/Toast';
-import { SaveIndicator } from '@/components/shared/SaveIndicator';
-import { ErrorModal } from '@/components/shared/ErrorModal';
+import type { ToastType } from '@/components/shared/Toast';
 import { submitEvaluationData, finalizeEvaluation, finalizeProject } from '@/api/entry-data/entry-data-api';
 import type {Metric,SubcriterionInput,EvaluationCriterionAPI,EvaluationDataAPI,  Evaluation,Project} from '@/types/data-entry/data-entry.types';
+
+// Lazy load de componentes no críticos (modales, indicadores)
+const EvaluationCompleteModal = dynamic(() => import('@/components/data-entry/EvaluationCompleteModal').then(mod => ({ default: mod.EvaluationCompleteModal })), { ssr: false });
+const FinalizedEvaluationModal = dynamic(() => import('@/components/data-entry/FinalizedEvaluationModal').then(mod => ({ default: mod.FinalizedEvaluationModal })), { ssr: false });
+const NextEvaluationModal = dynamic(() => import('@/components/data-entry/NextEvaluationModal').then(mod => ({ default: mod.NextEvaluationModal })), { ssr: false });
+const AlertBanner = dynamic(() => import('@/components/shared/AlertBanner'), { ssr: false });
+const Toast = dynamic(() => import('@/components/shared/Toast').then(mod => ({ default: mod.Toast })), { ssr: false });
+const SaveIndicator = dynamic(() => import('@/components/shared/SaveIndicator').then(mod => ({ default: mod.SaveIndicator })), { ssr: false });
+const ErrorModal = dynamic(() => import('@/components/shared/ErrorModal').then(mod => ({ default: mod.ErrorModal })), { ssr: false });
 
 // ===== HELPER FUNCTIONS =====
 
@@ -939,6 +943,7 @@ function DataEntryContent() {
             variableValues={variableValues}
             onMetricSelect={handleMetricSelect}
             finalizedEvaluations={finalizedEvaluations}
+            projectName={project.name}
           />
         </div>
 

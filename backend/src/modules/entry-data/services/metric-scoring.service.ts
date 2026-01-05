@@ -1,9 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { 
-  ThresholdParserService, 
-  ThresholdCaseType, 
-  ThresholdCase 
-} from './threshold-parser.service';
+
+// Services
+import { ThresholdParserService, ThresholdCaseType, ThresholdCase } from './threshold-parser.service';
 import { FormulaEvaluationService } from './formula-evaluation.service';
 
 /**

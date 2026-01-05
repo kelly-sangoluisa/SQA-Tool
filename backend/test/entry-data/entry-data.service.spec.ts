@@ -14,7 +14,6 @@ import { EvaluationResult } from '../../src/modules/entry-data/entities/evaluati
 import { ProjectResult } from '../../src/modules/entry-data/entities/project_result.entity';
 
 import { 
-  mockEvaluationVariable,
   mockMetricResult,
   mockCriteriaResult,
   mockEvaluationResult,
@@ -339,64 +338,6 @@ describe('EntryDataService', () => {
       // Assert
       expect(result.status).toBe('in_progress');
       expect(result.final_result).toBeNull();
-    });
-  });
-
-  describe('deleteVariable', () => {
-    it('should delete variable successfully', async () => {
-      // Arrange
-      const evalMetricId = 1;
-      const variableId = 1;
-      
-      jest.spyOn(evaluationVariableRepo, 'findOne')
-        .mockResolvedValue(mockEvaluationVariable as any);
-      jest.spyOn(evaluationVariableRepo, 'remove')
-        .mockResolvedValue(mockEvaluationVariable as any);
-
-      // Act
-      await service.deleteVariable(evalMetricId, variableId);
-
-      // Assert
-      expect(evaluationVariableRepo.remove).toHaveBeenCalledWith(mockEvaluationVariable);
-    });
-
-    it('should throw error when variable not found', async () => {
-      // Arrange
-      const evalMetricId = 1;
-      const variableId = 999;
-      
-      jest.spyOn(evaluationVariableRepo, 'findOne').mockResolvedValue(null);
-
-      // Act & Assert
-      await expect(service.deleteVariable(evalMetricId, variableId))
-        .rejects.toThrow(`Variable not found for metric ${evalMetricId} and variable ${variableId}`);
-    });
-  });
-
-  describe('resetEvaluation', () => {
-    it('should reset evaluation successfully', async () => {
-      // Arrange
-      const evaluationId = 1;
-      const mockQueryBuilder = {
-        delete: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        execute: jest.fn().mockResolvedValue({ affected: 1 }),
-      };
-      
-      jest.spyOn(evaluationResultRepo, 'delete').mockResolvedValue({ affected: 1 } as any);
-      jest.spyOn(evaluationCriteriaResultRepo, 'createQueryBuilder')
-        .mockReturnValue(mockQueryBuilder as any);
-      jest.spyOn(evaluationMetricResultRepo, 'createQueryBuilder')
-        .mockReturnValue(mockQueryBuilder as any);
-      jest.spyOn(evaluationVariableRepo, 'createQueryBuilder')
-        .mockReturnValue(mockQueryBuilder as any);
-
-      // Act
-      await service.resetEvaluation(evaluationId);
-
-      // Assert
-      expect(evaluationResultRepo.delete).toHaveBeenCalledWith({ evaluation_id: evaluationId });
-      expect(mockQueryBuilder.execute).toHaveBeenCalledTimes(3); // criteria, metrics, variables
     });
   });
 

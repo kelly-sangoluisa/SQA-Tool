@@ -1,6 +1,8 @@
 .root { 
   min-height: 100vh; 
-  background: linear-gradient(135deg, #F1F1F1 0%, rgb(232 233 243 / 1) 50%, rgb(216 218 232 / 1) 100%);
+  /* Simplificar gradient para mejor performance */
+  background: #E8E9F3;
+  will-change: auto;
 }
 
 .header {
@@ -37,12 +39,12 @@
   color: #374151;
   cursor: pointer;
   border-radius: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.2s ease, color 0.2s ease;
   flex-shrink: 0;
 }
 
 .menuButton:hover {
-  background: linear-gradient(135deg, rgb(78, 94, 163, 0.08) 0%, rgb(116, 98, 170, 0.08) 100%);
+  background: rgb(78, 94, 163, 0.08);
   color: #4E5EA3;
 }
 
@@ -65,7 +67,7 @@
 }
 
 .subtitle {
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: #6b7280;
   margin: 0;
   margin-top: 0.25rem;
@@ -89,11 +91,11 @@
   text-decoration: none;
   font-weight: 500;
   border-radius: 8px;
-  transition: all 0.3s ease;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .navLink:hover {
-  background: linear-gradient(135deg, rgb(78, 94, 163, 0.08) 0%, rgb(116, 98, 170, 0.08) 100%);
+  background: rgb(78, 94, 163, 0.08);
   color: #4E5EA3;
 }
 
@@ -130,12 +132,12 @@
 .mobileNavLabel {
   font-weight: 500;
   color: #1f2937;
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .mobileNavDesc {
   color: #6b7280;
-  font-size: 0.75rem;
+  font-size: 1rem;
   margin-top: 0.25rem;
 }
 
@@ -155,14 +157,17 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  /* Color más oscuro para mejor contraste (7:1 ratio para AAA) */
+  background: #3d4a7c;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.875rem;
-  box-shadow: 0 2px 8px rgb(78, 94, 163, 0.25);
+  font-size: 1rem;
+  box-shadow: 0 2px 6px rgb(61, 74, 124, 0.2);
+  /* Optimización */
+  will-change: auto;
 }
 
 .userDetails {
@@ -179,12 +184,12 @@
 
 .userName {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #0f172a;
 }
 
 .userRole {
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: #6b7280;
   font-weight: 500;
   padding: 0.125rem 0.5rem;
@@ -202,22 +207,24 @@
 }
 
 .logoutBtn {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  /* Rojo más oscuro para WCAG AA (4.5:1 contrast ratio) */
+  background: #b91c1c;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   border: none;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgb(220, 38, 38, 0.25);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 6px rgb(185, 28, 28, 0.2);
+  will-change: transform;
 }
 
 .logoutBtn:hover { 
-  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgb(220, 38, 38, 0.35);
+  background: #991b1b;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgb(185, 28, 28, 0.3);
 }
 
 .logoutBtn:disabled { 
@@ -231,4 +238,7 @@
   max-width: 1120px;
   margin: 0 auto;
   padding: 2rem 1rem;
+  /* Prevenir Layout Shift - reservar espacio mínimo */
+  min-height: 600px;
+  contain: layout;
 }

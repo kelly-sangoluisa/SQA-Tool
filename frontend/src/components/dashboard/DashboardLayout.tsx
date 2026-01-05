@@ -1,9 +1,18 @@
 "use client";
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { useAuth } from '../../hooks/auth/useAuth';
-import { DashboardSidebar } from './sidebar/DashboardSidebar';
 import { useSidebar } from './sidebar/context/SidebarContext';
 import styles from './DashboardLayout.module.css';
+
+// Lazy load sidebar - no es crítico para LCP
+const DashboardSidebar = dynamic(
+  () => import('./sidebar/DashboardSidebar').then(mod => ({ default: mod.DashboardSidebar })),
+  { 
+    ssr: false,
+    loading: () => null // Sin loader para evitar layout shift
+  }
+);
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -26,7 +35,7 @@ export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
   const getDashboardTitle = () => {
     if (!user?.role) return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <Image src="/logo-SQATool.png" alt="SQA Tool" width={32} height={32} />
+        <Image src="/logo-SQATool.png" alt="SQA Tool" width={32} height={32} priority />
         <span>Dashboard SQA Tool</span>
       </div>
     );
@@ -34,14 +43,14 @@ export function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
     if (user.role.name === 'admin') {
       return (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Image src="/logo-SQATool.png" alt="SQA Tool" width={32} height={32} />
+          <Image src="/logo-SQATool.png" alt="SQA Tool" width={32} height={32} priority />
           <span>Panel de Administración - SQA Tool</span>
         </div>
       );
     } else {
       return (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Image src="/logo-SQATool.png" alt="SQA Tool" width={32} height={32} />
+          <Image src="/logo-SQATool.png" alt="SQA Tool" width={32} height={32} priority />
           <span>Dashboard SQA Tool</span>
         </div>
       );

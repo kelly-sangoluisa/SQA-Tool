@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { IconType } from 'react-icons';
+import type { IconType } from 'react-icons';
 import styles from '../DashboardSidebar.module.css';
 
 interface SidebarSectionProps {

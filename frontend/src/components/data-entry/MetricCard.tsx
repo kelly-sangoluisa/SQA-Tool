@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
+import { Toast, type ToastType } from '@/components/shared/Toast';
 import { sortVariablesByFormulaOrder } from '@/utils/formulaUtils';
 import { isVariableFixed } from '@/utils/thresholdUtils';
 import type { Variable } from '@/types/data-entry/data-entry.types';
@@ -43,6 +45,13 @@ export function MetricCard({
   primaryAction
 }: Readonly<MetricCardProps>) {
 
+  // Estado para el toast de validación
+  const [toast, setToast] = useState<{ message: string; type: ToastType; isVisible: boolean }>({
+    message: '',
+    type: 'warning',
+    isVisible: false
+  });
+
   // Ordenar variables según aparición en la fórmula
   const sortedVariables = sortVariablesByFormulaOrder(formula, variables);
 
@@ -67,12 +76,22 @@ export function MetricCard({
     // Bloquear punto y coma (no permitir decimales)
     if (e.key === '.' || e.key === ',') {
       e.preventDefault();
+      setToast({
+        message: 'Solo se permiten números enteros (sin decimales)',
+        type: 'warning',
+        isVisible: true
+      });
       return;
     }
     
     // Bloquear si no es un número
     if (!/^\d$/.test(e.key)) {
       e.preventDefault();
+      setToast({
+        message: 'Solo se permiten números (no letras ni símbolos)',
+        type: 'warning',
+        isVisible: true
+      });
     }
   };
 
@@ -81,11 +100,62 @@ export function MetricCard({
     // Permitir solo números enteros (sin punto ni coma)
     if (!/^\d+$/.test(text)) {
       e.preventDefault();
+      setToast({
+        message: 'Solo se permiten números enteros (sin decimales ni símbolos)',
+        type: 'warning',
+        isVisible: true
+      });
     }
+  };
+
+  // Validar campos antes de avanzar
+  const validateFields = (): boolean => {
+    // Verificar que todas las variables no fijas tengan valores válidos
+    for (const variable of variables) {
+      const fixedInfo = isVariableFixed(
+        variable.symbol,
+        formula,
+        desiredThreshold || null,
+        worstCase || null
+      );
+      
+      // Si es fija, saltar validación
+      if (fixedInfo.isFixed) continue;
+      
+      const value = values[variable.symbol];
+      
+      // Campo vacío
+      if (!value || value.trim() === '') {
+        setToast({
+          message: 'Por favor completa todos los campos con valores válidos',
+          type: 'warning',
+          isVisible: true
+        });
+        return false;
+      }
+      
+      // Verificar que sea un número no negativo
+      const numValue = Number.parseFloat(value);
+      if (Number.isNaN(numValue) || numValue < 0) {
+        setToast({
+          message: 'Por favor ingresa valores válidos (números no negativos)',
+          type: 'warning',
+          isVisible: true
+        });
+        return false;
+      }
+    }
+    
+    return true;
   };
 
   // Ejecutar la acción del botón principal
   const handlePrimaryAction = () => {
+    // Validar campos antes de continuar
+    if (!validateFields()) {
+      return;
+    }
+    
     switch (primaryAction) {
       case 'finish-project':
         onFinishProject?.();
@@ -210,11 +280,19 @@ export function MetricCard({
           variant="primary" 
           size="lg"
           onClick={handlePrimaryAction}
-          disabled={primaryAction === 'disabled'}
         >
           {getPrimaryButtonText()}
         </Button>
       </div>
+
+      {/* Toast de validación */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+        duration={2000}
+      />
     </div>
   );
 }
