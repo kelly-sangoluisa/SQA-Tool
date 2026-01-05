@@ -1,29 +1,58 @@
-# 🎯 SQA-Tool - Sistema de Evaluación de Calidad de Software
+# 🎯 SQA-Tool
 
 <p align="center">
-  <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS">
-  <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js">
-  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind">
-  <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
+  <img src="https://img.shields.io/badge/NestJS-11-E0234E?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS 11">
+  <img src="https://img.shields.io/badge/Next.js-15-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js 15">
+  <img src="https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript 5.7">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind 4">
+  <img src="https://img.shields.io/badge/Supabase-2.0-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
+  <img src="https://img.shields.io/badge/Lighthouse-82-0CCE6B?style=for-the-badge&logo=lighthouse&logoColor=white" alt="Performance 82">
 </p>
 
 <p align="center">
-  Sistema modular para la evaluación de calidad de proyectos de software, desarrollado con arquitectura moderna y escalable.
+  <a href="https://sqa-tool.vercel.app" target="_blank">
+    <img src="https://img.shields.io/badge/Demo-Live-success?style=for-the-badge&logo=vercel" alt="Demo en Vivo">
+  </a>
+  <a href="https://sqa-tool-production.up.railway.app/api/docs" target="_blank">
+    <img src="https://img.shields.io/badge/API-Docs-blue?style=for-the-badge&logo=swagger" alt="API Docs">
+  </a>
+  <a href="./PERFORMANCE_SUMMARY.md">
+    <img src="https://img.shields.io/badge/Performance-Optimized-green?style=for-the-badge&logo=speedtest" alt="Performance">
+  </a>
+</p>
+
+<p align="center">
+  HERRAMIENTA PARA APOYO A LA EVALUACIÓN DE CALIDAD DE PRODUCTOS SOFTWARE BASADA EN LA SERIE DE NORMAS ISO/IEC 25000 
 </p>
 
 ## 📋 Tabla de Contenidos
 
+- [⚡ Inicio Rápido](#-inicio-rápido)
+- [🌎 Aplicación en Producción](#-aplicación-en-producción)
 - [🚀 Características Principales](#-características-principales)
-- [🏗️ Arquitectura del Proyecto](#️-arquitectura-del-proyecto)
+- [🏭️ Arquitectura del Proyecto](#️-arquitectura-del-proyecto)
 - [📦 Tecnologías Utilizadas](#-tecnologías-utilizadas)
-- [⚙️ Configuración del Entorno](#️-configuración-del-entorno)
-- [🚀 Instalación y Ejecución](#-instalación-y-ejecución)
+- [🚀 Instalación y Ejecución Local](#-instalación-y-ejecución-local)
 - [🧪 Testing](#-testing)
-- [📚 Documentación de la API](#-documentación-de-la-api)
-- [🔧 Configuración Avanzada](#-configuración-avanzada)
-- [🚀 Despliegue](#-despliegue)
 - [👥 Contribuir](#-contribuir)
+
+## ⚡ Inicio Rápido
+
+La forma más rápida de empezar es usar la aplicación desplegada:
+
+1. **Accede a la aplicación**: [https://sqa-tool.vercel.app](https://sqa-tool.vercel.app)
+2. **Crea una cuenta** o inicia sesión
+3. **Empieza a evaluar** proyectos de software
+
+## 🌐 Aplicación en Producción
+
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| 🎨 **Frontend** | [sqa-tool.vercel.app](https://sqa-tool.vercel.app) | Aplicación Next.js desplegada en Vercel |
+| 🚀 **Backend API** | [sqa-tool-production.up.railway.app/api](https://sqa-tool-production.up.railway.app/api) | API NestJS desplegada en Railway |
+| 📚 **API Docs** | [sqa-tool-production.up.railway.app/api/docs](https://sqa-tool-production.up.railway.app/api/docs) | Documentación Swagger interactiva |
+| 🗄️ **Base de Datos** | Supabase PostgreSQL | Base de datos gestionada |
+
 
 ## 🚀 Características Principales
 
@@ -40,10 +69,12 @@
 - Gestión segura de cookies y tokens
 
 ### 🏗️ **Arquitectura Escalable**
-- **Backend**: NestJS con TypeScript y arquitectura modular
-- **Frontend**: Next.js 14 con App Router y Tailwind CSS
-- **Base de Datos**: PostgreSQL con TypeORM
+- **Backend**: NestJS 11 con TypeScript y arquitectura modular
+- **Frontend**: Next.js 15 con App Router, Turbopack y Tailwind CSS 4
+- **Base de Datos**: Supabase PostgreSQL con TypeORM
+- **Autenticación**: Supabase Auth con sistema de roles
 - **CI/CD**: GitHub Actions configurado
+- **API**: REST con documentación Swagger/OpenAPI
 
 ## 🏗️ Arquitectura del Proyecto
 
@@ -51,66 +82,115 @@
 SQA-Tool/
 ├── backend/                    # 🚀 API NestJS
 │   ├── src/
-│   │   ├── auth/              # 🔐 Módulo de autenticación
-│   │   ├── users/             # 👥 Gestión de usuarios
+│   │   ├── auth/              # 🔐 Módulo de autenticación (Supabase)
+│   │   ├── users/             # 👥 Gestión de usuarios y roles
 │   │   ├── modules/           # 📦 Módulos específicos del negocio
-│   │   │   ├── config-evaluation/
-│   │   │   ├── entry-data/
-│   │   │   ├── parameterization/
-│   │   │   └── reports/
+│   │   │   ├── config-evaluation/  # Configuración de evaluaciones
+│   │   │   ├── entry-data/         # Entrada de datos y cálculos
+│   │   │   ├── parameterization/   # Parametrización del sistema
+│   │   │   └── reports/            # Generación de reportes
 │   │   ├── config/            # ⚙️ Configuraciones centralizadas
-│   │   └── common/            # 🤝 Código compartido
-│   └── test/                  # 🧪 Tests automatizados
+│   │   ├── common/            # 🤝 Código compartido (guards, decorators)
+│   │   └── types/             # 📝 Definiciones de tipos TypeScript
+│   └── test/                  # 🧪 Tests automatizados (Jest)
 ├── frontend/                  # 🎨 Next.js Frontend
 │   ├── src/
-│   │   ├── app/               # 📄 App Router (Next.js 14)
+│   │   ├── app/               # 📄 App Router (Next.js 15)
+│   │   │   ├── auth/          # Páginas de autenticación
+│   │   │   ├── dashboard/     # Dashboard principal
+│   │   │   ├── configuration-evaluation/
+│   │   │   ├── data-entry/    # Entrada de datos
+│   │   │   ├── parameterization/
+│   │   │   └── results/       # Visualización de resultados
 │   │   ├── components/        # 🧩 Componentes reutilizables
-│   │   ├── api/               # 🔗 Llamadas a la API
+│   │   ├── api/               # 🔗 Servicios para llamadas a la API
 │   │   ├── hooks/             # 🎣 Custom hooks
-│   │   └── utils/             # 🛠️ Utilidades
-└── .github/workflows/         # 🔄 CI/CD con GitHub Actions
+│   │   ├── utils/             # 🛠️ Utilidades (PDF, validaciones)
+│   │   └── types/             # 📝 Tipos TypeScript
+│   └── public/                # 🖼️ Recursos estáticos
+├── .github/workflows/         # 🔄 CI/CD (workflows configurados)
+├── CONTRIBUTING.md            # 📖 Guía de contribución
+└── README.md                  # 📚 Este archivo
 ```
+
+### **🎯 Características de Seguridad**
+
+- **Helmet.js** - Headers de seguridad HTTP
+- **CORS configurado** - Control de orígenes permitidos
+- **Validación de datos** - Class-validator y Class-transformer
+- **Rate limiting** - Throttler de NestJS
+- **Autenticación JWT** - Tokens seguros con Supabase
+- **Roles y permisos** - Sistema de autorización basado en roles
 
 ## 📦 Tecnologías Utilizadas
 
 ### **Backend (NestJS)**
-- **NestJS 10+** - Framework Node.js progresivo
-- **TypeScript** - Tipado estático
-- **TypeORM** - ORM para bases de datos
-- **PostgreSQL** - Base de datos principal
-- **Supabase** - Backend-as-a-Service para auth y BD
+- **NestJS 11** - Framework Node.js progresivo
+- **TypeScript 5.7** - Tipado estático
+- **TypeORM 0.3.26** - ORM para bases de datos
+
+- **Supabase 2.57+** - Backend-as-a-Service para auth y BD
 - **Swagger/OpenAPI** - Documentación automática de API
-- **Jest** - Framework de testing
+- **Jest 30** - Framework de testing
+- **Helmet** - Seguridad HTTP
+- **Google Generative AI** - Integración de IA
 
 ### **Frontend (Next.js)**
-- **Next.js 14** - Framework React con App Router
-- **TypeScript** - Tipado estático
-- **Tailwind CSS** - Framework de CSS utility-first
-- **React Hook Form** - Gestión de formularios
+- **Next.js 15.5** - Framework React con App Router y Turbopack
+- **React 19.1** - Biblioteca de UI
+- **TypeScript 5** - Tipado estático
+- **Tailwind CSS 4** - Framework de CSS utility-first
 - **Lucide React** - Iconos modernos
+- **jsPDF** - Generación de reportes PDF
+- **html2canvas** - Captura de elementos DOM
+- **js-cookie** - Gestión de cookies
 
 ### **DevOps & Tools**
-- **Docker** - Contenedorización
-- **GitHub Actions** - CI/CD
-- **ESLint + Prettier** - Linting y formateo
-- **Husky** - Git hooks
+- **ESLint 9** - Linting de código
+- **Prettier 3.4** - Formateo de código
+- **Stylelint 16** - Linting de estilos CSS
+- **Jest 30** - Testing framework (backend)
+- **Swagger UI Express** - Documentación interactiva de API
 
-## ⚙️ Configuración del Entorno
+
+
+
+## 🚀 Instalación y Ejecución Local
+
+> **💡 Información**: Esta sección es para configurar el proyecto en tu máquina local. 
+> Si solo quieres usar la aplicación, accede directamente a: https://sqa-tool.vercel.app
 
 ### **Requisitos Previos**
 
-```bash
-# Node.js (versión 18 o superior)
-node --version  # v18.0.0+
+  ```bash
+  # Node.js (versión 20 o superior recomendada)
+  node --version  # v20.0.0+
 
-# npm (incluido con Node.js)
-npm --version   # 9.0.0+
+  # npm (versión 10 o superior)
+  npm --version   # 10.0.0+
 
-# Git
-git --version  # 2.30.0+
+  # Git
+  git --version  # 2.30.0+
+
+  # PostgreSQL (si no usas Supabase)
+  psql --version  # 14.0+
+  ```
+### **Clonar repositorio e instalar dependencias**
+  ```bash
+# 1. Clonar el repositorio
+git clone https://github.com/kelly-sangoluisa/SQA-Tool.git
+cd SQA-Tool
+
+# 2. Instalar dependencias del backend
+cd backend
+npm install
+
+# 3. En otra terminal, instalar dependencias del frontend
+cd ../frontend
+npm install
 ```
 
-### **Variables de Entorno**
+### **Configuracion de Variables de Entorno**
 
 #### **Backend (`.env`)**
 
@@ -149,7 +229,7 @@ THROTTLE_TTL=60
 THROTTLE_LIMIT=10
 
 # CORS
-CORS_ORIGINS=http://localhost:3000,http://localhost:4200
+CORS_ORIGINS=http://localhost:3000
 
 # Cookies
 COOKIE_SAMESITE=lax
@@ -158,7 +238,7 @@ COOKIE_SECURE=false
 
 #### **Frontend (`.env.local`)**
 
-Crea un archivo `.env.local` en la carpeta `frontend/` con:
+Crea un archivo `.env.local` en la carpeta `frontend/`con la siguiente estructura:
 
 ```env
 # API Backend URL
@@ -169,99 +249,36 @@ NEXT_PUBLIC_APP_NAME=Sistema de Evaluación SQA
 NEXT_PUBLIC_APP_VERSION=1.0.0
 ```
 
-### **🔧 Configuración de Supabase**
+### **Ejecucion local**
 
-1. **Crear proyecto en Supabase**:
-   - Ve a [supabase.com](https://supabase.com)
-   - Crea un nuevo proyecto
-   - Copia las credenciales (URL, anon key, service role key)
-
-2. **Configurar la base de datos**:
-   ```sql
-   -- Crear tabla de roles
-   CREATE TABLE roles (
-     id SERIAL PRIMARY KEY,
-     name VARCHAR(50) UNIQUE NOT NULL,
-     created_at TIMESTAMP DEFAULT NOW(),
-     updated_at TIMESTAMP DEFAULT NOW()
-   );
-
-   -- Insertar roles por defecto
-   INSERT INTO roles (name) VALUES ('admin'), ('evaluator');
-
-   -- Crear tabla de usuarios
-   CREATE TABLE users (
-     id SERIAL PRIMARY KEY,
-     email VARCHAR(255) UNIQUE NOT NULL,
-     name VARCHAR(255) NOT NULL,
-     role_id INTEGER REFERENCES roles(id),
-     created_at TIMESTAMP DEFAULT NOW(),
-     updated_at TIMESTAMP DEFAULT NOW()
-   );
-   ```
-
-## 🚀 Instalación y Ejecución
-
-### **🔧 Setup Completo (Recomendado)**
-
-```bash
-# 1. Clonar el repositorio
-git clone https://github.com/tu-usuario/SQA-Tool.git
-cd SQA-Tool
-
-# 2. Instalar dependencias del backend
-cd backend
-npm install
-
-# 3. Configurar variables de entorno del backend
-cp .env.example .env
-# Editar .env con tus configuraciones
-
-# 4. Ejecutar migraciones/sincronizar BD
-npm run start:dev  # TypeORM sincronizará automáticamente
-
-# 5. Instalar dependencias del frontend (en otra terminal)
-cd ../frontend
-npm install
-
-# 6. Configurar variables de entorno del frontend
-cp .env.local.example .env.local
-# Editar .env.local con tus configuraciones
-
-# 7. Ejecutar frontend
-npm run dev
-```
-
-### **🚀 Ejecución en Desarrollo**
 
 #### **Backend (Puerto 3001)**
 ```bash
 cd backend
+npm run build
 
-# Modo desarrollo (con hot reload)
+# Modo desarrollo
 npm run start:dev
 
-# Modo debug
-npm run start:debug
+# Modo producción
+npm run start:prod
 
 # Verificar que funciona
 curl http://localhost:3001/api
 ```
-
 #### **Frontend (Puerto 3000)**
 ```bash
 cd frontend
+npm run build
 
 # Modo desarrollo (con hot reload y Turbopack)
 npm run dev
 
-# Abrir en navegador
-open http://localhost:3000
+# Verificar que funciona, abre un navegador y ve a:
+http://localhost:3000  
 ```
 
-### **📱 Acceso a la Aplicación**
-
-Una vez ejecutado todo:
+Una vez ejecutado todo localmente:
 
 1. **Frontend**: http://localhost:3000
 2. **Backend API**: http://localhost:3001/api
@@ -270,103 +287,21 @@ Una vez ejecutado todo:
 
 ### **👤 Usuario de Prueba**
 
-Puedes crear un usuario desde la aplicación o directamente en Supabase:
+Puedes crear un usuario desde la aplicación (Sign Up) o directamente en Supabase:
 
 ```json
 {
   "email": "admin@example.com",
-  "password": "123456789",
+  "password": "Admin123!",
+  "role": "admin",
   "name": "Administrador"
 }
 ```
 
-## 🧪 Testing
+**Roles disponibles:**
+- `admin` - Acceso completo al sistema
+- `evaluator` - Acceso a evaluaciones y reportes
 
-### **Backend Tests**
-
-```bash
-cd backend
-
-# Tests unitarios
-npm run test
-
-# Tests con coverage
-npm run test:cov
-
-# Tests e2e
-npm run test:e2e
-
-# Tests en modo watch
-npm run test:watch
-
-# Ejecutar tests específicos
-npm run test auth.service.spec.ts
-```
-
-### **Frontend Tests**
-
-```bash
-cd frontend
-
-# Tests con Jest
-npm run test
-
-# Tests en modo watch
-npm run test:watch
-
-# Tests de componentes específicos
-npm run test LoginForm
-```
-
-### **🔍 Lint y Formato**
-
-```bash
-# Backend
-cd backend
-npm run lint
-npm run format
-
-# Frontend
-cd frontend
-npm run lint
-npm run lint:fix
-```
-
-## 📚 Documentación de la API
-
-### **🔗 Swagger/OpenAPI**
-
-La documentación interactiva está disponible en:
-- **Desarrollo**: http://localhost:3001/api/docs
-- **Producción**: https://tu-api.railway.app/api/docs
-
-### **📋 Endpoints Principales**
-
-#### **Autenticación**
-```bash
-POST /api/auth/signin     # Iniciar sesión
-POST /api/auth/signup     # Registrarse
-POST /api/auth/signout    # Cerrar sesión
-GET  /api/auth/me         # Usuario actual
-POST /api/auth/forgot-password  # Recuperar contraseña
-POST /api/auth/reset-password   # Resetear contraseña
-```
-
-#### **Usuarios**
-```bash
-GET    /api/users         # Listar usuarios
-GET    /api/users/:id     # Obtener usuario específico
-PUT    /api/users/:id     # Actualizar usuario
-DELETE /api/users/:id     # Eliminar usuario
-```
-
-#### **Módulos de Evaluación**
-```bash
-GET    /api/config-evaluation     # Configuraciones
-GET    /api/entry-data           # Datos de entrada
-GET    /api/parameterization     # Parametrizaciones
-GET    /api/reports              # Reportes
-```
 
 ### **🔐 Autenticación de Requests**
 
@@ -381,115 +316,44 @@ const response = await fetch('http://localhost:3001/api/auth/me', {
 });
 ```
 
-## 🔧 Configuración Avanzada
+## 🧪 Testing
 
-### **🎛️ Configuración Modular**
-
-El backend usa un sistema de configuración modular centralizado:
-
-```typescript
-// config/app.config.ts - Configuración general
-// config/database.config.ts - Base de datos
-// config/auth.config.ts - Autenticación
-```
-
-### **🔄 Migración de Supabase a otra BD**
-
-Para cambiar de Supabase a PostgreSQL tradicional:
-
-```env
-# En backend/.env
-AUTH_PROVIDER=custom
-DATABASE_URL=postgresql://user:pass@localhost:5432/sqa_tool
-JWT_SECRET=your-super-secret-key
-JWT_EXPIRES_IN=1d
-```
-
-### **🚀 Performance y Optimización**
+### **Backend Tests**
 
 ```bash
-# Backend - Optimización de producción
-npm run build
-npm run start:prod
+cd backend
 
-# Frontend - Build optimizado
-npm run build
-npm start
+# Tests unitarios
+npm run test
+
+# Tests con debug
+npm run test:debug
+
+# Ejecutar tests específicos
+npm run test auth.service.spec.ts
 ```
 
-## 🚀 Despliegue
-
-### **🚄 Railway (Recomendado)**
-
-#### **Backend en Railway**
-
-1. **Conectar repositorio**:
-   ```bash
-   # Instalar Railway CLI
-   npm install -g @railway/cli
-   
-   # Login y deployar
-   railway login
-   railway link
-   railway up
-   ```
-
-2. **Variables de entorno en Railway**:
-   ```env
-   NODE_ENV=production
-   DATABASE_URL=${RAILWAY_POSTGRES_URL}
-   SUPABASE_URL=https://your-project.supabase.co
-   # ... resto de variables
-   ```
-
-#### **Frontend en Vercel**
+### **Frontend Tests**
 
 ```bash
-# Instalar Vercel CLI
-npm i -g vercel
-
-# Deployar
 cd frontend
-vercel
 
-# Variables de entorno en Vercel
-NEXT_PUBLIC_API_URL=https://tu-backend.railway.app/api
+# Lint de código JavaScript/TypeScript
+npm run lint
+
+# Lint de estilos CSS
+npm run lint:css
+
 ```
 
-### **🔧 Variables de Producción**
 
-#### **Backend (.env)**
-```env
-NODE_ENV=production
-PORT=3001
-DATABASE_URL=${RAILWAY_POSTGRES_URL}
-CORS_ORIGINS=https://tu-frontend.vercel.app
-COOKIE_SECURE=true
-```
-
-#### **Frontend (.env.local)**
-```env
-NEXT_PUBLIC_API_URL=https://tu-backend.railway.app/api
-```
 
 ## 👥 Contribuir
-
-### **🔀 Workflow de Desarrollo**
-
-```bash
-# 1. Fork del repositorio
-git clone https://github.com/tu-usuario/SQA-Tool.git
-
-# 2. Crear rama para nueva feature
-git checkout -b feature/nueva-funcionalidad
-
-# 3. Desarrollar y commitear
-git add .
-git commit -m "feat: agregar nueva funcionalidad"
-
-# 4. Push y crear PR
-git push origin feature/nueva-funcionalidad
-```
+> **📍 Nota**: Si quieres contribuir, en esta sección se describe las conveciones y estandares para realizarlo, la configuración para **desarrollo local** se encuentra en la parte de arriba. 
+> La aplicación ya está desplegada en producción en:
+> - Frontend: https://sqa-tool.vercel.app
+> - Backend: https://sqa-tool-production.up.railway.app/api
+> 
 
 ### **📝 Convenciones**
 
@@ -538,8 +402,6 @@ npm run lint
 - [ ] Variables de entorno documentadas ✅
 - [ ] Migraciones de BD incluidas (si aplica) ✅
 
-## 📞 Soporte y Contacto
-
 ### **🐛 Reportar Bugs**
 
 1. **Buscar issues existentes** en GitHub
@@ -561,22 +423,35 @@ npm run lint
 - **[Next.js Documentation](https://nextjs.org/docs)**
 - **[Supabase Documentation](https://supabase.com/docs)**
 - **[Railway Documentation](https://docs.railway.app/)**
+---
+
+## 👨‍💻 Desarrolladores
+
+<p align="center">
+  <strong>Desarrollado con ❤️ por Dev-Sentinels</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/kelly-sangoluisa">
+    <img src="https://img.shields.io/badge/Kelly_Sangoluisa-181717?style=for-the-badge&logo=github&logoColor=white" alt="Kelly Sangoluisa">
+  </a>
+  <a href="https://github.com/Theo-17">
+    <img src="https://img.shields.io/badge/Theo--17-181717?style=for-the-badge&logo=github&logoColor=white" alt="Theo-17">
+  </a>
+  <a href="https://github.com/ShanderGonzalez">
+    <img src="https://img.shields.io/badge/Shander17-181717?style=for-the-badge&logo=github&logoColor=white" alt="Shander Gonzalez">
+  </a>
+  <a href="https://github.com/pasanteIt-sime">
+    <img src="https://img.shields.io/badge/pasanteIt--sime-181717?style=for-the-badge&logo=github&logoColor=white" alt="pasanteIt-sime">
+  </a>
+</p>
 
 ---
 
 <p align="center">
-  Desarrollado con ❤️ para la evaluación de calidad de software
-</p>
-
-<p align="center">
-  <a href="https://github.com/tu-usuario/SQA-Tool/blob/main/LICENSE">
+  <a href="https://github.com/kelly-sangoluisa/SQA-Tool/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
   </a>
-  <a href="https://github.com/tu-usuario/SQA-Tool/releases">
-    <img src="https://img.shields.io/github/v/release/tu-usuario/SQA-Tool" alt="Release">
-  </a>
-  <a href="https://github.com/tu-usuario/SQA-Tool/actions">
-    <img src="https://img.shields.io/github/workflow/status/tu-usuario/SQA-Tool/CI" alt="CI Status">
-  </a>
+  <img src="https://img.shields.io/badge/Made%20with-TypeScript-3178C6?style=flat-square&logo=typescript" alt="Made with TypeScript">
+  <img src="https://img.shields.io/badge/Built%20with-NestJS%20%26%20Next.js-E0234E?style=flat-square" alt="Built with NestJS & Next.js">
 </p>
-by Dev-Sentinels
