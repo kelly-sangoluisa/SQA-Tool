@@ -230,12 +230,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(78, 94, 163, 0.25);
+  box-shadow: 0 2px 8px rgb(78, 94, 163, 0.25);
 }
 
 .newEvaluationBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(78, 94, 163, 0.35);
+  box-shadow: 0 4px 12px rgb(78, 94, 163, 0.35);
   background: #3d4a7c;
 }
 
