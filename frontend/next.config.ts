@@ -18,9 +18,26 @@ const nextConfig: NextConfig = {
   
   reactStrictMode: true,
 
+  // ⚡ Performance optimizations
   compiler: {
     // Limpia la consola en producción
     removeConsole: process.env.NODE_ENV === "production",
+  },
+
+  // ⚡ Optimizar fuentes para reducir CLS
+  optimizeFonts: true,
+
+  // ⚡ Minificar para reducir bundle size
+  swcMinify: true,
+
+  // ⚡ Desabilitar source maps en producción (reduce bundle)
+  productionBrowserSourceMaps: false,
+
+  // ⚡ Optimizar CSS modules
+  modularizeImports: {
+    '@heroicons/react/24/outline': {
+      transform: '@heroicons/react/24/outline/{{member}}',
+    },
   },
 
   // Turbopack config
