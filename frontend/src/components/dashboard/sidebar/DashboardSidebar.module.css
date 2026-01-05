@@ -221,7 +221,8 @@
   justify-content: center;
   gap: 8px;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Color más oscuro para WCAG AA (4.5:1 contrast ratio) */
+  background: #4E5EA3;
   color: white;
   border: none;
   border-radius: 8px;
@@ -229,12 +230,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgb(102, 126, 234, 0.25);
+  box-shadow: 0 2px 8px rgba(78, 94, 163, 0.25);
 }
 
 .newEvaluationBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgb(102, 126, 234, 0.35);
+  box-shadow: 0 4px 12px rgba(78, 94, 163, 0.35);
+  background: #3d4a7c;
 }
 
 .newEvaluationBtn:active {

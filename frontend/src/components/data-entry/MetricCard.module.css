@@ -7,6 +7,8 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  min-height: 500px;
+  will-change: auto;
 }
 
 .header {
@@ -24,7 +26,7 @@
   justify-content: center;
   width: 3rem;
   height: 3rem;
-  background: linear-gradient(135deg, #4E5EA3 0%, #59469A 100%);
+  background: #4E5EA3;
   color: white;
   border-radius: 12px;
   font-weight: 700;
@@ -181,7 +183,7 @@
   background-color: #e3f2fd;
   color: #1976d2;
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 
@@ -310,7 +312,7 @@
   }
   
   .variableDescription {
-    font-size: 0.85rem;
+    font-size: 1rem;
   }
   
   .inputsSection {

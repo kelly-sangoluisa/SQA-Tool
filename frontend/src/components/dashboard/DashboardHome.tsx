@@ -1,7 +1,8 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../hooks/auth/useAuth';
+import { ProjectCardSkeleton, ProjectCardSkeletonSmall } from './ProjectCardSkeleton';
 import styles from './DashboardHome.module.css';
 
 interface Project {
@@ -70,6 +71,7 @@ const getProjectIcon = (status: string) => {
   }
 };
 
+// Memoizar formatDate para evitar recrearlo en cada render
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('es-ES', {
     year: 'numeric',
@@ -81,7 +83,7 @@ const formatDate = (dateString: string) => {
 export function DashboardHome() {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Iniciar en true para mostrar skeletons inmediatamente
 
   useEffect(() => {
     let mounted = true;
@@ -120,15 +122,15 @@ export function DashboardHome() {
     };
   }, [user?.id]);
 
-  // Separar proyectos recientes (últimos 3) y todos los proyectos
-  const recentProjects = projects.slice(0, 3);
-  const allProjects = projects;
+  // Memoizar proyectos recientes y todos los proyectos
+  const recentProjects = useMemo(() => projects.slice(0, 3), [projects]);
+  const allProjects = useMemo(() => projects, [projects]);
 
   return (
     <div className={styles.root}>
       {/* Welcome Section */}
       <header className={styles.greeting}>
-        <h2>Hola, {user?.name ?? 'Usuario'}</h2>
+        <h1>Hola, {user?.name ?? 'Usuario'}</h1>
         <Link href="/configuration-evaluation" className={styles.newEvaluationBtn}>
           + Nueva Evaluación
         </Link>
@@ -141,7 +143,13 @@ export function DashboardHome() {
             <h3 className={styles.sectionTitle}>Proyectos recientes</h3>
           </div>
 
-          {loading && <p className={styles.loadingText}>Cargando...</p>}
+          {loading && (
+            <div className={styles.recentGridLarge}>
+              <ProjectCardSkeleton />
+              <ProjectCardSkeleton />
+              <ProjectCardSkeleton />
+            </div>
+          )}
 
           {!loading && (
             <div className={styles.recentGridLarge}>
@@ -181,6 +189,17 @@ export function DashboardHome() {
         <div className={styles.sectionHeader}>
           <h3 className={styles.sectionTitle}>Todos los proyectos</h3>
         </div>
+
+        {loading && (
+          <div className={styles.allGridSmall}>
+            <ProjectCardSkeletonSmall />
+            <ProjectCardSkeletonSmall />
+            <ProjectCardSkeletonSmall />
+            <ProjectCardSkeletonSmall />
+            <ProjectCardSkeletonSmall />
+            <ProjectCardSkeletonSmall />
+          </div>
+        )}
 
         {!loading && (
           <div className={styles.allGridSmall}>

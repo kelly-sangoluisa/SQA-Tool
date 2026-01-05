@@ -11,6 +11,16 @@ function DashboardPageContent() {
   const { user } = useAuth();
   const router = useRouter();
 
+  // Preload de la API de proyectos para reducir tiempo de carga
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.href = '/api/config-evaluation/projects';
+    link.as = 'fetch';
+    link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+  }, []);
+
   // Redireccionar a admins a su página correspondiente
   useEffect(() => {
     if (user && user.role?.name === 'admin') {

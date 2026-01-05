@@ -1,0 +1,134 @@
+/* Skeleton styles - optimizados para performance */
+@keyframes shimmer {
+  0% { background-position: -468px 0; }
+  100% { background-position: 468px 0; }
+}
+
+/* Visually hidden pero accesible para lectores de pantalla y W3C */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.skeletonBase {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0px,
+    #f8f8f8 40px,
+    #f0f0f0 80px
+  );
+  background-size: 800px;
+  animation: shimmer 1.5s infinite linear;
+  will-change: background-position;
+  border-radius: 8px;
+}
+
+/* Skeleton Card Large */
+.skeletonCard {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  min-height: 160px;
+}
+
+.skeletonIcon {
+  composes: skeletonBase;
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.skeletonContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skeletonTitle {
+  composes: skeletonBase;
+  height: 24px;
+  width: 60%;
+}
+
+.skeletonDesc {
+  composes: skeletonBase;
+  height: 18px;
+  width: 85%;
+}
+
+.skeletonFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.skeletonDate {
+  composes: skeletonBase;
+  height: 16px;
+  width: 150px;
+}
+
+.skeletonButton {
+  composes: skeletonBase;
+  height: 36px;
+  width: 80px;
+}
+
+/* Skeleton Card Small */
+.skeletonCardSmall {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  align-items: center;
+  min-height: 80px;
+}
+
+.skeletonIconSmall {
+  composes: skeletonBase;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.skeletonContentSmall {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeletonTitleSmall {
+  composes: skeletonBase;
+  height: 18px;
+  width: 50%;
+}
+
+.skeletonDescSmall {
+  composes: skeletonBase;
+  height: 14px;
+  width: 70%;
+}
+
+.skeletonButtonSmall {
+  composes: skeletonBase;
+  height: 32px;
+  width: 60px;
+  flex-shrink: 0;
+}
