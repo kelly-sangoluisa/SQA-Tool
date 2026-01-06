@@ -86,8 +86,8 @@ export class MetricResultDto {
   @ApiProperty({ description: 'Fórmula de la métrica' })
   formula: string;
 
-  @ApiProperty({ description: 'Umbral deseado' })
-  desired_threshold: number | null;
+  @ApiProperty({ description: 'Umbral deseado', required: false })
+  desired_threshold: string | null;
 
   @ApiProperty({ description: 'Valor calculado' })
   calculated_value: number;
@@ -95,8 +95,8 @@ export class MetricResultDto {
   @ApiProperty({ description: 'Valor ponderado' })
   weighted_value: number;
 
-  @ApiProperty({ description: 'Cumple con el umbral deseado' })
-  meets_threshold: boolean;
+  @ApiProperty({ description: 'Cumple con el umbral deseado (null si no hay umbral)', required: false })
+  meets_threshold: boolean | null;
 
   @ApiProperty({ description: 'Variables utilizadas en el cálculo' })
   variables: VariableResultDto[];
@@ -225,6 +225,12 @@ export class ProjectReportDto {
 
   @ApiProperty({ description: 'Indica si cumple con el umbral del proyecto' })
   meets_threshold: boolean;
+
+  @ApiProperty({ description: 'Grado de satisfacción del proyecto', required: false })
+  satisfaction_grade: string | null;
+
+  @ApiProperty({ description: 'Nivel de puntuación del proyecto', required: false })
+  score_level: string | null;
 
   @ApiProperty({ description: 'Estado del proyecto' })
   status: string;

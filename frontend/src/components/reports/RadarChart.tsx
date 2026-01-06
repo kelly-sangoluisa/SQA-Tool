@@ -49,7 +49,7 @@ export function RadarChart({ report }: Readonly<Props>) {
     
     return radarData.map((item, index) => {
       const angle = angleStep * index - Math.PI / 2;
-      const scoreRatio = item.score / 100;
+      const scoreRatio = item.score / 10;
       const x = centerX + radius * scoreRatio * Math.cos(angle);
       const y = centerY + radius * scoreRatio * Math.sin(angle);
       return { x, y, angle, label: item.name, score: item.score };

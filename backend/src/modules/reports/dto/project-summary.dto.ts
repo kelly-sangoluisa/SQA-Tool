@@ -22,6 +22,12 @@ export class ProjectSummaryDto {
   @ApiProperty({ description: 'Indica si el proyecto cumple con el umbral mínimo' })
   meets_threshold: boolean;
 
+  @ApiProperty({ description: 'Grado de satisfacción del proyecto', required: false })
+  satisfaction_grade: string | null;
+
+  @ApiProperty({ description: 'Nivel de puntuación del proyecto', required: false })
+  score_level: string | null;
+
   @ApiProperty({ description: 'Estado del proyecto (in_progress, completed, cancelled)' })
   status: string;
 

@@ -2,10 +2,10 @@
  * Constantes centralizadas para la aplicación
  */
 
-// Score ranges para evaluación de calidad
+// Score ranges para evaluación de calidad (escala 0-10)
 export const SCORE_RANGES = {
-  EXCELLENT: 80,
-  GOOD: 60,
+  EXCELLENT: 8,
+  GOOD: 6,
   POOR: 0,
 } as const;
 

@@ -124,8 +124,8 @@ class ProjectPDFGenerator {
     // Score con más separación
     this.currentY += 20;
     this.pdf.setFont('helvetica', 'bold');
-    const isHighProjectScore = report.final_project_score >= 80;
-    const isMediumProjectScore = report.final_project_score >= 60;
+    const isHighProjectScore = report.final_project_score >= 8;
+    const isMediumProjectScore = report.final_project_score >= 6;
     let scoreColor: number[];
     if (isHighProjectScore) {
       scoreColor = [16, 185, 129];
@@ -136,7 +136,7 @@ class ProjectPDFGenerator {
     }
     this.pdf.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
     this.pdf.setFontSize(32);
-    this.pdf.text(`${report.final_project_score.toFixed(1)}%`, this.pageWidth / 2, this.currentY, { align: 'center' });
+    this.pdf.text(`${report.final_project_score.toFixed(1)}`, this.pageWidth / 2, this.currentY, { align: 'center' });
 
     // Línea decorativa debajo del score
     this.currentY += 8;
@@ -155,8 +155,8 @@ class ProjectPDFGenerator {
     this.currentY += 8;
     const meetsThreshold = report.meets_threshold;
     const badgeColor = meetsThreshold ? [16, 185, 129] : [239, 68, 68];
-    const statusText = meetsThreshold ? 'APROBADO' : 'NO APROBADO';
-    const badgeWidth = meetsThreshold ? 45 : 55;
+    const statusText = report.satisfaction_grade || (meetsThreshold ? 'APROBADO' : 'NO APROBADO');
+    const badgeWidth = Math.max(45, this.pdf.getTextWidth(statusText) + 10);
     const badgeHeight = 11;
     const badgeX = (this.pageWidth - badgeWidth) / 2;
     
@@ -271,13 +271,13 @@ class ProjectPDFGenerator {
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.text('Puntuación:', this.margin, this.currentY);
     this.pdf.setFont('helvetica', 'normal');
-    this.pdf.text(`${report.final_project_score.toFixed(1)}%`, this.margin + 30, this.currentY);
+    this.pdf.text(`${report.final_project_score.toFixed(1)}`, this.margin + 30, this.currentY);
 
     this.currentY += 8;
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.text('Umbral:', this.margin, this.currentY);
     this.pdf.setFont('helvetica', 'normal');
-    this.pdf.text(`${report.minimum_threshold}%`, this.margin + 30, this.currentY);
+    this.pdf.text(`${report.minimum_threshold}`, this.margin + 30, this.currentY);
 
     // Estadísticas
     this.currentY += 15;
@@ -306,7 +306,7 @@ class ProjectPDFGenerator {
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.text('Promedio:', this.margin, this.currentY);
     this.pdf.setFont('helvetica', 'normal');
-    this.pdf.text(`${stats.average_evaluation_score?.toFixed(1) || '0.0'}%`, this.margin + 50, this.currentY);
+    this.pdf.text(`${stats.average_evaluation_score?.toFixed(1) || '0.0'}`, this.margin + 50, this.currentY);
 
     if (stats.completed_evaluations > 1 && stats.highest_evaluation && stats.lowest_evaluation) {
       this.currentY += 10;
@@ -333,7 +333,8 @@ class ProjectPDFGenerator {
     
     const meetsThresholdExec = report.meets_threshold;
     const statusColor = meetsThresholdExec ? [16, 185, 129] : [239, 68, 68];
-    const statusWidth = meetsThresholdExec ? 45 : 55;
+    const statusText = report.satisfaction_grade || (meetsThresholdExec ? 'APROBADO' : 'NO APROBADO');
+    const statusWidth = Math.max(45, this.pdf.getTextWidth(statusText) + 10);
     const badgeHeight = 11;
     const badgeX = (this.pageWidth - statusWidth) / 2;
     this.pdf.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
@@ -341,13 +342,12 @@ class ProjectPDFGenerator {
     this.pdf.setTextColor(255, 255, 255);
     this.pdf.setFontSize(10);
     this.pdf.setFont('helvetica', 'bold');
-    const statusText = meetsThresholdExec ? 'APROBADO' : 'NO APROBADO';
     this.pdf.text(statusText, this.pageWidth / 2, this.currentY, { align: 'center' });
 
     this.currentY += 12;
     this.pdf.setTextColor(100, 100, 100);
     this.pdf.setFontSize(9);
-    const umbralText = `Umbral mínimo: ${report.minimum_threshold}% | Obtenido: ${report.final_project_score.toFixed(1)}%`;
+    const umbralText = `Umbral mínimo: ${report.minimum_threshold} | Obtenido: ${report.final_project_score.toFixed(1)}`;
     const umbralWidth = this.pdf.getTextWidth(umbralText);
     this.pdf.text(umbralText, (this.pageWidth - umbralWidth) / 2, this.currentY);
   }
@@ -387,8 +387,8 @@ class ProjectPDFGenerator {
       this.pdf.setFont('helvetica', 'bold');
       this.pdf.text('Puntuación:', this.margin + 5, this.currentY);
       this.pdf.setFont('helvetica', 'normal');
-      const isHighEvalScore = evaluation.final_score >= 80;
-      const isMediumEvalScore = evaluation.final_score >= 60;
+      const isHighEvalScore = evaluation.final_score >= 8;
+      const isMediumEvalScore = evaluation.final_score >= 6;
       let scoreColor: number[];
       if (isHighEvalScore) {
         scoreColor = [16, 185, 129];
@@ -398,7 +398,7 @@ class ProjectPDFGenerator {
         scoreColor = [239, 68, 68];
       }
       this.pdf.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-      this.pdf.text(`${evaluation.final_score.toFixed(1)}%`, this.margin + 30, this.currentY);
+      this.pdf.text(`${evaluation.final_score.toFixed(1)}`, this.margin + 30, this.currentY);
 
       // Línea separadora
       this.currentY += 8;
@@ -468,22 +468,24 @@ class ProjectPDFGenerator {
     this.currentY += 12;
     this.pdf.setTextColor(16, 185, 129);
     this.pdf.setFontSize(36);
-    this.pdf.text(`${report.final_project_score.toFixed(1)}%`, this.pageWidth / 2, this.currentY, { align: 'center' });
+    this.pdf.text(`${report.final_project_score.toFixed(1)}`, this.pageWidth / 2, this.currentY, { align: 'center' });
 
     this.currentY += 12;
     this.pdf.setFont('helvetica', 'normal');
     this.pdf.setFontSize(11);
     this.pdf.setTextColor(60, 60, 60);
-    this.pdf.text(`Umbral mínimo requerido: ${report.minimum_threshold}%`, this.pageWidth / 2, this.currentY, { align: 'center' });
+    this.pdf.text(`Umbral mínimo requerido: ${report.minimum_threshold}`, this.pageWidth / 2, this.currentY, { align: 'center' });
 
     // Estado
     this.currentY += 20;
+    const certStatusText = report.satisfaction_grade || 'APROBADO';
+    const certStatusWidth = Math.max(60, this.pdf.getTextWidth(certStatusText) + 20);
     this.pdf.setFillColor(16, 185, 129);
-    this.pdf.roundedRect(this.pageWidth / 2 - 30, this.currentY - 8, 60, 15, 3, 3, 'F');
+    this.pdf.roundedRect(this.pageWidth / 2 - certStatusWidth/2, this.currentY - 8, certStatusWidth, 15, 3, 3, 'F');
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.setFontSize(14);
     this.pdf.setTextColor(255, 255, 255);
-    this.pdf.text('APROBADO', this.pageWidth / 2, this.currentY, { align: 'center' });
+    this.pdf.text(certStatusText, this.pageWidth / 2, this.currentY, { align: 'center' });
 
     // Fecha de emisión
     this.currentY = this.pageHeight - 40;

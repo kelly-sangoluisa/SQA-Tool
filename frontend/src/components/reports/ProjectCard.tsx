@@ -41,7 +41,7 @@ export function ProjectCard({ project }: Readonly<ProjectCardProps>) {
             className={`project-card-score ${project.meets_threshold ? 'project-card-score--success' : 'project-card-score--warning'}`}
           >
             <div className="score-value">{project.final_project_score?.toFixed(1)}</div>
-            <div className="score-label">{project.meets_threshold ? 'Aprobado' : 'No Aprobado'}</div>
+            <div className="score-label">{project.satisfaction_grade || (project.meets_threshold ? 'Aprobado' : 'No Aprobado')}</div>
           </div>
         )}
 
@@ -55,7 +55,7 @@ export function ProjectCard({ project }: Readonly<ProjectCardProps>) {
       {hasThreshold && (
         <div className="project-threshold-info">
           <span className="threshold-label">Umbral mínimo:</span>
-          <span className="threshold-value">{Number(project.minimum_threshold).toFixed(1)}%</span>
+          <span className="threshold-value">{Number(project.minimum_threshold).toFixed(1)}</span>
         </div>
       )}
 

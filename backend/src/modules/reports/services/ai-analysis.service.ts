@@ -137,7 +137,7 @@ export class AIAnalysisService {
 
     const evaluationsDetails = (report.evaluations && Array.isArray(report.evaluations))
       ? report.evaluations
-          .map(e => `  - ${e.standard_name || 'Unknown'}: ${(e.final_score || 0).toFixed(1)}%`)
+          .map(e => `  - ${e.standard_name || 'Unknown'}: ${(e.final_score || 0).toFixed(1)}`)
           .join('\n')
       : 'No evaluations available';
 
@@ -168,16 +168,16 @@ Analiza los siguientes resultados de evaluación de calidad de software y propor
 ${projectDescription ? `**Descripción:** ${projectDescription}` : ''}
 
 **Resultados Principales:**
-- 🎯 Puntuación Final: ${finalScore.toFixed(1)}%
-- 📏 Umbral Mínimo Requerido: ${minThreshold}%
+- 🎯 Puntuación Final: ${finalScore.toFixed(1)}
+- 📏 Umbral Mínimo Requerido: ${minThreshold}
 - ✅ Estado: ${meetsThreshold ? '✅ APROBADO - Cumple con el estándar' : '❌ NO APROBADO - Por debajo del umbral'}
 
 **Estadísticas de Evaluaciones:**
 - Total de evaluaciones realizadas: ${totalEvals}
 - Evaluaciones completadas: ${completedEvals}
-- Promedio general: ${avgScore.toFixed(1)}%
-- 🏆 Mejor evaluación: ${highestEval} (${highestScore.toFixed(1)}%)
-- ⚠️ Evaluación más baja: ${lowestEval} (${lowestScore.toFixed(1)}%)
+- Promedio general: ${avgScore.toFixed(1)}
+- 🏆 Mejor evaluación: ${highestEval} (${highestScore.toFixed(1)})
+- ⚠️ Evaluación más baja: ${lowestEval} (${lowestScore.toFixed(1)})
 
 **Detalle de Evaluaciones por Estándar:**
 ${evaluationsDetails}

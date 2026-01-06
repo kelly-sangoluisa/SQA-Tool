@@ -121,8 +121,8 @@ export class PDFGenerator {
     
     // Score con más separación
     this.pdf.setFont('helvetica', 'normal');
-    const isHighScore = report.final_score >= 80;
-    const isMediumScore = report.final_score >= 60;
+    const isHighScore = report.final_score >= 8;
+    const isMediumScore = report.final_score >= 6;
     let scoreColor: number[];
     if (isHighScore) {
       scoreColor = [16, 185, 129];
@@ -133,7 +133,7 @@ export class PDFGenerator {
     }
     this.pdf.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
     this.pdf.setFontSize(24);
-    this.pdf.text(`${report.final_score.toFixed(1)}%`, this.margin + 40, this.currentY);
+    this.pdf.text(`${report.final_score.toFixed(1)}`, this.margin + 40, this.currentY);
 
     // Badge de estado - COMMENTED OUT for individual evaluations
     // Will be used later for project results
@@ -338,8 +338,8 @@ export class PDFGenerator {
       this.pdf.text(`${index + 1}. ${criterion.criterion_name}`, this.margin, this.currentY);
       
       // Score del criterio
-      const isCriterionHigh = criterion.final_score >= 80;
-      const isCriterionMedium = criterion.final_score >= 60;
+      const isCriterionHigh = criterion.final_score >= 8;
+      const isCriterionMedium = criterion.final_score >= 6;
       let scoreColor: number[];
       if (isCriterionHigh) {
         scoreColor = [16, 185, 129];
@@ -349,7 +349,7 @@ export class PDFGenerator {
         scoreColor = [239, 68, 68];
       }
       this.pdf.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-      this.pdf.text(`${criterion.final_score.toFixed(1)}%`, this.pageWidth - this.margin - 20, this.currentY);
+      this.pdf.text(`${criterion.final_score.toFixed(1)}`, this.pageWidth - this.margin - 20, this.currentY);
 
       this.currentY += 7;
       
