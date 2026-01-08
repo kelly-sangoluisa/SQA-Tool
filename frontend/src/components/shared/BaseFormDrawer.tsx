@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from './Button';
 import styles from './FormDrawer.module.css';
 
@@ -27,7 +28,27 @@ export function BaseFormDrawer({
   generalError,
   children
 }: BaseFormDrawerProps) {
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  // Bloquear scroll del body cuando el drawer está visible
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isVisible]);
+
+  const drawerContent = (
     <div className={`${styles.overlay} ${isVisible ? styles.visible : ''}`}>
       <div className={`${styles.drawer} ${isVisible ? styles.open : ''}`}>
         <div className={styles.header}>
@@ -104,4 +125,7 @@ export function BaseFormDrawer({
       </div>
     </div>
   );
+
+  // Renderizar en el body usando Portal para escapar del contenedor "shifted"
+  return mounted ? createPortal(drawerContent, document.body) : null;
 }

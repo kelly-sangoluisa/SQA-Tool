@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Metric, parameterizationApi, CreateMetricDto, UpdateMetricDto } from '../../api/parameterization/parameterization-api';
 import { MetricSearchResult } from '../../types/parameterization-search.types';
 import { Button } from '../shared/Button';
@@ -34,6 +35,7 @@ const renderMetricMeta = (item: MetricSearchResult) => (
 );
 
 export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: MetricFormDrawerProps) {
+  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
@@ -48,6 +50,24 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
   const [isVisible, setIsVisible] = useState(false);
   const [tempIdCounter, setTempIdCounter] = useState(0);
   const [showAutocomplete, setShowAutocomplete] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  // Bloquear scroll del body cuando el drawer está visible
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isVisible]);
 
   useEffect(() => {
     setIsVisible(true);
@@ -271,7 +291,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
     }
   };
 
-  return (
+  const drawerContent = (
     <div className={`${styles.overlay} ${isVisible ? styles.visible : ''}`}>
       <div className={`${styles.drawer} ${isVisible ? styles.open : ''}`}>
         <div className={styles.header}>
@@ -575,4 +595,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
       </div>
     </div>
   );
+
+  // Renderizar en el body usando Portal para escapar del contenedor "shifted"
+  return mounted ? createPortal(drawerContent, document.body) : null;
 }
