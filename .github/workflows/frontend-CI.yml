@@ -52,10 +52,6 @@ jobs:
         run: pnpm install
         working-directory: frontend
       
-      - name: Clear Jest cache
-        run: pnpm run test -- --clearCache
-        working-directory: frontend
-      
       - name: Run tests
         run: pnpm run test -- --ci --watchAll=false --passWithNoTests
         working-directory: frontend
