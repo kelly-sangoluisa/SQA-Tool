@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { Toast, type ToastType } from '@/components/shared/Toast';
-import { sortVariablesByFormulaOrder } from '@/utils/formulaUtils';
-import { isVariableFixed } from '@/utils/thresholdUtils';
-import { isDenominatorVariable } from '@/utils/divisionUtils';
+import { sortVariablesByFormulaOrder } from '@/utils/data-entry/formulaUtils';
+import { isVariableFixed } from '@/utils/data-entry/thresholdUtils';
+import { isDenominatorVariable } from '@/utils/data-entry/divisionUtils';
 import type { Variable } from '@/types/data-entry/data-entry.types';
 import styles from './MetricCard.module.css';
 
