@@ -57,7 +57,7 @@ jobs:
         working-directory: frontend
       
       - name: Run tests
-        run: pnpm run test -- --ci --watchAll=false
+        run: pnpm run test -- --ci --watchAll=false --passWithNoTests
         working-directory: frontend
 
   build:

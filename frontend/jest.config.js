@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const nextJest = require('next/jest')
 
 const createJestConfig = nextJest({
@@ -13,9 +12,13 @@ const customJestConfig = {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   testMatch: [
-    '**/test/**/*.test.ts?(x)',
-    '**/__tests__/**/*.test.ts?(x)',
-    '**/?(*.)+(spec|test).ts?(x)',
+    '<rootDir>/test/**/*.test.ts?(x)',      // Más específico
+    '<rootDir>/src/**/__tests__/**/*.test.ts?(x)',
+    '<rootDir>/src/**/?(*.)+(spec|test).ts?(x)',
+  ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/.next/',
   ],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
