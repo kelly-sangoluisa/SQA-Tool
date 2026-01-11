@@ -82,7 +82,7 @@ export function ChartsSection({ report }: Readonly<Props>) {
                   <div 
                     className="bar-fill"
                     style={{
-                      width: `${(criterion.score / 100) * 100}%`,
+                      width: `${(criterion.score / 10) * 100}%`,
                       background: getScoreColor(criterion.score)
                     }}
                   >
@@ -120,7 +120,7 @@ export function ChartsSection({ report }: Readonly<Props>) {
         {/* Gráfico de DONA - Distribución de Importancia */}
         <div className="chart-card donut-card">
           <div className="chart-header">
-            <h4 className="chart-title">🍩 Distribución de Importancia</h4>
+            <h4 className="chart-title">Distribución de Importancia</h4>
             <p className="chart-subtitle">Peso relativo por nivel de importancia</p>
           </div>
           <div className="donut-chart-container">
@@ -162,7 +162,7 @@ export function ChartsSection({ report }: Readonly<Props>) {
                         r={innerRadius}
                         fill="white"
                       />
-                      <title>{`${item.label}: ${item.percentage.toFixed(1)}% (Score: ${item.score.toFixed(1)}%)`}</title>
+                      <title>{`${item.label}: ${item.percentage.toFixed(1)}% (Score: ${item.score.toFixed(1)})`}</title>
                     </g>
                   );
                 }
@@ -210,7 +210,7 @@ export function ChartsSection({ report }: Readonly<Props>) {
                         stroke="white"
                         strokeWidth="2"
                       />
-                      <title>{`${item.label}: ${item.percentage.toFixed(1)}% (Score: ${item.score.toFixed(1)}%)`}</title>
+                      <title>{`${item.label}: ${item.percentage.toFixed(1)}% (Score: ${item.score.toFixed(1)})`}</title>
                     </g>
                   );
                 });
@@ -219,7 +219,7 @@ export function ChartsSection({ report }: Readonly<Props>) {
               {/* Centro del donut con score total */}
               <circle cx="100" cy="100" r="38" fill="white" />
               <text x="100" y="95" textAnchor="middle" fontSize="20" fontWeight="bold" fill="#1f2937">
-                {report.final_score.toFixed(1)}%
+                {report.final_score.toFixed(1)}
               </text>
               <text x="100" y="110" textAnchor="middle" fontSize="10" fill="#6b7280">
                 Score Total
@@ -243,7 +243,7 @@ export function ChartsSection({ report }: Readonly<Props>) {
                     <div className="donut-legend-text">
                       <span className="donut-legend-label">{levelLabel}</span>
                       <span className="donut-legend-value">{weight.toFixed(1)}%</span>
-                      <span className="donut-legend-score">Score: {avgScore.toFixed(1)}%</span>
+                      <span className="donut-legend-score">Score: {avgScore.toFixed(1)}</span>
                     </div>
                   </div>
                 );
@@ -275,7 +275,7 @@ export function ChartsSection({ report }: Readonly<Props>) {
                 stroke={getScoreColor(report.final_score)}
                 strokeWidth="20"
                 strokeLinecap="round"
-                strokeDasharray={`${(report.final_score / 100) * 220} 220`}
+                strokeDasharray={`${(report.final_score / 10) * 220} 220`}
                 className="gauge-arc"
               />
             </svg>

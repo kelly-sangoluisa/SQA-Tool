@@ -80,7 +80,7 @@ jobs:
         working-directory: frontend
 
   test:
-    name: Test (placeholder)
+    name: Test 
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

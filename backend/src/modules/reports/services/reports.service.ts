@@ -129,17 +129,21 @@ export class ReportsService {
       });
 
       const finalScore = result ? Number(result.final_project_score) : null;
-      const meetsThreshold = finalScore !== null && project.minimum_threshold !== null
-        ? finalScore >= Number(project.minimum_threshold)
+      // Convertir threshold de escala 100 a escala 10
+      const threshold = project.minimum_threshold ? Number(project.minimum_threshold) / 10 : null;
+      const meetsThreshold = finalScore !== null && threshold !== null
+        ? finalScore >= threshold
         : false;
 
       return {
         project_id: project.id,
         project_name: project.name,
         project_description: project.description,
-        minimum_threshold: project.minimum_threshold ?? null,
+        minimum_threshold: threshold,
         final_project_score: finalScore,
         meets_threshold: meetsThreshold,
+        satisfaction_grade: result?.satisfaction_grade ?? null,
+        score_level: result?.score_level ?? null,
         status: project.status,
         evaluation_count: project.evaluations.length,
         created_at: project.created_at,
@@ -294,15 +298,19 @@ export class ReportsService {
               relations: ['variable'],
             });
 
+            const desiredThreshold = metric.metric.desired_threshold;
+            const calculatedValue = metricResult ? Number(metricResult.calculated_value) : 0;
+            const meetsThreshold = desiredThreshold ? this.compareWithThreshold(calculatedValue, desiredThreshold) : null;
+
             return {
               metric_code: metric.metric.code,
               metric_name: metric.metric.name,
               metric_description: metric.metric.description,
               formula: metric.metric.formula,
-              desired_threshold: null, // No existe en la entidad
-              calculated_value: metricResult ? Number(metricResult.calculated_value) : 0,
+              desired_threshold: desiredThreshold || null,
+              calculated_value: calculatedValue,
               weighted_value: metricResult ? Number(metricResult.weighted_value) : 0,
-              meets_threshold: false, // Se calcularía comparando con threshold si existiera
+              meets_threshold: meetsThreshold,
               variables: variables.map(v => ({
                 symbol: v.variable.symbol,
                 description: v.variable.description,
@@ -324,14 +332,14 @@ export class ReportsService {
     );
 
     const finalScore = result ? Number(result.evaluation_score) : 0;
-    const projectThreshold = evaluation.project.minimum_threshold ? Number(evaluation.project.minimum_threshold) : 0;
+    const projectThreshold = evaluation.project.minimum_threshold ? Number(evaluation.project.minimum_threshold) / 10 : 0;
 
     return {
       evaluation_id: evaluation.id,
       project_id: evaluation.project_id,
       project_name: evaluation.project.name,
       created_by_name: evaluation.project.creator.name,
-      project_threshold: evaluation.project.minimum_threshold,
+      project_threshold: projectThreshold,
       standard_name: evaluation.standard.name,
       created_at: evaluation.created_at,
       final_score: finalScore,
@@ -365,7 +373,8 @@ export class ReportsService {
         });
 
         const evalScore = result ? Number(result.evaluation_score) : 0;
-        const threshold = project.minimum_threshold ? Number(project.minimum_threshold) : 0;
+        // Convertir threshold de escala 100 a escala 10
+        const threshold = project.minimum_threshold ? Number(project.minimum_threshold) / 10 : 0;
 
         return {
           evaluation_id: evaluation.id,
@@ -379,7 +388,8 @@ export class ReportsService {
     );
 
     const finalProjectScore = projectResult ? Number(projectResult.final_project_score) : 0;
-    const minThreshold = project.minimum_threshold ? Number(project.minimum_threshold) : 0;
+    // Convertir threshold de escala 100 a escala 10
+    const minThreshold = project.minimum_threshold ? Number(project.minimum_threshold) / 10 : 0;
 
     return {
       project_id: project.id,
@@ -390,6 +400,8 @@ export class ReportsService {
       final_project_score: finalProjectScore,
       minimum_threshold: minThreshold,
       meets_threshold: finalProjectScore >= minThreshold,
+      satisfaction_grade: projectResult?.satisfaction_grade ?? null,
+      score_level: projectResult?.score_level ?? null,
       status: project.status,
       evaluations: evaluationsWithResults,
     };
@@ -448,5 +460,34 @@ export class ReportsService {
         score: lowest.score,
       },
     };
+  }
+
+  /**
+   * Compara un valor calculado con el umbral deseado
+   * El umbral puede ser un número o una expresión como ">=0.9" o ">80"
+   */
+  private compareWithThreshold(calculatedValue: number, threshold: string): boolean {
+    const trimmedThreshold = threshold.trim();
+    
+    // Si es un número simple, comparar directamente (>=)
+    if (!isNaN(Number(trimmedThreshold))) {
+      return calculatedValue >= Number(trimmedThreshold);
+    }
+    
+    // Parsear expresiones como ">=0.9", ">0.8", etc.
+    const match = trimmedThreshold.match(/^(>=|>|<=|<|=)?\s*([0-9.]+)$/);
+    if (!match) return false;
+    
+    const operator = match[1] || '>=';
+    const thresholdValue = Number(match[2]);
+    
+    switch (operator) {
+      case '>=': return calculatedValue >= thresholdValue;
+      case '>': return calculatedValue > thresholdValue;
+      case '<=': return calculatedValue <= thresholdValue;
+      case '<': return calculatedValue < thresholdValue;
+      case '=': return calculatedValue === thresholdValue;
+      default: return false;
+    }
   }
 }

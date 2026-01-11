@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // ⚡ Habilitar standalone para Docker optimizado
+  // Habilitar standalone para Docker optimizado
   output: 'standalone',
   
-  // ✅ REWRITES para evitar cookies de terceros
+  // REWRITES para evitar cookies de terceros
   // En producción, el frontend en Vercel hace proxy al backend de Railway
   // De esta forma, las cookies se guardan bajo el dominio de Vercel
   async rewrites() {
@@ -18,22 +18,22 @@ const nextConfig: NextConfig = {
   
   reactStrictMode: true,
 
-  // ⚡ Performance optimizations
+  // Performance optimizations
   compiler: {
     // Limpia la consola en producción
     removeConsole: process.env.NODE_ENV === "production",
   },
 
-  // ⚡ Optimizar fuentes para reducir CLS
+  // Optimizar fuentes para reducir CLS
   optimizeFonts: true,
 
-  // ⚡ Minificar para reducir bundle size
+  // Minificar para reducir bundle size
   swcMinify: true,
 
-  // ⚡ Desabilitar source maps en producción (reduce bundle)
+  // Desabilitar source maps en producción (reduce bundle)
   productionBrowserSourceMaps: false,
 
-  // ⚡ Optimizar CSS modules
+  // Optimizar CSS modules
   modularizeImports: {
     '@heroicons/react/24/outline': {
       transform: '@heroicons/react/24/outline/{{member}}',

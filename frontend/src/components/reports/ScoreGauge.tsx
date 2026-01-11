@@ -15,14 +15,14 @@ export function ScoreGauge({ score, size = 'medium', showLabel = true, threshold
   const validThreshold = threshold !== null && typeof threshold === 'number' && !Number.isNaN(threshold) ? threshold : null;
   
   const getColor = (value: number) => {
-    if (value >= 80) return '#10b981';
-    if (value >= 60) return '#f59e0b';
+    if (value >= 8) return '#10b981';
+    if (value >= 6) return '#f59e0b';
     return '#ef4444';
   };
 
   const getLabel = (value: number) => {
-    if (value >= 80) return 'Excelente';
-    if (value >= 60) return 'Bueno';
+    if (value >= 8) return 'Excelente';
+    if (value >= 6) return 'Bueno';
     return 'Necesita mejora';
   };
 
@@ -35,11 +35,11 @@ export function ScoreGauge({ score, size = 'medium', showLabel = true, threshold
   const config = sizes[size];
   const radius = (config.width / 2) - config.stroke;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (validScore / 100) * circumference;
+  const offset = circumference - (validScore / 10) * circumference;
   const color = getColor(validScore);
 
   // Calcular posición de la línea del umbral si existe
-  const thresholdAngle = validThreshold === null ? null : (validThreshold / 100) * 360 - 90;
+  const thresholdAngle = validThreshold === null ? null : (validThreshold / 10) * 360 - 90;
   const thresholdRadians = thresholdAngle === null ? null : (thresholdAngle * Math.PI) / 180;
   
   // Coordenadas para la línea del umbral (desde el borde interno hasta el externo)

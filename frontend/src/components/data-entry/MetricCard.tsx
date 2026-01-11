@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { Toast, type ToastType } from '@/components/shared/Toast';
-import { sortVariablesByFormulaOrder } from '@/utils/formulaUtils';
-import { isVariableFixed } from '@/utils/thresholdUtils';
+import { sortVariablesByFormulaOrder } from '@/utils/data-entry/formulaUtils';
+import { isVariableFixed } from '@/utils/data-entry/thresholdUtils';
+import { isDenominatorVariable } from '@/utils/data-entry/divisionUtils';
 import type { Variable } from '@/types/data-entry/data-entry.types';
 import styles from './MetricCard.module.css';
 
@@ -56,11 +57,21 @@ export function MetricCard({
   const sortedVariables = sortVariablesByFormulaOrder(formula, variables);
 
   const handleInputChange = (variableSymbol: string, value: string) => {
+    // Si el valor es 0 y la variable es denominador, mostrar error
+    if (value === '0' && isDenominatorVariable(variableSymbol, formula)) {
+      setToast({
+        message: 'No se puede ingresar 0 en esta variable (división por cero)',
+        type: 'error',
+        isVisible: true
+      });
+      return; // No actualizar el valor
+    }
+    
     onValueChange?.(variableSymbol, value);
   };
 
-  // Validar que solo se ingresen números enteros positivos
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  // Crear handler de teclado específico para cada variable
+  const createKeyDownHandler = (variableSymbol: string) => (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Permitir: backspace, delete, tab, escape, enter, flechas
     if (
       ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)
@@ -84,6 +95,38 @@ export function MetricCard({
       return;
     }
     
+    // Validación especial para 0 en denominadores
+    if (e.key === '0') {
+      const input = e.target as HTMLInputElement;
+      const currentValue = input.value;
+      const isDenominator = isDenominatorVariable(variableSymbol, formula);
+      
+      if (isDenominator) {
+        // Obtener la posición del cursor
+        const cursorStart = input.selectionStart || 0;
+        const cursorEnd = input.selectionEnd || 0;
+        
+        // Simular el valor resultante después de escribir '0'
+        const newValue = 
+          currentValue.substring(0, cursorStart) + 
+          '0' + 
+          currentValue.substring(cursorEnd);
+        
+        // Bloquear solo si el valor final sería exactamente "0" (o "00", "000", etc)
+        // Permitir valores como "10", "20", "100", "105", etc.
+        const numValue = Number.parseInt(newValue, 10);
+        if (numValue === 0) {
+          e.preventDefault();
+          setToast({
+            message: 'No se puede usar 0 en el denominador de una división.',
+            type: 'warning',
+            isVisible: true
+          });
+          return;
+        }
+      }
+    }
+    
     // Bloquear si no es un número
     if (!/^\d$/.test(e.key)) {
       e.preventDefault();
@@ -95,8 +138,11 @@ export function MetricCard({
     }
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+  // Crear handler de paste específico para cada variable
+  const createPasteHandler = (variableSymbol: string) => (e: React.ClipboardEvent<HTMLInputElement>) => {
     const text = e.clipboardData.getData('text');
+    const isDenominator = isDenominatorVariable(variableSymbol, formula);
+    
     // Permitir solo números enteros (sin punto ni coma)
     if (!/^\d+$/.test(text)) {
       e.preventDefault();
@@ -105,6 +151,21 @@ export function MetricCard({
         type: 'warning',
         isVisible: true
       });
+      return;
+    }
+    
+    // Validación especial: no permitir pegar valores que resulten en 0
+    // Permitir "10", "20", "100" etc., bloquear solo "0", "00", "000"
+    if (isDenominator) {
+      const numValue = Number.parseInt(text, 10);
+      if (numValue === 0) {
+        e.preventDefault();
+        setToast({
+          message: 'Esta variable no puede ser 0 (causaría división por cero)',
+          type: 'error',
+          isVisible: true
+        });
+      }
     }
   };
 
@@ -140,6 +201,16 @@ export function MetricCard({
         setToast({
           message: 'Por favor ingresa valores válidos (números no negativos)',
           type: 'warning',
+          isVisible: true
+        });
+        return false;
+      }
+      
+      // Validación especial: si es denominador, no puede ser 0
+      if (numValue === 0 && isDenominatorVariable(variable.symbol, formula)) {
+        setToast({
+          message: 'No se puede usar 0 en esta variable (causaría división por cero)',
+          type: 'error',
           isVisible: true
         });
         return false;
@@ -251,8 +322,8 @@ export function MetricCard({
                       step="any"
                       value={isFixed && fixedValue !== undefined ? fixedValue.toString() : (values[variable.symbol] || '')}
                       onChange={(e) => handleInputChange(variable.symbol, e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      onPaste={handlePaste}
+                      onKeyDown={createKeyDownHandler(variable.symbol)}
+                      onPaste={createPasteHandler(variable.symbol)}
                       className={styles.valueInput}
                       disabled={isFixed}
                       readOnly={isFixed}

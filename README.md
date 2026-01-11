@@ -6,19 +6,6 @@
   <img src="https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript 5.7">
   <img src="https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind 4">
   <img src="https://img.shields.io/badge/Supabase-2.0-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
-  <img src="https://img.shields.io/badge/Lighthouse-82-0CCE6B?style=for-the-badge&logo=lighthouse&logoColor=white" alt="Performance 82">
-</p>
-
-<p align="center">
-  <a href="https://sqa-tool.vercel.app" target="_blank">
-    <img src="https://img.shields.io/badge/Demo-Live-success?style=for-the-badge&logo=vercel" alt="Demo en Vivo">
-  </a>
-  <a href="https://sqa-tool-production.up.railway.app/api/docs" target="_blank">
-    <img src="https://img.shields.io/badge/API-Docs-blue?style=for-the-badge&logo=swagger" alt="API Docs">
-  </a>
-  <a href="./PERFORMANCE_SUMMARY.md">
-    <img src="https://img.shields.io/badge/Performance-Optimized-green?style=for-the-badge&logo=speedtest" alt="Performance">
-  </a>
 </p>
 
 <p align="center">

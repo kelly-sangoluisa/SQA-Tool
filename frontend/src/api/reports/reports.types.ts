@@ -9,6 +9,8 @@ export interface ProjectSummary {
   minimum_threshold: number | null;
   final_project_score: number | null;
   meets_threshold: boolean;
+  satisfaction_grade: string | null;
+  score_level: string | null;
   status: string;
   evaluation_count: number;
   created_at: string;
@@ -38,8 +40,8 @@ export interface MetricResult {
   formula: string;
   calculated_value: number;
   weighted_value: number;
-  desired_threshold: string;
-  meets_threshold: boolean;
+  desired_threshold: string | null;
+  meets_threshold: boolean | null;
   variables: VariableResult[];
 }
 
@@ -104,6 +106,8 @@ export interface ProjectReport {
   final_project_score: number;
   minimum_threshold: number;
   meets_threshold: boolean;
+  satisfaction_grade: string | null;
+  score_level: string | null;
   status: string;
   evaluations: ProjectEvaluationSummary[];
 }

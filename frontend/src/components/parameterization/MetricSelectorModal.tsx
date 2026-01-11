@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { SubCriterionSearchResult, MetricSearchResult } from '../../types/parameterization-search.types';
 import styles from './MetricSelectorModal.module.css';
 
@@ -17,7 +18,22 @@ export function MetricSelectorModal({
   onSelect,
   onCancel,
 }: MetricSelectorModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [selectedMetricIds, setSelectedMetricIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  // Bloquear scroll del body cuando el modal está abierto
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const handleToggleMetric = (metricId: number) => {
     setSelectedMetricIds(prev => 
@@ -39,7 +55,7 @@ export function MetricSelectorModal({
     }
   };
 
-  return (
+  const modalContent = (
     <div className={styles.modalOverlay}>
       <button 
         className={styles.modalBackdrop}
@@ -155,4 +171,6 @@ export function MetricSelectorModal({
       </dialog>
     </div>
   );
+
+  return mounted ? createPortal(modalContent, document.body) : null;
 }

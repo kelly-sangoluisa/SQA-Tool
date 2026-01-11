@@ -93,7 +93,7 @@ export function StatsOverview({ stats, report }: Readonly<StatsOverviewProps>) {
               <div className="bar-container">
                 <div 
                   className="bar-fill bar-fill--high"
-                  style={{ width: `${stats.score_by_importance?.high || 0}%` }}
+                  style={{ width: `${((stats.score_by_importance?.high || 0) / 10) * 100}%` }}
                 />
               </div>
             </div>
@@ -108,7 +108,7 @@ export function StatsOverview({ stats, report }: Readonly<StatsOverviewProps>) {
               <div className="bar-container">
                 <div 
                   className="bar-fill bar-fill--medium"
-                  style={{ width: `${stats.score_by_importance?.medium || 0}%` }}
+                  style={{ width: `${((stats.score_by_importance?.medium || 0) / 10) * 100}%` }}
                 />
               </div>
             </div>
@@ -123,7 +123,7 @@ export function StatsOverview({ stats, report }: Readonly<StatsOverviewProps>) {
               <div className="bar-container">
                 <div 
                   className="bar-fill bar-fill--low"
-                  style={{ width: `${stats.score_by_importance?.low || 0}%` }}
+                  style={{ width: `${((stats.score_by_importance?.low || 0) / 10) * 100}%` }}
                 />
               </div>
             </div>

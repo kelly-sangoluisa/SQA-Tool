@@ -89,7 +89,7 @@ export function AIAnalysisDisplay({ analysis, onClose }: Readonly<AIAnalysisDisp
         {analysis.metadata && (
           <div className={`metadata-badge ${analysis.metadata.meetsThreshold ? 'approved' : 'rejected'}`}>
             <div className="metadata-score">
-              <span className="score-value">{analysis.metadata.score?.toFixed(1) || '0.0'}%</span>
+              <span className="score-value">{analysis.metadata.score?.toFixed(1) || '0.0'}</span>
               <span className="score-label">Puntuación</span>
             </div>
             <div className="metadata-divider" />
