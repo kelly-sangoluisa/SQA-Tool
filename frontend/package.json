@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "lint:css": "stylelint \"src/**/*.{css,scss}\"",
-    "test": "jest",
+    "test": "jest --passWithNoTests --ci --watchAll=false",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },
