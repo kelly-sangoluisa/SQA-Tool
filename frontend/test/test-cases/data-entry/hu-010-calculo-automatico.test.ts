@@ -1,6 +1,6 @@
 /**
- * CASOS DE PRUEBA - HU-006: Cálculo Automático
- * Valida los criterios de aceptación de la historia de usuario HU-006
+ * CASOS DE PRUEBA - HU-010: Cálculo Automático
+ * Valida los criterios de aceptación de la historia de usuario HU-010
  */
 
 import '@testing-library/jest-dom';
@@ -20,12 +20,12 @@ jest.mock('react-hot-toast', () => ({
 }));
 
 
-describe('HU-006: Cálculo automático - Casos de Prueba', () => {
+describe('HU-010: Cálculo automático - Casos de Prueba', () => {
   
   // ============================================
-  // CP-006-01: Cálculo exitoso con datos válidos
+  // CP-010-01: Cálculo exitoso con datos válidos
   // ============================================
-  test('CP-006-01: FormulaEvaluationService calcula correctamente', () => {
+  test('CP-010-01: FormulaEvaluationService calcula correctamente', () => {
     // Simulación de cálculo (la lógica real está en el backend y tienes sus test)
     const evaluateFormula = (formula: string, vars: Record<string, number>) => {
       // Implementación simplificada para tests
@@ -42,7 +42,7 @@ describe('HU-006: Cálculo automático - Casos de Prueba', () => {
     expect(result2).toBe(6);
   });
 
-  test('CP-006-01: Clasificación de scores según threshold', () => {
+  test('CP-010-01: Clasificación de scores según threshold', () => {
     const classifyScore = (value: number, threshold: string): string => {
       if (threshold.includes('>=0.5good') && value >= 0.5) return 'Satisfactorio';
       if (threshold.includes('<0.3poor') && value < 0.3) return 'Deficiente';

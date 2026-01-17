@@ -1,6 +1,6 @@
 /**
- * CASOS DE PRUEBA - HU-008: Comparación con Nivel Mínimo
- * Valida los criterios de aceptación de la historia de usuario HU-008
+ * CASOS DE PRUEBA - HU-012: Comparación con Nivel Mínimo
+ * Valida los criterios de aceptación de la historia de usuario HU-012
  */
 
 import '@testing-library/jest-dom';
@@ -20,12 +20,12 @@ jest.mock('react-hot-toast', () => ({
 }));
 
 
-describe('HU-008: Comparación con nivel mínimo - Casos de Prueba', () => {
+describe('HU-012: Comparación con nivel mínimo - Casos de Prueba', () => {
   
   // ============================================
-  // CP-008-01: Comparación automática
+  // CP-012-01: Comparación automática
   // ============================================
-  test('CP-008-01: Lógica de comparación con nivel mínimo', () => {
+  test('CP-012-01: Lógica de comparación con nivel mínimo', () => {
     const compareWithMinimum = (finalResult: number, minimumLevel: number): boolean => {
       return finalResult >= minimumLevel;
     };
@@ -40,7 +40,7 @@ describe('HU-008: Comparación con nivel mínimo - Casos de Prueba', () => {
     expect(compareWithMinimum(2, 2)).toBe(true);
   });
 
-  test('CP-008-02: Estado de cumplimiento se determina correctamente', () => {
+  test('CP-012-02: Estado de cumplimiento se determina correctamente', () => {
     interface ProjectResult {
       final_result: number;
       classification: string;

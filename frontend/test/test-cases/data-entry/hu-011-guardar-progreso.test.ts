@@ -1,6 +1,6 @@
 /**
- * CASOS DE PRUEBA - HU-007: Guardar Progreso de la Evaluación
- * Valida los criterios de aceptación de la historia de usuario HU-007
+ * CASOS DE PRUEBA - HU-011: Guardar Progreso de la Evaluación
+ * Valida los criterios de aceptación de la historia de usuario HU-011
  */
 
 import '@testing-library/jest-dom';
@@ -20,12 +20,12 @@ jest.mock('react-hot-toast', () => ({
 }));
 
 
-describe('HU-007: Guardar Progreso - Casos de Prueba', () => {
+describe('HU-011: Guardar Progreso - Casos de Prueba', () => {
   
   // ============================================
-  // CP-007-01: Guardado parcial en localStorage
+  // CP-011-01: Guardado parcial en localStorage
   // ============================================
-  test('CP-007-01: LocalStorage guarda y recupera datos correctamente', () => {
+  test('CP-011-01: LocalStorage guarda y recupera datos correctamente', () => {
     const projectId = 123;
     const metricId = 456;
     const key = `evaluation_${projectId}_metric_${metricId}`;

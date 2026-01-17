@@ -1,6 +1,6 @@
 /**
- * CASOS DE PRUEBA - HU-005: Ingreso de Datos
- * Valida los criterios de aceptación de la historia de usuario HU-005
+ * CASOS DE PRUEBA - HU-009: Ingreso de Datos
+ * Valida los criterios de aceptación de la historia de usuario HU-009
  */
 
 import '@testing-library/jest-dom';
@@ -20,12 +20,12 @@ jest.mock('react-hot-toast', () => ({
 }));
 
 
-describe('HU-005: Ingreso de datos - Casos de Prueba', () => {
+describe('HU-009: Ingreso de datos - Casos de Prueba', () => {
   
   // ============================================
-  // CP-005-02: Apoyo visual de fórmula y descripción
+  // CP-009-02: Apoyo visual de fórmula y descripción
   // ============================================
-  describe('CP-005-02: Apoyo visual', () => {
+  describe('CP-009-02: Apoyo visual', () => {
     
     test('Verifica que las variables tienen descripciones definidas', () => {
       const mockVariables = [
@@ -118,9 +118,9 @@ describe('HU-005: Ingreso de datos - Casos de Prueba', () => {
 
   
   // ============================================
-  // CP-005-03: Bloqueo de datos incompatibles
+  // CP-009-03: Bloqueo de datos incompatibles
   // ============================================
-  describe('CP-005-03: División por cero', () => {
+  describe('CP-009-03: División por cero', () => {
     
     test('Función isDenominatorVariable detecta denominadores correctamente', () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
