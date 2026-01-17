@@ -3,23 +3,29 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 1.5rem;
   animation: slide-down 0.3s ease-out;
-  border-left: 4px solid;
+  border: 2px solid;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .content {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 0.875rem;
   flex: 1;
 }
 
 .icon {
-  font-size: 1.25rem;
   flex-shrink: 0;
   margin-top: 0.125rem;
+}
+
+.iconSvg {
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke-width: 2.5;
 }
 
 .text {
@@ -32,33 +38,44 @@
   font-weight: 700;
   display: block;
   margin-bottom: 0.25rem;
+  font-size: 0.9375rem;
 }
 
 .message {
-  line-height: 1.5;
+  line-height: 1.6;
   overflow-wrap: break-word;
+  font-size: 0.9375rem;
+  white-space: pre-line;
 }
 
 .closeButton {
   background: none;
   border: none;
-  font-size: 1.5rem;
   cursor: pointer;
-  padding: 0;
+  padding: 0.25rem;
   margin-left: 1rem;
   flex-shrink: 0;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .closeButton:hover {
   opacity: 1;
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 /* Error Banner */
 .banner.error {
-  background-color: #fee2e2;
-  border-left-color: #dc2626;
+  background-color: #fef2f2;
+  border-color: #dc2626;
+}
+
+.banner.error .iconSvg {
+  color: #dc2626;
 }
 
 .banner.error .title,
@@ -72,8 +89,12 @@
 
 /* Warning Banner */
 .banner.warning {
-  background-color: #fef3c7;
-  border-left-color: #f59e0b;
+  background-color: #fffbeb;
+  border-color: #f59e0b;
+}
+
+.banner.warning .iconSvg {
+  color: #f59e0b;
 }
 
 .banner.warning .title,
@@ -87,8 +108,12 @@
 
 /* Success Banner */
 .banner.success {
-  background-color: #dcfce7;
-  border-left-color: #16a34a;
+  background-color: #f0fdf4;
+  border-color: #16a34a;
+}
+
+.banner.success .iconSvg {
+  color: #16a34a;
 }
 
 .banner.success .title,
@@ -102,17 +127,21 @@
 
 /* Info Banner */
 .banner.info {
-  background-color: #dbeafe;
-  border-left-color: #0284c7;
+  background-color: #eff6ff;
+  border-color: #4E5EA3;
+}
+
+.banner.info .iconSvg {
+  color: #4E5EA3;
 }
 
 .banner.info .title,
 .banner.info .message {
-  color: #0c2340;
+  color: #1e3a8a;
 }
 
 .banner.info .closeButton {
-  color: #0c2340;
+  color: #1e3a8a;
 }
 
 @keyframes slide-down {

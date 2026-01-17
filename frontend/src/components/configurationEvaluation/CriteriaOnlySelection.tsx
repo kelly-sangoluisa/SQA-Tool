@@ -133,7 +133,9 @@ export function CriteriaOnlySelection({
   const handleImportancePercentageChange = (criterionId: number, percentage: number) => {
     const newImportance = new Map(criteriaImportance);
     const current = newImportance.get(criterionId) || { importanceLevel: 'M', importancePercentage: 0 };
-    newImportance.set(criterionId, { ...current, importancePercentage: percentage });
+    // Redondear a 2 decimales para evitar problemas de precisión
+    const roundedPercentage = Math.round(percentage * 100) / 100;
+    newImportance.set(criterionId, { ...current, importancePercentage: roundedPercentage });
     setCriteriaImportance(newImportance);
   };
 
@@ -142,7 +144,8 @@ export function CriteriaOnlySelection({
     criteriaImportance.forEach((data) => {
       total += data.importancePercentage;
     });
-    return total;
+    // Redondear a 2 decimales para evitar problemas de precisión
+    return Math.round(total * 100) / 100;
   };
 
   const validateAndProceed = (): boolean => {
@@ -176,13 +179,13 @@ export function CriteriaOnlySelection({
 
     // Validar que la suma sea exactamente 100%
     const total = calculateTotalPercentage();
-    if (Math.abs(total - 100) > 0.01) {
+    if (total !== 100) {
       const difference = total - 100;
       const message = difference > 0 
-        ? ` La suma de los porcentajes de importancia es ${total.toFixed(2)}%.\n\nDebe ajustar los porcentajes para que sumen exactamente 100%. Actualmente sobran ${difference.toFixed(2)}%.`
-        : ` La suma de los porcentajes de importancia es ${total.toFixed(2)}%.\n\nDebe ajustar los porcentajes para que sumen exactamente 100%. Actualmente faltan ${Math.abs(difference).toFixed(2)}%.`;
+        ? `La suma de los porcentajes es ${total}%. Debe ajustar los valores para que sumen exactamente 100%. Sobran ${difference}%.`
+        : `La suma de los porcentajes es ${total}%. Debe ajustar los valores para que sumen exactamente 100%. Faltan ${Math.abs(difference)}%.`;
       setAlertMessage(message);
-      setAlertType('error');
+      setAlertType('warning');
       return false;
     }
 
@@ -274,8 +277,8 @@ export function CriteriaOnlySelection({
           {selectedIds.size > 0 && (
             <div className={styles.selectionSummary}>
               <span className={styles.badge}>{selectedIds.size} criterios seleccionados</span>
-              <span className={`${styles.percentageBadge} ${Math.abs(calculateTotalPercentage() - 100) < 0.01 ? styles.valid : styles.invalid}`}>
-                Total: {calculateTotalPercentage().toFixed(2)}%
+              <span className={`${styles.percentageBadge} ${calculateTotalPercentage() === 100 ? styles.valid : styles.invalid}`}>
+                Total: {calculateTotalPercentage()}%
               </span>
             </div>
           )}
