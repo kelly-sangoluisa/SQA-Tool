@@ -242,7 +242,7 @@ export function MetricsSelection({
                 <div className={styles.subCriteriaList}>
                   {criterionData.sub_criteria
                     .filter((subCriterion) => {
-                      // Filtrar solo los subcriterios que fueron seleccionados en el paso anterior
+
                       const selectedSubCriteriaIds = getSelectedSubCriteriaIds(criterion.id);
                       return selectedSubCriteriaIds.includes(subCriterion.id);
                     })
