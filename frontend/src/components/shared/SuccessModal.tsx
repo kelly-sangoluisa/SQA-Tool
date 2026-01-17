@@ -130,6 +130,35 @@ export default function SuccessModal({
     };
   }, [open]);
 
+  // Manejar tecla Escape para cerrar el modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && open) {
+        onClose();
+      }
+    };
+
+    if (open) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, onClose]);
+
+  // Handlers para accesibilidad
+  const handleOverlayKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onClose();
+    }
+  };
+
+  const handleModalKeyDown = (event: React.KeyboardEvent) => {
+    event.stopPropagation();
+  };
+
   // No renderizar en el servidor
   if (!mounted) return null;
   if (!open) return null;
@@ -139,11 +168,19 @@ export default function SuccessModal({
       className={styles.overlay}
       style={fallbackStyles.overlay}
       onClick={onClose}
+      onKeyDown={handleOverlayKeyDown}
+      role="button"
+      tabIndex={-1}
+      aria-label="Cerrar modal"
     >
       <div
         className={styles.modal}
         style={fallbackStyles.modal}
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={handleModalKeyDown}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
       >
         <div className={styles.iconContainer} style={fallbackStyles.iconContainer}>
           <svg
@@ -161,7 +198,7 @@ export default function SuccessModal({
             />
           </svg>
         </div>
-        <h3 className={styles.title} style={fallbackStyles.title}>{title}</h3>
+        <h3 id="modal-title" className={styles.title} style={fallbackStyles.title}>{title}</h3>
         <p className={styles.message} style={fallbackStyles.message}>{message}</p>
         <div className={styles.actions} style={fallbackStyles.actions}>
           {showCancelButton && onCancel && (
