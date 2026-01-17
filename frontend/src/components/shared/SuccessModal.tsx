@@ -148,15 +148,17 @@ export default function SuccessModal({
   }, [open, onClose]);
 
   // Handlers para accesibilidad
+  const handleOverlayClick = (event: React.MouseEvent) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
   const handleOverlayKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       onClose();
     }
-  };
-
-  const handleModalKeyDown = (event: React.KeyboardEvent) => {
-    event.stopPropagation();
   };
 
   // No renderizar en el servidor
@@ -167,17 +169,15 @@ export default function SuccessModal({
     <div
       className={styles.overlay}
       style={fallbackStyles.overlay}
-      onClick={onClose}
+      onClick={handleOverlayClick}
       onKeyDown={handleOverlayKeyDown}
       role="button"
-      tabIndex={-1}
+      tabIndex={0}
       aria-label="Cerrar modal"
     >
       <div
         className={styles.modal}
         style={fallbackStyles.modal}
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={handleModalKeyDown}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
