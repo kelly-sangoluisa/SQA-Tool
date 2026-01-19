@@ -140,8 +140,8 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
 
     if (!nameValidation.valid || !descriptionValidation.valid) {
       setErrors({
-        name: nameValidation.error,
-        description: descriptionValidation.error
+        name: nameValidation.error || '',
+        description: descriptionValidation.error || ''
       });
       return;
     }

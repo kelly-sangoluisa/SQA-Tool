@@ -46,9 +46,9 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
 
     if (!nameValidation.valid || !versionValidation.valid || !descriptionValidation.valid) {
       setErrors({
-        name: nameValidation.error,
-        version: versionValidation.error,
-        description: descriptionValidation.error
+        name: nameValidation.error || '',
+        version: versionValidation.error || '',
+        description: descriptionValidation.error || ''
       });
       return;
     }

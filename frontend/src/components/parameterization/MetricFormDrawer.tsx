@@ -135,31 +135,33 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
 
   // Validación en tiempo real para campos específicos
   const validateFieldOnChange = (fieldName: string, value: string) => {
-    let validation = { valid: true, message: undefined as string | undefined };
+    let validationResult;
 
     switch (fieldName) {
       case 'name':
-        validation = validateMetricName(value);
+        validationResult = validateMetricName(value);
         break;
       case 'code':
-        validation = validateMetricCode(value);
+        validationResult = validateMetricCode(value);
         break;
       case 'formula':
-        validation = validateFormula(value);
+        validationResult = validateFormula(value);
         break;
       case 'desired_threshold':
-        validation = validateThreshold(value, 'umbral deseado');
+        validationResult = validateThreshold(value, 'umbral deseado');
         break;
       case 'worst_case':
-        validation = validateThreshold(value, 'peor caso');
+        validationResult = validateThreshold(value, 'peor caso');
         break;
+      default:
+        validationResult = { valid: true, error: undefined, warning: undefined, success: undefined };
     }
 
     setFieldValidation(prev => ({
       ...prev,
       [fieldName]: {
-        valid: validation.valid,
-        message: validation.error || validation.warning || validation.success
+        valid: validationResult.valid,
+        message: validationResult.error || validationResult.warning || validationResult.success
       }
     }));
   };
