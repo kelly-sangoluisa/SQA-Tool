@@ -4,7 +4,9 @@ import { CriterionSearchResult } from '../../types/parameterization-search.types
 import { BaseFormDrawer } from '../shared/BaseFormDrawer';
 import { ValidatedFormField } from '../shared/ValidatedFormField';
 import { Autocomplete } from './Autocomplete';
+import { Toast } from '../shared/Toast';
 import { useFormDrawer } from '../../hooks/shared/useFormDrawer';
+import { useToast } from '../../hooks/shared/useToast';
 import { handleApiError } from '../../utils/validation';
 import { validateCriterionName, validateDescription } from '../../utils/parameterization-validation';
 import styles from '../shared/FormDrawer.module.css';
@@ -39,6 +41,8 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
     onSave,
     onClose
   });
+  
+  const { toast, showToast, hideToast } = useToast();
 
   /**
    * Maneja la selección de un criterio del autocompletado
@@ -54,6 +58,12 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Verificar campos obligatorios vacíos primero
+    if (!formData.name.trim()) {
+      setErrors({ name: 'Completa este campo' });
+      return;
+    }
     
     const nameValidation = validateCriterionName(formData.name);
     const descriptionValidation = validateDescription(formData.description, 500);
@@ -89,7 +99,14 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
         savedCriterion = await parameterizationApi.createCriterion(createData);
       }
       
-      onSave(savedCriterion);
+      showToast(
+        criterion ? '✅ Criterio actualizado exitosamente' : '✅ Criterio creado exitosamente',
+        'success'
+      );
+      
+      setTimeout(() => {
+        onSave(savedCriterion);
+      }, 500);
     } catch (error) {
       console.error('Error saving criterion:', error);
       const errorMessage = handleApiError(error, criterion ? 'actualizar' : 'crear', 'el criterio');
@@ -110,27 +127,33 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
   };
 
   return (
-    <BaseFormDrawer
-      isVisible={isVisible}
-      title={criterion ? 'Editar Criterio' : 'Nuevo Criterio'}
-      subtitle={criterion 
-        ? 'Modifica la información del criterio de evaluación'
-        : 'Define un nuevo criterio para evaluar la calidad del software'
-      }
-      onClose={handleClose}
-      onSubmit={handleSubmit}
-      loading={loading}
-      submitLabel={criterion ? 'Actualizar Criterio' : 'Crear Criterio'}
-      submitDisabled={!formData.name.trim()}
-      generalError={errors.general}
-    >
+    <>
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
+      <BaseFormDrawer
+        isVisible={isVisible}
+        title={criterion ? 'Editar Criterio' : 'Nuevo Criterio'}
+        subtitle={criterion 
+          ? 'Modifica la información del criterio de evaluación'
+          : 'Define un nuevo criterio para evaluar la calidad del software'
+        }
+        onClose={handleClose}
+        onSubmit={handleSubmit}
+        loading={loading}
+        submitLabel={criterion ? 'Actualizar Criterio' : 'Crear Criterio'}
+        generalError={errors.general}
+      >
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Información del Criterio</h3>
         
         {!criterion && showAutocomplete ? (
           <div className={styles.field}>
-            <label htmlFor="name" className={styles.label}>
-              Nombre del Criterio * (Búsqueda inteligente)
+            <label htmlFor="name" className={`${styles.label} ${styles.required}`}>
+              Nombre del Criterio (Búsqueda inteligente)
             </label>
             <Autocomplete
               value={formData.name}
@@ -143,9 +166,9 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
               placeholder="Escribe o busca un criterio existente..."
               helperText="💡 Puedes reutilizar un criterio existente de cualquier estándar"
               name="name"
-              required
+              error={errors.name}
             />
-            {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
+            {/* El error ya se muestra dentro del Autocomplete */}
           </div>
         ) : (
           <ValidatedFormField
@@ -189,5 +212,6 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
         />
       </div>
     </BaseFormDrawer>
+    </>
   );
 }

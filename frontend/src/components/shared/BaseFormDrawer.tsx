@@ -11,7 +11,7 @@ interface BaseFormDrawerProps {
   readonly onSubmit: (e: React.FormEvent) => void;
   readonly loading: boolean;
   readonly submitLabel: string;
-  readonly submitDisabled: boolean;
+  readonly submitDisabled?: boolean;
   readonly generalError?: string;
   readonly children: ReactNode;
 }
@@ -24,7 +24,7 @@ export function BaseFormDrawer({
   onSubmit,
   loading,
   submitLabel,
-  submitDisabled,
+  submitDisabled = false,
   generalError,
   children
 }: BaseFormDrawerProps) {

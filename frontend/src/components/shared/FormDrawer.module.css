@@ -766,7 +766,7 @@
   margin-top: 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;
-  animation: fadeIn 0.3s ease;
+  animation: fade-in 0.3s ease;
 }
 
 .successMessage {
@@ -800,7 +800,7 @@
   animation: shake 0.5s ease;
 }
 
-@keyframes fadeIn {
+@keyframes fade-in {
   from {
     opacity: 0;
     transform: translateY(-5px);

@@ -4,6 +4,8 @@ import { Metric, parameterizationApi, CreateMetricDto, UpdateMetricDto } from '.
 import { MetricSearchResult } from '../../types/parameterization-search.types';
 import { Button } from '../shared/Button';
 import { Autocomplete } from './Autocomplete';
+import { Toast } from '../shared/Toast';
+import { useToast } from '../../hooks/shared/useToast';
 import { validateThresholdFormat } from '../../utils/data-entry/thresholdUtils';
 import { 
   validateMetricName, 
@@ -62,6 +64,8 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
   const [isVisible, setIsVisible] = useState(false);
   const [tempIdCounter, setTempIdCounter] = useState(0);
   const [showAutocomplete, setShowAutocomplete] = useState(true);
+  
+  const { toast, showToast, hideToast } = useToast();
 
   useEffect(() => {
     setMounted(true);
@@ -168,6 +172,29 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+
+    // Verificar campos obligatorios vacíos primero
+    if (!formData.name.trim()) {
+      newErrors.name = 'Completa este campo';
+    }
+    if (!formData.code.trim()) {
+      newErrors.code = 'Completa este campo';
+    }
+    if (!formData.formula.trim()) {
+      newErrors.formula = 'Completa este campo';
+    }
+    if (!formData.desired_threshold.trim()) {
+      newErrors.desired_threshold = 'Completa este campo';
+    }
+    if (!formData.worst_case.trim()) {
+      newErrors.worst_case = 'Completa este campo';
+    }
+    
+    // Si hay campos obligatorios vacíos, detener aquí
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return false;
+    }
 
     // Validar nombre
     const nameValidation = validateMetricName(formData.name);
@@ -312,7 +339,14 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
         }
       }
 
-      onSave();
+      showToast(
+        metric ? '✅ Métrica actualizada exitosamente' : '✅ Métrica creada exitosamente',
+        'success'
+      );
+      
+      setTimeout(() => {
+        onSave();
+      }, 500);
     } catch (error) {
       console.error('Error saving metric:', error);
       setErrors({ general: 'Error al guardar la métrica' });
@@ -426,7 +460,14 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
   };
 
   const drawerContent = (
-    <div className={`${styles.overlay} ${isVisible ? styles.visible : ''}`}>
+    <>
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
+      <div className={`${styles.overlay} ${isVisible ? styles.visible : ''}`}>
       <div className={`${styles.drawer} ${isVisible ? styles.open : ''}`}>
         <div className={styles.header}>
           <div className={styles.titleSection}>
@@ -469,8 +510,8 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
               
               <div className={styles.row}>
                 <div className={styles.field}>
-                  <label htmlFor="name" className={styles.label}>
-                    Nombre * {!metric && '(Búsqueda inteligente)'}
+                  <label htmlFor="name" className={`${styles.label} ${styles.required}`}>
+                    Nombre {!metric && '(Búsqueda inteligente)'}
                   </label>
                   {!metric && showAutocomplete ? (
                     <Autocomplete
@@ -484,14 +525,19 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                       placeholder="Escribe o busca una métrica existente..."
                       helperText="💡 Puedes reutilizar una métrica existente de cualquier estándar"
                       name="name"
-                      required
+                      error={errors.name}
                     />
                   ) : (
                     <input
                       type="text"
                       id="name"
                       value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, name: e.target.value }));
+                        if (errors.name) {
+                          setErrors(prev => ({ ...prev, name: '' }));
+                        }
+                      }}
                       className={`${styles.input} ${errors.name ? styles.error : ''}}`}
                       placeholder="Ej: Porcentaje de éxito"
                     />
@@ -505,21 +551,28 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                       🔍 Buscar métrica existente
                     </button>
                   )}
-                  {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
+                  {/* Solo mostrar error si NO está usando Autocomplete */}
+                  {!showAutocomplete && errors.name && <span className={styles.fieldError}>{errors.name}</span>}
                 </div>
 
                 <div className={styles.field}>
-                  <label htmlFor="code" className={styles.label}>
+                  <label htmlFor="code" className={`${styles.label} ${styles.required}`}>
                     Código
                   </label>
                   <input
                     type="text"
                     id="code"
                     value={formData.code}
-                    onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-                    className={styles.input}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, code: e.target.value }));
+                      if (errors.code) {
+                        setErrors(prev => ({ ...prev, code: '' }));
+                      }
+                    }}
+                    className={`${styles.input} ${errors.code ? styles.error : ''}`}
                     placeholder="Ej: PO-1"
                   />
+                  {errors.code && <span className={styles.fieldError}>{errors.code}</span>}
                 </div>
               </div>
 
@@ -538,7 +591,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="threshold" className={styles.label}>
+                <label htmlFor="threshold" className={`${styles.label} ${styles.required}`}>
                   Umbral Deseado
                 </label>
                 <input
@@ -551,6 +604,10 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                       ...prev, 
                       desired_threshold: value
                     }));
+                    // Limpiar error cuando el usuario empieza a escribir
+                    if (errors.desired_threshold) {
+                      setErrors(prev => ({ ...prev, desired_threshold: '' }));
+                    }
                     validateFieldOnChange('desired_threshold', value);
                   }}
                   className={`${styles.input} ${errors.desired_threshold ? styles.error : ''} ${!errors.desired_threshold && fieldValidation.desired_threshold?.valid && formData.desired_threshold ? styles.success : ''}`}
@@ -570,7 +627,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="worstCase" className={styles.label}>
+                <label htmlFor="worstCase" className={`${styles.label} ${styles.required}`}>
                   Peor Caso
                 </label>
                 <input
@@ -583,6 +640,10 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                       ...prev, 
                       worst_case: value
                     }));
+                    // Limpiar error cuando el usuario empieza a escribir
+                    if (errors.worst_case) {
+                      setErrors(prev => ({ ...prev, worst_case: '' }));
+                    }
                     validateFieldOnChange('worst_case', value);
                   }}
                   className={`${styles.input} ${errors.worst_case ? styles.error : ''} ${!errors.worst_case && fieldValidation.worst_case?.valid && formData.worst_case ? styles.success : ''}`}
@@ -603,11 +664,11 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
             </div>
 
             <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Fórmula *</h3>
+              <h3 className={styles.sectionTitle}>Fórmula</h3>
               
               <div className={styles.field}>
-                <label htmlFor="formula" className={styles.label}>
-                  Expresión Matemática (Obligatoria)
+                <label htmlFor="formula" className={`${styles.label} ${styles.required}`}>
+                  Expresión Matemática
                 </label>
                 <textarea
                   id="formula"
@@ -615,6 +676,9 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                   onChange={(e) => {
                     const newFormula = e.target.value;
                     setFormData(prev => ({ ...prev, formula: newFormula }));
+                    if (errors.formula) {
+                      setErrors(prev => ({ ...prev, formula: '' }));
+                    }
                     validateFieldOnChange('formula', newFormula);
                   }}
                   onBlur={() => {
@@ -625,7 +689,6 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                   className={`${styles.textarea} ${styles.formula} ${errors.formula ? styles.error : ''}`}
                   rows={3}
                   placeholder="Ej: A/B, 1-(A/B), (A+B)/C"
-                  required
                 />
                 {errors.formula && (
                   <span className={styles.fieldError}>{errors.formula}</span>
@@ -831,7 +894,6 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
               type="submit"
               variant="primary"
               isLoading={loading}
-              disabled={!formData.name.trim() || !formData.code.trim() || !formData.formula.trim()}
             >
               {metric ? 'Actualizar Métrica' : 'Crear Métrica'}
             </Button>
@@ -839,6 +901,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
         </form>
       </div>
     </div>
+    </>
   );
 
   // Renderizar en el body usando Portal para escapar del contenedor "shifted"
