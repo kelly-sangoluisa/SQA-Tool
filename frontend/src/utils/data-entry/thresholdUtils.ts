@@ -220,7 +220,7 @@ export function validateThresholdFormat(threshold: string): { valid: boolean; er
     if (!ratioMatch) {
       return { 
         valid: false, 
-        error: `Formato inválido "${cleanNumberStr}/${unit}". Use el formato completo, ej: "10/1${unit}" o "0/3${unit}"` 
+        error: `Formato inválido "${cleanNumberStr}${unit}". Use el formato completo, ej: "10/1${unit}" o "0/3${unit}"` 
       };
     }
     // Validar que tiene numerador y denominador

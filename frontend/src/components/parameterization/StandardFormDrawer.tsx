@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { parameterizationApi, CreateStandardDto, UpdateStandardDto, Standard } from '../../api/parameterization/parameterization-api';
+import { parameterizationApi, Standard } from '../../api/parameterization/parameterization-api';
 import { BaseFormDrawer } from '../shared/BaseFormDrawer';
 import { ValidatedFormField } from '../shared/ValidatedFormField';
+import { Toast } from '../shared/Toast';
 import { useFormDrawer } from '../../hooks/shared/useFormDrawer';
+import { useToast } from '../../hooks/shared/useToast';
 import { handleApiError } from '../../utils/validation';
 import { 
   validateStandardName, 
@@ -35,11 +37,21 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
     onSave,
     onClose
   });
+  
+  const { toast, showToast, hideToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar todos los campos antes de enviar
+    const newErrors: Record<string, string> = {};
+    if (!formData.name.trim()) newErrors.name = 'Completa este campo';
+    if (!formData.version.trim()) newErrors.version = 'Completa este campo';
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
     const nameValidation = validateStandardName(formData.name);
     const versionValidation = validateStandardVersion(formData.version);
     const descriptionValidation = validateDescription(formData.description, 500);
@@ -55,35 +67,22 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
 
     setLoading(true);
     try {
-      let savedStandard: Standard;
+      const data = {
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
+        version: formData.version.trim() || undefined
+      };
+
+      const savedStandard = standard
+        ? await parameterizationApi.updateStandard(standard.id, data)
+        : await parameterizationApi.createStandard(data);
       
-      if (standard) {
-        const updateData: UpdateStandardDto = {
-          name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
-          version: formData.version.trim() || undefined
-        };
-        savedStandard = await parameterizationApi.updateStandard(standard.id, updateData);
-      } else {
-        const createData: CreateStandardDto = {
-          name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
-          version: formData.version.trim() || undefined
-        };
-        // Creating standard...
-        savedStandard = await parameterizationApi.createStandard(createData);
-      }
-      
-      onSave(savedStandard);
+      const message = standard ? '✅ Estándar actualizado exitosamente' : '✅ Estándar creado exitosamente';
+      showToast(message, 'success');
+      setTimeout(() => onSave(savedStandard), 500);
     } catch (error) {
       console.error('Error saving standard:', error);
-      const errorMessage = handleApiError(error, standard ? 'actualizar' : 'crear', 'el estándar');
-      if (error instanceof Error) {
-        if (error.message.includes('name')) {
-          // Error already handled by handleApiError
-        }
-      }
-      setErrors({ general: errorMessage });
+      setErrors({ general: handleApiError(error, standard ? 'actualizar' : 'crear', 'el estándar') });
     } finally {
       setLoading(false);
     }
@@ -95,20 +94,26 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
   };
 
   return (
-    <BaseFormDrawer
-      isVisible={isVisible}
-      title={standard ? 'Editar Estándar' : 'Nuevo Estándar'}
-      subtitle={standard 
-        ? 'Modifica la información del estándar de calidad'
-        : 'Crea un nuevo estándar de calidad para tu organización'
-      }
-      onClose={handleClose}
-      onSubmit={handleSubmit}
-      loading={loading}
-      submitLabel={standard ? 'Actualizar Estándar' : 'Crear Estándar'}
-      submitDisabled={!formData.name.trim() || !formData.version.trim()}
-      generalError={errors.general}
-    >
+    <>
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
+      <BaseFormDrawer
+        isVisible={isVisible}
+        title={standard ? 'Editar Estándar' : 'Nuevo Estándar'}
+        subtitle={standard 
+          ? 'Modifica la información del estándar de calidad'
+          : 'Crea un nuevo estándar de calidad para tu organización'
+        }
+        onClose={handleClose}
+        onSubmit={handleSubmit}
+        loading={loading}
+        submitLabel={standard ? 'Actualizar Estándar' : 'Crear Estándar'}
+        generalError={errors.general}
+      >
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Información Básica</h3>
         
@@ -156,5 +161,6 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
         />
       </div>
     </BaseFormDrawer>
+    </>
   );
 }

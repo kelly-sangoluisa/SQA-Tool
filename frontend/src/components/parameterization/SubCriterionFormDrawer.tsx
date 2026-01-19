@@ -135,6 +135,12 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Verificar campos obligatorios vacíos primero
+    if (!formData.name.trim()) {
+      setErrors({ name: 'Completa este campo' });
+      return;
+    }
+    
     const nameValidation = validateSubCriterionName(formData.name);
     const descriptionValidation = validateDescription(formData.description, 500);
 
@@ -197,7 +203,6 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
         onSubmit={handleSubmit}
         loading={loading}
         submitLabel={subCriterion ? 'Actualizar Subcriterio' : 'Crear Subcriterio'}
-        submitDisabled={!formData.name.trim()}
         generalError={errors.general}
       >
         <div className={styles.section}>
@@ -205,8 +210,8 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
           
           {!subCriterion && showAutocomplete ? (
             <div className={styles.field}>
-              <label htmlFor="name" className={styles.label}>
-                Nombre del Subcriterio * (Búsqueda inteligente)
+              <label htmlFor="name" className={`${styles.label} ${styles.required}`}>
+                Nombre del Subcriterio (Búsqueda inteligente)
               </label>
               <Autocomplete
                 value={formData.name}
@@ -219,9 +224,9 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
                 placeholder="Escribe o busca un subcriterio existente..."
                 helperText="💡 Puedes reutilizar un subcriterio existente de cualquier estándar. Si tiene métricas, también podrás seleccionarlas."
                 name="name"
-                required
+                error={errors.name}
               />
-              {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
+              {/* El error ya se muestra dentro del Autocomplete */}
             </div>
           ) : (
             <ValidatedFormField

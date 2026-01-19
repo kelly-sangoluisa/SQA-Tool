@@ -16,6 +16,7 @@ interface AutocompleteProps<T> {
   readonly helperText?: string;
   readonly name?: string;
   readonly required?: boolean;
+  readonly error?: string;
 }
 
 export function Autocomplete<T>({
@@ -33,6 +34,7 @@ export function Autocomplete<T>({
   helperText,
   name,
   required = false,
+  error,
 }: AutocompleteProps<T>) {
   const [results, setResults] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -164,7 +166,7 @@ export function Autocomplete<T>({
         required={required}
         className={`${styles.autocompleteInput} ${
           showResults && results.length > 0 ? styles.hasResults : ''
-        }`}
+        } ${error ? styles.error : ''}`}
         autoComplete="off"
         role="combobox"
         aria-autocomplete="list"
@@ -239,8 +241,12 @@ export function Autocomplete<T>({
         </div>
       )}
 
-      {helperText && !showResults && (
+      {helperText && !showResults && !error && (
         <div className={styles.helperText}>{helperText}</div>
+      )}
+      
+      {error && (
+        <div className={styles.errorText}>{error}</div>
       )}
     </div>
   );
