@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { SubCriterion, parameterizationApi, CreateSubCriterionDto, UpdateSubCriterionDto } from '../../api/parameterization/parameterization-api';
 import { SubCriterionSearchResult, MetricSearchResult } from '../../types/parameterization-search.types';
 import { BaseFormDrawer } from '../shared/BaseFormDrawer';
-import { FormField } from '../shared/FormField';
+import { ValidatedFormField } from '../shared/ValidatedFormField';
 import { Autocomplete } from './Autocomplete';
 import { MetricSelectorModal } from './MetricSelectorModal';
 import { useFormDrawer } from '../../hooks/shared/useFormDrawer';
-import { validateForm, handleApiError } from '../../utils/validation';
+import { handleApiError } from '../../utils/validation';
+import { validateSubCriterionName, validateDescription } from '../../utils/parameterization-validation';
 import styles from '../shared/FormDrawer.module.css';
 
 interface SubCriterionFormDrawerProps {
@@ -134,13 +135,14 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const validationErrors = validateForm(formData as unknown as Record<string, unknown>, {
-      name: { required: true, minLength: 2, maxLength: 100 },
-      description: { maxLength: 500 }
-    });
+    const nameValidation = validateSubCriterionName(formData.name);
+    const descriptionValidation = validateDescription(formData.description, 500);
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+    if (!nameValidation.valid || !descriptionValidation.valid) {
+      setErrors({
+        name: nameValidation.error,
+        description: descriptionValidation.error
+      });
       return;
     }
 
@@ -222,16 +224,18 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
               {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
             </div>
           ) : (
-            <FormField
+            <ValidatedFormField
               id="name"
               label="Nombre del Subcriterio"
               value={formData.name}
               onChange={(value) => handleInputChange('name', value)}
               placeholder="Ej: Gestión de Defectos, Tolerancia a Fallos"
               disabled={loading}
-              error={errors.name}
               required
               maxLength={100}
+              validateFn={validateSubCriterionName}
+              validateOnChange={true}
+              helperText="Nombre específico del aspecto a evaluar"
             />
           )}
 
@@ -245,16 +249,19 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
             </button>
           )}
 
-          <FormField
+          <ValidatedFormField
             id="description"
             label="Descripción"
             value={formData.description}
             onChange={(value) => handleInputChange('description', value)}
             placeholder="Describe qué aspecto específico evalúa este subcriterio, cómo se mide y su importancia..."
             disabled={loading}
-            error={errors.description}
             maxLength={500}
             type="textarea"
+            rows={4}
+            validateFn={(val) => validateDescription(val, 500)}
+            validateOnChange={false}
+            helperText="Detalla el propósito y alcance del subcriterio"
           />
 
           {selectedMetricsForParent.length > 0 && (

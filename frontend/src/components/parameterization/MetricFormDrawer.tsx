@@ -5,6 +5,16 @@ import { MetricSearchResult } from '../../types/parameterization-search.types';
 import { Button } from '../shared/Button';
 import { Autocomplete } from './Autocomplete';
 import { validateThresholdFormat } from '../../utils/data-entry/thresholdUtils';
+import { 
+  validateMetricName, 
+  validateMetricCode, 
+  validateFormula,
+  validateVariableSymbol,
+  validateVariableDescription,
+  validateThreshold,
+  validateVariablesMatchFormula,
+  extractVariablesFromFormula
+} from '../../utils/parameterization-validation';
 import styles from '../shared/FormDrawer.module.css';
 
 interface MetricFormDrawerProps {
@@ -48,6 +58,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [fieldValidation, setFieldValidation] = useState<Record<string, { valid: boolean; message?: string }>>({});
   const [isVisible, setIsVisible] = useState(false);
   const [tempIdCounter, setTempIdCounter] = useState(0);
   const [showAutocomplete, setShowAutocomplete] = useState(true);
@@ -122,11 +133,64 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
     setShowAutocomplete(false); // Ocultar autocomplete después de seleccionar
   };
 
+  // Validación en tiempo real para campos específicos
+  const validateFieldOnChange = (fieldName: string, value: string) => {
+    let validation = { valid: true, message: undefined as string | undefined };
+
+    switch (fieldName) {
+      case 'name':
+        validation = validateMetricName(value);
+        break;
+      case 'code':
+        validation = validateMetricCode(value);
+        break;
+      case 'formula':
+        validation = validateFormula(value);
+        break;
+      case 'desired_threshold':
+        validation = validateThreshold(value, 'umbral deseado');
+        break;
+      case 'worst_case':
+        validation = validateThreshold(value, 'peor caso');
+        break;
+    }
+
+    setFieldValidation(prev => ({
+      ...prev,
+      [fieldName]: {
+        valid: validation.valid,
+        message: validation.error || validation.warning || validation.success
+      }
+    }));
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es requerido';
+    // Validar nombre
+    const nameValidation = validateMetricName(formData.name);
+    if (!nameValidation.valid) {
+      newErrors.name = nameValidation.error!;
+    }
+
+    // Validar código
+    const codeValidation = validateMetricCode(formData.code);
+    if (!codeValidation.valid) {
+      newErrors.code = codeValidation.error!;
+    }
+
+    // Validar fórmula (AHORA OBLIGATORIA)
+    const formulaValidation = validateFormula(formData.formula, true);
+    if (!formulaValidation.valid) {
+      newErrors.formula = formulaValidation.error!;
+    }
+
+    // Validar que las variables coincidan con la fórmula
+    if (formData.formula.trim()) {
+      const variablesValidation = validateVariablesMatchFormula(formData.formula, formData.variables);
+      if (!variablesValidation.valid) {
+        newErrors.variables = variablesValidation.error!;
+      }
     }
 
     if (!subCriterionId && !metric?.sub_criterion_id) {
@@ -135,7 +199,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
 
     // Validar formato de umbral deseado
     if (formData.desired_threshold) {
-      const thresholdValidation = validateThresholdFormat(formData.desired_threshold);
+      const thresholdValidation = validateThreshold(formData.desired_threshold, 'umbral deseado');
       if (!thresholdValidation.valid) {
         newErrors.desired_threshold = thresholdValidation.error || 'Formato de umbral inválido';
       }
@@ -143,7 +207,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
 
     // Validar formato de peor caso
     if (formData.worst_case) {
-      const worstCaseValidation = validateThresholdFormat(formData.worst_case);
+      const worstCaseValidation = validateThreshold(formData.worst_case, 'peor caso');
       if (!worstCaseValidation.valid) {
         newErrors.worst_case = worstCaseValidation.error || 'Formato de peor caso inválido';
       }
@@ -151,11 +215,14 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
 
     // Validate variables
     formData.variables.forEach((variable, index) => {
-      if (!variable.symbol.trim()) {
-        newErrors[`variable-symbol-${index}`] = 'El símbolo es requerido';
+      const symbolValidation = validateVariableSymbol(variable.symbol);
+      if (!symbolValidation.valid) {
+        newErrors[`variable-symbol-${index}`] = symbolValidation.error!;
       }
-      if (!variable.description.trim()) {
-        newErrors[`variable-description-${index}`] = 'La descripción es requerida';
+
+      const descValidation = validateVariableDescription(variable.description);
+      if (!descValidation.valid) {
+        newErrors[`variable-description-${index}`] = descValidation.error!;
       }
     });
 
@@ -257,7 +324,55 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
     setTimeout(onClose, 300); // Wait for animation
   };
 
+  // Sincronizar variables con la fórmula cuando cambia
+  const syncVariablesWithFormula = (formula: string) => {
+    if (!formula.trim()) {
+      return;
+    }
+
+    const requiredVars = extractVariablesFromFormula(formula);
+    const currentSymbols = formData.variables.map(v => v.symbol.trim()).filter(s => s.length > 0);
+
+    // Si las variables ya coinciden, no hacer nada
+    if (JSON.stringify(requiredVars.sort()) === JSON.stringify(currentSymbols.sort())) {
+      return;
+    }
+
+    // Crear nuevas variables basadas en la fórmula
+    const newVariables = requiredVars.map((symbol, idx) => {
+      // Buscar si ya existe una variable con este símbolo
+      const existing = formData.variables.find(v => v.symbol === symbol);
+      if (existing) {
+        return existing;
+      }
+      // Crear nueva variable vacía
+      return {
+        symbol,
+        description: '',
+        tempId: `temp-formula-${Date.now()}-${idx}`
+      };
+    });
+
+    setFormData(prev => ({
+      ...prev,
+      variables: newVariables
+    }));
+  };
+
   const addVariable = () => {
+    // Validar si ya se cumple con las variables de la fórmula
+    if (formData.formula.trim()) {
+      const requiredVars = extractVariablesFromFormula(formData.formula);
+      const currentSymbols = formData.variables.map(v => v.symbol.trim()).filter(s => s.length > 0);
+      
+      if (currentSymbols.length >= requiredVars.length) {
+        setErrors({ 
+          variables: `No puede agregar más variables. La fórmula solo requiere: ${requiredVars.join(', ')}` 
+        });
+        return;
+      }
+    }
+
     setTempIdCounter(prev => prev + 1);
     setFormData(prev => ({
       ...prev,
@@ -468,21 +583,63 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
             </div>
 
             <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Fórmula</h3>
+              <h3 className={styles.sectionTitle}>Fórmula *</h3>
               
               <div className={styles.field}>
                 <label htmlFor="formula" className={styles.label}>
-                  Expresión Matemática
+                  Expresión Matemática (Obligatoria)
                 </label>
                 <textarea
                   id="formula"
                   value={formData.formula}
-                  onChange={(e) => setFormData(prev => ({ ...prev, formula: e.target.value }))}
-                  className={`${styles.textarea} ${styles.formula}`}
+                  onChange={(e) => {
+                    const newFormula = e.target.value;
+                    setFormData(prev => ({ ...prev, formula: newFormula }));
+                    validateFieldOnChange('formula', newFormula);
+                  }}
+                  onBlur={() => {
+                    if (formData.formula.trim()) {
+                      syncVariablesWithFormula(formData.formula);
+                    }
+                  }}
+                  className={`${styles.textarea} ${styles.formula} ${errors.formula ? styles.error : ''}`}
                   rows={3}
-                  placeholder="Ej: (N_EXITO / N_TOTAL) * 100"
+                  placeholder="Ej: (N_EXITO / N_TOTAL) * 100, A/B, 1-(A/B)"
+                  required
                 />
+                {errors.formula && (
+                  <span className={styles.fieldError}>{errors.formula}</span>
+                )}
+                {!errors.formula && fieldValidation.formula?.message && (
+                  <span className={`${styles.feedbackMessage} ${fieldValidation.formula.message.includes('✓') ? styles.successMessage : styles.warningMessage}`}>
+                    {fieldValidation.formula.message}
+                  </span>
+                )}
+                <span className={styles.helpText}>
+                  💡 Use variables en MAYÚSCULAS (A, B, N_TOTAL, etc.) y operadores: +, -, *, /, ( )
+                </span>
               </div>
+
+              {formData.formula.trim() && (
+                <button
+                  type="button"
+                  onClick={() => syncVariablesWithFormula(formData.formula)}
+                  className={styles.syncButton}
+                  style={{
+                    marginTop: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  🔄 Auto-generar variables desde fórmula
+                </button>
+              )}
 
               <div className={styles.variablesSection}>
                 <div className={styles.variablesHeader}>
@@ -491,6 +648,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                     type="button"
                     onClick={addVariable}
                     className={styles.addButton}
+                    disabled={!formData.formula.trim()}
                   >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path
@@ -503,6 +661,50 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                     Agregar Variable
                   </button>
                 </div>
+
+                {/* Mensaje de estado de validación de variables */}
+                {formData.formula.trim() && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    {(() => {
+                      const requiredVars = extractVariablesFromFormula(formData.formula);
+                      const variablesValidation = validateVariablesMatchFormula(formData.formula, formData.variables);
+                      
+                      if (requiredVars.length === 0) {
+                        return (
+                          <div className={styles.infoBox} style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a' }}>
+                            ⚠️ La fórmula no contiene variables válidas (use MAYÚSCULAS: A, B, N_TOTAL)
+                          </div>
+                        );
+                      }
+
+                      if (variablesValidation.valid) {
+                        return (
+                          <div className={styles.infoBox} style={{ backgroundColor: '#d1fae5', border: '1px solid #a7f3d0' }}>
+                            {variablesValidation.success}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className={styles.infoBox} style={{ backgroundColor: '#fee2e2', border: '1px solid #fecaca' }}>
+                          ❌ {variablesValidation.error}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {!formData.formula.trim() && (
+                  <div className={styles.infoBox} style={{ marginBottom: '1rem' }}>
+                    💡 Primero defina la fórmula para saber qué variables necesita
+                  </div>
+                )}
+
+                {errors.variables && (
+                  <div className={styles.errorMessage} style={{ marginBottom: '1rem' }}>
+                    {errors.variables}
+                  </div>
+                )}
 
                 {!metric && !showAutocomplete && formData.variables.length > 0 && (
                   <div className={styles.infoBox} style={{ marginBottom: '1rem' }}>
@@ -609,7 +811,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
               type="submit"
               variant="primary"
               isLoading={loading}
-              disabled={!formData.name.trim() || !formData.code.trim()}
+              disabled={!formData.name.trim() || !formData.code.trim() || !formData.formula.trim()}
             >
               {metric ? 'Actualizar Métrica' : 'Crear Métrica'}
             </Button>

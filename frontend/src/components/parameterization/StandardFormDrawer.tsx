@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { parameterizationApi, CreateStandardDto, UpdateStandardDto, Standard } from '../../api/parameterization/parameterization-api';
 import { BaseFormDrawer } from '../shared/BaseFormDrawer';
-import { FormField } from '../shared/FormField';
+import { ValidatedFormField } from '../shared/ValidatedFormField';
 import { useFormDrawer } from '../../hooks/shared/useFormDrawer';
-import { validateForm, handleApiError } from '../../utils/validation';
+import { handleApiError } from '../../utils/validation';
+import { 
+  validateStandardName, 
+  validateStandardVersion, 
+  validateDescription 
+} from '../../utils/parameterization-validation';
 import styles from '../shared/FormDrawer.module.css';
 
 interface StandardFormDrawerProps {
@@ -34,14 +39,17 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const validationErrors = validateForm(formData as unknown as Record<string, unknown>, {
-      name: { required: true, minLength: 2, maxLength: 100 },
-      description: { maxLength: 500 },
-      version: { maxLength: 20 }
-    });
+    // Validar todos los campos antes de enviar
+    const nameValidation = validateStandardName(formData.name);
+    const versionValidation = validateStandardVersion(formData.version);
+    const descriptionValidation = validateDescription(formData.description, 500);
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+    if (!nameValidation.valid || !versionValidation.valid || !descriptionValidation.valid) {
+      setErrors({
+        name: nameValidation.error,
+        version: versionValidation.error,
+        description: descriptionValidation.error
+      });
       return;
     }
 
@@ -104,40 +112,47 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Información Básica</h3>
         
-        <FormField
+        <ValidatedFormField
           id="name"
           label="Nombre del Estándar"
           value={formData.name}
           onChange={(value) => handleInputChange('name', value)}
           placeholder="Ej: ISO 25010, CMMI, IEEE 730"
           disabled={loading}
-          error={errors.name}
           required
           maxLength={100}
+          validateFn={validateStandardName}
+          validateOnChange={true}
+          helperText="Ingrese el nombre oficial del estándar de calidad"
         />
 
-        <FormField
+        <ValidatedFormField
           id="version"
           label="Versión"
           value={formData.version}
           onChange={(value) => handleInputChange('version', value)}
           placeholder="Ej: 1.0, 2023.1, v2.0"
           disabled={loading}
-          error={errors.version}
           required
           maxLength={20}
+          validateFn={validateStandardVersion}
+          validateOnChange={true}
+          helperText="Use formato numérico: 1.0, v2.0, 2023.1"
         />
 
-        <FormField
+        <ValidatedFormField
           id="description"
           label="Descripción"
           value={formData.description}
           onChange={(value) => handleInputChange('description', value)}
           placeholder="Describe el estándar de calidad, su propósito, alcance y principales características..."
           disabled={loading}
-          error={errors.description}
           maxLength={500}
           type="textarea"
+          rows={4}
+          validateFn={(val) => validateDescription(val, 500)}
+          validateOnChange={false}
+          helperText="Una buena descripción ayuda a entender el contexto y aplicación del estándar"
         />
       </div>
     </BaseFormDrawer>

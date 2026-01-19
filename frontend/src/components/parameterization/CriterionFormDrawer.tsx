@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Criterion, parameterizationApi, CreateCriterionDto, UpdateCriterionDto } from '../../api/parameterization/parameterization-api';
 import { CriterionSearchResult } from '../../types/parameterization-search.types';
 import { BaseFormDrawer } from '../shared/BaseFormDrawer';
-import { FormField } from '../shared/FormField';
+import { ValidatedFormField } from '../shared/ValidatedFormField';
 import { Autocomplete } from './Autocomplete';
 import { useFormDrawer } from '../../hooks/shared/useFormDrawer';
-import { validateForm, handleApiError } from '../../utils/validation';
+import { handleApiError } from '../../utils/validation';
+import { validateCriterionName, validateDescription } from '../../utils/parameterization-validation';
 import styles from '../shared/FormDrawer.module.css';
 
 interface CriterionFormDrawerProps {
@@ -54,13 +55,14 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const validationErrors = validateForm(formData as unknown as Record<string, unknown>, {
-      name: { required: true, minLength: 2, maxLength: 100 },
-      description: { maxLength: 500 }
-    });
+    const nameValidation = validateCriterionName(formData.name);
+    const descriptionValidation = validateDescription(formData.description, 500);
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+    if (!nameValidation.valid || !descriptionValidation.valid) {
+      setErrors({
+        name: nameValidation.error,
+        description: descriptionValidation.error
+      });
       return;
     }
 
@@ -146,16 +148,18 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
             {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
           </div>
         ) : (
-          <FormField
+          <ValidatedFormField
             id="name"
             label="Nombre del Criterio"
             value={formData.name}
             onChange={(value) => handleInputChange('name', value)}
             placeholder="Ej: Funcionalidad, Confiabilidad, Usabilidad"
             disabled={loading}
-            error={errors.name}
             required
             maxLength={100}
+            validateFn={validateCriterionName}
+            validateOnChange={true}
+            helperText="Nombre del criterio de evaluación de calidad"
           />
         )}
 
@@ -169,16 +173,19 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
           </button>
         )}
 
-        <FormField
+        <ValidatedFormField
           id="description"
           label="Descripción"
           value={formData.description}
           onChange={(value) => handleInputChange('description', value)}
           placeholder="Describe qué aspecto de la calidad evalúa este criterio, su importancia y cómo se mide..."
           disabled={loading}
-          error={errors.description}
           maxLength={500}
           type="textarea"
+          rows={4}
+          validateFn={(val) => validateDescription(val, 500)}
+          validateOnChange={false}
+          helperText="Explica el propósito y alcance de este criterio de calidad"
         />
       </div>
     </BaseFormDrawer>
