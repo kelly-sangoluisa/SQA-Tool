@@ -23,7 +23,6 @@ interface FormData {
   description: string;
 }
 
-// Helper function to render criterion metadata badge
 const renderCriterionMeta = (item: CriterionSearchResult) => (
   <span className={styles.badge}>{item.standard_name}</span>
 );
@@ -44,10 +43,6 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
   
   const { toast, showToast, hideToast } = useToast();
 
-  /**
-   * Maneja la selección de un criterio del autocompletado
-   * Rellena automáticamente los campos con los datos del criterio seleccionado
-   */
   const handleCriterionSelected = (selected: CriterionSearchResult) => {
     setFormData({
       name: selected.name,
@@ -59,7 +54,6 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Verificar campos obligatorios vacíos primero
     if (!formData.name.trim()) {
       setErrors({ name: 'Completa este campo' });
       return;
@@ -78,39 +72,21 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
 
     setLoading(true);
     try {
-      let savedCriterion: Criterion;
-      
-      if (criterion) {
-        const updateData: UpdateCriterionDto = {
-          name: formData.name.trim(),
-          description: formData.description.trim() || undefined
-        };
-        savedCriterion = await parameterizationApi.updateCriterion(criterion.id, updateData);
-      } else {
-        if (!standardId) {
-          setErrors({ general: 'Error: Se requiere un ID de estándar para crear un criterio' });
-          return;
-        }
-        const createData: CreateCriterionDto = {
-          name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
-          standard_id: standardId
-        };
-        savedCriterion = await parameterizationApi.createCriterion(createData);
-      }
+      const data = {
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined
+      };
+
+      const savedCriterion = criterion
+        ? await parameterizationApi.updateCriterion(criterion.id, data)
+        : await parameterizationApi.createCriterion({ ...data, standard_id: standardId! });
       
       const message = criterion ? '✅ Criterio actualizado exitosamente' : '✅ Criterio creado exitosamente';
       showToast(message, 'success');
       setTimeout(() => onSave(savedCriterion), 500);
     } catch (error) {
       console.error('Error saving criterion:', error);
-      const errorMessage = handleApiError(error, criterion ? 'actualizar' : 'crear', 'el criterio');
-      if (error instanceof Error) {
-        if (error.message.includes('Internal server error')) {
-          // Error already handled by handleApiError
-        }
-      }
-      setErrors({ general: errorMessage });
+      setErrors({ general: handleApiError(error, criterion ? 'actualizar' : 'crear', 'el criterio') });
     } finally {
       setLoading(false);
     }
@@ -163,7 +139,6 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
               name="name"
               error={errors.name}
             />
-            {/* El error ya se muestra dentro del Autocomplete */}
           </div>
         ) : (
           <ValidatedFormField

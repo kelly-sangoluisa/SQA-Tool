@@ -43,23 +43,15 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Verificar campos obligatorios vacíos primero
     const newErrors: Record<string, string> = {};
+    if (!formData.name.trim()) newErrors.name = 'Completa este campo';
+    if (!formData.version.trim()) newErrors.version = 'Completa este campo';
     
-    if (!formData.name.trim()) {
-      newErrors.name = 'Completa este campo';
-    }
-    if (!formData.version.trim()) {
-      newErrors.version = 'Completa este campo';
-    }
-    
-    // Si hay campos vacíos, mostrar errores y detener
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
     
-    // Validar todos los campos antes de enviar
     const nameValidation = validateStandardName(formData.name);
     const versionValidation = validateStandardVersion(formData.version);
     const descriptionValidation = validateDescription(formData.description, 500);
@@ -75,37 +67,22 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
 
     setLoading(true);
     try {
-      let savedStandard: Standard;
-      
-      if (standard) {
-        const updateData: UpdateStandardDto = {
-          name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
-          version: formData.version.trim() || undefined
-        };
-        savedStandard = await parameterizationApi.updateStandard(standard.id, updateData);
-      } else {
-        const createData: CreateStandardDto = {
-          name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
-          version: formData.version.trim() || undefined
-        };
-        // Creating standard...
-        savedStandard = await parameterizationApi.createStandard(createData);
-      }
+      const data = {
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
+        version: formData.version.trim() || undefined
+      };
+
+      const savedStandard = standard
+        ? await parameterizationApi.updateStandard(standard.id, data)
+        : await parameterizationApi.createStandard(data);
       
       const message = standard ? '✅ Estándar actualizado exitosamente' : '✅ Estándar creado exitosamente';
       showToast(message, 'success');
       setTimeout(() => onSave(savedStandard), 500);
     } catch (error) {
       console.error('Error saving standard:', error);
-      const errorMessage = handleApiError(error, standard ? 'actualizar' : 'crear', 'el estándar');
-      if (error instanceof Error) {
-        if (error.message.includes('name')) {
-          // Error already handled by handleApiError
-        }
-      }
-      setErrors({ general: errorMessage });
+      setErrors({ general: handleApiError(error, standard ? 'actualizar' : 'crear', 'el estándar') });
     } finally {
       setLoading(false);
     }
