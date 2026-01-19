@@ -4,6 +4,7 @@ import { Metric, parameterizationApi, CreateMetricDto, UpdateMetricDto } from '.
 import { MetricSearchResult } from '../../types/parameterization-search.types';
 import { Button } from '../shared/Button';
 import { Autocomplete } from './Autocomplete';
+import { validateThresholdFormat } from '../../utils/data-entry/thresholdUtils';
 import styles from '../shared/FormDrawer.module.css';
 
 interface MetricFormDrawerProps {
@@ -130,6 +131,22 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
 
     if (!subCriterionId && !metric?.sub_criterion_id) {
       newErrors.general = 'ID de sub-criterio requerido';
+    }
+
+    // Validar formato de umbral deseado
+    if (formData.desired_threshold) {
+      const thresholdValidation = validateThresholdFormat(formData.desired_threshold);
+      if (!thresholdValidation.valid) {
+        newErrors.desired_threshold = thresholdValidation.error || 'Formato de umbral inválido';
+      }
+    }
+
+    // Validar formato de peor caso
+    if (formData.worst_case) {
+      const worstCaseValidation = validateThresholdFormat(formData.worst_case);
+      if (!worstCaseValidation.valid) {
+        newErrors.worst_case = worstCaseValidation.error || 'Formato de peor caso inválido';
+      }
     }
 
     // Validate variables
@@ -415,9 +432,12 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                     ...prev, 
                     desired_threshold: e.target.value
                   }))}
-                  className={styles.input}
+                  className={`${styles.input} ${errors.desired_threshold ? styles.error : ''}`}
                   placeholder="Ej: 0, 1, >=10/3min, 20 min, 0%, 0 seg, 0/1min"
                 />
+                {errors.desired_threshold && (
+                  <span className={styles.fieldError}>{errors.desired_threshold}</span>
+                )}
                 <span className={styles.helpText}>
                   💡 Ejemplos: numéricos (0, 1), comparadores (&gt;=10/3min), unidades (20 min, 0%, 0 seg)
                 </span>
@@ -435,9 +455,12 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                     ...prev, 
                     worst_case: e.target.value
                   }))}
-                  className={styles.input}
+                  className={`${styles.input} ${errors.worst_case ? styles.error : ''}`}
                   placeholder="Ej: 0, 1, 0/3min, >20 min, >=10%, >= 15 seg, >=4"
                 />
+                {errors.worst_case && (
+                  <span className={styles.fieldError}>{errors.worst_case}</span>
+                )}
                 <span className={styles.helpText}>
                   💡 Ejemplos: valores mínimos o condiciones no deseables
                 </span>

@@ -172,3 +172,85 @@ export function getFixedValue(
   const result = isVariableFixed(variableSymbol, formula, desiredThreshold, worstCase);
   return result.isFixed && result.fixedValue !== undefined ? result.fixedValue : null;
 }
+
+/**
+ * Valida el formato de un umbral (threshold)
+ * 
+ * Formatos válidos:
+ * - Números simples: "0", "1", "10.5"
+ * - Con unidades: "20 min", "0%", "0 seg", "15ms"
+ * - Con operadores: ">=10", ">20", "<=5"
+ * - Ratios completos: ">=10/3min", "0/1min", "5/10"
+ * 
+ * Formatos INVÁLIDOS:
+ * - Ratios incompletos: "=>10/min" (falta numerador/denominador)
+ * - Operadores incorrectos: "=>10" (debe ser >=)
+ * 
+ * @returns { valid: boolean, error?: string }
+ */
+export function validateThresholdFormat(threshold: string): { valid: boolean; error?: string } {
+  if (!threshold || !threshold.trim()) {
+    return { valid: true }; // Permitir campos vacíos (la validación de "requerido" es otra)
+  }
+
+  const trimmed = threshold.trim();
+
+  // Validar operador (solo >=, <=, >, <, =)
+  const operatorMatch = /^(>=|<=|>|<|=)/.exec(trimmed);
+  if (/^=>/.test(trimmed)) {
+    return { valid: false, error: 'Operador inválido "=>". Use ">=" en su lugar' };
+  }
+  if (/^=</.test(trimmed)) {
+    return { valid: false, error: 'Operador inválido "=<". Use "<=" en su lugar' };
+  }
+
+  const valueStr = operatorMatch ? trimmed.substring(operatorMatch[1].length).trim() : trimmed;
+
+  // Extraer unidad
+  const unitMatch = /(min|seg|%|ms|s|h)\s*$/.exec(valueStr);
+  const unit = unitMatch ? unitMatch[1] : undefined;
+  const numberStr = unit ? valueStr.replace(new RegExp(String.raw`\s*${unit}\s*$`), '').trim() : valueStr;
+
+  // Limpiar espacios
+  const cleanNumberStr = numberStr.replaceAll(/\s+/g, '');
+
+  // Si tiene unidad de tiempo (min, seg, etc.) y contiene "/", debe ser un ratio completo
+  if (unit && cleanNumberStr.includes('/')) {
+    const ratioMatch = /^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/.exec(cleanNumberStr);
+    if (!ratioMatch) {
+      return { 
+        valid: false, 
+        error: `Formato inválido "${cleanNumberStr}/${unit}". Use el formato completo, ej: "10/1${unit}" o "0/3${unit}"` 
+      };
+    }
+    // Validar que tiene numerador y denominador
+    if (!ratioMatch[1] || !ratioMatch[2]) {
+      return { 
+        valid: false, 
+        error: `Ratio incompleto. Debe especificar numerador y denominador, ej: "10/3${unit}"` 
+      };
+    }
+  }
+
+  // Verificar si es ratio (sin unidad de tiempo)
+  if (cleanNumberStr.includes('/')) {
+    const ratioMatch = /^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/.exec(cleanNumberStr);
+    if (!ratioMatch) {
+      return { 
+        valid: false, 
+        error: `Formato de ratio inválido "${cleanNumberStr}". Use formato "numerador/denominador", ej: "10/20"` 
+      };
+    }
+  }
+
+  // Validar número simple
+  const value = Number.parseFloat(cleanNumberStr);
+  if (Number.isNaN(value)) {
+    return { 
+      valid: false, 
+      error: `Valor numérico inválido "${cleanNumberStr}". Use números, ej: "10", "0.5", ">=10/3min"` 
+    };
+  }
+
+  return { valid: true };
+}
