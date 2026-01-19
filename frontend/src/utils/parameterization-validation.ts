@@ -426,13 +426,13 @@ export function validateThreshold(threshold: string, fieldName: string = 'umbral
 
   // Agregar mensajes de éxito según el formato detectado
   if (/^(>=|<=|>|<)/.test(trimmed)) {
-    if (/\d+\/\d+/.test(trimmed)) {
+    if (/\d{1,10}\/\d{1,10}/.test(trimmed)) {
       return { valid: true, success: '✓ Umbral con ratio y operador válido' };
     }
     return { valid: true, success: '✓ Umbral con operador válido' };
   }
 
-  if (/\d+\/\d+/.test(trimmed)) {
+  if (/\d{1,10}\/\d{1,10}/.test(trimmed)) {
     return { valid: true, success: '✓ Umbral con ratio válido' };
   }
 

@@ -1,4 +1,6 @@
+
 /* Wrapper específico para la vista de parameterization */
+
 /* El wrapper solo debe afectar al contenido estático, no a los elementos fixed */
 .parameterizationWrapper {
   transition: margin-left 0.3s ease;

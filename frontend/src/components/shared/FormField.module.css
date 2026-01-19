@@ -36,6 +36,11 @@
   font-family: inherit;
 }
 
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
 .input:hover,
 .textarea:hover {
   border-color: #9ca3af;
@@ -46,11 +51,6 @@
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.textarea {
-  resize: vertical;
-  min-height: 80px;
 }
 
 /* Estados de validación */
@@ -87,10 +87,10 @@
   border-radius: 0.375rem;
   font-size: 0.8125rem;
   line-height: 1.4;
-  animation: slideDown 0.2s ease;
+  animation: slide-down 0.2s ease;
 }
 
-@keyframes slideDown {
+@keyframes slide-down {
   from {
     opacity: 0;
     transform: translateY(-4px);
