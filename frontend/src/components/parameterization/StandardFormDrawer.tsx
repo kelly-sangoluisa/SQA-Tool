@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { parameterizationApi, CreateStandardDto, UpdateStandardDto, Standard } from '../../api/parameterization/parameterization-api';
+import { parameterizationApi, Standard } from '../../api/parameterization/parameterization-api';
 import { BaseFormDrawer } from '../shared/BaseFormDrawer';
 import { ValidatedFormField } from '../shared/ValidatedFormField';
 import { Toast } from '../shared/Toast';

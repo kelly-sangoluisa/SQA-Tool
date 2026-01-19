@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Criterion, parameterizationApi, CreateCriterionDto, UpdateCriterionDto } from '../../api/parameterization/parameterization-api';
+import { Criterion, parameterizationApi } from '../../api/parameterization/parameterization-api';
 import { CriterionSearchResult } from '../../types/parameterization-search.types';
 import { BaseFormDrawer } from '../shared/BaseFormDrawer';
 import { ValidatedFormField } from '../shared/ValidatedFormField';

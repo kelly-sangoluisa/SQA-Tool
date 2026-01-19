@@ -170,91 +170,70 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
     }));
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  const validateRequiredFields = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    if (!formData.name.trim()) errors.name = 'Completa este campo';
+    if (!formData.code.trim()) errors.code = 'Completa este campo';
+    if (!formData.formula.trim()) errors.formula = 'Completa este campo';
+    if (!formData.desired_threshold.trim()) errors.desired_threshold = 'Completa este campo';
+    if (!formData.worst_case.trim()) errors.worst_case = 'Completa este campo';
+    return errors;
+  };
 
-    // Verificar campos obligatorios vacíos primero
-    if (!formData.name.trim()) {
-      newErrors.name = 'Completa este campo';
-    }
-    if (!formData.code.trim()) {
-      newErrors.code = 'Completa este campo';
-    }
-    if (!formData.formula.trim()) {
-      newErrors.formula = 'Completa este campo';
-    }
-    if (!formData.desired_threshold.trim()) {
-      newErrors.desired_threshold = 'Completa este campo';
-    }
-    if (!formData.worst_case.trim()) {
-      newErrors.worst_case = 'Completa este campo';
-    }
+  const validateFieldFormats = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
     
-    // Si hay campos obligatorios vacíos, detener aquí
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return false;
-    }
-
-    // Validar nombre
     const nameValidation = validateMetricName(formData.name);
-    if (!nameValidation.valid) {
-      newErrors.name = nameValidation.error!;
-    }
+    if (!nameValidation.valid) errors.name = nameValidation.error!;
 
-    // Validar código
     const codeValidation = validateMetricCode(formData.code);
-    if (!codeValidation.valid) {
-      newErrors.code = codeValidation.error!;
-    }
+    if (!codeValidation.valid) errors.code = codeValidation.error!;
 
-    // Validar fórmula (AHORA OBLIGATORIA)
     const formulaValidation = validateFormula(formData.formula, true);
-    if (!formulaValidation.valid) {
-      newErrors.formula = formulaValidation.error!;
-    }
+    if (!formulaValidation.valid) errors.formula = formulaValidation.error!;
 
-    // Validar que las variables coincidan con la fórmula
     if (formData.formula.trim()) {
       const variablesValidation = validateVariablesMatchFormula(formData.formula, formData.variables);
-      if (!variablesValidation.valid) {
-        newErrors.variables = variablesValidation.error!;
-      }
+      if (!variablesValidation.valid) errors.variables = variablesValidation.error!;
     }
 
     if (!subCriterionId && !metric?.sub_criterion_id) {
-      newErrors.general = 'ID de sub-criterio requerido';
+      errors.general = 'ID de sub-criterio requerido';
     }
 
-    // Validar formato de umbral deseado
     if (formData.desired_threshold) {
       const thresholdValidation = validateThreshold(formData.desired_threshold, 'umbral deseado');
-      if (!thresholdValidation.valid) {
-        newErrors.desired_threshold = thresholdValidation.error || 'Formato de umbral inválido';
-      }
+      if (!thresholdValidation.valid) errors.desired_threshold = thresholdValidation.error || 'Formato de umbral inválido';
     }
 
-    // Validar formato de peor caso
     if (formData.worst_case) {
       const worstCaseValidation = validateThreshold(formData.worst_case, 'peor caso');
-      if (!worstCaseValidation.valid) {
-        newErrors.worst_case = worstCaseValidation.error || 'Formato de peor caso inválido';
-      }
+      if (!worstCaseValidation.valid) errors.worst_case = worstCaseValidation.error || 'Formato de peor caso inválido';
     }
 
-    // Validate variables
+    return errors;
+  };
+
+  const validateVariables = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
     formData.variables.forEach((variable, index) => {
       const symbolValidation = validateVariableSymbol(variable.symbol);
-      if (!symbolValidation.valid) {
-        newErrors[`variable-symbol-${index}`] = symbolValidation.error!;
-      }
+      if (!symbolValidation.valid) errors[`variable-symbol-${index}`] = symbolValidation.error!;
 
       const descValidation = validateVariableDescription(variable.description);
-      if (!descValidation.valid) {
-        newErrors[`variable-description-${index}`] = descValidation.error!;
-      }
+      if (!descValidation.valid) errors[`variable-description-${index}`] = descValidation.error!;
     });
+    return errors;
+  };
 
+  const validateForm = (): boolean => {
+    const requiredErrors = validateRequiredFields();
+    if (Object.keys(requiredErrors).length > 0) {
+      setErrors(requiredErrors);
+      return false;
+    }
+
+    const newErrors = { ...validateFieldFormats(), ...validateVariables() };
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

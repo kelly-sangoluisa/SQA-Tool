@@ -5,9 +5,7 @@ import { BaseFormDrawer } from '../shared/BaseFormDrawer';
 import { ValidatedFormField } from '../shared/ValidatedFormField';
 import { Autocomplete } from './Autocomplete';
 import { MetricSelectorModal } from './MetricSelectorModal';
-import { Toast } from '../shared/Toast';
 import { useFormDrawer } from '../../hooks/shared/useFormDrawer';
-import { useToast } from '../../hooks/shared/useToast';
 import { handleApiError } from '../../utils/validation';
 import { validateSubCriterionName, validateDescription } from '../../utils/parameterization-validation';
 import styles from '../shared/FormDrawer.module.css';
@@ -65,8 +63,6 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
     onSave,
     onClose
   });
-  
-  const { toast, showToast, hideToast } = useToast();
 
   /**
    * Maneja la selección de un subcriterio del autocompletado (Caso B: Complejo)
@@ -179,14 +175,7 @@ export function SubCriterionFormDrawer({ subCriterion, criterionId, onClose, onS
         savedSubCriterion = await parameterizationApi.createSubCriterion(createData);
       }
       
-      showToast(
-        subCriterion ? '✅ Subcriterio actualizado exitosamente' : '✅ Subcriterio creado exitosamente',
-        'success'
-      );
-      
-      setTimeout(() => {
-        onSave(savedSubCriterion);
-      }, 500);
+      onSave(savedSubCriterion);
     } catch (error) {
       console.error('Error saving subcriterion:', error);
       const errorMessage = handleApiError(error, subCriterion ? 'actualizar' : 'crear', 'el subcriterio');
