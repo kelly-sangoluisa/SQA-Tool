@@ -99,14 +99,9 @@ export function CriterionFormDrawer({ criterion, standardId, onClose, onSave }: 
         savedCriterion = await parameterizationApi.createCriterion(createData);
       }
       
-      showToast(
-        criterion ? '✅ Criterio actualizado exitosamente' : '✅ Criterio creado exitosamente',
-        'success'
-      );
-      
-      setTimeout(() => {
-        onSave(savedCriterion);
-      }, 500);
+      const message = criterion ? '✅ Criterio actualizado exitosamente' : '✅ Criterio creado exitosamente';
+      showToast(message, 'success');
+      setTimeout(() => onSave(savedCriterion), 500);
     } catch (error) {
       console.error('Error saving criterion:', error);
       const errorMessage = handleApiError(error, criterion ? 'actualizar' : 'crear', 'el criterio');

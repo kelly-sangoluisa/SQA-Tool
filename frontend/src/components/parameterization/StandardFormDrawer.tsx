@@ -94,15 +94,9 @@ export function StandardFormDrawer({ standard, onClose, onSave }: StandardFormDr
         savedStandard = await parameterizationApi.createStandard(createData);
       }
       
-      showToast(
-        standard ? '✅ Estándar actualizado exitosamente' : '✅ Estándar creado exitosamente',
-        'success'
-      );
-      
-      // Dar tiempo para ver la notificación antes de cerrar
-      setTimeout(() => {
-        onSave(savedStandard);
-      }, 500);
+      const message = standard ? '✅ Estándar actualizado exitosamente' : '✅ Estándar creado exitosamente';
+      showToast(message, 'success');
+      setTimeout(() => onSave(savedStandard), 500);
     } catch (error) {
       console.error('Error saving standard:', error);
       const errorMessage = handleApiError(error, standard ? 'actualizar' : 'crear', 'el estándar');
