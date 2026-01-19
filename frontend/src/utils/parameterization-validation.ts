@@ -211,7 +211,7 @@ export function validateMetricCode(code: string): ValidationResult {
 /**
  * Extrae las variables únicas de una fórmula matemática
  * Ejemplo: "1-(A/B)" -> ["A", "B"]
- * Ejemplo: "(N_EXITO / N_TOTAL) * 100" -> ["N_EXITO", "N_TOTAL"]
+ * Ejemplo: "(A + B) * 100" -> ["A", "B"]
  */
 export function extractVariablesFromFormula(formula: string): string[] {
   if (!formula) return [];
@@ -248,7 +248,7 @@ export function validateFormula(formula: string, isRequired: boolean = true): Va
   if (!/[A-Z]/.test(trimmed)) {
     return { 
       valid: false, 
-      error: 'La fórmula debe contener al menos una variable (letras mayúsculas: A, B, N_TOTAL, etc.)' 
+      error: 'La fórmula debe contener al menos una variable (letras mayúsculas: A, B, C, etc.)' 
     };
   }
 
@@ -367,7 +367,7 @@ export function validateVariableSymbol(symbol: string): ValidationResult {
   if (!/^[A-Z][A-Z0-9_]*$/.test(trimmed)) {
     return { 
       valid: false, 
-      error: 'El símbolo debe comenzar con mayúscula y usar solo letras, números y guiones bajos (ej: N_TOTAL)' 
+      error: 'El símbolo debe comenzar con mayúscula y usar solo letras, números y guiones bajos (ej: VAR_A)' 
     };
   }
 

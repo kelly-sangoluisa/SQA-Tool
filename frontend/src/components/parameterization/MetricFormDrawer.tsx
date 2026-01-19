@@ -545,15 +545,24 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                   type="text"
                   id="threshold"
                   value={formData.desired_threshold}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    desired_threshold: e.target.value
-                  }))}
-                  className={`${styles.input} ${errors.desired_threshold ? styles.error : ''}`}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      desired_threshold: value
+                    }));
+                    validateFieldOnChange('desired_threshold', value);
+                  }}
+                  className={`${styles.input} ${errors.desired_threshold ? styles.error : ''} ${!errors.desired_threshold && fieldValidation.desired_threshold?.valid && formData.desired_threshold ? styles.success : ''}`}
                   placeholder="Ej: 0, 1, >=10/3min, 20 min, 0%, 0 seg, 0/1min"
                 />
                 {errors.desired_threshold && (
                   <span className={styles.fieldError}>{errors.desired_threshold}</span>
+                )}
+                {!errors.desired_threshold && fieldValidation.desired_threshold?.message && formData.desired_threshold && (
+                  <span className={`${styles.feedbackMessage} ${fieldValidation.desired_threshold.message.includes('✓') || fieldValidation.desired_threshold.message.includes('válido') ? styles.successMessage : styles.warningMessage}`}>
+                    {fieldValidation.desired_threshold.message}
+                  </span>
                 )}
                 <span className={styles.helpText}>
                   💡 Ejemplos: numéricos (0, 1), comparadores (&gt;=10/3min), unidades (20 min, 0%, 0 seg)
@@ -568,15 +577,24 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                   type="text"
                   id="worstCase"
                   value={formData.worst_case}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    worst_case: e.target.value
-                  }))}
-                  className={`${styles.input} ${errors.worst_case ? styles.error : ''}`}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      worst_case: value
+                    }));
+                    validateFieldOnChange('worst_case', value);
+                  }}
+                  className={`${styles.input} ${errors.worst_case ? styles.error : ''} ${!errors.worst_case && fieldValidation.worst_case?.valid && formData.worst_case ? styles.success : ''}`}
                   placeholder="Ej: 0, 1, 0/3min, >20 min, >=10%, >= 15 seg, >=4"
                 />
                 {errors.worst_case && (
                   <span className={styles.fieldError}>{errors.worst_case}</span>
+                )}
+                {!errors.worst_case && fieldValidation.worst_case?.message && formData.worst_case && (
+                  <span className={`${styles.feedbackMessage} ${fieldValidation.worst_case.message.includes('✓') || fieldValidation.worst_case.message.includes('válido') ? styles.successMessage : styles.warningMessage}`}>
+                    {fieldValidation.worst_case.message}
+                  </span>
                 )}
                 <span className={styles.helpText}>
                   💡 Ejemplos: valores mínimos o condiciones no deseables
@@ -606,7 +624,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                   }}
                   className={`${styles.textarea} ${styles.formula} ${errors.formula ? styles.error : ''}`}
                   rows={3}
-                  placeholder="Ej: (N_EXITO / N_TOTAL) * 100, A/B, 1-(A/B)"
+                  placeholder="Ej: A/B, 1-(A/B), (A+B)/C"
                   required
                 />
                 {errors.formula && (
@@ -618,7 +636,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                   </span>
                 )}
                 <span className={styles.helpText}>
-                  💡 Use variables en MAYÚSCULAS (A, B, N_TOTAL, etc.) y operadores: +, -, *, /, ( )
+                  💡 Use variables en MAYÚSCULAS (A, B, C, etc.) y operadores: +, -, *, /, ( )
                 </span>
               </div>
 
@@ -674,7 +692,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
                       if (requiredVars.length === 0) {
                         return (
                           <div className={styles.infoBox} style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a' }}>
-                            ⚠️ La fórmula no contiene variables válidas (use MAYÚSCULAS: A, B, N_TOTAL)
+                            ⚠️ La fórmula no contiene variables válidas (use MAYÚSCULAS: A, B, C)
                           </div>
                         );
                       }

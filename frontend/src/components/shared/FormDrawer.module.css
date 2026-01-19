@@ -740,3 +740,73 @@
 .infoBox ul {
   margin: 0.5rem 0;
 }
+
+/* ========================================
+   FEEDBACK VISUAL STYLES
+   ======================================== */
+
+/* Input Success State */
+.input.success,
+.textarea.success {
+  border-color: #22c55e;
+  background: rgb(240 253 244 / 0.5);
+}
+
+.input.success:focus,
+.textarea.success:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 4px rgb(34 197 94 / 0.1);
+}
+
+/* Feedback Messages */
+.feedbackMessage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+.successMessage {
+  color: #15803d;
+  background: rgb(220 252 231 / 0.5);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border-left: 3px solid #22c55e;
+}
+
+.warningMessage {
+  color: #b45309;
+  background: rgb(254 243 199 / 0.5);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border-left: 3px solid #f59e0b;
+}
+
+.fieldError {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #dc2626;
+  font-weight: 500;
+  background: rgb(254 242 242 / 0.5);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border-left: 3px solid #dc2626;
+  animation: shake 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
