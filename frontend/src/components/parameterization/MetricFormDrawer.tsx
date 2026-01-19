@@ -336,7 +336,7 @@ export function MetricFormDrawer({ metric, subCriterionId, onClose, onSave }: Me
     const currentSymbols = formData.variables.map(v => v.symbol.trim()).filter(s => s.length > 0);
 
     // Si las variables ya coinciden, no hacer nada
-    if (JSON.stringify(requiredVars.sort()) === JSON.stringify(currentSymbols.sort())) {
+    if (JSON.stringify(requiredVars.sort((a, b) => a.localeCompare(b))) === JSON.stringify(currentSymbols.sort((a, b) => a.localeCompare(b)))) {
       return;
     }
 

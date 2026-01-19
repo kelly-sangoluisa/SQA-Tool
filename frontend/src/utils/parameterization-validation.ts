@@ -222,7 +222,7 @@ export function extractVariablesFromFormula(formula: string): string[] {
   if (!matches) return [];
 
   // Eliminar duplicados y ordenar
-  return [...new Set(matches)].sort();
+  return [...new Set(matches)].sort((a, b) => a.localeCompare(b));
 }
 
 /**
@@ -319,7 +319,7 @@ export function validateVariablesMatchFormula(
   const definedSymbols = definedVariables
     .map(v => v.symbol.trim())
     .filter(s => s.length > 0)
-    .sort();
+    .sort((a, b) => a.localeCompare(b));
 
   // Validar que todas las variables de la fórmula estén definidas
   const missingVars = requiredVars.filter(v => !definedSymbols.includes(v));
