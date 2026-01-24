@@ -40,7 +40,6 @@ export function validateStandardName(name: string): ValidationResult {
     return { valid: false, error: 'El nombre contiene caracteres no permitidos' };
   }
 
-  // Todo bien
   return { 
     valid: true, 
     success: '✓ Nombre válido' 

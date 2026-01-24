@@ -154,32 +154,21 @@ export default function SuccessModal({
     }
   };
 
-  const handleOverlayKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      onClose();
-    }
-  };
-
   // No renderizar en el servidor
   if (!mounted) return null;
   if (!open) return null;
 
   const modalContent = (
-    <div
+    <button
       className={styles.overlay}
       style={fallbackStyles.overlay}
       onClick={handleOverlayClick}
-      onKeyDown={handleOverlayKeyDown}
-      role="button"
-      tabIndex={0}
       aria-label="Cerrar modal"
     >
-      <div
+      <dialog
         className={styles.modal}
         style={fallbackStyles.modal}
-        role="dialog"
-        aria-modal="true"
+        open
         aria-labelledby="modal-title"
       >
         <div className={styles.iconContainer} style={fallbackStyles.iconContainer}>
@@ -218,8 +207,8 @@ export default function SuccessModal({
             {confirmText}
           </button>
         </div>
-      </div>
-    </div>
+      </dialog>
+    </button>
   );
 
   return createPortal(modalContent, document.body);

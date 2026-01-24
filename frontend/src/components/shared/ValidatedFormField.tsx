@@ -48,6 +48,33 @@ interface ValidatedFormFieldProps {
   readonly showCharCount?: boolean;
 }
 
+// Helper functions to reduce cognitive complexity
+const getFeedbackType = (hasError: boolean, hasWarning: boolean, hasSuccess: boolean): 'error' | 'warning' | 'success' | null => {
+  if (hasError) return 'error';
+  if (hasWarning) return 'warning';
+  if (hasSuccess) return 'success';
+  return null;
+};
+
+const getInputClassName = (baseStyle: string, hasError: boolean, hasSuccess: boolean): string => {
+  const errorClass = hasError ? styles.error : '';
+  const successClass = hasSuccess ? styles.success : '';
+  return `${baseStyle} ${errorClass} ${successClass}`.trim();
+};
+
+const getCharCountClassName = (isWarning: boolean, isCritical: boolean): string => {
+  const warningClass = isWarning ? styles.warning : '';
+  const criticalClass = isCritical ? styles.critical : '';
+  return `${styles.characterCount} ${warningClass} ${criticalClass}`.trim();
+};
+
+const FeedbackIcon = ({ type }: { type: 'error' | 'warning' | 'success' | null }) => {
+  if (type === 'error') return <ErrorIcon />;
+  if (type === 'warning') return <WarningIcon />;
+  if (type === 'success') return <SuccessIcon />;
+  return null;
+};
+
 export function ValidatedFormField({
   id,
   label,
@@ -67,9 +94,9 @@ export function ValidatedFormField({
   const [validationResult, setValidationResult] = useState<ValidationResult>({ valid: true });
   const [touched, setTouched] = useState(false);
 
-  // Validar cuando cambia el valor
   useEffect(() => {
-    if (validateFn && (validateOnChange || touched)) {
+    const shouldValidate = validateFn && (validateOnChange || touched);
+    if (shouldValidate) {
       const result = validateFn(value);
       setValidationResult(result);
     }
@@ -95,19 +122,26 @@ export function ValidatedFormField({
   const isLengthWarning = value.length > warningThreshold;
   const isLengthCritical = value.length > criticalThreshold;
 
-  const hasError = validationResult.error;
-  const hasWarning = validationResult.warning;
-  const hasSuccess = validationResult.success && touched && value.trim().length > 0;
+  const hasError = !!validationResult.error;
+  const hasWarning = !!validationResult.warning;
+  const hasSuccess = !!(validationResult.success && touched && value.trim().length > 0);
 
   const feedbackMessage = validationResult.error || validationResult.warning || validationResult.success;
-  const feedbackType = hasError ? 'error' : hasWarning ? 'warning' : hasSuccess ? 'success' : null;
+  const feedbackType = getFeedbackType(hasError, hasWarning, hasSuccess);
+
+  const labelClassName = `${styles.label} ${required ? styles.required : ''}`.trim();
+  const textareaClassName = getInputClassName(styles.textarea, hasError, hasSuccess);
+  const inputClassName = getInputClassName(styles.input, hasError, hasSuccess);
+  const charCountClassName = getCharCountClassName(isLengthWarning, isLengthCritical);
+
+  const showFeedback = feedbackMessage && touched;
+  const showHelper = helperText && !feedbackMessage;
+  const feedbackClassName = feedbackType ? `feedback-${feedbackType}` : '';
+  const feedbackClassNames = `${styles.feedback} ${feedbackType ? styles[feedbackClassName] : ''}`.trim();
 
   return (
     <div className={styles.field}>
-      <label 
-        htmlFor={id} 
-        className={`${styles.label} ${required ? styles.required : ''}`}
-      >
+      <label htmlFor={id} className={labelClassName}>
         {label}
       </label>
       
@@ -117,7 +151,7 @@ export function ValidatedFormField({
           value={value}
           onChange={(e) => handleChange(e.target.value)}
           onBlur={handleBlur}
-          className={`${styles.textarea} ${hasError ? styles.error : ''} ${hasSuccess ? styles.success : ''}`}
+          className={textareaClassName}
           placeholder={placeholder}
           disabled={disabled}
           maxLength={maxLength}
@@ -130,33 +164,28 @@ export function ValidatedFormField({
           value={value}
           onChange={(e) => handleChange(e.target.value)}
           onBlur={handleBlur}
-          className={`${styles.input} ${hasError ? styles.error : ''} ${hasSuccess ? styles.success : ''}`}
+          className={inputClassName}
           placeholder={placeholder}
           disabled={disabled}
           maxLength={maxLength}
         />
       )}
 
-      {/* Mensajes de retroalimentación */}
-      {feedbackMessage && touched && (
-        <div className={`${styles.feedback} ${styles[`feedback-${feedbackType}`]}`}>
-          {feedbackType === 'error' && <ErrorIcon />}
-          {feedbackType === 'warning' && <WarningIcon />}
-          {feedbackType === 'success' && <SuccessIcon />}
+      {showFeedback && (
+        <div className={feedbackClassNames}>
+          <FeedbackIcon type={feedbackType} />
           <span>{feedbackMessage}</span>
         </div>
       )}
 
-      {/* Texto de ayuda */}
-      {helperText && !feedbackMessage && (
+      {showHelper && (
         <div className={styles.helperText}>
           {helperText}
         </div>
       )}
 
-      {/* Contador de caracteres */}
       {showCharCount && (
-        <div className={`${styles.characterCount} ${isLengthWarning ? styles.warning : ''} ${isLengthCritical ? styles.critical : ''}`}>
+        <div className={charCountClassName}>
           {value.length}/{maxLength}
         </div>
       )}
