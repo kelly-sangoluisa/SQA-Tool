@@ -67,14 +67,14 @@
 }
 
 .stepLabel {
-  font-size: 0.625rem;
+  font-size: 0.875rem;
   color: #9ca3af;
   margin: 0;
   font-weight: 500;
 }
 
 .stepTitle {
-  font-size: 0.75rem;
+  font-size: 1rem;
   color: #1f2937;
   margin: 0;
   font-weight: 600;
@@ -145,11 +145,11 @@
   }
 
   .stepLabel {
-    font-size: 0.5rem;
+    font-size: 0.75rem;
   }
 
   .stepTitle {
-    font-size: 0.625rem;
+    font-size: 0.85rem;
   }
 
   .stepDivider {

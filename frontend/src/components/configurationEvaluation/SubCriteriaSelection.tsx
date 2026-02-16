@@ -64,6 +64,13 @@ useEffect(() => {
     const newSelected = new Map(selectedSubCriteria);
     const subCriteria = newSelected.get(criterionId) || new Set();
 
+    // Prevent deselecting the last subcriterion for a criterion
+    if (subCriteria.has(subCriterionId) && subCriteria.size === 1) {
+      setAlertMessage('Debe mantener al menos un subcriterio seleccionado para cada criterio.');
+      setAlertType('warning');
+      return;
+    }
+
     if (subCriteria.has(subCriterionId)) {
       subCriteria.delete(subCriterionId);
     } else {
@@ -77,6 +84,7 @@ useEffect(() => {
     }
 
     setSelectedSubCriteria(newSelected);
+    setAlertMessage(null);
   };
 
   const handleSelectAllForCriterion = (criterionId: number) => {
@@ -98,11 +106,14 @@ useEffect(() => {
     const currentSelected = newSelected.get(criterionId) || new Set();
 
     if (currentSelected.size === allSubIds.length) {
-      // Deselect all
-      newSelected.delete(criterionId);
+      // Prevent deselecting all - must keep at least one
+      setAlertMessage('Debe mantener al menos un subcriterio seleccionado para cada criterio.');
+      setAlertType('warning');
+      return;
     } else {
       // Select all
       newSelected.set(criterionId, new Set(allSubIds));
+      setAlertMessage(null);
     }
 
     setSelectedSubCriteria(newSelected);

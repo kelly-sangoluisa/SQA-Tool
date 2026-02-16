@@ -69,6 +69,12 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
     }
   };
 
+  const handleVersionChange = (value: string) => {
+    // Solo permitir números y puntos
+    const filtered = value.replace(/[^0-9.]/g, '');
+    handleChange('version', filtered);
+  };
+
   const validate = (): boolean => {
     const newErrors: ValidationErrors = {};
 
@@ -217,7 +223,6 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
               onChange={(e) => handleChange('name', e.target.value)}
               error={errors.name}
             />
-            {errors.name && <span className={styles.errorText}>{errors.name}</span>}
           </div>
 
           <div className={styles.formGroup}>
@@ -244,10 +249,9 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
               type="text"
               placeholder="Ej: 1.0.0"
               value={formData.version}
-              onChange={(e) => handleChange('version', e.target.value)}
+              onChange={(e) => handleVersionChange(e.target.value)}
               error={errors.version}
             />
-            {errors.version && <span className={styles.errorText}>{errors.version}</span>}
           </div>
 
           <div className={styles.formGroup}>
@@ -262,7 +266,6 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
               onChange={(e) => handleChange('company', e.target.value)}
               error={errors.company}
             />
-            {errors.company && <span className={styles.errorText}>{errors.company}</span>}
           </div>
 
           <div className={styles.formGroup}>
@@ -279,9 +282,6 @@ export function EvaluationInfoForm({ initialData, onNext, onCancel }: Evaluation
               onChange={(e) => handleChange('minQualityThreshold', Number(e.target.value))}
               error={errors.minQualityThreshold}
             />
-            {errors.minQualityThreshold && (
-              <span className={styles.errorText}>{errors.minQualityThreshold}</span>
-            )}
             <p className={styles.helpText}>
               Porcentaje mínimo requerido para considerar la evaluación como aprobada
             </p>
