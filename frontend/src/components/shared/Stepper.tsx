@@ -6,10 +6,10 @@ type Props = Readonly<{
 }>;
 
 export default function Stepper({ currentStep }: Props) {
-  const getStepStatus = (step: number): 'in_progress' | 'completed' | 'cancelled' => {
+  const getStepStatus = (step: number): 'active' | 'completed' | 'pending' => {
     if (step < currentStep) return 'completed';
-    if (step === currentStep) return 'in_progress';
-    return 'cancelled';
+    if (step === currentStep) return 'active';
+    return 'pending';
   };
 
   return (
