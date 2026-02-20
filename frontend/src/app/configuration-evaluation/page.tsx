@@ -235,11 +235,13 @@ const handleStep5Complete = async (selectedMetrics: Map<number, number[]>) => {
         )}
 
         <div className={styles.content}>
-          {currentStep === 1 && <EvaluationInfoForm onNext={handleStep1Complete} />}
-          {currentStep === 2 && <StandardSelection onNext={handleStep2Complete} onBack={() => setCurrentStep(1)} />}
+          {currentStep === 1 && <EvaluationInfoForm initialData={evaluationInfo ?? undefined} onNext={handleStep1Complete} />}
+          {currentStep === 2 && <StandardSelection initialSelectedId={selectedStandard?.id} onNext={handleStep2Complete} onBack={() => setCurrentStep(1)} />}
           {currentStep === 3 && selectedStandard && (
             <CriteriaOnlySelection
               standardId={selectedStandard.id}
+              initialSelectedIds={criteriaImportance.map(c => c.criterionId)}
+              initialCriteriaImportance={criteriaImportance}
               onNext={handleStep3Complete}
               onBack={() => setCurrentStep(2)}
             />
@@ -247,6 +249,7 @@ const handleStep5Complete = async (selectedMetrics: Map<number, number[]>) => {
           {currentStep === 4 && (
             <SubCriteriaSelection
               selectedCriteria={selectedCriteriaFull}
+              initialSelected={selectedSubCriteria}
               onNext={handleStep4Complete}
               onBack={() => setCurrentStep(3)}
             />

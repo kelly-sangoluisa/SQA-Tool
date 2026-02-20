@@ -155,8 +155,24 @@ export function MetricsSelection({
       return;
     }
 
-    if (selectedMetrics.size === 0 || getSelectedCount() === 0) {
-      setAlertMessage('Debe seleccionar al menos una métrica para continuar.');
+    // Validar que cada subcriterio seleccionado tenga al menos una métrica asignada
+    const missingSubCriteria: string[] = [];
+    for (const selected of selectedSubCriteria) {
+      const criterionData = criteriaWithMetrics.get(selected.criterionId);
+      if (!criterionData) continue;
+      for (const subCriterionId of selected.subCriteriaIds) {
+        const subCriterion = criterionData.sub_criteria?.find(sc => sc.id === subCriterionId);
+        if (!subCriterion || !subCriterion.metrics || subCriterion.metrics.length === 0) continue;
+        const selectedForCriterion = selectedMetrics.get(selected.criterionId) || new Set();
+        const hasMetric = subCriterion.metrics.some(m => selectedForCriterion.has(m.id));
+        if (!hasMetric) {
+          missingSubCriteria.push(subCriterion.name);
+        }
+      }
+    }
+
+    if (missingSubCriteria.length > 0) {
+      setAlertMessage(`Debe seleccionar al menos una métrica en: ${missingSubCriteria.join(', ')}.`);
       setAlertType('error');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;

@@ -20,9 +20,16 @@ export interface CriteriaWithImportance {
   importancePercentage: number;
 }
 
+interface InitialCriteriaImportanceItem {
+  criterionId: number;
+  importanceLevel: ImportanceLevel;
+  importancePercentage: number;
+}
+
 interface CriteriaOnlySelectionProps {
   readonly standardId: number;
   readonly initialSelectedIds?: number[];
+  readonly initialCriteriaImportance?: InitialCriteriaImportanceItem[];
   readonly onNext: (criteriaWithImportance: CriteriaWithImportance[]) => void;
   readonly onBack: () => void;
 }
@@ -30,13 +37,24 @@ interface CriteriaOnlySelectionProps {
 export function CriteriaOnlySelection({
   standardId,
   initialSelectedIds = [],
+  initialCriteriaImportance = [],
   onNext,
   onBack,
 }: CriteriaOnlySelectionProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set(initialSelectedIds));
-  const [criteriaImportance, setCriteriaImportance] = useState<Map<number, CriteriaImportanceData>>(new Map());
+  const [criteriaImportance, setCriteriaImportance] = useState<Map<number, CriteriaImportanceData>>(() => {
+    if (initialCriteriaImportance.length > 0) {
+      return new Map(
+        initialCriteriaImportance.map(item => [
+          item.criterionId,
+          { importanceLevel: item.importanceLevel, importancePercentage: item.importancePercentage },
+        ])
+      );
+    }
+    return new Map();
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
