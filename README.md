@@ -47,7 +47,12 @@ La forma más rápida de empezar es usar la aplicación desplegada:
 - **Configuración de Evaluación**: Configurar criterios y parámetros
 - **Entrada de Datos**: Gestión de datos de proyectos  
 - **Parametrización**: Configuración avanzada del sistema
-- **Reportes**: Generación y visualización de reportes
+- **Reportes**: Generación y visualización de reportes con análisis IA
+  - 📈 **Documentación detallada del módulo**: [backend/src/modules/reports/README.md](./backend/src/modules/reports/README.md)
+  - Endpoints REST para reportes de evaluación y proyecto
+  - Estadísticas analíticas (promedios, mejores/peores criterios)
+  - Análisis automatizado con Google Gemini 2.5 Flash
+  - Componentes React para visualización (gráficos, gauges, acordeones)
 
 ### 🔐 **Autenticación Robusta**
 - Integración con **Supabase** para autenticación
@@ -342,6 +347,21 @@ npm run lint:css
 > - Backend: https://sqa-tool-production.up.railway.app/api
 > 
 
+### 📚 Documentación de Módulos
+
+Cada módulo del backend tiene su propia documentación detallada:
+
+| Módulo | Ubicación | Descripción |
+|--------|-----------|-------------|
+| **Reportes** | [backend/src/modules/reports/README.md](./backend/src/modules/reports/README.md) | API de reportes, estadísticas, análisis con IA Gemini, componentes frontend |
+| **Configuración de Evaluación** | [backend/src/modules/config-evaluation/README.md](./backend/src/modules/config-evaluation/README.md) | Configuración de criterios, métricas y evaluaciones |
+| **Entrada de Datos** | [backend/src/modules/entry-data/README.md](./backend/src/modules/entry-data/README.md) | Gestión de datos de evaluación y cálculos |
+| **Parametrización** | [backend/src/modules/parameterization/README.md](./backend/src/modules/parameterization/README.md) | Parametrización de estándares y variables del sistema |
+
+Documentación adicional del frontend:
+- [Sistema de Validación](./frontend/VALIDATION_SYSTEM.md) - Guía de validación de formularios
+- [Sistema de Diseño](./frontend/DESIGN_SYSTEM.md) - Guía de estilos y componentes
+
 ### **📝 Convenciones**
 
 #### **Commits**
@@ -403,6 +423,17 @@ npm run lint
 1. **Crear issue** con label `enhancement`
 2. **Describir la funcionalidad** deseada
 3. **Justificar el caso de uso**
+
+### 🔍 Áreas de Mejora del Proyecto
+
+El proyecto está bien estructurado y en producción, pero hay algunas áreas identificadas para mejorar:
+
+- **Variables de entorno**: No hay archivos `.env.example` en el repositorio para backend/frontend
+- **Migraciones de base de datos**: No hay sistema de migraciones documentado (TypeORM con `synchronize: false`)
+- **Test coverage**: No hay métricas de cobertura de tests documentadas
+- **Frontend README**: El README del frontend es el default de Next.js, necesita documentación específica del proyecto
+- **Backend package.json**: Faltan campos de descripción, autor y licencia
+- **Exportación de reportes**: Pendiente implementar exportación a Excel/CSV (ver [README de Reportes](./backend/src/modules/reports/README.md#-mejoras-futuras))
 
 ### **📚 Recursos Adicionales**
 
